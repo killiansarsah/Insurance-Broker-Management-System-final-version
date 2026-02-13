@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+/* ============================================================
+   IBMS Design System — Tokens & Custom Properties
+   SRS §10.2.2 Color Scheme + Elevated Premium Design
+   ============================================================ */
+
+@theme {
+  /* --- Primary Palette --- */
+  --color-primary-50: #e3f2fd;
+  --color-primary-100: #bbdefb;
+  --color-primary-200: #90caf9;
+  --color-primary-300: #64b5f6;
+  --color-primary-400: #42a5f5;
+  --color-primary-500: #1976d2;
+  --color-primary-600: #1565c0;
+  --color-primary-700: #0d47a1;
+  --color-primary-800: #0a3880;
+  --color-primary-900: #062960;
+
+  /* --- Success / Secondary (Green) --- */
+  --color-success-50: #e8f5e9;
+  --color-success-100: #c8e6c9;
+  --color-success-200: #a5d6a7;
+  --color-success-300: #81c784;
+  --color-success-400: #66bb6a;
+  --color-success-500: #388e3c;
+  --color-success-600: #2e7d32;
+  --color-success-700: #1b5e20;
+
+  /* --- Accent / Warning (Orange) --- */
+  --color-accent-50: #fff3e0;
+  --color-accent-100: #ffe0b2;
+  --color-accent-200: #ffcc80;
+  --color-accent-300: #ffb74d;
+  --color-accent-400: #ffa726;
+  --color-accent-500: #f57c00;
+  --color-accent-600: #ef6c00;
+  --color-accent-700: #e65100;
+
+  /* --- Error / Danger (Red) --- */
+  --color-danger-50: #ffebee;
+  --color-danger-100: #ffcdd2;
+  --color-danger-200: #ef9a9a;
+  --color-danger-300: #e57373;
+  --color-danger-400: #ef5350;
+  --color-danger-500: #d32f2f;
+  --color-danger-600: #c62828;
+  --color-danger-700: #b71c1c;
+
+  /* --- Neutral / Surface --- */
+  --color-surface-0: #ffffff;
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #64748b;
+  --color-surface-600: #475569;
+  --color-surface-700: #334155;
+  --color-surface-800: #1e293b;
+  --color-surface-900: #0f172a;
+  --color-surface-950: #020617;
+
+  /* --- Sidebar --- */
+  --color-sidebar-bg: #0f172a;
+  --color-sidebar-hover: #1e293b;
+  --color-sidebar-active: #1976d2;
+  --color-sidebar-text: #94a3b8;
+  --color-sidebar-text-active: #ffffff;
+
+  /* --- Spacing (8-point grid) --- */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* --- Border Radius --- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* --- Shadows --- */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
+
+  /* --- Typography --- */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* --- Transitions --- */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* --- Sidebar dimensions --- */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+  --header-height: 64px;
+}
+
+/* ============================================================
+   Base Styles
+   ============================================================ */
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-surface-50);
+  color: var(--color-surface-900);
+}
+
+/* --- Scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-surface-300);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-surface-400);
+}
+
+/* --- Focus ring --- */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* --- Selection --- */
+::selection {
+  background-color: var(--color-primary-100);
+  color: var(--color-primary-900);
+}
+
+/* ============================================================
+   Animation Utilities
+   ============================================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fade-in var(--transition-slow) ease-out both;
+}
+
+.animate-slide-right {
+  animation: slide-in-right var(--transition-slow) ease-out both;
+}
+
+.animate-slide-left {
+  animation: slide-in-left var(--transition-slow) ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--transition-base) ease-out both;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-200) 25%,
+    var(--color-surface-100) 50%,
+    var(--color-surface-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
