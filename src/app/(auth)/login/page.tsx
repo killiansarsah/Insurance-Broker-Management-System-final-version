@@ -32,7 +32,7 @@ export default function LoginPage() {
     return (
         <div className="flex min-h-screen bg-white">
             {/* Left side: Premium Branding & Visuals */}
-            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-primary-900 overflow-hidden">
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-primary-900">
                 {/* Animated Mesh Gradient Background */}
                 <div className="absolute inset-0 z-0">
                     <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full bg-primary-600 blur-[100px] opacity-40 animate-pulse" />
@@ -54,12 +54,12 @@ export default function LoginPage() {
                         <span className="text-2xl font-bold tracking-tight">IBMS</span>
                     </motion.div>
 
-                    <div className="max-w-md">
+                    <div className="max-w-xl">
                         <motion.h2
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.3, duration: 0.8 }}
-                            className="text-5xl font-bold leading-tight mb-6"
+                            className="text-6xl font-extrabold leading-[1.1] mb-8 tracking-tight"
                         >
                             Insurance Management, <br />
                             <span className="text-primary-400">Perfected.</span>
@@ -68,10 +68,10 @@ export default function LoginPage() {
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.5, duration: 0.8 }}
-                            className="text-lg text-primary-100 mb-8"
+                            className="text-xl text-primary-100/90 mb-10 leading-relaxed font-light"
                         >
-                            The definitive platform for Ghana's insurance ecosystem.
-                            Compliant, efficient, and built for growth.
+                            The definitive platform for Ghana&apos;s insurance ecosystem.
+                            Compliant, efficient, and built for market leaders.
                         </motion.p>
 
                         <motion.div
@@ -80,14 +80,14 @@ export default function LoginPage() {
                             transition={{ delay: 0.7, duration: 0.8 }}
                             className="flex flex-wrap gap-4"
                         >
-                            <Badge variant="outline" className="bg-white/5 border-white/10 py-1.5 px-3">
+                            <Badge variant="outline" className="bg-white/5 border-white/10 py-2 px-4 text-sm">
                                 NIC Compliant
                             </Badge>
-                            <Badge variant="outline" className="bg-white/5 border-white/10 py-1.5 px-3">
+                            <Badge variant="outline" className="bg-white/5 border-white/10 py-2 px-4 text-sm">
                                 RBAC Security
                             </Badge>
-                            <Badge variant="outline" className="bg-white/5 border-white/10 py-1.5 px-3">
-                                Cloud Ready
+                            <Badge variant="outline" className="bg-white/5 border-white/10 py-2 px-4 text-sm">
+                                Cloud Infrastructure
                             </Badge>
                         </motion.div>
                     </div>
@@ -96,116 +96,136 @@ export default function LoginPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 0.6 }}
                         transition={{ delay: 1, duration: 1 }}
-                        className="text-sm text-primary-200"
+                        className="text-sm font-medium tracking-wide text-primary-200"
                     >
-                        &copy; {new Date().getFullYear()} IBMS Ghana. All rights reserved.
+                        &copy; {new Date().getFullYear()} IBMS GHANA. PLATFORM VERSION 1.0.0
                     </motion.div>
                 </div>
             </div>
 
-            {/* Right side: Clean Login Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-surface-50">
+            {/* Right side: Clean Login Form in a focused card */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 lg:p-12 bg-surface-50">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
-                    className="w-full max-w-md"
+                    className="w-full max-w-[460px] bg-white rounded-[32px] shadow-2xl shadow-surface-900/5 border border-surface-200 p-8 lg:p-12"
                 >
-                    <div className="mb-8 text-center lg:text-left">
-                        <h1 className="text-3xl font-bold text-surface-900 mb-2">Welcome Back</h1>
-                        <p className="text-surface-600">Enter your credentials to access your dashboard</p>
-                    </div>
+                    <div className="flex flex-col">
+                        <div className="mb-10 flex flex-col items-start">
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="w-16 h-16 rounded-2xl bg-primary-600 flex items-center justify-center mb-8 shadow-lg shadow-primary-500/20"
+                            >
+                                <Shield className="text-white" size={32} />
+                            </motion.div>
+                            <h1 className="text-3xl lg:text-4xl font-extrabold text-surface-900 mb-3 tracking-tight">
+                                Portal Login
+                            </h1>
+                            <p className="text-surface-600 text-lg font-medium leading-relaxed">
+                                Access your secure brokerage ecosystem
+                            </p>
+                        </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div className="space-y-4">
-                            <Input
-                                label="Email Address"
-                                placeholder="name@company.com"
-                                type="email"
-                                required
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                leftIcon={<Mail size={18} />}
-                                className="bg-white"
-                            />
-                            <div className="relative">
+                        <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+                            <div className="flex flex-col gap-5 w-full">
                                 <Input
-                                    label="Password"
+                                    label="Work Email"
+                                    placeholder="name@insurance-firm.com"
+                                    type="email"
+                                    required
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    leftIcon={<Mail size={20} />}
+                                    className="bg-white"
+                                />
+                                <Input
+                                    label="Secure Password"
                                     placeholder="••••••••"
                                     type={showPassword ? 'text' : 'password'}
                                     required
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    leftIcon={<Lock size={18} />}
+                                    leftIcon={<Lock size={20} />}
                                     className="bg-white"
+                                    rightIcon={
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="p-2 -mr-1 text-surface-400 hover:text-primary-600 focus:outline-none transition-colors cursor-pointer rounded-full hover:bg-surface-100"
+                                            aria-label={showPassword ? "Hide password" : "Show password"}
+                                        >
+                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                        </button>
+                                    }
                                 />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-[38px] text-surface-400 hover:text-surface-600 focus:outline-none transition-colors"
-                                >
-                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                                </button>
                             </div>
-                        </div>
 
-                        <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500 transition-all cursor-pointer"
-                                />
-                                <span className="text-sm text-surface-600">Remember me</span>
-                            </label>
-                            <Link
-                                href="/forgot-password"
-                                className="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
-                            >
-                                Forgot password?
-                            </Link>
-                        </div>
-
-                        <AnimatePresence>
-                            {error && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
-                                    className="p-3 rounded-md bg-danger-50 border border-danger-100 flex items-start gap-2 text-danger-700 text-sm"
+                            <div className="flex items-center justify-between mt-2">
+                                <label className="flex items-center gap-3 cursor-pointer select-none group">
+                                    <div className="relative flex items-center justify-center">
+                                        <input
+                                            type="checkbox"
+                                            className="peer w-5 h-5 rounded border-2 border-surface-300 text-primary-600 focus:ring-primary-500 transition-all cursor-pointer appearance-none checked:bg-primary-600 checked:border-primary-600"
+                                        />
+                                        <svg
+                                            className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        >
+                                            <path d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span className="text-sm font-semibold text-surface-600 group-hover:text-surface-900 transition-colors">Keep me signed in</span>
+                                </label>
+                                <Link
+                                    href="/forgot-password"
+                                    className="text-sm font-bold text-primary-600 hover:text-primary-700 transition-all hover:underline"
                                 >
-                                    <Info size={16} className="mt-0.5 shrink-0" />
-                                    <p>{error}</p>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                                    Reset credentials
+                                </Link>
+                            </div>
 
-                        <Button
-                            type="submit"
-                            className="w-full h-12 text-base font-semibold"
-                            isLoading={isLoading}
-                        >
-                            Sign In
-                        </Button>
-                    </form>
+                            <AnimatePresence>
+                                {error && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        className="p-4 rounded-xl bg-danger-50 border border-danger-200 flex items-start gap-3 text-danger-700 text-sm"
+                                    >
+                                        <Info size={20} className="shrink-0 text-danger-500" />
+                                        <p className="font-medium leading-relaxed">{error}</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
 
-                    <div className="mt-10 pt-10 border-t border-surface-200 text-center">
-                        <p className="text-sm text-surface-500">
-                            Need assistance?{' '}
-                            <a href="#" className="font-medium text-primary-600 hover:text-primary-700 transition-colors">
-                                Contact IT Support
-                            </a>
-                        </p>
+                            <Button
+                                type="submit"
+                                size="lg"
+                                className="w-full h-14 text-lg font-bold shadow-xl shadow-primary-500/20 rounded-2xl mt-4 transition-transform active:scale-[0.98]"
+                                isLoading={isLoading}
+                            >
+                                Sign Into Dashboard
+                            </Button>
+                        </form>
                     </div>
 
-                    <div className="mt-8 p-4 rounded-xl bg-primary-50 border border-primary-100 flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 shrink-0">
-                            <Info size={18} />
-                        </div>
-                        <div>
-                            <p className="text-xs font-semibold text-primary-900 mb-0.5">Development Access</p>
-                            <p className="text-[11px] text-primary-700 leading-normal">
-                                Use <code className="bg-primary-200 px-1 rounded">admin@ibms.com</code> to bypass authentication in this demo.
-                            </p>
+                    <div className="mt-12 pt-8 border-t border-surface-100">
+                        <div className="p-4 rounded-2xl bg-surface-50 border border-surface-200 flex items-start gap-4">
+                            <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-primary-600 shrink-0 shadow-sm">
+                                <Info size={20} />
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-surface-900 mb-1">QA/Demo Access</p>
+                                <p className="text-xs text-surface-500 leading-relaxed font-medium">
+                                    Auth is currently bypassed for <code className="bg-white px-1.5 py-0.5 rounded text-primary-700 border border-surface-200">admin@ibms.com</code>.
+                                </p>
+                            </div>
                         </div>
                     </div>
                 </motion.div>

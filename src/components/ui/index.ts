@@ -7,3 +7,4 @@ export { Avatar } from './avatar';
 export { Spinner, PageLoader } from './spinner';
 export { EmptyState } from './empty-state';
 export { Skeleton, SkeletonCard, SkeletonTable } from './skeleton';
+export { Textarea } from './textarea';

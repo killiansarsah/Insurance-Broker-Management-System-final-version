@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -7,46 +7,48 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     hint?: string;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
+    containerClassName?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, hint, leftIcon, rightIcon, className, id, ...props }, ref) => {
-        const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+    ({ label, error, hint, leftIcon, rightIcon, className, containerClassName, id, ...props }, ref) => {
+        const generatedId = useId();
+        const inputId = id || generatedId;
 
         return (
-            <div className="flex flex-col gap-1.5">
+            <div className={cn('flex flex-col gap-2 w-full', containerClassName)}>
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className="text-sm font-medium text-surface-700"
+                        className="text-sm font-semibold text-surface-800 select-none w-fit"
                     >
                         {label}
                         {props.required && (
-                            <span className="text-danger-500 ml-0.5">*</span>
+                            <span className="text-danger-500 ml-1">*</span>
                         )}
                     </label>
                 )}
-                <div className="relative">
+                <div className="relative w-full group">
                     {leftIcon && (
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400 group-focus-within:text-primary-500 transition-colors pointer-events-none flex items-center justify-center z-10">
                             {leftIcon}
-                        </span>
+                        </div>
                     )}
                     <input
                         ref={ref}
                         id={inputId}
                         className={cn(
-                            'w-full h-10 px-3 text-sm bg-white border rounded-[var(--radius-md)]',
-                            'placeholder:text-surface-400',
-                            'transition-colors duration-[var(--transition-fast)]',
-                            'hover:border-surface-400',
-                            'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-                            leftIcon && 'pl-10',
-                            rightIcon && 'pr-10',
+                            'block w-full h-12 px-4 text-sm bg-white border-2 rounded-xl border-surface-200',
+                            'placeholder:text-surface-400 text-surface-900',
+                            'transition-all duration-200 outline-none',
+                            'hover:border-surface-300',
+                            'focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10',
+                            leftIcon && 'pl-12',
+                            rightIcon && 'pr-12',
                             error
-                                ? 'border-danger-500 focus:ring-danger-500/20 focus:border-danger-500'
-                                : 'border-surface-300',
-                            'disabled:bg-surface-100 disabled:cursor-not-allowed',
+                                ? 'border-danger-500 focus:border-danger-500 focus:ring-danger-500/10'
+                                : '',
+                            'disabled:bg-surface-50 disabled:cursor-not-allowed disabled:text-surface-400',
                             className
                         )}
                         aria-invalid={!!error}
@@ -56,18 +58,18 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                         {...props}
                     />
                     {rightIcon && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400">
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 flex items-center justify-center z-10">
                             {rightIcon}
-                        </span>
+                        </div>
                     )}
                 </div>
                 {error && (
-                    <p id={`${inputId}-error`} className="text-xs text-danger-500" role="alert">
+                    <p id={`${inputId}-error`} className="text-xs text-danger-600 font-semibold mt-1" role="alert">
                         {error}
                     </p>
                 )}
                 {hint && !error && (
-                    <p id={`${inputId}-hint`} className="text-xs text-surface-500">
+                    <p id={`${inputId}-hint`} className="text-xs text-surface-500 mt-1">
                         {hint}
                     </p>
                 )}
