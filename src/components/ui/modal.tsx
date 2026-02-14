@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useCallback, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +10,7 @@ interface ModalProps {
     title?: string;
     description?: string;
     children: React.ReactNode;
+    footer?: React.ReactNode;
     size?: 'sm' | 'md' | 'lg' | 'xl';
     className?: string;
 }
@@ -27,81 +28,94 @@ export function Modal({
     title,
     description,
     children,
+    footer,
     size = 'md',
     className,
 }: ModalProps) {
-    const overlayRef = useRef<HTMLDivElement>(null);
-
-    const handleEscape = useCallback(
-        (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        },
-        [onClose]
-    );
+    const dialogRef = useRef<HTMLDialogElement>(null);
 
     useEffect(() => {
+        const dialog = dialogRef.current;
+        if (!dialog) return;
+
         if (isOpen) {
-            document.addEventListener('keydown', handleEscape);
+            if (!dialog.open) {
+                dialog.showModal();
+                dialog.focus(); // Ensure focus moves to dialog
+            }
             document.body.style.overflow = 'hidden';
+        } else {
+            if (dialog.open) {
+                dialog.close();
+            }
+            document.body.style.overflow = '';
         }
+
         return () => {
-            document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = '';
         };
-    }, [isOpen, handleEscape]);
+    }, [isOpen]);
 
-    if (!isOpen) return null;
+    const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement, Event>) => {
+        e.preventDefault();
+        onClose();
+    };
+
+    // Close when clicking backdrop
+    const handleClick = (e: React.MouseEvent<HTMLDialogElement>) => {
+        const dialog = dialogRef.current;
+        if (e.target === dialog) {
+            onClose();
+        }
+    };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Overlay */}
-            <div
-                ref={overlayRef}
-                className="absolute inset-0 bg-surface-900/50 animate-fade-in"
-                onClick={onClose}
-                aria-hidden
-            />
-            {/* Content */}
-            <div
-                className={cn(
-                    'relative w-full mx-4',
-                    'bg-white rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)]',
-                    'animate-scale-in',
-                    sizeStyles[size],
-                    className
-                )}
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby={title ? 'modal-title' : undefined}
-                aria-describedby={description ? 'modal-description' : undefined}
-            >
+        <dialog
+            ref={dialogRef}
+            onCancel={handleCancel}
+            onClick={handleClick}
+            className={cn(
+                'peer bg-transparent p-0 m-auto backdrop:bg-slate-900/40 backdrop:backdrop-blur-sm open:animate-in open:fade-in open:zoom-in-95 open:duration-300 backdrop:animate-in backdrop:fade-in backdrop:duration-300',
+                sizeStyles[size],
+                'w-full min-w-[340px] max-h-[90vh] rounded-[var(--radius-xl)] shadow-2xl overflow-hidden outline-none flex flex-col',
+                className
+            )}
+        >
+            <div className="bg-white flex flex-col w-full h-full border border-surface-200 shadow-2xl overflow-hidden">
                 {/* Header */}
-                {(title || description) && (
-                    <div className="flex items-start justify-between p-6 pb-0">
-                        <div>
-                            {title && (
-                                <h2 id="modal-title" className="text-lg font-semibold text-surface-900">
-                                    {title}
-                                </h2>
-                            )}
-                            {description && (
-                                <p id="modal-description" className="text-sm text-surface-500 mt-1">
-                                    {description}
-                                </p>
-                            )}
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-1.5 text-surface-400 hover:text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] transition-colors"
-                            aria-label="Close dialog"
-                        >
-                            <X size={18} />
-                        </button>
+                <div className="flex items-center justify-between p-4 md:p-6 border-b border-surface-100 bg-surface-50/50 shrink-0">
+                    <div>
+                        {title && (
+                            <h2 className="text-xl font-bold text-surface-900 tracking-tight">
+                                {title}
+                            </h2>
+                        )}
+                        {description && (
+                            <p className="text-sm text-surface-500 mt-1">{description}</p>
+                        )}
+                    </div>
+                    <button
+                        onClick={onClose}
+                        type="button"
+                        className="p-2 text-surface-400 hover:text-surface-600 hover:bg-surface-100 rounded-full transition-colors active:scale-95 outline-none focus:ring-2 focus:ring-surface-200"
+                        aria-label="Close dialog"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="p-4 md:p-6 overflow-y-auto w-full flex-1">
+                    {children}
+                </div>
+
+                {/* Footer */}
+                {footer && (
+                    <div className="p-4 md:p-6 border-t border-surface-100 bg-surface-50/50 shrink-0 mb-safe">
+                        {footer}
                     </div>
                 )}
-                {/* Body */}
-                <div className="p-6">{children}</div>
             </div>
-        </div>
+        </dialog>
     );
 }

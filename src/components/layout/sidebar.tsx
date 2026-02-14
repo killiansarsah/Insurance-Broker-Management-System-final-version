@@ -17,7 +17,11 @@ import {
     ShieldCheck,
     AlertTriangle,
     X,
+    Calendar,
+    Banknote,
+    Wallet,
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
 import { useState } from 'react';
@@ -29,78 +33,118 @@ interface NavItemConfig {
     children?: { label: string; href: string }[];
 }
 
-const navigation: NavItemConfig[] = [
+interface NavSection {
+    label: string;
+    items: NavItemConfig[];
+}
+
+const navigation: NavSection[] = [
     {
-        label: 'Dashboard',
-        href: '/dashboard',
-        icon: <LayoutDashboard size={20} />,
-    },
-    {
-        label: 'Clients',
-        href: '/dashboard/clients',
-        icon: <Users size={20} />,
-        children: [
-            { label: 'All Clients', href: '/dashboard/clients' },
-            { label: 'New Client', href: '/dashboard/clients/new' },
+        label: 'Overview',
+        items: [
+            {
+                label: 'Dashboard',
+                href: '/dashboard',
+                icon: <LayoutDashboard size={20} />,
+            },
+            {
+                label: 'Calendar',
+                href: '/dashboard/calendar',
+                icon: <Calendar size={20} />,
+            },
         ],
     },
     {
-        label: 'Policies',
-        href: '/dashboard/policies',
-        icon: <FileText size={20} />,
-        children: [
-            { label: 'All Policies', href: '/dashboard/policies' },
-            { label: 'New Policy', href: '/dashboard/policies/new' },
-            { label: 'Renewals', href: '/dashboard/policies?tab=renewals' },
+        label: 'Manage',
+        items: [
+            {
+                label: 'Clients',
+                href: '/dashboard/clients',
+                icon: <Users size={20} />,
+                children: [
+                    { label: 'All Clients', href: '/dashboard/clients' },
+                    { label: 'New Client', href: '/dashboard/clients/new' },
+                ],
+            },
+            {
+                label: 'Policies',
+                href: '/dashboard/policies',
+                icon: <FileText size={20} />,
+                children: [
+                    { label: 'All Policies', href: '/dashboard/policies' },
+                    { label: 'New Policy', href: '/dashboard/policies/new' },
+                    { label: 'Renewals', href: '/dashboard/policies?tab=renewals' },
+                ],
+            },
+            {
+                label: 'Leads',
+                href: '/dashboard/leads',
+                icon: <Target size={20} />,
+            },
+            {
+                label: 'Claims',
+                href: '/dashboard/claims',
+                icon: <Shield size={20} />,
+                children: [
+                    { label: 'All Claims', href: '/dashboard/claims' },
+                    { label: 'New Claim', href: '/dashboard/claims/new' },
+                ],
+            },
+            {
+                label: 'Complaints',
+                href: '/dashboard/complaints',
+                icon: <AlertTriangle size={20} />,
+            },
+            {
+                label: 'Documents',
+                href: '/dashboard/documents',
+                icon: <FileArchive size={20} />,
+            },
+            {
+                label: 'Chat',
+                href: '/dashboard/chat',
+                icon: <MessageSquare size={20} />,
+            },
         ],
     },
     {
-        label: 'Leads',
-        href: '/dashboard/leads',
-        icon: <Target size={20} />,
-    },
-    {
-        label: 'Claims',
-        href: '/dashboard/claims',
-        icon: <Shield size={20} />,
-        children: [
-            { label: 'All Claims', href: '/dashboard/claims' },
-            { label: 'New Claim', href: '/dashboard/claims/new' },
+        label: 'Finance & Insights',
+        items: [
+            {
+                label: 'Commissions',
+                href: '/dashboard/commissions',
+                icon: <Banknote size={20} />,
+            },
+            {
+                label: 'Finance',
+                href: '/dashboard/finance',
+                icon: <Wallet size={20} />,
+            },
+            {
+                label: 'Reports',
+                href: '/dashboard/reports',
+                icon: <BarChart3 size={20} />,
+            },
+            {
+                label: 'Compliance',
+                href: '/dashboard/compliance',
+                icon: <ShieldCheck size={20} />,
+            },
         ],
     },
     {
-        label: 'Complaints',
-        href: '/dashboard/complaints',
-        icon: <AlertTriangle size={20} />,
-    },
-    {
-        label: 'Chat',
-        href: '/dashboard/chat',
-        icon: <MessageSquare size={20} />,
-    },
-    {
-        label: 'Documents',
-        href: '/dashboard/documents',
-        icon: <FileArchive size={20} />,
-    },
-    {
-        label: 'Reports',
-        href: '/dashboard/reports',
-        icon: <BarChart3 size={20} />,
-    },
-    {
-        label: 'Compliance',
-        href: '/dashboard/compliance',
-        icon: <ShieldCheck size={20} />,
-    },
-    {
-        label: 'Settings',
-        href: '/dashboard/settings',
-        icon: <Settings size={20} />,
-        children: [
-            { label: 'General', href: '/dashboard/settings' },
-            { label: 'Users', href: '/dashboard/settings/users' },
-            { label: 'Roles', href: '/dashboard/settings/roles' },
+        label: 'System',
+        items: [
+            {
+                label: 'Settings',
+                href: '/dashboard/settings',
+                icon: <Settings size={20} />,
+                children: [
+                    { label: 'General', href: '/dashboard/settings' },
+                    { label: 'Users', href: '/dashboard/admin/users' },
+                    { label: 'Roles', href: '/dashboard/admin/users?tab=roles' },
+                ],
+            },
         ],
     },
 ];
@@ -178,7 +222,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                 <div className="ml-5 mt-1 pl-4 border-l border-surface-700 space-y-0.5">
                     {item.children!.map((child) => (
                         <Link
-                            key={child.href}
+                            key={child.label}
                             href={child.href}
                             className={cn(
                                 'block px-3 py-2 rounded-[var(--radius-sm)] text-sm',
@@ -256,9 +300,23 @@ export function Sidebar() {
                 </div>
 
                 {/* Navigation */}
-                <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
-                    {navigation.map((item) => (
-                        <NavItem key={item.href} item={item} collapsed={sidebarCollapsed} />
+                <nav className="flex-1 overflow-y-auto py-4 px-3">
+                    {navigation.map((section, sectionIdx) => (
+                        <div key={section.label} className={cn(sectionIdx > 0 && 'mt-5')}>
+                            {/* Section label */}
+                            {sidebarCollapsed ? (
+                                <div className="mx-2 mb-2 border-t border-surface-700" />
+                            ) : (
+                                <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-[0.1em] text-sidebar-text/50 select-none">
+                                    {section.label}
+                                </p>
+                            )}
+                            <div className="space-y-1">
+                                {section.items.map((item) => (
+                                    <NavItem key={item.href} item={item} collapsed={sidebarCollapsed} />
+                                ))}
+                            </div>
+                        </div>
                     ))}
                 </nav>
 

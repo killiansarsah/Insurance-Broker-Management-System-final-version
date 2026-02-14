@@ -396,3 +396,5 @@ export function getPolicyById(id: string): Policy | undefined {
 export function getPoliciesByClientId(clientId: string): Policy[] {
     return mockPolicies.filter((p) => p.clientId === clientId);
 }
+
+export const policies = mockPolicies;

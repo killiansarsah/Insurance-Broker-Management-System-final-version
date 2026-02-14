@@ -100,6 +100,7 @@ export type DocumentCategory =
 
 export type PaymentMethod = 'cash' | 'cheque' | 'bank_transfer' | 'mobile_money' | 'card';
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'overdue' | 'refunded';
+export type MoMoNetwork = 'mtn' | 'telecel' | 'airteltigo';
 
 // --- Core Entities ---
 
@@ -318,28 +319,25 @@ export interface Complaint {
 
 export interface ChatMessage {
     id: string;
-    conversationId: string;
-    senderId: string;
-    senderName: string;
-    senderAvatar?: string;
-    type: ChatMessageType;
     content: string;
-    fileUrl?: string;
-    fileName?: string;
-    readStatus: ReadStatus;
-    createdAt: string;
+    senderId: string;
+    timestamp: string;
+    status: 'sent' | 'delivered' | 'read';
 }
 
 export interface ChatConversation {
     id: string;
-    name: string;
-    isGroup: boolean;
-    participants: { userId: string; name: string; avatarUrl?: string }[];
-    lastMessage?: ChatMessage;
+    participantId: string;
+    participantName: string;
+    participantAvatar?: string;
+    participantRole: string;
+    lastMessage: string;
+    lastMessageTime: string;
     unreadCount: number;
-    contextType?: 'client' | 'policy' | 'claim' | 'lead';
-    contextId?: string;
-    updatedAt: string;
+    isOnline: boolean;
+    type: 'direct' | 'group' | 'ai';
+    linkedResourceId?: string;
+    linkedResourceType?: 'policy' | 'claim' | 'complaint' | 'client';
 }
 
 export interface Document {
@@ -367,6 +365,24 @@ export interface Document {
 
     createdAt: string;
     updatedAt: string;
+}
+
+export interface Transaction {
+    id: string;
+    policyId: string;
+    policyNumber: string;
+    clientId: string;
+    clientName: string;
+    amount: number;
+    currency: string;
+    status: PaymentStatus;
+    method: PaymentMethod;
+    momoNetwork?: MoMoNetwork;
+    phoneNumber?: string;
+    reference: string;
+    description: string;
+    processedAt?: string;
+    createdAt: string;
 }
 
 // --- UI Types ---

@@ -5,6 +5,7 @@ type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
 interface AvatarProps {
     name: string;
     src?: string;
+    icon?: React.ReactNode;
     size?: AvatarSize;
     className?: string;
 }
@@ -32,7 +33,7 @@ function getColorFromName(name: string): string {
     return colorPalette[Math.abs(hash) % colorPalette.length];
 }
 
-export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
+export function Avatar({ name, src, icon, size = 'md', className }: AvatarProps) {
     if (src) {
         return (
             <img
@@ -58,7 +59,7 @@ export function Avatar({ name, src, size = 'md', className }: AvatarProps) {
             title={name}
             aria-label={name}
         >
-            {getInitials(name)}
+            {icon || getInitials(name)}
         </div>
     );
 }

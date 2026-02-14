@@ -1,0 +1,77 @@
+import { User } from '@/types';
+
+export const users: User[] = [
+    {
+        id: 'USR-001',
+        email: 'admin@ibms.com',
+        firstName: 'Kwame',
+        lastName: 'Admin',
+        role: 'super_admin',
+        phone: '+233 20 000 0001',
+        branchId: 'HQ',
+        isActive: true,
+        avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+        createdAt: '2023-01-01T00:00:00Z',
+        lastLogin: new Date().toISOString(),
+    },
+    {
+        id: 'USR-002',
+        email: 'manager@ibms.com',
+        firstName: 'Ama',
+        lastName: 'Manager',
+        role: 'branch_manager',
+        phone: '+233 20 000 0002',
+        branchId: 'ACC-01',
+        isActive: true,
+        avatarUrl: 'https://i.pravatar.cc/150?u=manager',
+        createdAt: '2023-01-15T00:00:00Z',
+        lastLogin: new Date(Date.now() - 86400000).toISOString(),
+    },
+    {
+        id: 'USR-003',
+        email: 'compliance@ibms.com',
+        firstName: 'Kofi',
+        lastName: 'Compliance',
+        role: 'admin', // Using admin for compliance officer proxy for now, or add specific role if enabled
+        phone: '+233 20 000 0003',
+        branchId: 'HQ',
+        isActive: true,
+        createdAt: '2023-02-01T00:00:00Z',
+        lastLogin: new Date(Date.now() - 172800000).toISOString(),
+    },
+    {
+        id: 'USR-004',
+        email: 'broker1@ibms.com',
+        firstName: 'Esi',
+        lastName: 'Broker',
+        role: 'senior_broker',
+        phone: '+233 20 000 0004',
+        branchId: 'ACC-01',
+        isActive: true,
+        avatarUrl: 'https://i.pravatar.cc/150?u=broker1',
+        createdAt: '2023-03-01T00:00:00Z',
+        lastLogin: new Date().toISOString(),
+    },
+    {
+        id: 'USR-005',
+        email: 'broker2@ibms.com',
+        firstName: 'Yaw',
+        lastName: 'Agent',
+        role: 'broker',
+        phone: '+233 20 000 0005',
+        branchId: 'KSI-01',
+        isActive: false, // Inactive user test
+        createdAt: '2023-04-01T00:00:00Z',
+        lastLogin: '2023-12-01T00:00:00Z',
+    },
+];
+
+export const roles = [
+    { id: 'super_admin', label: 'Super Admin', description: 'Full system access', permissions: ['all'] },
+    { id: 'admin', label: 'Administrator', description: 'System configuration and user management', permissions: ['manage_users', 'manage_settings'] },
+    { id: 'branch_manager', label: 'Branch Manager', description: 'Branch oversight and approvals', permissions: ['approve_claims', 'view_reports'] },
+    { id: 'senior_broker', label: 'Senior Broker', description: 'Lead broker with team oversight', permissions: ['manage_leads', 'create_policies'] },
+    { id: 'broker', label: 'Broker', description: 'Standard broker access', permissions: ['create_leads', 'create_policies'] },
+    { id: 'data_entry', label: 'Data Entry', description: 'Data input only', permissions: ['create_clients'] },
+    { id: 'viewer', label: 'Viewer', description: 'Read-only access', permissions: ['view_all'] },
+];

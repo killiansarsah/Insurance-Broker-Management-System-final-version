@@ -18,7 +18,9 @@ type StatusType =
     | LeadStatus
     | LeadPriority
     | ClaimStatus
-    | ComplaintStatus;
+    | ComplaintStatus
+    | 'earned' | 'paid' | 'clawback'
+    | 'outstanding' | 'overdue' | 'partial';
 
 const STATUS_STYLES: Record<string, string> = {
     // Client
@@ -74,6 +76,16 @@ const STATUS_STYLES: Record<string, string> = {
     under_investigation: 'bg-accent-50 text-accent-700 ring-accent-200',
     resolved: 'bg-success-50 text-success-700 ring-success-200',
     escalated: 'bg-danger-50 text-danger-700 ring-danger-200',
+
+    // Commission
+    earned: 'bg-success-50 text-success-700 ring-success-200',
+    paid: 'bg-primary-50 text-primary-700 ring-primary-200',
+    clawback: 'bg-danger-50 text-danger-700 ring-danger-200',
+
+    // Finance
+    outstanding: 'bg-accent-50 text-accent-700 ring-accent-200',
+    overdue: 'bg-danger-50 text-danger-700 ring-danger-200',
+    partial: 'bg-warning-50 text-warning-700 ring-warning-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {

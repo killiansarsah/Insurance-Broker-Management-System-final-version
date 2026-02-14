@@ -1,0 +1,81 @@
+import { Document, Complaint } from '@/types';
+
+export const MOCK_DOCUMENTS: Document[] = [
+    {
+        id: 'doc-1',
+        name: 'Ghana_Card_Kwame_Mensah.pdf',
+        category: 'kyc',
+        mimeType: 'application/pdf',
+        sizeBytes: 1024 * 1024 * 1.2,
+        url: '#',
+        uploadedBy: 'user-2',
+        createdAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+    },
+    {
+        id: 'doc-2',
+        name: 'Motor_Claim_Photos_CLM84.zip',
+        category: 'claims',
+        mimeType: 'application/zip',
+        sizeBytes: 1024 * 1024 * 8.5,
+        url: '#',
+        uploadedBy: '1',
+        createdAt: new Date(Date.now() - 3600000 * 2).toISOString(),
+    },
+    {
+        id: 'doc-3',
+        name: 'Enterprise_Insurance_Policy_Terms.pdf',
+        category: 'policy',
+        mimeType: 'application/pdf',
+        sizeBytes: 1024 * 1024 * 2.1,
+        url: '#',
+        uploadedBy: 'user-3',
+        createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    },
+    {
+        id: 'doc-4',
+        name: 'Utility_Bill_Ama_Serwaa.png',
+        category: 'kyc',
+        mimeType: 'image/png',
+        sizeBytes: 1024 * 512,
+        url: '#',
+        uploadedBy: 'user-2',
+        createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+    }
+];
+
+export const MOCK_COMPLAINTS: Complaint[] = [
+    {
+        id: 'cmp-1',
+        complaintNumber: 'CMP-2024-001',
+        status: 'open',
+        priority: 'high',
+        complainantName: 'Dr. Ernest Osei',
+        complainantPhone: '+233 24 555 1234',
+        subject: 'Delay in claim settlement',
+        category: 'Claims',
+        description: 'Client is complaining that the claim CLM-084 has been under assessment for over 14 days without update.',
+        escalationLevel: 0,
+        slaDeadline: new Date(Date.now() + 86400000 * 2).toISOString(),
+        isBreached: false,
+        createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
+    },
+    {
+        id: 'cmp-2',
+        complaintNumber: 'CMP-2024-002',
+        status: 'resolved',
+        priority: 'medium',
+        complainantName: 'Naana Afua',
+        complainantPhone: '+233 20 888 7777',
+        subject: 'Incorrect premium billing',
+        category: 'Accounting',
+        description: 'Auto-renewal charged the wrong card and applied double premium.',
+        resolution: 'Reversed the transaction and applied correct premium. User notified.',
+        escalationLevel: 1,
+        slaDeadline: new Date(Date.now() - 3600000).toISOString(),
+        isBreached: true,
+        createdAt: new Date(Date.now() - 86400000 * 10).toISOString(),
+        updatedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+        resolvedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
+    }
+];

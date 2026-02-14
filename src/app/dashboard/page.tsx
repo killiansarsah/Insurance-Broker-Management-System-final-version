@@ -157,8 +157,10 @@ const activityColors: Record<string, string> = {
 
 import { PremiumTrend } from '@/components/charts/premium-trend';
 import { PolicyMix } from '@/components/charts/policy-mix';
+import { CalendarWidget } from '@/components/dashboard/calendar-widget';
 
 export default function DashboardPage() {
+
     return (
         <div className="space-y-6 animate-fade-in mb-12">
             {/* Page header */}
@@ -276,7 +278,19 @@ export default function DashboardPage() {
                 </Card>
             </div>
 
+            {/* Calendar & Activity Highlights */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-1">
+                    <CalendarWidget />
+                </div>
+                <div className="lg:col-span-2">
+                    {/* Placeholder for future specific highlights or integrated into next row */}
+                </div>
+            </div>
+
             {/* Two column: Recent Activity + Upcoming Renewals */}
+
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Activity */}
                 <Card padding="none" className="overflow-hidden">
