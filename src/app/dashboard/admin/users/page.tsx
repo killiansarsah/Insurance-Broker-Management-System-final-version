@@ -4,7 +4,7 @@ import { useState } from 'react';
 import {
     Plus,
     Search,
-    User,
+    User as UserIcon,
     Shield,
     Mail,
     Phone,
@@ -19,7 +19,8 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { users } from '@/mock/users';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { UserRole } from '@/types';
+import { UserRole, User } from '@/types';
+import { InviteUserModal } from '@/components/admin/invite-user-modal';
 
 const ROLE_COLORS: Record<UserRole, 'primary' | 'success' | 'warning' | 'danger' | 'default' | 'outline'> = {
     super_admin: 'danger',
@@ -43,26 +44,49 @@ const ROLE_LABELS: Record<UserRole, string> = {
 
 export default function UsersPage() {
     const [roleFilter, setRoleFilter] = useState<string>('all');
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     const filteredUsers = roleFilter === 'all'
         ? users
         : users.filter(u => u.role === roleFilter);
 
+    const handleAction = (action: string, userName: string) => {
+        setOpenMenuId(null);
+        // Simulate action
+        import('sonner').then(({ toast }) => {
+            if (action === 'password') {
+                toast.success('Password Reset Sent', { description: `Reset link sent to ${userName}` });
+            } else if (action === 'deactivate') {
+                toast.warning('User Deactivated', { description: `${userName} is now inactive.` });
+            }
+        });
+    };
+
     return (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-6 animate-fade-in" onClick={() => setOpenMenuId(null)}>
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-surface-900 tracking-tight">User Management</h1>
                     <p className="text-sm text-surface-500 mt-1">Manage system access and roles.</p>
                 </div>
-                <Button variant="primary" leftIcon={<Plus size={16} />}>
+                <Button
+                    variant="primary"
+                    leftIcon={<Plus size={16} />}
+                    onClick={() => setIsInviteOpen(true)}
+                >
                     Invite User
                 </Button>
             </div>
 
+            <InviteUserModal
+                isOpen={isInviteOpen}
+                onClose={() => setIsInviteOpen(false)}
+            />
+
             {/* List */}
-            <DataTable
+            <DataTable<User>
                 data={filteredUsers}
                 columns={[
                     {
@@ -102,11 +126,41 @@ export default function UsersPage() {
                     {
                         key: 'id',
                         label: 'Actions',
-                        render: () => (
-                            <div className="flex justify-end gap-2">
-                                <button className="p-1 text-surface-400 hover:text-primary-600 transition-colors">
+                        render: (row) => (
+                            <div className="relative flex justify-end">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setOpenMenuId(openMenuId === row.id ? null : row.id);
+                                    }}
+                                    className="p-1 text-surface-400 hover:text-primary-600 transition-colors rounded hover:bg-surface-100"
+                                >
                                     <MoreVertical size={16} />
                                 </button>
+
+                                {openMenuId === row.id && (
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] border border-surface-200 z-20 animate-scale-in origin-top-right overflow-hidden">
+                                        <button
+                                            className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
+                                            onClick={(e) => { e.stopPropagation(); handleAction('edit', row.firstName); }}
+                                        >
+                                            <UserIcon size={14} /> Edit Profile
+                                        </button>
+                                        <button
+                                            className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
+                                            onClick={(e) => { e.stopPropagation(); handleAction('password', row.firstName); }}
+                                        >
+                                            <Lock size={14} /> Reset Password
+                                        </button>
+                                        <div className="h-px bg-surface-100 my-1" />
+                                        <button
+                                            className="w-full text-left px-4 py-2 text-sm text-danger-600 hover:bg-danger-50 transition-colors flex items-center gap-2 font-medium"
+                                            onClick={(e) => { e.stopPropagation(); handleAction('deactivate', row.firstName); }}
+                                        >
+                                            <Unlock size={14} /> Deactivate User
+                                        </button>
+                                    </div>
+                                )}
                             </div>
                         )
                     }

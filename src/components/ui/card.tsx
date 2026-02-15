@@ -23,8 +23,8 @@ export function Card({
     return (
         <div
             className={cn(
-                'bg-white rounded-[var(--radius-lg)] border border-surface-200',
-                'shadow-[var(--shadow-xs)]',
+                'bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] rounded-[var(--radius-lg)] border border-[var(--glass-26-border)]',
+                'shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)]',
                 hover &&
                 'transition-all duration-[var(--transition-base)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5',
                 paddingStyles[padding],

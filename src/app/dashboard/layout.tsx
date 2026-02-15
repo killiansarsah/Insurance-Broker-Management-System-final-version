@@ -16,7 +16,7 @@ export default function DashboardLayout({
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen bg-surface-50">
+            <div className="min-h-screen bg-transparent">
                 <Sidebar />
                 <Header />
                 <main

@@ -70,6 +70,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
     const handleSaveEvent = (newEvent: any) => {
         setEvents([...events, newEvent]);
+        setIsModalOpen(false);
     };
 
     const renderHeader = () => {
@@ -104,8 +105,8 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 className={cn(
                                     "px-4 py-1.5 text-xs font-semibold rounded-[var(--radius-sm)] transition-all uppercase tracking-wider",
                                     view === v
-                                        ? "bg-white text-primary-600 shadow-sm"
-                                        : "text-surface-500 hover:text-surface-700 hover:bg-white/50"
+                                        ? "bg-[var(--bg-card)] backdrop-blur text-primary-600 shadow-sm border border-[var(--glass-border)]"
+                                        : "text-surface-500 hover:text-surface-700 hover:bg-[var(--sidebar-hover)]"
                                 )}
                             >
                                 {v}
@@ -158,8 +159,8 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         key={day.toString()}
                         whileHover={{ scale: 1.01 }}
                         className={cn(
-                            "relative min-h-[130px] p-2 border-r border-b border-surface-100 transition-colors group",
-                            !isSameMonth(day, monthStart) ? "bg-surface-50/50" : "bg-white",
+                            "relative min-h-[130px] p-2 border-r border-b border-[var(--glass-border)] transition-colors group",
+                            !isSameMonth(day, monthStart) ? "bg-surface-50/20" : "bg-transparent",
                             isSameDay(day, selectedDate) && "bg-primary-50/20 ring-1 ring-inset ring-primary-500/20",
                             i === 0 && "border-l border-surface-100"
                         )}
@@ -290,7 +291,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         const dayEvents = events.filter(event => isSameDay(event.start, currentDate));
 
         return (
-            <div className="bg-white border border-surface-100 rounded-[var(--radius-lg)] shadow-2xl overflow-hidden min-h-[600px] flex flex-col md:flex-row">
+            <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] border-0 border-[var(--glass-border)] rounded-[var(--radius-lg)] shadow-[var(--glass-shadow)] overflow-hidden min-h-[600px] flex flex-col md:flex-row">
                 <div className="md:w-64 border-r border-surface-100 p-8 flex flex-col items-center bg-surface-50/30">
                     <span className="text-sm font-black text-surface-400 uppercase tracking-widest mb-2">{format(currentDate, 'EEEE')}</span>
                     <span className={cn(
@@ -306,7 +307,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         </button>
                     </div>
                 </div>
-                <div className="flex-1 p-8 space-y-6 bg-white overflow-y-auto">
+                <div className="flex-1 p-8 space-y-6 bg-transparent overflow-y-auto">
                     <h3 className="text-xl font-bold text-surface-900 flex items-center gap-2 mb-4">
                         <Clock className="text-primary-500" size={24} />
                         Daily Schedule • {dayEvents.length} Events
@@ -315,7 +316,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         {dayEvents.length > 0 ? (
                             dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime()).map(event => (
                                 <div key={event.id} className={cn(
-                                    "p-6 rounded-[var(--radius-xl)] border flex items-center gap-6 group transition-all hover:shadow-xl",
+                                    "p-6 rounded-[var(--radius-xl)] border border-[var(--glass-border)] flex items-center gap-6 group transition-all hover:shadow-[var(--glass-shadow)] bg-[var(--bg-card)]",
                                     event.type === 'policy' && "bg-blue-50/20 border-blue-100 hover:bg-blue-50/50",
                                     event.type === 'meeting' && "bg-amber-50/20 border-amber-100 hover:bg-amber-50/50",
                                     event.type === 'claim' && "bg-red-50/20 border-red-100 hover:bg-red-50/50",
@@ -355,7 +356,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
     return (
         <div className="max-w-7xl mx-auto py-6">
-            <div className="bg-white/70 backdrop-blur-md rounded-[var(--radius-2xl)] p-8 shadow-2xl border border-white/40">
+            <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-2xl)] p-8 shadow-[var(--glass-shadow)] border border-[var(--glass-border)]">
                 {renderHeader()}
 
                 <AnimatePresence mode="wait">
@@ -375,7 +376,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                 {/* Additional Sidebar Info in Month View */}
                 {view === 'month' && (
                     <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 bg-white rounded-[var(--radius-xl)] p-6 shadow-lg border border-surface-100">
+                        <div className="lg:col-span-2 bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-xl)] p-6 shadow-[var(--glass-shadow)] border border-[var(--glass-border)]">
                             <h3 className="text-lg font-bold text-surface-900 mb-4 flex items-center gap-2">
                                 <Clock size={20} className="text-primary-500" />
                                 Selected Date: {format(selectedDate, 'MMMM d, yyyy')}

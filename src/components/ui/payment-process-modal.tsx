@@ -144,7 +144,7 @@ export function PaymentProcessModal({
                             Premium for <span className="font-medium text-slate-900">{policy.policyNumber}</span> has been received.
                         </p>
 
-                        <div className="mt-8 p-4 bg-slate-50 rounded-2xl w-full border border-slate-100 border-dashed">
+                        <div className="mt-8 p-4 bg-transparent rounded-2xl w-full border border-[var(--glass-border)] border-dashed">
                             <div className="flex justify-between text-xs mb-2">
                                 <span className="text-slate-500">Amount Paid</span>
                                 <span className="font-bold text-slate-900">{policy.premiumAmount} {policy.currency}</span>

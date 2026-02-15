@@ -1,7 +1,7 @@
 import { forwardRef, type ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
-type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
+type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'glass' | 'liquid-glass';
 type ButtonSize = 'sm' | 'md' | 'lg' | 'icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -14,7 +14,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
     primary:
-        'bg-primary-500 text-white hover:bg-primary-600 active:bg-primary-700 shadow-sm',
+        'relative overflow-hidden bg-[var(--glass-26-bg)] text-white border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] backdrop-blur-[var(--glass-26-blur)] hover:bg-[rgba(255,255,255,0.1)] active:scale-95 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:[filter:url(#liquid-hover)]',
     secondary:
         'bg-success-500 text-white hover:bg-success-600 active:bg-success-700 shadow-sm',
     outline:
@@ -23,6 +23,10 @@ const variantStyles: Record<ButtonVariant, string> = {
         'text-surface-600 hover:bg-surface-100 active:bg-surface-200',
     danger:
         'bg-danger-500 text-white hover:bg-danger-600 active:bg-danger-700 shadow-sm',
+    glass:
+        'bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 active:bg-white/40 shadow-glass',
+    'liquid-glass':
+        'relative overflow-hidden bg-[var(--glass-26-bg)] text-white border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] backdrop-blur-[var(--glass-26-blur)] hover:bg-[rgba(255,255,255,0.1)] active:scale-95 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:[filter:url(#liquid-hover)]',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -54,6 +58,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                 className={cn(
                     'inline-flex items-center justify-center font-medium',
                     'transition-all duration-[var(--transition-fast)]',
+                    (variant === 'primary' || variant === 'liquid-glass') && 'hover:backdrop-brightness-125',
                     'disabled:opacity-50 disabled:cursor-not-allowed',
                     'cursor-pointer select-none',
                     variantStyles[variant],

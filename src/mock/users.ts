@@ -2,76 +2,75 @@ import { User } from '@/types';
 
 export const users: User[] = [
     {
-        id: 'USR-001',
-        email: 'admin@ibms.com',
-        firstName: 'Kwame',
-        lastName: 'Admin',
+        id: 'usr-001',
+        email: 'admin@ibms.com.gh',
+        firstName: 'System',
+        lastName: 'Administrator',
         role: 'super_admin',
-        phone: '+233 20 000 0001',
-        branchId: 'HQ',
+        phone: '+233 24 123 4567',
+        branchId: 'BR-ACC-01',
         isActive: true,
-        avatarUrl: 'https://i.pravatar.cc/150?u=admin',
-        createdAt: '2023-01-01T00:00:00Z',
-        lastLogin: new Date().toISOString(),
+        lastLogin: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+        createdAt: '2023-01-01T08:00:00Z'
     },
     {
-        id: 'USR-002',
-        email: 'manager@ibms.com',
-        firstName: 'Ama',
-        lastName: 'Manager',
+        id: 'usr-002',
+        email: 'ernest.osei@ibms.com.gh',
+        firstName: 'Dr. Ernest',
+        lastName: 'Osei',
         role: 'branch_manager',
-        phone: '+233 20 000 0002',
-        branchId: 'ACC-01',
+        phone: '+233 20 987 6543',
+        branchId: 'BR-ACC-01',
         isActive: true,
-        avatarUrl: 'https://i.pravatar.cc/150?u=manager',
-        createdAt: '2023-01-15T00:00:00Z',
-        lastLogin: new Date(Date.now() - 86400000).toISOString(),
+        lastLogin: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+        createdAt: '2023-01-15T10:00:00Z'
     },
     {
-        id: 'USR-003',
-        email: 'compliance@ibms.com',
-        firstName: 'Kofi',
-        lastName: 'Compliance',
-        role: 'admin', // Using admin for compliance officer proxy for now, or add specific role if enabled
-        phone: '+233 20 000 0003',
-        branchId: 'HQ',
-        isActive: true,
-        createdAt: '2023-02-01T00:00:00Z',
-        lastLogin: new Date(Date.now() - 172800000).toISOString(),
-    },
-    {
-        id: 'USR-004',
-        email: 'broker1@ibms.com',
-        firstName: 'Esi',
-        lastName: 'Broker',
+        id: 'usr-003',
+        email: 'kwame.mensah@ibms.com.gh',
+        firstName: 'Kwame',
+        lastName: 'Mensah',
         role: 'senior_broker',
-        phone: '+233 20 000 0004',
-        branchId: 'ACC-01',
+        phone: '+233 55 444 3322',
+        branchId: 'BR-ACC-01',
         isActive: true,
-        avatarUrl: 'https://i.pravatar.cc/150?u=broker1',
-        createdAt: '2023-03-01T00:00:00Z',
-        lastLogin: new Date().toISOString(),
+        lastLogin: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
+        createdAt: '2023-02-01T09:00:00Z'
     },
     {
-        id: 'USR-005',
-        email: 'broker2@ibms.com',
-        firstName: 'Yaw',
-        lastName: 'Agent',
+        id: 'usr-004',
+        email: 'ama.serwaa@ibms.com.gh',
+        firstName: 'Ama',
+        lastName: 'Serwaa',
         role: 'broker',
-        phone: '+233 20 000 0005',
-        branchId: 'KSI-01',
-        isActive: false, // Inactive user test
-        createdAt: '2023-04-01T00:00:00Z',
-        lastLogin: '2023-12-01T00:00:00Z',
+        phone: '+233 27 555 6677',
+        branchId: 'BR-KUM-01',
+        isActive: true,
+        lastLogin: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
+        createdAt: '2023-03-10T14:30:00Z'
     },
-];
-
-export const roles = [
-    { id: 'super_admin', label: 'Super Admin', description: 'Full system access', permissions: ['all'] },
-    { id: 'admin', label: 'Administrator', description: 'System configuration and user management', permissions: ['manage_users', 'manage_settings'] },
-    { id: 'branch_manager', label: 'Branch Manager', description: 'Branch oversight and approvals', permissions: ['approve_claims', 'view_reports'] },
-    { id: 'senior_broker', label: 'Senior Broker', description: 'Lead broker with team oversight', permissions: ['manage_leads', 'create_policies'] },
-    { id: 'broker', label: 'Broker', description: 'Standard broker access', permissions: ['create_leads', 'create_policies'] },
-    { id: 'data_entry', label: 'Data Entry', description: 'Data input only', permissions: ['create_clients'] },
-    { id: 'viewer', label: 'Viewer', description: 'Read-only access', permissions: ['view_all'] },
+    {
+        id: 'usr-005',
+        email: 'emmanuel.tetteh@ibms.com.gh',
+        firstName: 'Emmanuel',
+        lastName: 'Tetteh',
+        role: 'broker',
+        phone: '+233 24 888 9900',
+        branchId: 'BR-ACC-01',
+        isActive: true,
+        lastLogin: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+        createdAt: '2023-04-05T11:15:00Z'
+    },
+    {
+        id: 'usr-006',
+        email: 'support@ibms.com.gh',
+        firstName: 'Tech',
+        lastName: 'Support',
+        role: 'data_entry',
+        phone: '+233 30 222 1100',
+        branchId: 'BR-ACC-01',
+        isActive: false,
+        lastLogin: new Date(Date.now() - 2592000000).toISOString(), // 30 days ago
+        createdAt: '2023-05-20T16:00:00Z'
+    }
 ];

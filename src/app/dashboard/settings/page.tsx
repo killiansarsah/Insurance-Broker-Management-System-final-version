@@ -21,6 +21,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useUiStore } from '@/stores/ui-store';
+
 
 type Tab = 'profile' | 'notifications' | 'security' | 'system';
 
@@ -272,12 +274,24 @@ export default function SettingsPage() {
                                     icon={<DollarSign size={16} />}
                                     options={['GHS - Cedis', 'USD - Dollars', 'EUR - Euro']}
                                 />
-                                <SelectSetting
-                                    label="Color Theme"
-                                    desc="Appearance of the platform interface."
-                                    icon={<Moon size={16} />}
-                                    options={['Gold / Industrial (Deep)', 'Liquid Glass', 'Compact Classic']}
-                                />
+                                <div className="space-y-3">
+                                    <div>
+                                        <p className="text-sm font-bold text-surface-900 flex items-center gap-2">
+                                            <span className="text-primary-500"><Moon size={16} /></span>
+                                            Color Theme
+                                        </p>
+                                        <p className="text-xs text-surface-500 mt-1 font-medium">Appearance of the platform interface.</p>
+                                    </div>
+                                    <select
+                                        value={useUiStore.getState().currentTheme}
+                                        onChange={(e) => useUiStore.getState().setTheme(e.target.value as any)}
+                                        className="w-full px-4 py-2.5 bg-surface-50 border border-surface-200 rounded-xl text-sm font-bold focus:ring-4 focus:ring-accent-500/10 focus:border-accent-500 outline-none transition-all appearance-none cursor-pointer"
+                                    >
+                                        <option value="gold">Gold / Industrial (Deep)</option>
+                                        <option value="glass">Liquid Glass</option>
+                                        <option value="compact">Compact Classic</option>
+                                    </select>
+                                </div>
                                 <SelectSetting
                                     label="Timezone"
                                     desc="Auto-sync reminders with your region."

@@ -17,7 +17,7 @@ const variantStyles: Record<BadgeVariant, string> = {
     success: 'bg-success-50 text-success-700',
     warning: 'bg-accent-50 text-accent-700',
     danger: 'bg-danger-50 text-danger-700',
-    outline: 'border border-surface-300 text-surface-600 bg-white',
+    outline: 'border border-[var(--glass-border)] text-surface-600 bg-[var(--bg-card)] backdrop-blur-sm',
 };
 
 const dotColors: Record<BadgeVariant, string> = {

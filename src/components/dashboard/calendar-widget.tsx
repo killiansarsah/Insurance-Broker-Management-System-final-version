@@ -15,7 +15,7 @@ export function CalendarWidget() {
         .slice(0, 4);
 
     return (
-        <div className="bg-white rounded-[var(--radius-xl)] shadow-sm border border-surface-200 overflow-hidden flex flex-col h-full">
+        <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-xl)] shadow-[var(--glass-shadow)] border-0 border-[var(--glass-border)] overflow-hidden flex flex-col h-full">
             <div className="p-5 border-b border-surface-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-[var(--radius-md)] bg-primary-100 text-primary-600 flex items-center justify-center">
@@ -73,7 +73,7 @@ export function CalendarWidget() {
             </div>
 
             <div className="p-4 bg-surface-50 border-t border-surface-100">
-                <button className="w-full py-2 text-xs font-bold text-surface-600 bg-white border border-surface-200 rounded-[var(--radius-md)] hover:bg-surface-50 transition-colors shadow-xs">
+                <button className="w-full py-2 text-xs font-bold text-surface-600 bg-[var(--bg-card)] border border-[var(--glass-border)] rounded-[var(--radius-md)] hover:bg-[var(--sidebar-hover)] transition-colors shadow-none">
                     Quick Add Event
                 </button>
             </div>

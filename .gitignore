@@ -42,3 +42,6 @@ next-env.d.ts
 
 #Ai agent files
 .agent
+
+#real data
+.real data

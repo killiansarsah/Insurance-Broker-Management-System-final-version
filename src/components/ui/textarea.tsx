@@ -29,14 +29,14 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
                     ref={ref}
                     id={textareaId}
                     className={cn(
-                        'w-full min-h-[100px] px-3.5 py-3 text-sm bg-white border rounded-[var(--radius-md)]',
+                        'w-full min-h-[100px] px-3.5 py-3 text-sm bg-[var(--bg-input)] backdrop-blur-[var(--glass-blur)] border rounded-[var(--radius-md)]',
                         'placeholder:text-surface-400',
                         'transition-all duration-[var(--transition-fast)]',
                         'hover:border-surface-400',
                         'focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500',
                         error
                             ? 'border-danger-500 focus:ring-danger-500/10 focus:border-danger-500'
-                            : 'border-surface-300',
+                            : 'border-[var(--glass-border)]',
                         'disabled:bg-surface-100 disabled:cursor-not-allowed disabled:text-surface-400',
                         'resize-y',
                         className

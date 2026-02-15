@@ -125,9 +125,9 @@ export function DataTable<T>({
     }
 
     return (
-        <div className={cn('bg-white rounded-[var(--radius-lg)] border border-surface-200 shadow-sm overflow-hidden', className)}>
+        <div className={cn('bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-lg)] border-0 border-[var(--glass-border)] shadow-[var(--glass-shadow)] overflow-hidden', className)}>
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-surface-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-b border-[var(--glass-border)]">
                 {searchable && (
                     <div className="relative flex-1 max-w-sm">
                         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
@@ -139,7 +139,7 @@ export function DataTable<T>({
                                 setPage(1);
                             }}
                             placeholder={searchPlaceholder}
-                            className="w-full pl-9 pr-8 py-2 text-sm bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
+                            className="w-full pl-9 pr-8 py-2 text-sm bg-[var(--bg-input)] backdrop-blur-sm border border-[var(--glass-border)] rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all placeholder:text-surface-400"
                         />
                         {search && (
                             <button
@@ -157,7 +157,7 @@ export function DataTable<T>({
                 <div className="flex items-center gap-2 shrink-0">
                     <button
                         onClick={handleExportCSV}
-                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-surface-600 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] hover:bg-surface-100 cursor-pointer transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-surface-600 bg-[var(--bg-input)] border border-[var(--glass-border)] rounded-[var(--radius-md)] hover:bg-surface-100 cursor-pointer transition-colors"
                     >
                         <Download size={14} />
                         Export
@@ -170,7 +170,7 @@ export function DataTable<T>({
             <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                     <thead>
-                        <tr className="bg-surface-50/80">
+                        <tr className="bg-transparent border-b border-[var(--glass-border)]">
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
@@ -201,7 +201,7 @@ export function DataTable<T>({
                             ))}
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-surface-100">
+                    <tbody className="divide-y divide-[var(--glass-border)]">
                         {paginatedData.length === 0 ? (
                             <tr>
                                 <td
@@ -217,8 +217,8 @@ export function DataTable<T>({
                                     key={i}
                                     onClick={() => onRowClick?.(row)}
                                     className={cn(
-                                        'transition-colors',
-                                        onRowClick && 'cursor-pointer hover:bg-primary-50/40'
+                                        'transition-colors hover:bg-[var(--sidebar-hover)]',
+                                        onRowClick && 'cursor-pointer'
                                     )}
                                 >
                                     {columns.map((col) => (
@@ -242,7 +242,7 @@ export function DataTable<T>({
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between px-5 py-3 border-t border-surface-100 bg-surface-50/50">
+            <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--glass-border)] bg-transparent">
                 <p className="text-xs text-surface-500">
                     Showing{' '}
                     <span className="font-semibold text-surface-700">
@@ -260,7 +260,7 @@ export function DataTable<T>({
                     <button
                         disabled={safePage <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="p-1.5 rounded-[var(--radius-sm)] text-surface-500 hover:bg-surface-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        className="p-1.5 rounded-[var(--radius-sm)] text-surface-500 hover:bg-[var(--sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                         <ChevronLeft size={16} />
                     </button>
@@ -283,7 +283,7 @@ export function DataTable<T>({
                                     'w-8 h-8 rounded-[var(--radius-sm)] text-xs font-medium cursor-pointer transition-colors',
                                     pageNum === safePage
                                         ? 'bg-primary-500 text-white'
-                                        : 'text-surface-600 hover:bg-surface-200'
+                                        : 'text-surface-600 hover:bg-[var(--sidebar-hover)]'
                                 )}
                             >
                                 {pageNum}
@@ -293,7 +293,7 @@ export function DataTable<T>({
                     <button
                         disabled={safePage >= totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="p-1.5 rounded-[var(--radius-sm)] text-surface-500 hover:bg-surface-200 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+                        className="p-1.5 rounded-[var(--radius-sm)] text-surface-500 hover:bg-[var(--sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                     >
                         <ChevronRight size={16} />
                     </button>
