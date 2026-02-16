@@ -62,12 +62,7 @@ function TimelineStep({ date, title, desc, icon, active, warning, isLast }: { da
     );
 }
 
-// Generate static params for static export
-export async function generateStaticParams() {
-    return MOCK_COMPLAINTS.map((c) => ({
-        id: c.id,
-    }));
-}
+
 
 export default function ComplaintDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
