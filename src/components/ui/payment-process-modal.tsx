@@ -63,12 +63,45 @@ export function PaymentProcessModal({
         onClose();
     };
 
+    const footerActions = (
+        <div className="flex justify-center gap-3 w-full">
+            {step !== 'success' && step !== 'error' ? (
+                <>
+                    <button
+                        type="button"
+                        onClick={step === 'details' ? () => setStep('method') : onClose}
+                        className="py-3 px-8 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+                    >
+                        {step === 'details' ? 'Back' : 'Cancel'}
+                    </button>
+                    <button
+                        onClick={handleNext}
+                        disabled={step === 'details' && !phone}
+                        className="py-3 px-10 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm flex items-center justify-center gap-2"
+                    >
+                        {step === 'details' ? 'Authorize Payment' : 'Next'}
+                        <ArrowRight size={16} />
+                    </button>
+                </>
+            ) : (
+                <button
+                    onClick={reset}
+                    className="py-3 px-12 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
+                >
+                    Got it
+                </button>
+            )}
+        </div>
+    );
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={reset}
             title={step === 'processing' ? 'Processing Payment' : 'Make a Payment'}
             className="overflow-hidden"
+            size="xl"
+            footer={step !== 'processing' ? footerActions : undefined}
         >
             <div className="relative">
                 {/* Step Indicator */}
@@ -86,109 +119,83 @@ export function PaymentProcessModal({
                     ))}
                 </div>
 
-                {step === 'method' && (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">Choose how to pay</h3>
-                            <p className="text-sm text-slate-500 mt-1">
-                                Securely pay your premium for policy <span className="text-slate-900 font-medium">{policy.policyNumber}</span>
+                {/* Scrollable content container for XL size */}
+                <div className="bg-white/50 rounded-[var(--radius-xl)] p-6 border border-surface-100 shadow-sm backdrop-blur-sm">
+                    {step === 'method' && (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div className="mb-6">
+                                <h3 className="text-xl font-bold text-slate-900">Choose how to pay</h3>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    Securely pay your premium for policy <span className="text-slate-900 font-medium">{policy.policyNumber}</span>
+                                </p>
+                            </div>
+                            <PaymentMethodSelector
+                                selectedMethod={method}
+                                onSelect={setMethod}
+                            />
+                        </div>
+                    )}
+
+                    {step === 'details' && (
+                        <div className="animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="mb-6">
+                                <h3 className="text-xl font-bold text-slate-900">MoMo Details</h3>
+                                <p className="text-sm text-slate-500 mt-1">
+                                    Enter your mobile money number to receive a payment prompt
+                                </p>
+                            </div>
+                            <MoMoPaymentForm
+                                network={network}
+                                phoneNumber={phone}
+                                onNetworkChange={setNetwork}
+                                onPhoneChange={setPhone}
+                            />
+                        </div>
+                    )}
+
+                    {step === 'processing' && (
+                        <div className="flex flex-col items-center justify-center py-12 animate-in fade-in zoom-in duration-500">
+                            <div className="relative w-24 h-24 mb-6">
+                                <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+                                <div className="absolute inset-2 bg-primary/10 rounded-full animate-pulse" />
+                                <div className="relative w-full h-full flex items-center justify-center">
+                                    <Spinner size="lg" className="text-primary" />
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold text-slate-900">Waiting for prompt...</h3>
+                            <p className="text-sm text-slate-500 mt-2 text-center max-w-[280px]">
+                                Check your phone <span className="font-bold text-slate-900">+233 {phone}</span> for the authorization request.
                             </p>
                         </div>
-                        <PaymentMethodSelector
-                            selectedMethod={method}
-                            onSelect={setMethod}
-                        />
-                    </div>
-                )}
+                    )}
 
-                {step === 'details' && (
-                    <div className="animate-in fade-in slide-in-from-right-4 duration-500">
-                        <div className="mb-6">
-                            <h3 className="text-xl font-bold text-slate-900">MoMo Details</h3>
-                            <p className="text-sm text-slate-500 mt-1">
-                                Enter your mobile money number to receive a payment prompt
+                    {step === 'success' && (
+                        <div className="flex flex-col items-center justify-center py-8 animate-in fade-in zoom-in duration-700">
+                            <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-500">
+                                <CheckCircle2 size={48} strokeWidth={2.5} className="animate-in zoom-in spin-in-12 duration-1000" />
+                            </div>
+                            <h3 className="text-2xl font-bold text-slate-900">Payment Successful</h3>
+                            <p className="text-sm text-slate-500 mt-2 text-center">
+                                Premium for <span className="font-medium text-slate-900">{policy.policyNumber}</span> has been received.
                             </p>
-                        </div>
-                        <MoMoPaymentForm
-                            network={network}
-                            phoneNumber={phone}
-                            onNetworkChange={setNetwork}
-                            onPhoneChange={setPhone}
-                        />
-                    </div>
-                )}
 
-                {step === 'processing' && (
-                    <div className="flex flex-col items-center justify-center py-12 animate-in fade-in zoom-in duration-500">
-                        <div className="relative w-24 h-24 mb-6">
-                            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
-                            <div className="absolute inset-2 bg-primary/10 rounded-full animate-pulse" />
-                            <div className="relative w-full h-full flex items-center justify-center">
-                                <Spinner size="lg" className="text-primary" />
+                            <div className="mt-8 p-4 bg-transparent rounded-2xl w-full border border-[var(--glass-border)] border-dashed">
+                                <div className="flex justify-between text-xs mb-2">
+                                    <span className="text-slate-500">Amount Paid</span>
+                                    <span className="font-bold text-slate-900">{policy.premiumAmount} {policy.currency}</span>
+                                </div>
+                                <div className="flex justify-between text-xs mb-2">
+                                    <span className="text-slate-500">Method</span>
+                                    <span className="font-bold text-slate-900 uppercase">{network} MoMo</span>
+                                </div>
+                                <div className="flex justify-between text-xs">
+                                    <span className="text-slate-500">Reference</span>
+                                    <span className="font-mono text-slate-600 truncate max-w-[120px]">PREM-{policy.policyNumber.split('/').pop()}</span>
+                                </div>
                             </div>
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">Waiting for prompt...</h3>
-                        <p className="text-sm text-slate-500 mt-2 text-center max-w-[280px]">
-                            Check your phone <span className="font-bold text-slate-900">+233 {phone}</span> for the authorization request.
-                        </p>
-                    </div>
-                )}
-
-                {step === 'success' && (
-                    <div className="flex flex-col items-center justify-center py-8 animate-in fade-in zoom-in duration-700">
-                        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-500">
-                            <CheckCircle2 size={48} strokeWidth={2.5} className="animate-in zoom-in spin-in-12 duration-1000" />
-                        </div>
-                        <h3 className="text-2xl font-bold text-slate-900">Payment Successful</h3>
-                        <p className="text-sm text-slate-500 mt-2 text-center">
-                            Premium for <span className="font-medium text-slate-900">{policy.policyNumber}</span> has been received.
-                        </p>
-
-                        <div className="mt-8 p-4 bg-transparent rounded-2xl w-full border border-[var(--glass-border)] border-dashed">
-                            <div className="flex justify-between text-xs mb-2">
-                                <span className="text-slate-500">Amount Paid</span>
-                                <span className="font-bold text-slate-900">{policy.premiumAmount} {policy.currency}</span>
-                            </div>
-                            <div className="flex justify-between text-xs mb-2">
-                                <span className="text-slate-500">Method</span>
-                                <span className="font-bold text-slate-900 uppercase">{network} MoMo</span>
-                            </div>
-                            <div className="flex justify-between text-xs">
-                                <span className="text-slate-500">Reference</span>
-                                <span className="font-mono text-slate-600 truncate max-w-[120px]">PREM-{policy.policyNumber.split('/').pop()}</span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Footer Actions */}
-                {step !== 'processing' && (
-                    <div className="mt-10 flex gap-3">
-                        {step !== 'success' && step !== 'error' ? (
-                            <>
-                                <Button
-                                    variant="outline"
-                                    className="flex-1"
-                                    onClick={step === 'details' ? () => setStep('method') : onClose}
-                                >
-                                    {step === 'details' ? 'Back' : 'Cancel'}
-                                </Button>
-                                <Button
-                                    className="flex-[1.5]"
-                                    onClick={handleNext}
-                                    disabled={step === 'details' && !phone}
-                                >
-                                    {step === 'details' ? 'Authorize Payment' : 'Next'}
-                                    <ArrowRight size={16} className="ml-2" />
-                                </Button>
-                            </>
-                        ) : (
-                            <Button className="w-full" onClick={reset}>
-                                Got it
-                            </Button>
-                        )}
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Liquid Background Effect (Glassmorphism) */}

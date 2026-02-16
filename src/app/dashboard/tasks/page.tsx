@@ -352,18 +352,18 @@ export default function TasksPage() {
                 size="xl"
                 className="overflow-visible"
                 footer={
-                    <div className="flex gap-3 w-full">
+                    <div className="flex justify-center gap-3 w-full">
                         <button
                             type="button"
                             onClick={() => setIsCreateModalOpen(false)}
-                            className="flex-1 py-3 px-4 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+                            className="py-3 px-8 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
                         >
                             Discard
                         </button>
                         <button
                             form="create-task-form"
                             type="submit"
-                            className="flex-[2] py-3 px-4 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
+                            className="py-3 px-12 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
                         >
                             Create Task
                         </button>
@@ -458,17 +458,17 @@ export default function TasksPage() {
                 description="Refine your active tasks based on operational criteria."
                 size="md"
                 footer={
-                    <div className="flex gap-3 w-full">
+                    <div className="flex justify-center gap-3 w-full">
                         <button
                             type="button"
                             onClick={resetFilters}
-                            className="flex-1 py-3 px-4 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+                            className="py-3 px-8 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
                         >
                             Clear All
                         </button>
                         <button
                             onClick={() => setIsFilterModalOpen(false)}
-                            className="flex-[2] py-3 px-4 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
+                            className="py-3 px-10 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
                         >
                             Apply Filters
                         </button>

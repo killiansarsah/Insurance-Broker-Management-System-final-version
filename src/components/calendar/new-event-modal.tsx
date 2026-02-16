@@ -66,18 +66,18 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
             description="Schedule meetings, renewals, or review sessions."
             size="xl"
             footer={
-                <div className="flex gap-3 w-full">
+                <div className="flex justify-center gap-3 w-full">
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 py-3 px-4 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+                        className="py-3 px-8 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
                     >
                         Discard
                     </button>
                     <button
                         onClick={handleSubmit}
                         type="button"
-                        className="flex-[2] py-3 px-4 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
+                        className="py-3 px-12 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
                     >
                         Book Event
                     </button>
