@@ -311,6 +311,61 @@ function FilterDropdown({
     );
 }
 
+function YearDropdown({
+    years,
+    selectedYear,
+    onChange,
+}: {
+    years: number[];
+    selectedYear: number;
+    onChange: (year: number) => void;
+}) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    // Close on outside click
+    useEffect(() => {
+        function handleClick(e: MouseEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+        }
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
+    return (
+        <div className="relative" ref={ref}>
+            <button
+                onClick={() => setOpen(!open)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-700 bg-white border border-surface-200 rounded-lg hover:bg-surface-50 hover:border-surface-300 transition-colors cursor-pointer"
+            >
+                <Calendar size={14} className="text-surface-400" />
+                <span>{selectedYear}</span>
+                <ChevronDown size={12} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
+            </button>
+
+            {open && (
+                <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-surface-200 rounded-xl shadow-lg z-50 overflow-hidden animate-scale-in">
+                    <div className="py-1">
+                        {years.map((year) => (
+                            <button
+                                key={year}
+                                onClick={() => { onChange(year); setOpen(false); }}
+                                className={cn(
+                                    'flex items-center justify-between w-full px-3 py-2 text-sm text-left hover:bg-surface-50 transition-colors cursor-pointer',
+                                    selectedYear === year ? 'text-primary-700 font-semibold bg-primary-50/50' : 'text-surface-700'
+                                )}
+                            >
+                                {year}
+                                {selectedYear === year && <Check size={14} className="text-primary-500" />}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // =====================================================================
 // MAIN DASHBOARD
 // =====================================================================
@@ -362,10 +417,16 @@ export default function DashboardPage() {
         <div className="space-y-6 animate-fade-in mb-12">
             {/* === HEADER === */}
             <div className="flex flex-col gap-4">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    {/* Centered Greeting (Visible on Desktop as absolute, Mobile as stacked) */}
+                    <div className="md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 w-full md:w-auto text-center mb-2 md:mb-0 pointer-events-none z-10">
+                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border border-surface-200 shadow-sm text-sm text-surface-600 backdrop-blur-sm bg-opacity-80">
+                            {greeting}, <span className="font-bold text-surface-900">Kwame</span> <span className="animate-wave">👋</span>
+                        </span>
+                    </div>
+
                     <div>
-                        <p className="text-sm text-surface-500">{greeting}, <span className="font-semibold text-surface-700">Kwame</span> 👋</p>
-                        <h1 className="text-2xl font-bold text-surface-900 tracking-tight mt-1">Executive Dashboard</h1>
+                        <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Executive Dashboard</h1>
                         <p className="text-sm text-surface-500 mt-0.5">
                             {selectedYear} • <span className="font-medium text-surface-700">{periodLabels[period]}</span>
                             {activeFilterCount > 0 && (
@@ -388,19 +449,7 @@ export default function DashboardPage() {
                 {/* Year Selector + Period Toggle + Filters */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     {/* Year Selector */}
-                    <div className="inline-flex items-center bg-white rounded-lg border border-surface-200 p-1 shadow-sm">
-                        <Calendar size={14} className="text-surface-400 ml-2 mr-1" />
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="text-xs font-semibold text-surface-700 bg-transparent border-none outline-none cursor-pointer pr-2 py-1.5 appearance-none"
-                        >
-                            {availableYears.map((yr) => (
-                                <option key={yr} value={yr}>{yr}</option>
-                            ))}
-                        </select>
-                        <ChevronDown size={12} className="text-surface-400 mr-2 -ml-1 pointer-events-none" />
-                    </div>
+                    <YearDropdown years={availableYears} selectedYear={selectedYear} onChange={setSelectedYear} />
 
                     {/* Period Toggle */}
                     <div className="inline-flex items-center bg-white rounded-lg border border-surface-200 p-1 shadow-sm">
@@ -434,7 +483,7 @@ export default function DashboardPage() {
                 {kpiData.map((kpi) => (
                     <Card key={kpi.label} padding="md" hover className="relative overflow-hidden group">
                         <div className="flex items-start justify-between">
-                            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', kpi.color)}>
+                            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center animate-float', kpi.color)}>
                                 {kpi.icon}
                             </div>
                             {kpi.change > 0 && (
@@ -462,7 +511,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <Link href="/dashboard/clients/new">
                     <Card padding="sm" hover className="text-center cursor-pointer group hover:border-primary-300 transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-500 flex items-center justify-center mx-auto transition-all group-hover:bg-primary-500 group-hover:text-white duration-200">
+                        <div className="w-10 h-10 rounded-full bg-primary-50 text-primary-500 flex items-center justify-center mx-auto animate-breathe">
                             <Plus size={20} />
                         </div>
                         <p className="text-sm font-semibold text-surface-700 mt-2">New Client</p>
@@ -470,7 +519,7 @@ export default function DashboardPage() {
                 </Link>
                 <Link href="/dashboard/policies/new">
                     <Card padding="sm" hover className="text-center cursor-pointer group hover:border-success-300 transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-success-50 text-success-500 flex items-center justify-center mx-auto transition-all group-hover:bg-success-500 group-hover:text-white duration-200">
+                        <div className="w-10 h-10 rounded-full bg-success-50 text-success-500 flex items-center justify-center mx-auto animate-breathe delay-75">
                             <Plus size={20} />
                         </div>
                         <p className="text-sm font-semibold text-surface-700 mt-2">New Policy</p>
@@ -478,7 +527,7 @@ export default function DashboardPage() {
                 </Link>
                 <Link href="/dashboard/quotes/new">
                     <Card padding="sm" hover className="text-center cursor-pointer group hover:border-accent-300 transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-accent-50 text-accent-500 flex items-center justify-center mx-auto transition-all group-hover:bg-accent-500 group-hover:text-white duration-200">
+                        <div className="w-10 h-10 rounded-full bg-accent-50 text-accent-500 flex items-center justify-center mx-auto animate-breathe delay-150">
                             <FileText size={20} />
                         </div>
                         <p className="text-sm font-semibold text-surface-700 mt-2">New Quote</p>
@@ -486,7 +535,7 @@ export default function DashboardPage() {
                 </Link>
                 <Link href="/dashboard/claims/new">
                     <Card padding="sm" hover className="text-center cursor-pointer group hover:border-danger-300 transition-colors">
-                        <div className="w-10 h-10 rounded-full bg-danger-50 text-danger-500 flex items-center justify-center mx-auto transition-all group-hover:bg-danger-500 group-hover:text-white duration-200">
+                        <div className="w-10 h-10 rounded-full bg-danger-50 text-danger-500 flex items-center justify-center mx-auto animate-breathe delay-300">
                             <Shield size={20} />
                         </div>
                         <p className="text-sm font-semibold text-surface-700 mt-2">File Claim</p>
@@ -705,10 +754,10 @@ export default function DashboardPage() {
                             { label: 'Certificates Pending', value: operationsData.certsPending, icon: <FileText size={14} /> },
                             { label: 'Overdue Follow-ups', value: operationsData.overdueFollowups, icon: <AlertTriangle size={14} />, danger: true },
                         ].map((op) => (
-                            <div key={op.label} className="flex items-center justify-between py-2">
-                                <div className="flex items-center gap-2 text-surface-600">
-                                    {op.icon}
-                                    <span className="text-sm">{op.label}</span>
+                            <div key={op.label} className="flex items-center justify-between py-2 group cursor-default">
+                                <div className="flex items-center gap-2 text-surface-600 group-hover:text-primary-600 transition-colors">
+                                    <div className="animate-pulse-slow">{op.icon}</div>
+                                    <span className="text-sm border-b border-transparent group-hover:border-primary-200 transition-all">{op.label}</span>
                                 </div>
                                 <span className={cn('text-sm font-bold', (op as { danger?: boolean }).danger ? 'text-danger-600' : 'text-surface-900')}>
                                     {op.value}
@@ -724,8 +773,8 @@ export default function DashboardPage() {
                 <CardHeader title="Recent Activity" subtitle="Latest system logs" className="p-6 pb-4" />
                 <div className="divide-y divide-surface-100">
                     {recentActivity.map((activity) => (
-                        <div key={activity.id} className="flex items-start gap-4 px-6 py-4 hover:bg-surface-50 transition-colors group">
-                            <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5', activityColors[activity.type] || 'bg-surface-100 text-surface-500')}>
+                        <div key={activity.id} className="flex items-start gap-4 px-6 py-4 hover:bg-surface-50 transition-colors group cursor-default">
+                            <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm', activityColors[activity.type] || 'bg-surface-100 text-surface-500')}>
                                 {activity.type === 'policy' && <FileText size={16} />}
                                 {activity.type === 'client' && <Users size={16} />}
                                 {activity.type === 'claim' && <AlertCircle size={16} />}
