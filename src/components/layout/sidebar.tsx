@@ -167,6 +167,8 @@ const navigation: NavSection[] = [
 
 // --- Components ---
 
+// --- Components ---
+
 function GlobalRail() {
     // Simple placeholder actions for now
     const handleSearch = () => alert("Global Search modal would open here");
@@ -174,9 +176,9 @@ function GlobalRail() {
     const handleQuickAdd = () => alert("Quick Create menu (Quote, Client, Claim) would open here");
 
     return (
-        <div className="w-[48px] h-full flex flex-col items-center py-4 bg-[var(--bg-sidebar)]/80 border-r border-surface-800/50 shrink-0 z-20">
+        <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white border-r border-surface-200 shrink-0 z-20">
             {/* Logo Icon */}
-            <div className="w-8 h-8 rounded-none bg-primary-600 flex items-center justify-center mb-6 text-white font-bold text-xs shadow-none cursor-pointer hover:bg-primary-500 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-surface-100 flex items-center justify-center mb-6 text-primary-600 font-bold text-xs shadow-sm cursor-pointer hover:bg-surface-200 transition-colors">
                 IB
             </div>
 
@@ -184,25 +186,25 @@ function GlobalRail() {
             <div className="flex flex-col gap-3 w-full items-center">
                 <button
                     onClick={handleSearch}
-                    className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                     title="Global Search"
                 >
-                    <Search size={18} />
+                    <Search size={20} />
                 </button>
                 <button
                     onClick={handleNotifications}
-                    className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-white hover:bg-white/10 transition-colors relative"
+                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors relative"
                     title="Notifications"
                 >
-                    <Bell size={18} />
-                    <span className="absolute top-1.5 right-2 w-1.5 h-1.5 bg-red-500 rounded-full"></span>
+                    <Bell size={20} />
+                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
                 </button>
                 <button
                     onClick={handleQuickAdd}
-                    className="w-8 h-8 flex items-center justify-center text-primary-400 hover:text-white hover:bg-primary-500/20 transition-colors"
+                    className="w-10 h-10 flex items-center justify-center text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
                     title="Create New..."
                 >
-                    <Plus size={20} />
+                    <Plus size={22} />
                 </button>
             </div>
 
@@ -210,8 +212,8 @@ function GlobalRail() {
 
             {/* Bottom Actions */}
             <div className="flex flex-col gap-3 w-full items-center mb-2">
-                <button className="w-8 h-8 flex items-center justify-center text-surface-400 hover:text-white hover:bg-white/10 transition-colors" title="Profile">
-                    <UserCircle size={20} />
+                <button className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-surface-900 hover:bg-surface-100 rounded-lg transition-colors" title="Profile">
+                    <UserCircle size={22} />
                 </button>
             </div>
         </div>
@@ -233,12 +235,12 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
             <Link
                 href={item.href}
                 className={cn(
-                    'flex items-center justify-center w-10 h-10 mx-auto rounded-none', // Sharp corners
-                    'transition-all duration-200',
-                    'hover:bg-white/5',
+                    'flex items-center justify-center w-10 h-10 mx-auto rounded-xl', // Premium soft rounded
+                    'transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]', // Smooth bezier
+                    'hover:scale-105 active:scale-95', // Micro-interaction
                     isActive
-                        ? 'text-primary-400 bg-primary-500/10 border-l-2 border-primary-500' // Sharp indicator
-                        : 'text-surface-400'
+                        ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/20'
+                        : 'text-surface-500 hover:bg-surface-50 hover:text-surface-900 mx-2'
                 )}
                 title={item.label}
             >
@@ -249,33 +251,33 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
 
     // Expanded View (Full Row)
     return (
-        <div>
+        <div className="px-2"> {/* Added padding container for floating feel */}
             {hasChildren ? (
                 <button
                     onClick={() => setExpanded(!expanded)}
                     className={cn(
-                        'flex items-center gap-3 w-full px-3 py-2 rounded-none', // Sharp corners
-                        'transition-all duration-200',
+                        'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl', // Premium rounded
+                        'transition-all duration-200 ease-out',
                         'text-sm font-medium cursor-pointer group',
-                        'border-l-2 border-transparent', // Layout stability for active state
+                        'hover:translate-x-1', // Lateral movement
                         isActive
-                            ? 'bg-surface-800/50 text-white border-primary-500' // Sharp left border
-                            : 'text-surface-400 hover:text-surface-100 hover:bg-white/5'
+                            ? 'bg-gradient-to-r from-primary-200/70 to-primary-100/40 text-surface-900 font-semibold shadow-sm border border-primary-300/60'
+                            : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'
                     )}
                 >
-                    <span className={cn("transition-colors", isActive ? "text-primary-400" : "text-surface-400 group-hover:text-surface-300")}>
+                    <span className={cn("transition-colors duration-200", isActive ? "text-primary-700" : "text-surface-400 group-hover:text-primary-500")}>
                         {item.icon}
                     </span>
                     <span className="flex-1 text-left tracking-tight">{item.label}</span>
                     {item.badge && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary-600 text-white rounded-none">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary-100 text-primary-700 rounded-md shadow-sm">
                             {item.badge}
                         </span>
                     )}
                     <ChevronDown
                         size={14}
                         className={cn(
-                            'transition-transform duration-200 text-surface-500',
+                            'transition-transform duration-300 text-surface-400',
                             expanded && 'rotate-180'
                         )}
                     />
@@ -284,21 +286,21 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                 <Link
                     href={item.href}
                     className={cn(
-                        'flex items-center gap-3 w-full px-3 py-2 rounded-none', // Sharp corners
-                        'transition-all duration-200',
+                        'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl', // Premium rounded
+                        'transition-all duration-300 ease-out',
                         'text-sm font-medium cursor-pointer group',
-                        'border-l-2 border-transparent',
+                        'hover:translate-x-1', // Lateral movement
                         isActive
-                            ? 'bg-surface-800/50 text-white border-primary-500'
-                            : 'text-surface-400 hover:text-surface-100 hover:bg-white/5'
+                            ? 'bg-gradient-to-r from-primary-200/70 to-primary-100/40 border-l-[3px] border-primary-700 text-surface-900 font-semibold pl-3.5'
+                            : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900 border-l-[3px] border-transparent'
                     )}
                 >
-                    <span className={cn("transition-colors", isActive ? "text-primary-400" : "text-surface-400 group-hover:text-surface-300")}>
+                    <span className={cn("transition-colors duration-200", isActive ? "text-primary-700" : "text-surface-400 group-hover:text-primary-500")}>
                         {item.icon}
                     </span>
-                    <span className="flex-1 text-left tracking-tight">{item.label}</span>
+                    <span className="flex-1 text-left tracking-tight font-medium">{item.label}</span>
                     {item.badge && (
-                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary-600 text-white rounded-none">
+                        <span className="px-1.5 py-0.5 text-[10px] font-bold bg-primary-100 text-primary-700 rounded-md shadow-sm">
                             {item.badge}
                         </span>
                     )}
@@ -307,17 +309,17 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
 
             {/* Submenu (Tree Line Style) */}
             {hasChildren && expanded && (
-                <div className="ml-4 pl-4 border-l border-surface-700/50 space-y-0.5 mt-0.5 mb-1">
+                <div className="ml-4 pl-4 border-l border-surface-200 space-y-1 mt-1 mb-2">
                     {item.children!.map((child) => (
                         <Link
                             key={child.label}
                             href={child.href}
                             className={cn(
-                                'block px-3 py-1.5 text-xs rounded-none',
-                                'transition-colors duration-200',
+                                'block px-3 py-2 text-xs rounded-lg transition-all duration-200',
+                                'hover:translate-x-1',
                                 pathname === child.href
-                                    ? 'text-white font-medium'
-                                    : 'text-surface-500 hover:text-surface-300'
+                                    ? 'text-primary-700 font-semibold bg-primary-50/50'
+                                    : 'text-surface-500 hover:text-surface-900 hover:bg-surface-50'
                             )}
                         >
                             {child.label}
@@ -338,17 +340,16 @@ export function Sidebar() {
             {/* Mobile overlay */}
             {sidebarMobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
                     onClick={() => setSidebarMobileOpen(false)}
                 />
             )}
 
             <aside
                 className={cn(
-                    'fixed top-0 left-0 h-full bg-[var(--bg-sidebar)] backdrop-blur-[var(--glass-blur)] z-50',
+                    'fixed top-0 left-0 h-full bg-white z-50',
                     // Using flex-row to accommodate the Double Rail
-                    'flex flex-row transition-all duration-300',
-                    'border-r border-surface-800/50',
+                    'flex flex-row transition-all duration-300 shadow-xl lg:shadow-none border-r border-surface-200',
                     // Desktop
                     'hidden lg:flex',
                     sidebarCollapsed
@@ -367,40 +368,40 @@ export function Sidebar() {
 
                     {/* Header Area */}
                     <div className={cn(
-                        'h-[var(--header-height)] flex items-center shrink-0 border-b border-surface-800/50',
-                        sidebarCollapsed ? 'justify-center' : 'px-4'
+                        'h-[var(--header-height)] flex items-center shrink-0 border-b border-surface-100',
+                        sidebarCollapsed ? 'justify-center' : 'px-6'
                     )}>
                         {sidebarCollapsed ? (
-                            <div className="text-primary-500 font-bold">IB</div>
+                            <div className="text-primary-600 font-bold text-xl">IB</div>
                         ) : (
                             <div>
-                                <h2 className="text-surface-100 font-bold text-sm tracking-wide uppercase">Workspace</h2>
-                                <p className="text-[10px] text-surface-500">Brokerage & Co.</p>
+                                <h2 className="text-surface-900 font-bold text-base tracking-tight">Dezag Brokers</h2>
+                                <p className="text-[11px] text-surface-500 font-medium uppercase tracking-wider">Broker [MID 899597]</p>
                             </div>
                         )}
 
                         {/* Mobile Close */}
                         <button
                             onClick={() => setSidebarMobileOpen(false)}
-                            className="ml-auto lg:hidden text-surface-400 hover:text-white"
+                            className="ml-auto lg:hidden text-surface-400 hover:text-surface-900"
                         >
                             <X size={20} />
                         </button>
                     </div>
 
                     {/* Scrollable Navigation */}
-                    <nav className="flex-1 overflow-y-auto py-4 px-2 custom-scrollbar">
+                    <nav className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar">
                         {navigation.map((section, sectionIdx) => (
-                            <div key={section.label} className={cn(sectionIdx > 0 && 'mt-6')}>
+                            <div key={section.label} className={cn(sectionIdx > 0 && 'mt-8')}>
                                 {/* Section label */}
                                 {sidebarCollapsed ? (
-                                    <div className="mx-2 mb-2 border-t border-surface-800" />
+                                    <div className="mx-2 mb-2 border-t border-surface-200" />
                                 ) : (
-                                    <p className="px-3 mb-2 text-[9px] font-bold uppercase tracking-[0.15em] text-surface-500 select-none">
+                                    <p className="px-3 mb-3 text-[11px] font-bold uppercase tracking-widest text-surface-400 select-none">
                                         {section.label}
                                     </p>
                                 )}
-                                <div className="space-y-0.5">
+                                <div className="space-y-1">
                                     {section.items.map((item) => (
                                         <NavItem key={item.href} item={item} collapsed={sidebarCollapsed} />
                                     ))}
@@ -410,25 +411,25 @@ export function Sidebar() {
                     </nav>
 
                     {/* Footer / User / Collapse */}
-                    <div className="border-t border-surface-800/50 p-2">
+                    <div className="border-t border-surface-200 p-4">
                         <button
                             onClick={toggleSidebar}
                             className={cn(
-                                'flex items-center justify-center w-full py-2 rounded-none group', // Sharp
-                                'text-surface-500 hover:text-surface-200 hover:bg-white/5',
+                                'flex items-center justify-center w-full py-2.5 rounded-lg group', // Soft
+                                'text-surface-500 hover:text-surface-900 hover:bg-surface-100',
                                 'transition-colors duration-200',
                                 'cursor-pointer'
                             )}
                             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         >
                             <ChevronLeft
-                                size={16}
+                                size={18}
                                 className={cn(
                                     'transition-transform duration-300',
                                     sidebarCollapsed && 'rotate-180'
                                 )}
                             />
-                            {!sidebarCollapsed && <span className="ml-2 text-xs font-medium">Collapse View</span>}
+                            {!sidebarCollapsed && <span className="ml-2 text-sm font-medium">Collapse View</span>}
                         </button>
                     </div>
                 </div>

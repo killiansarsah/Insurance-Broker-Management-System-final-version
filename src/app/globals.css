@@ -228,6 +228,46 @@ body {
   }
 }
 
+@keyframes wave {
+  0% {
+    transform: rotate(0.0deg)
+  }
+
+  10% {
+    transform: rotate(14.0deg)
+  }
+
+  20% {
+    transform: rotate(-8.0deg)
+  }
+
+  30% {
+    transform: rotate(14.0deg)
+  }
+
+  40% {
+    transform: rotate(-4.0deg)
+  }
+
+  50% {
+    transform: rotate(10.0deg)
+  }
+
+  60% {
+    transform: rotate(0.0deg)
+  }
+
+  100% {
+    transform: rotate(0.0deg)
+  }
+}
+
+.animate-wave {
+  animation: wave 2.5s infinite;
+  transform-origin: 70% 70%;
+  display: inline-block;
+}
+
 /* --- Theme Definitions --- */
 
 :root,
@@ -271,20 +311,8 @@ body {
   --danger-600: #c62828;
   --danger-700: #b71c1c;
 
-  --bg-page: #f8fafc;
-  /* Apple Glass 26 Variables */
-  --glass-26-bg: rgba(255, 255, 255, 0.05);
-  /* Ultra-transparent */
-  --glass-26-border: rgba(255, 255, 255, 0.3);
-  /* Crystalline border */
-  --glass-26-highlight: rgba(255, 255, 255, 0.5);
-  /* Specular highlight */
-  --glass-26-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-  /* Deep soft shadow */
-  --glass-26-blur: 40px;
-  /* Extreme blur */
-  --glass-26-refraction: 1.5;
-  /* For future shader use */
+  --bg-page: #edf1f8;
+  /* Cool Blue-Grey for Card Contrast */
 
   --sidebar: 0 0% 100%;
   --sidebar-foreground: 222.2 47.4% 11.2%;
@@ -294,15 +322,22 @@ body {
   --sidebar-accent-foreground: 240 5.9% 10%;
   --sidebar-border: 220 13% 91%;
   --sidebar-ring: 240 5% 64.9%;
-  --bg-sidebar: #031430;
-  /* Deep Navy */
+  --bg-sidebar: #ffffff;
+  /* White Sidebar */
   --bg-header: #ffffff;
   --bg-card: #ffffff;
 
-  --sidebar-text: #94a3b8;
-  --sidebar-hover: rgba(255, 255, 255, 0.1);
-  --sidebar-active: #f57c00;
-  /* Gold/Orange Accent */
+  --sidebar-text: #64748b;
+  /* Slate 500 */
+  --sidebar-hover: #f1f5f9;
+  /* Slate 100 */
+  --sidebar-active: #fbbf24;
+  /* Amber 400 (Gold) */
+  --sidebar-text-active: #0f172a;
+  /* Dark text on Gold */
+
+  --bg-modal: #ffffff;
+  --bg-input: #ffffff;
 
   --bg-modal: #ffffff;
   --bg-input: #ffffff;

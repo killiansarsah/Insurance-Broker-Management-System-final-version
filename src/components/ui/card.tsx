@@ -23,10 +23,10 @@ export function Card({
     return (
         <div
             className={cn(
-                'bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] rounded-[var(--radius-lg)] border border-[var(--glass-26-border)]',
-                'shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)]',
+                'bg-white rounded-xl border border-surface-200/60', // Thinner, crisp border
+                'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]', // Base layered shadow
                 hover &&
-                'transition-all duration-[var(--transition-base)] hover:shadow-[var(--shadow-md)] hover:-translate-y-0.5',
+                'transition-all duration-300 ease-out hover:shadow-[0_8px_24px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.04)] hover:-translate-y-1', // Premium lift
                 paddingStyles[padding],
                 className
             )}

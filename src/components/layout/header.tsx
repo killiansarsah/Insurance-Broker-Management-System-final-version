@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, CheckCircle2, Trash2 } from 'lucide-react';
+import { Bell, Search, Menu, CheckCircle2, Trash2, Calculator, Headset } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
@@ -102,6 +102,22 @@ export function Header() {
             </div>
 
             <div className="flex items-center gap-2">
+                {/* Utilities */}
+                <button
+                    onClick={() => alert("Code Calculator utility")}
+                    className="p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
+                    title="Code Calculator"
+                >
+                    <Calculator size={20} />
+                </button>
+                <button
+                    onClick={() => alert("Contact Support")}
+                    className="p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
+                    title="Contact Support"
+                >
+                    <Headset size={20} />
+                </button>
+
                 {/* Notifications */}
                 <div className="relative" ref={notificationsRef}>
                     <button

@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { User, UserRole } from '@/types';
 
 interface AuthState {
@@ -101,43 +102,54 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
     },
 };
 
-export const useAuthStore = create<AuthState>((set, get) => ({
-    user: null,
-    isAuthenticated: false,
-    isLoading: false,
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set, get) => ({
+            user: null,
+            isAuthenticated: false,
+            isLoading: false,
 
-    login: async (email, password) => {
-        set({ isLoading: true });
-        // Simulate API call
-        console.log(`Logging in ${email}`); // Use vars to avoid lint error
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        set({ user: MOCK_USER, isAuthenticated: true, isLoading: false });
-    },
+            login: async (email, password) => {
+                set({ isLoading: true });
+                // Simulate API call
+                console.log(`Logging in ${email}`); // Use vars to avoid lint error
+                await new Promise((resolve) => setTimeout(resolve, 800));
+                set({ user: MOCK_USER, isAuthenticated: true, isLoading: false });
+            },
 
-    logout: () => {
-        set({ user: null, isAuthenticated: false });
-    },
+            logout: () => {
+                set({ user: null, isAuthenticated: false });
+            },
 
-    hasRole: (roles: UserRole[]) => {
-        const user = get().user;
-        if (!user) return false;
-        if (user.role === 'super_admin') return true;
-        return roles.includes(user.role);
-    },
+            hasRole: (roles: UserRole[]) => {
+                const user = get().user;
+                if (!user) return false;
+                if (user.role === 'super_admin') return true;
+                return roles.includes(user.role);
+            },
 
-    hasPermission: (module: string, action: string) => {
-        const user = get().user;
-        if (!user) return false;
+            hasPermission: (module: string, action: string) => {
+                const user = get().user;
+                if (!user) return false;
 
-        const rolePerms = PERMISSIONS[user.role];
-        if (!rolePerms) return false;
+                const rolePerms = PERMISSIONS[user.role];
+                if (!rolePerms) return false;
 
-        // Super admin wildcard
-        if (rolePerms['*']?.includes('*')) return true;
+                // Super admin wildcard
+                if (rolePerms['*']?.includes('*')) return true;
 
-        const modulePerms = rolePerms[module];
-        if (!modulePerms) return false;
+                const modulePerms = rolePerms[module];
+                if (!modulePerms) return false;
 
-        return modulePerms.includes(action);
-    },
-}));
+                return modulePerms.includes(action);
+            },
+        }),
+        {
+            name: 'ibms-auth',
+            partialize: (state) => ({
+                user: state.user,
+                isAuthenticated: state.isAuthenticated,
+            }),
+        }
+    )
+);

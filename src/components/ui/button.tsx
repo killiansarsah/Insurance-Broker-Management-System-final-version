@@ -14,7 +14,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles: Record<ButtonVariant, string> = {
     primary:
-        'relative overflow-hidden bg-[var(--glass-26-bg)] text-white border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] backdrop-blur-[var(--glass-26-blur)] hover:bg-[rgba(255,255,255,0.1)] active:scale-95 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:[filter:url(#liquid-hover)]',
+        'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200',
     secondary:
         'bg-success-500 text-white hover:bg-success-600 active:bg-success-700 shadow-sm',
     outline:
@@ -24,9 +24,9 @@ const variantStyles: Record<ButtonVariant, string> = {
     danger:
         'bg-danger-500 text-white hover:bg-danger-600 active:bg-danger-700 shadow-sm',
     glass:
-        'bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 active:bg-white/40 shadow-glass',
+        'bg-white/20 backdrop-blur-md border border-white/30 text-white hover:bg-white/30 active:bg-white/40',
     'liquid-glass':
-        'relative overflow-hidden bg-[var(--glass-26-bg)] text-white border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] backdrop-blur-[var(--glass-26-blur)] hover:bg-[rgba(255,255,255,0.1)] active:scale-95 transition-all duration-300 before:absolute before:inset-0 before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] hover:[filter:url(#liquid-hover)]',
+        'bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 shadow-sm hover:shadow-md active:scale-[0.98] transition-all duration-200',
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
