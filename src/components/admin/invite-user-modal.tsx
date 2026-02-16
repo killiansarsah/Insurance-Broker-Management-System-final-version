@@ -42,18 +42,20 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
 
     const footer = (
         <div className="flex gap-3 w-full">
-            <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isLoading}>
+            <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 px-4 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+            >
                 Cancel
-            </Button>
-            <Button
-                variant="primary"
-                className="flex-[2]"
+            </button>
+            <button
                 onClick={handleSubmit}
-                isLoading={isLoading}
-                leftIcon={<Mail size={18} />}
+                type="button"
+                className="flex-[2] py-3 px-4 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
             >
                 Send Invite
-            </Button>
+            </button>
         </div>
     );
 
@@ -63,79 +65,87 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
             onClose={onClose}
             title="Invite New User"
             description="Send an invitation to join the organization."
-            size="md"
+            size="xl"
             footer={footer}
+            className="overflow-visible"
         >
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <User size={12} /> First Name
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <User size={12} className="text-primary-500" /> First Name
                         </label>
-                        <Input
+                        <input
                             required
                             placeholder="e.g. Kwame"
                             value={firstName}
                             onChange={(e) => setFirstName(e.target.value)}
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50"
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <User size={12} /> Last Name
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <User size={12} className="text-primary-500" /> Last Name
                         </label>
-                        <Input
+                        <input
                             required
                             placeholder="e.g. Mensah"
                             value={lastName}
                             onChange={(e) => setLastName(e.target.value)}
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50"
                         />
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                        <Mail size={12} /> Email Address
+                    <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <Mail size={12} className="text-primary-500" /> Email Address
                     </label>
-                    <Input
+                    <input
                         required
                         type="email"
                         placeholder="e.g. kwame.mensah@ibms.com.gh"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50"
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <Shield size={12} /> Role
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <Shield size={12} className="text-accent-500" /> Organizational Role
                         </label>
-                        <select
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm bg-white"
-                        >
-                            <option value="admin">Admin</option>
-                            <option value="branch_manager">Branch Manager</option>
-                            <option value="senior_broker">Senior Broker</option>
-                            <option value="broker">Broker</option>
-                            <option value="data_entry">Data Entry</option>
-                            <option value="viewer">Viewer</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={role}
+                                onChange={(e) => setRole(e.target.value)}
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 appearance-none cursor-pointer"
+                            >
+                                <option value="admin">Admin</option>
+                                <option value="branch_manager">Branch Manager</option>
+                                <option value="senior_broker">Senior Broker</option>
+                                <option value="broker">Broker</option>
+                                <option value="data_entry">Data Entry</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <Building2 size={12} /> Branch
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <Building2 size={12} className="text-accent-500" /> Assigned Branch
                         </label>
-                        <select
-                            value={branch}
-                            onChange={(e) => setBranch(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm bg-white"
-                        >
-                            <option value="BR-ACC-01">Accra Main</option>
-                            <option value="BR-KUM-01">Kumasi Branch</option>
-                            <option value="BR-TAK-01">Takoradi Branch</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={branch}
+                                onChange={(e) => setBranch(e.target.value)}
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 appearance-none cursor-pointer"
+                            >
+                                <option value="BR-ACC-01">Accra Main</option>
+                                <option value="BR-KUM-01">Kumasi Branch</option>
+                                <option value="BR-TAK-01">Takoradi Branch</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </form>

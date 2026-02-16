@@ -51,18 +51,20 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
 
     const footer = (
         <div className="flex gap-3 w-full">
-            <Button variant="ghost" className="flex-1" onClick={onClose} disabled={isLoading}>
+            <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-3 px-4 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+            >
                 Cancel
-            </Button>
-            <Button
-                variant="primary"
-                className="flex-[2]"
+            </button>
+            <button
                 onClick={handleSubmit}
-                isLoading={isLoading}
-                leftIcon={<AlertTriangle size={18} />}
+                type="button"
+                className="flex-[2] py-3 px-4 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
             >
                 Log Complaint
-            </Button>
+            </button>
         </div>
     );
 
@@ -72,15 +74,15 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
             onClose={onClose}
             title="Log New Complaint"
             description="Register a client dispute for regulatory tracking."
-            size="lg"
+            size="xl"
             footer={footer}
+            className="overflow-visible"
         >
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Complainant Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <User size={12} /> Complainant Name <span className="text-danger-500">*</span>
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <User size={12} className="text-primary-500" /> Complainant Name
                         </label>
                         <input
                             required
@@ -89,27 +91,26 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
                             value={complainant}
                             onChange={(e) => setComplainant(e.target.value)}
                             placeholder="e.g. Ama Ghana"
-                            className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50"
                         />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <Shield size={12} /> Policy Number (Optional)
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <Shield size={12} className="text-primary-500" /> Policy Number (Optional)
                         </label>
                         <input
                             type="text"
                             value={policyNo}
                             onChange={(e) => setPolicyNo(e.target.value)}
                             placeholder="e.g. POL-2024-001"
-                            className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 shadow-sm placeholder:text-surface-400 bg-white/50"
                         />
                     </div>
                 </div>
 
-                {/* Complaint Details */}
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                        <FileText size={12} /> Subject / Summary <span className="text-danger-500">*</span>
+                    <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <FileText size={12} className="text-primary-500" /> Subject / Summary
                     </label>
                     <input
                         required
@@ -117,54 +118,58 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
                         value={subject}
                         onChange={(e) => setSubject(e.target.value)}
                         placeholder="e.g. Delay in claim settlement"
-                        className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-bold text-surface-800"
+                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 shadow-sm placeholder:text-surface-400"
                     />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <Flag size={12} /> Priority
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <Flag size={12} className="text-danger-500" /> Priority
                         </label>
-                        <select
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm bg-white"
-                        >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High (Immediate Action)</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={priority}
+                                onChange={(e) => setPriority(e.target.value)}
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 appearance-none cursor-pointer"
+                            >
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High (Immediate Action)</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                            <AlertTriangle size={12} /> Category
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <AlertTriangle size={12} className="text-accent-500" /> Category
                         </label>
-                        <select
-                            value={type}
-                            onChange={(e) => setType(e.target.value)}
-                            className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm bg-white"
-                        >
-                            <option value="service">Service Quality</option>
-                            <option value="claims">Claims Dispute</option>
-                            <option value="policy">Policy Terms</option>
-                            <option value="billing">Billing / Commission</option>
-                            <option value="other">Other</option>
-                        </select>
+                        <div className="relative">
+                            <select
+                                value={type}
+                                onChange={(e) => setType(e.target.value)}
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 appearance-none cursor-pointer"
+                            >
+                                <option value="service">Service Quality</option>
+                                <option value="claims">Claims Dispute</option>
+                                <option value="policy">Policy Terms</option>
+                                <option value="billing">Billing / Commission</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <div className="space-y-2">
-                    <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
-                        <MessageSquare size={12} /> Detailed Description
+                    <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                        <MessageSquare size={12} className="text-surface-400" /> Detailed Description
                     </label>
                     <textarea
                         required
-                        rows={5}
+                        rows={4}
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        placeholder="Provide full details of the customer's complaint..."
-                        className="w-full px-3 py-2.5 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium text-sm resize-none"
+                        placeholder="Provide full details of the customer's complaint for our records..."
+                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 shadow-sm placeholder:text-surface-400 resize-none"
                     />
                 </div>
             </form>

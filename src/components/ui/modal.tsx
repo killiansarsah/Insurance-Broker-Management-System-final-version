@@ -12,7 +12,7 @@ interface ModalProps {
     description?: string;
     children: React.ReactNode;
     footer?: React.ReactNode;
-    size?: 'sm' | 'md' | 'lg' | 'xl';
+    size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
     className?: string;
 }
 
@@ -21,6 +21,8 @@ const sizeStyles = {
     md: 'max-w-lg',
     lg: 'max-w-2xl',
     xl: 'max-w-4xl',
+    '2xl': 'max-w-6xl',
+    full: 'max-w-[95vw]',
 };
 
 export function Modal({
@@ -83,11 +85,11 @@ export function Modal({
                 'open:animate-in open:fade-in open:zoom-in-95 open:duration-300',
                 'backdrop:animate-in backdrop:fade-in backdrop:duration-300',
                 sizeStyles[size],
-                'w-full min-w-[340px] max-h-[90vh] rounded-[var(--radius-xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col',
+                'w-full min-w-[340px] max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col',
                 className
             )}
         >
-            <div className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full h-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900">
+            <div className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full h-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--glass-26-border)] bg-transparent shrink-0">
                     <div>

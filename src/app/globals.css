@@ -83,6 +83,7 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
 
   /* --- Shadows --- */
@@ -397,6 +398,13 @@ body {
   --glass-blur: 0px;
   --glass-border: 1px solid var(--color-surface-200);
   --glass-shadow: var(--shadow-xl);
+
+  /* Glass 26 (Premium Industrial Glass) */
+  --glass-26-bg: rgba(255, 255, 255, 0.65);
+  --glass-26-blur: 20px;
+  --glass-26-border: rgba(255, 255, 255, 0.6);
+  --glass-26-highlight: rgba(255, 255, 255, 1);
+  --glass-26-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.1);
 }
 
 .theme-glass {
