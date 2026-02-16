@@ -48,7 +48,7 @@ export function ChatList({ activeId, onSelect }: ChatListProps) {
                             <Avatar
                                 name={chat.participantName}
                                 size="md"
-                                fallbackClassName={chat.type === 'ai' ? (activeId === chat.id ? 'bg-white text-primary-600' : 'bg-primary-500 text-white') : undefined}
+                                className={chat.type === 'ai' ? (activeId === chat.id ? 'bg-white text-primary-600' : 'bg-primary-500 text-white') : undefined}
                                 icon={chat.type === 'ai' ? <Bot size={20} /> : <User size={20} />}
                             />
                             {chat.isOnline && (

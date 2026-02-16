@@ -21,13 +21,19 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { getClientById, getClientDisplayName } from '@/mock/clients';
+import { getClientById, getClientDisplayName, mockClients } from '@/mock/clients';
 import { getPoliciesByClientId } from '@/mock/policies';
 import { formatCurrency, formatDate, formatPhone, getInitials, cn } from '@/lib/utils';
 import type { Policy } from '@/types';
 import Link from 'next/link';
 
 const TABS = ['Overview', 'Policies', 'Claims', 'Documents', 'Activity'];
+
+export async function generateStaticParams() {
+    return mockClients.map((client) => ({
+        id: client.id,
+    }));
+}
 
 export default function ClientProfilePage() {
     const params = useParams();

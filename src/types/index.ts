@@ -96,7 +96,8 @@ export type DocumentCategory =
     | 'claim'
     | 'compliance'
     | 'internal'
-    | 'report';
+    | 'report'
+    | 'kyc';
 
 export type PaymentMethod = 'cash' | 'cheque' | 'bank_transfer' | 'mobile_money' | 'card';
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'overdue' | 'refunded';
