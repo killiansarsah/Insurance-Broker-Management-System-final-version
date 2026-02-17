@@ -185,11 +185,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.01 }}
-                    whileHover={{ y: -4, boxShadow: "0 15px 30px rgba(0,0,0,0.08)" }}
+                    whileHover={{ y: -6, boxShadow: "0 20px 40px rgba(0,0,0,0.12)" }}
                     onClick={() => setSelectedDate(day)}
                     className={cn(
-                        "relative min-h-[60px] p-1 rounded-[var(--radius-lg)] transition-all cursor-pointer group flex flex-col gap-0.5",
-                        isOutsideMonth ? "bg-surface-50/10 opacity-30" : "bg-white/40 border-surface-200/50 shadow-sm backdrop-blur-sm",
+                        "relative min-h-[100px] p-2 rounded-[var(--radius-xl)] transition-all cursor-pointer group flex flex-col gap-1.5",
+                        isOutsideMonth ? "bg-surface-50/10 opacity-20" : "bg-white/40 border-surface-200/50 shadow-sm backdrop-blur-sm",
                         isTodayDay && "border-primary-500/50 bg-primary-500/5 shadow-primary-500/20 ring-1 ring-primary-500/20",
                         isSelected && "ring-2 ring-primary-500 ring-offset-2 z-10",
 
@@ -205,7 +205,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                 >
                     <div className="flex items-center justify-between">
                         <span className={cn(
-                            "text-[10px] font-black tracking-tighter w-6 h-6 flex items-center justify-center rounded-lg transition-colors",
+                            "text-xs font-black tracking-tighter w-7 h-7 flex items-center justify-center rounded-lg transition-colors",
                             isTodayDay ? "bg-primary-600 text-white shadow-lg shadow-primary-500/30" : "text-surface-900"
                         )}>
                             {format(day, 'd')}
@@ -216,27 +216,27 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 e.stopPropagation();
                                 handleOpenModal(day);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1 rounded-full bg-surface-900 text-white transition-opacity active:scale-90"
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full bg-surface-900 text-white transition-opacity active:scale-90"
                         >
-                            <Plus size={10} />
+                            <Plus size={12} />
                         </button>
                     </div>
 
                     {/* Vibrancy Indicators for multiple events */}
                     {dayEvents.length > 1 && (
-                        <div className="absolute top-1 right-8 flex gap-0.5">
+                        <div className="absolute top-2 right-10 flex gap-1">
                             {dayEvents.slice(0, 3).map((_, idx) => (
-                                <div key={idx} className="w-1 h-1 rounded-full bg-primary-500/60" />
+                                <div key={idx} className="w-1.5 h-1.5 rounded-full bg-primary-500/60" />
                             ))}
                         </div>
                     )}
 
-                    <div className="flex-1 space-y-1.5 overflow-hidden">
+                    <div className="flex-1 space-y-1 overflow-hidden">
                         {dayEvents.slice(0, 3).map(event => (
                             <div
                                 key={event.id}
                                 className={cn(
-                                    "px-1 py-0 rounded-md text-[7px] font-bold truncate transition-transform hover:scale-105",
+                                    "px-1.5 py-0.5 rounded-md text-[9px] font-bold truncate transition-transform hover:scale-105",
                                     event.type === 'policy' && "bg-blue-500 text-white",
                                     event.type === 'meeting' && "bg-amber-500 text-white",
                                     event.type === 'claim' && "bg-red-500 text-white",
@@ -247,7 +247,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                             </div>
                         ))}
                         {dayEvents.length > 3 && (
-                            <div className="text-[8px] font-black text-surface-400 uppercase tracking-widest pl-1">
+                            <div className="text-[10px] font-black text-surface-400 uppercase tracking-widest pl-1 mt-0.5">
                                 +{dayEvents.length - 3} More
                             </div>
                         )}
@@ -265,12 +265,12 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                 <div className="absolute inset-0 bg-primary-500/5 blur-[120px] rounded-full pointer-events-none" />
 
                 {/* Floating Glass Panes Grid */}
-                <div className="grid grid-cols-7 gap-1 mb-1">
+                <div className="grid grid-cols-7 gap-3 mb-3">
                     {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                        <div key={d} className="text-center text-[9px] font-black text-surface-400/60 uppercase tracking-[3px] py-0.5">{d}</div>
+                        <div key={d} className="text-center text-[11px] font-black text-surface-400/60 uppercase tracking-[4px] py-1">{d}</div>
                     ))}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                     {dayCells}
                 </div>
 
@@ -314,12 +314,12 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex justify-between items-center gap-2">
-                                                <h4 className="font-black text-[12px] text-surface-900 uppercase tracking-tight truncate">{event.title}</h4>
-                                                <span className="text-[9px] font-black text-surface-400 uppercase shrink-0">
+                                                <h4 className="font-black text-[14px] text-surface-900 uppercase tracking-tight truncate">{event.title}</h4>
+                                                <span className="text-[10px] font-black text-surface-400 uppercase shrink-0">
                                                     {format(event.start, 'HH:mm')}
                                                 </span>
                                             </div>
-                                            <p className="text-[10px] text-surface-500 font-medium truncate opacity-60">
+                                            <p className="text-[11px] text-surface-500 font-medium truncate opacity-60">
                                                 {event.description || 'Liquid scheduling active...'}
                                             </p>
                                         </div>
@@ -336,14 +336,14 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     <div className="bg-surface-900 rounded-[var(--radius-xl)] p-3 shadow-2xl text-white relative overflow-hidden group flex flex-col justify-center border border-white/5">
                         <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
                         <div className="relative z-10 text-center">
-                            <div className="w-12 h-12 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-500/30">
-                                <Plus size={20} className="text-primary-500" />
+                            <div className="w-14 h-14 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-primary-500/30">
+                                <Plus size={24} className="text-primary-500" />
                             </div>
-                            <h3 className="text-lg font-black mb-1 tracking-tighter uppercase">Generate Flux</h3>
-                            <p className="text-white/40 text-[9px] mb-6 font-black uppercase tracking-widest">Accelerate your scheduling pipeline</p>
+                            <h3 className="text-xl font-black mb-2 tracking-tighter uppercase">Generate Flux</h3>
+                            <p className="text-white/40 text-[10px] mb-8 font-black uppercase tracking-widest leading-relaxed">Accelerate your scheduling pipeline</p>
                             <button
                                 onClick={() => handleOpenModal(selectedDate)}
-                                className="w-full bg-white text-surface-900 font-black py-3 rounded-full text-[10px] uppercase tracking-[3px] shadow-xl hover:bg-primary-50 transition-all active:scale-95"
+                                className="w-full bg-white text-surface-900 font-black py-4 rounded-full text-[11px] uppercase tracking-[3px] shadow-xl hover:bg-primary-50 transition-all active:scale-95"
                             >
                                 New Entry
                             </button>
@@ -368,16 +368,13 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
                     return (
                         <div key={i} className={cn(
-                            "min-h-[420px] border border-surface-200/50 bg-white/40 backdrop-blur-sm flex flex-col group transition-all relative overflow-hidden rounded-[var(--radius-2xl)] shadow-sm hover:shadow-md",
-                            isTodayDay && "ring-2 ring-primary-500 shadow-xl shadow-primary-500/10"
+                            "flex flex-col min-h-[280px] rounded-[var(--radius-xl)] border transition-all",
+                            isTodayDay ? "bg-white border-primary-500 shadow-xl z-10" : "bg-white/40 border-surface-200/50"
                         )}>
-                            <div className={cn(
-                                "p-3 text-center border-b border-surface-200/40 flex flex-col items-center gap-2 relative z-10",
-                                isTodayDay && "bg-primary-500/5"
-                            )}>
-                                <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest leading-none">{format(day, 'EEE')}</span>
+                            <div className="p-4 border-b border-surface-100/50 flex flex-col items-center gap-2">
+                                <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest">{format(day, 'EEE')}</span>
                                 <span className={cn(
-                                    "text-xl font-black w-10 h-10 flex items-center justify-center rounded-xl transition-all shadow-sm",
+                                    "text-2xl font-black w-12 h-12 flex items-center justify-center rounded-xl transition-all shadow-sm",
                                     isTodayDay ? "bg-primary-600 text-white shadow-lg" : "text-surface-900 bg-white/50"
                                 )}>{format(day, 'd')}</span>
 
@@ -385,9 +382,9 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleOpenModal(day)}
-                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-900 text-white text-[9px] font-black transition-all shadow-lg uppercase tracking-wider"
+                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-2 px-5 py-2 rounded-full bg-surface-900 text-white text-[10px] font-black transition-all shadow-lg uppercase tracking-wider"
                                 >
-                                    <Plus size={12} strokeWidth={3} /> Add
+                                    <Plus size={14} strokeWidth={3} /> Add
                                 </motion.button>
                             </div>
 
@@ -424,11 +421,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         const dateParts = format(currentDate, 'EEEE,d,MMMM').split(',');
 
         return (
-            <div className="bg-white/40 backdrop-blur-xl border border-surface-200/50 rounded-[var(--radius-2xl)] shadow-2xl overflow-hidden min-h-[550px] flex flex-col lg:flex-row relative">
+            <div className="bg-white/40 backdrop-blur-xl border border-surface-200/50 rounded-[var(--radius-2xl)] shadow-2xl overflow-hidden min-h-[600px] flex flex-col lg:flex-row relative">
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
                 {/* Compact Focus Pillar */}
-                <div className="lg:w-56 border-r border-surface-200/40 p-8 flex flex-col items-center justify-between bg-surface-900 text-white relative overflow-hidden shrink-0">
+                <div className="lg:w-72 border-r border-surface-200/40 p-10 flex flex-col items-center justify-between bg-surface-900 text-white relative overflow-hidden shrink-0">
                     <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-primary-500/20 to-transparent" />
 
                     <motion.div
@@ -436,17 +433,17 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         animate={{ opacity: 1, scale: 1 }}
                         className="relative z-10 text-center"
                     >
-                        <span className="text-[9px] font-black uppercase tracking-[5px] opacity-40 mb-6 block leading-none">{dateParts[0]}</span>
-                        <span className="text-7xl font-black tracking-tighter leading-none block mb-2">{dateParts[1]}</span>
-                        <span className="text-lg font-black uppercase tracking-[3px] opacity-60 block">{dateParts[2]}</span>
-                        <div className="h-0.5 bg-primary-500 w-10 mx-auto my-8 opacity-50" />
+                        <span className="text-[11px] font-black uppercase tracking-[6px] opacity-40 mb-8 block leading-none">{dateParts[0]}</span>
+                        <span className="text-8xl font-black tracking-tighter leading-none block mb-3">{dateParts[1]}</span>
+                        <span className="text-xl font-black uppercase tracking-[4px] opacity-60 block">{dateParts[2]}</span>
+                        <div className="h-0.5 bg-primary-500 w-12 mx-auto my-10 opacity-50" />
                     </motion.div>
 
                     <button
                         onClick={() => handleOpenModal(currentDate)}
-                        className="relative z-10 w-full py-4 rounded-full bg-white text-surface-900 font-black flex items-center justify-center gap-2 shadow-2xl hover:bg-primary-50 transition-all active:scale-95 group text-[10px] tracking-[2px]"
+                        className="relative z-10 w-full py-5 rounded-full bg-white text-surface-900 font-black flex items-center justify-center gap-3 shadow-2xl hover:bg-primary-50 transition-all active:scale-95 group text-[11px] tracking-[3px]"
                     >
-                        <Plus size={16} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
+                        <Plus size={18} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
                         NEW ACTION
                     </button>
 
