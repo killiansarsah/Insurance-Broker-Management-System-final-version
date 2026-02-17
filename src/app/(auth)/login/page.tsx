@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Mail, Lock, Eye, EyeOff, Loader2, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -48,8 +49,13 @@ export default function LoginPage() {
                         transition={{ duration: 0.6 }}
                         className="flex items-center gap-3"
                     >
-                        <div className="w-10 h-10 rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
-                            <Shield className="text-white" size={24} />
+                        <div className="w-10 h-10 relative rounded-xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden">
+                            <Image
+                                src="/logo.png"
+                                alt="IBMS Logo"
+                                fill
+                                className="object-contain p-1.5"
+                            />
                         </div>
                         <span className="text-2xl font-bold tracking-tight">IBMS</span>
                     </motion.div>
@@ -117,9 +123,15 @@ export default function LoginPage() {
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.2 }}
-                                className="w-16 h-16 rounded-2xl bg-primary-600 flex items-center justify-center mb-8 shadow-lg shadow-primary-500/20"
+                                className="w-20 h-20 relative mb-6"
                             >
-                                <Shield className="text-white" size={32} />
+                                <Image
+                                    src="/logo.png"
+                                    alt="IBMS Logo"
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
                             </motion.div>
                             <h1 className="text-3xl lg:text-4xl font-extrabold text-surface-900 mb-3 tracking-tight">
                                 Portal Login

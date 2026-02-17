@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -76,10 +77,6 @@ const navigation: NavSection[] = [
                 label: 'Clients',
                 href: '/dashboard/clients',
                 icon: <Users size={18} />,
-                children: [
-                    { label: 'Active Clients', href: '/dashboard/clients' },
-                    { label: 'Add Client', href: '/dashboard/clients/new' },
-                ],
             },
             {
                 label: 'Policies',
@@ -181,8 +178,14 @@ function GlobalRail() {
     return (
         <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white border-r border-surface-200 shrink-0 z-20">
             {/* Logo Icon */}
-            <div className="w-10 h-10 rounded-xl bg-surface-100 flex items-center justify-center mb-6 text-primary-600 font-bold text-xs shadow-sm cursor-pointer hover:bg-surface-200 transition-colors">
-                IB
+            <div className="relative w-8 h-8">
+                <Image
+                    src="/logo.png"
+                    alt="IBMS Logo"
+                    fill
+                    className="object-contain"
+                    sizes="32px"
+                />
             </div>
 
             {/* Quick Actions (High Frequency) */}
@@ -378,7 +381,15 @@ export function Sidebar() {
                         sidebarCollapsed ? 'justify-center' : 'px-6'
                     )}>
                         {sidebarCollapsed ? (
-                            <div className="text-primary-600 font-bold text-xl">IB</div>
+                            <div className="relative w-8 h-8">
+                                <Image
+                                    src="/logo.png"
+                                    alt="IBMS Logo"
+                                    fill
+                                    className="object-contain"
+                                    sizes="32px"
+                                />
+                            </div>
                         ) : (
                             <div>
                                 <h2 className="text-surface-900 font-bold text-base tracking-tight">Dezag Brokers</h2>

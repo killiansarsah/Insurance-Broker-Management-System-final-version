@@ -13,6 +13,11 @@ export const metadata: Metadata = {
     title: 'IBMS — Insurance Broker Management System',
     description:
         'NIC-compliant insurance brokerage management platform for Ghana. Manage clients, policies, claims, leads, and compliance.',
+    icons: {
+        icon: '/logo.png',
+        shortcut: '/logo.png',
+        apple: '/logo.png',
+    },
 };
 
 export default function RootLayout({
