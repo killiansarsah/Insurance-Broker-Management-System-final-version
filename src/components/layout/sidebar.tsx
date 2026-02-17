@@ -83,8 +83,8 @@ const navigation: NavSection[] = [
                 href: '/dashboard/policies',
                 icon: <FileText size={18} />,
                 children: [
-                    { label: 'Active Policies', href: '/dashboard/policies' },
-                    { label: 'Renewals', href: '/dashboard/policies?tab=renewals' },
+                    { label: 'Motor', href: '/dashboard/policies?type=motor' },
+                    { label: 'Non-Motor', href: '/dashboard/policies?type=non-motor' },
                 ],
             },
             {
@@ -169,16 +169,22 @@ const normalizePath = (p: string) => p.replace(/\/$/, "") || "/";
 
 // --- Components ---
 
+// --- Global Rail with Features ---
+
+import { GlobalSearch } from '@/components/features/global-search';
+import { QuickAddMenu } from '@/components/features/quick-add';
+import { NotificationsPopover } from '@/components/features/notifications';
+
 function GlobalRail() {
-    // Simple placeholder actions for now
-    const handleSearch = () => alert("Global Search modal would open here");
-    const handleNotifications = () => alert("Notifications panel would slide out here");
-    const handleQuickAdd = () => alert("Quick Create menu (Quote, Client, Claim) would open here");
+    const [searchOpen, setSearchOpen] = useState(false);
 
     return (
         <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white border-r border-surface-200 shrink-0 z-20">
+            {/* Global Search Dialog */}
+            <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
+
             {/* Logo Icon */}
-            <div className="relative w-8 h-8">
+            <div className="relative w-8 h-8 mb-6 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchOpen(true)}>
                 <Image
                     src="/logo.png"
                     alt="IBMS Logo"
@@ -191,36 +197,29 @@ function GlobalRail() {
             {/* Quick Actions (High Frequency) */}
             <div className="flex flex-col gap-3 w-full items-center">
                 <button
-                    onClick={handleSearch}
-                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-                    title="Global Search"
+                    onClick={() => setSearchOpen(true)}
+                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary-200"
+                    title="Global Search (Cmd+K)"
                 >
                     <Search size={20} />
                 </button>
-                <button
-                    onClick={handleNotifications}
-                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors relative"
-                    title="Notifications"
-                >
-                    <Bell size={20} />
-                    <span className="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full border border-white"></span>
-                </button>
-                <button
-                    onClick={handleQuickAdd}
-                    className="w-10 h-10 flex items-center justify-center text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-lg transition-colors"
-                    title="Create New..."
-                >
-                    <Plus size={22} />
-                </button>
+
+                <NotificationsPopover />
+
+                <QuickAddMenu />
             </div>
 
             <div className="flex-1" />
 
             {/* Bottom Actions */}
             <div className="flex flex-col gap-3 w-full items-center mb-2">
-                <button className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-surface-900 hover:bg-surface-100 rounded-lg transition-colors" title="Profile">
+                <Link
+                    href="/dashboard/settings"
+                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-surface-900 hover:bg-surface-100 rounded-lg transition-colors"
+                    title="Profile & Settings"
+                >
                     <UserCircle size={22} />
-                </button>
+                </Link>
             </div>
         </div>
     );

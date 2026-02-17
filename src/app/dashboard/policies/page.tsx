@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     FileText,
     Plus,
@@ -48,18 +48,63 @@ const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
 
 export default function PoliciesPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const typeParam = searchParams.get('type') as 'motor' | 'non-motor' | null;
+
     const [showFilters, setShowFilters] = useState(false);
     const [filterStatus, setFilterStatus] = useState<PolicyStatus | ''>('');
     const [filterType, setFilterType] = useState<InsuranceType | ''>('');
 
-    const filtered = mockPolicies.filter((p) => {
+    // base filtering on 'type' query param
+    const baseData = mockPolicies.filter((p) => {
+        if (!typeParam) return true;
+        if (typeParam === 'motor') return p.insuranceType === 'motor';
+        if (typeParam === 'non-motor') return p.insuranceType !== 'motor';
+        return true;
+    });
+
+    const filtered = baseData.filter((p) => {
         if (filterStatus && p.status !== filterStatus) return false;
         if (filterType && p.insuranceType !== filterType) return false;
         return true;
     });
 
+    // KPI Calculations based on filtered view
+    const activePolicies = baseData.filter((p) => p.status === 'active');
+    const totalPremium = baseData.reduce((s, p) => s + p.premiumAmount, 0);
+    const expiringSoon = baseData.filter((p) => (p.daysToExpiry ?? 999) <= 30 && p.status === 'active');
+    const pendingDraft = baseData.filter((p) => p.status === 'pending' || p.status === 'draft');
+
+    const kpis = [
+        {
+            label: `Active ${typeParam ? (typeParam === 'motor' ? 'Motor' : 'Non-Motor') : ''} Policies`,
+            value: activePolicies.length,
+            icon: <FileText size={20} />,
+            color: 'text-primary-500 bg-primary-50'
+        },
+        {
+            label: 'Total Premium',
+            value: formatCurrency(totalPremium),
+            icon: <TrendingUp size={20} />,
+            color: 'text-success-500 bg-success-50'
+        },
+        {
+            label: 'Expiring ≤30d',
+            value: expiringSoon.length,
+            icon: <Clock size={20} />,
+            color: 'text-accent-500 bg-accent-50'
+        },
+        {
+            label: 'Pending / Draft',
+            value: pendingDraft.length,
+            icon: <AlertCircle size={20} />,
+            color: 'text-danger-500 bg-danger-50'
+        },
+    ];
+
     const hasFilters = filterStatus || filterType;
 
+    // ... columns definition (omitted for brevity, same as before) ...
     const columns = [
         {
             key: 'policyNumber',
@@ -141,17 +186,32 @@ export default function PoliciesPage() {
         },
     ];
 
+    const getPageTitle = () => {
+        if (typeParam === 'motor') return 'Motor Policies';
+        if (typeParam === 'non-motor') return 'Non-Motor Policies';
+        return 'All Policies';
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-surface-900 tracking-tight">Policies</h1>
-                    <p className="text-sm text-surface-500 mt-1">Manage insurance policies and renewals.</p>
+                    <h1 className="text-3xl font-bold text-surface-900 tracking-tight">{getPageTitle()}</h1>
+                    <p className="text-sm text-surface-500 mt-1">
+                        Manage {typeParam ? (typeParam === 'motor' ? 'motor' : 'non-motor') : 'insurance'} policies and renewals.
+                    </p>
                 </div>
-                <Link href="/dashboard/policies/new">
-                    <Button variant="primary" leftIcon={<Plus size={16} />}>New Policy</Button>
-                </Link>
+                <div className="flex items-center gap-3">
+                    {typeParam && (
+                        <Link href="/dashboard/policies">
+                            <Button variant="outline" size="sm">View All</Button>
+                        </Link>
+                    )}
+                    <Link href="/dashboard/policies/new">
+                        <Button variant="primary" leftIcon={<Plus size={16} />}>New Policy</Button>
+                    </Link>
+                </div>
             </div>
 
             {/* KPI Cards */}
@@ -205,16 +265,19 @@ export default function PoliciesPage() {
                                 <option value="suspended">Suspended</option>
                             </select>
                         </div>
-                        <div>
-                            <label className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-1.5">Insurance Type</label>
-                            <select value={filterType} onChange={(e) => setFilterType(e.target.value as InsuranceType | '')}
-                                className="w-full px-3 py-2 text-sm bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
-                                <option value="">All</option>
-                                {INSURANCE_TYPES.map((t) => (
-                                    <option key={t.value} value={t.value}>{t.label}</option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* Only show Type filter if NOT in a specific type view */}
+                        {!typeParam && (
+                            <div>
+                                <label className="block text-xs font-semibold text-surface-500 uppercase tracking-wider mb-1.5">Insurance Type</label>
+                                <select value={filterType} onChange={(e) => setFilterType(e.target.value as InsuranceType | '')}
+                                    className="w-full px-3 py-2 text-sm bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                                    <option value="">All</option>
+                                    {INSURANCE_TYPES.map((t) => (
+                                        <option key={t.value} value={t.value}>{t.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                     </div>
                 </Card>
             )}
@@ -226,6 +289,11 @@ export default function PoliciesPage() {
                 searchPlaceholder="Search by policy number, client, insurer…"
                 searchKeys={['policyNumber', 'clientName', 'insurerName', 'insuranceType']}
                 onRowClick={(row) => router.push(`/dashboard/policies/${row.id}`)}
+                emptyMessage={
+                    typeParam
+                        ? `No ${typeParam === 'motor' ? 'motor' : 'non-motor'} policies found.`
+                        : "No policies found."
+                }
             />
         </div>
     );
