@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "predeploy": "next build && node -e \"require('fs').writeFileSync('out/.nojekyll', '')\"",
-    "deploy": "gh-pages -d out -t true"
+    "deploy": "node deploy.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

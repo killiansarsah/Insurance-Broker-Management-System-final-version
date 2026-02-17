@@ -1,0 +1,7 @@
+1:"$Sreact.fragment"
+2:I[92825,["/Insurance-Broker-Management-System-final-version/_next/static/chunks/ff1a16fafef87110.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/a2dfb6fc5208ab9b.js"],"ClientSegmentRoot"]
+3:I[39126,["/Insurance-Broker-Management-System-final-version/_next/static/chunks/d0855144c177f661.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/0bd93f88d7f62dde.js"],"default"]
+4:I[39756,["/Insurance-Broker-Management-System-final-version/_next/static/chunks/ff1a16fafef87110.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/a2dfb6fc5208ab9b.js"],"default"]
+5:I[37457,["/Insurance-Broker-Management-System-final-version/_next/static/chunks/ff1a16fafef87110.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/a2dfb6fc5208ab9b.js"],"default"]
+0:{"buildId":"nFJrbJ_ngKaIY-9UvTKBH","rsc":["$","$1","c",{"children":[[["$","script","script-0",{"src":"/Insurance-Broker-Management-System-final-version/_next/static/chunks/0bd93f88d7f62dde.js","async":true}]],["$","$L2",null,{"Component":"$3","slots":{"children":["$","$L4",null,{"parallelRouterKey":"children","template":["$","$L5",null,{}]}]},"serverProvidedParams":{"params":{},"promises":["$@6"]}}]]}],"loading":null,"isPartial":false}
+6:"$0:rsc:props:children:1:props:serverProvidedParams:params"
