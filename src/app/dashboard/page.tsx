@@ -26,6 +26,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
+import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
 
 // =====================================================================
@@ -237,148 +238,6 @@ function formatCompact(n: number): string {
     return `₵${n}`;
 }
 
-function FilterDropdown({
-    label,
-    options,
-    value,
-    onChange,
-}: {
-    label: string;
-    options: string[];
-    value: string | null;
-    onChange: (val: string | null) => void;
-}) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    // Close on outside click
-    useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-        }
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
-
-    return (
-        <div className="relative" ref={ref}>
-            <button
-                onClick={() => setOpen(!open)}
-                className={cn(
-                    'inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border rounded-full transition-all cursor-pointer shadow-sm backdrop-blur-md',
-                    value
-                        ? 'text-primary-600 bg-primary-50/50 border-primary-200/50'
-                        : 'text-surface-400 bg-white/60 border-surface-200/50 hover:bg-white hover:text-surface-600 hover:border-surface-300'
-                )}
-            >
-                {value ? (
-                    <>
-                        <span className="max-w-[100px] truncate">{value}</span>
-                        <X
-                            size={10}
-                            className="text-surface-400 hover:text-danger-500 shrink-0"
-                            onClick={(e) => { e.stopPropagation(); onChange(null); setOpen(false); }}
-                        />
-                    </>
-                ) : (
-                    <>
-                        {label}
-                        <ChevronDown size={10} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
-                    </>
-                )}
-            </button>
-
-            <AnimatePresence>
-                {open && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 w-52 bg-white/90 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden"
-                    >
-                        <div className="py-1">
-                            {options.map((opt) => (
-                                <button
-                                    key={opt}
-                                    onClick={() => { onChange(opt === value ? null : opt); setOpen(false); }}
-                                    className={cn(
-                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left hover:bg-primary-50/50 transition-colors cursor-pointer uppercase tracking-tight',
-                                        value === opt ? 'text-primary-600 bg-primary-50/80 shadow-inner' : 'text-surface-600'
-                                    )}
-                                >
-                                    {opt}
-                                    {value === opt && <Check size={12} className="text-primary-500" />}
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-}
-
-function YearDropdown({
-    years,
-    selectedYear,
-    onChange,
-}: {
-    years: number[];
-    selectedYear: number;
-    onChange: (year: number) => void;
-}) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef<HTMLDivElement>(null);
-
-    // Close on outside click
-    useEffect(() => {
-        function handleClick(e: MouseEvent) {
-            if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-        }
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
-
-    return (
-        <div className="relative" ref={ref}>
-            <button
-                onClick={() => setOpen(!open)}
-                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-surface-400 bg-white/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-white hover:text-surface-600 hover:border-surface-300 transition-all cursor-pointer shadow-sm"
-            >
-                <Calendar size={12} className="text-primary-500/60" />
-                <span>{selectedYear}</span>
-                <ChevronDown size={10} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
-            </button>
-
-            <AnimatePresence>
-                {open && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        className="absolute top-full left-0 mt-2 w-32 bg-white/90 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden"
-                    >
-                        <div className="py-1">
-                            {years.map((year) => (
-                                <button
-                                    key={year}
-                                    onClick={() => { onChange(year); setOpen(false); }}
-                                    className={cn(
-                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left hover:bg-primary-50/50 transition-colors cursor-pointer uppercase tracking-tight',
-                                        selectedYear === year ? 'text-primary-600 bg-primary-50/80 shadow-inner' : 'text-surface-600'
-                                    )}
-                                >
-                                    {year}
-                                    {selectedYear === year && <Check size={12} className="text-primary-500" />}
-                                </button>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-}
 
 // =====================================================================
 // MAIN DASHBOARD
@@ -470,7 +329,12 @@ export default function DashboardPage() {
                 {/* Year Selector + Period Toggle + Filters */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                     {/* Year Selector */}
-                    <YearDropdown years={availableYears} selectedYear={selectedYear} onChange={setSelectedYear} />
+                    <CustomSelect
+                        options={availableYears}
+                        value={selectedYear}
+                        onChange={(v) => setSelectedYear(Number(v))}
+                        icon={<Calendar size={12} />}
+                    />
 
                     {/* Period Toggle - Liquid Glass Switcher */}
                     <div className="inline-flex items-center bg-white/60 backdrop-blur-xl p-0.5 rounded-full border border-surface-200/50 shadow-sm">
@@ -497,11 +361,11 @@ export default function DashboardPage() {
                         ))}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <FilterDropdown label="Insurer" options={filterOptions.insurer} value={filters.insurer} onChange={(v) => updateFilter('insurer', v)} />
-                        <FilterDropdown label="Product" options={filterOptions.product} value={filters.product} onChange={(v) => updateFilter('product', v)} />
-                        <FilterDropdown label="Client Type" options={filterOptions.clientType} value={filters.clientType} onChange={(v) => updateFilter('clientType', v)} />
-                        <FilterDropdown label="Account Officer" options={filterOptions.accountOfficer} value={filters.accountOfficer} onChange={(v) => updateFilter('accountOfficer', v)} />
-                        <FilterDropdown label="Region" options={filterOptions.region} value={filters.region} onChange={(v) => updateFilter('region', v)} />
+                        <CustomSelect label="Insurer" options={filterOptions.insurer} value={filters.insurer} onChange={(v) => updateFilter('insurer', v)} clearable />
+                        <CustomSelect label="Product" options={filterOptions.product} value={filters.product} onChange={(v) => updateFilter('product', v)} clearable />
+                        <CustomSelect label="Client Type" options={filterOptions.clientType} value={filters.clientType} onChange={(v) => updateFilter('clientType', v)} clearable />
+                        <CustomSelect label="Account Officer" options={filterOptions.accountOfficer} value={filters.accountOfficer} onChange={(v) => updateFilter('accountOfficer', v)} clearable />
+                        <CustomSelect label="Region" options={filterOptions.region} value={filters.region} onChange={(v) => updateFilter('region', v)} clearable />
                     </div>
                 </div>
             </div>

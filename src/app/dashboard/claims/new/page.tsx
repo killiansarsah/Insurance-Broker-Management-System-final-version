@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { BackButton } from '@/components/ui/back-button';
 import { cn, formatCurrency } from '@/lib/utils';
 import { policies } from '@/mock/policies';
 import { Policy } from '@/types';
@@ -64,12 +65,7 @@ export default function NewClaimPage() {
         <div className="space-y-6 animate-fade-in max-w-4xl">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <button
-                    onClick={() => router.push('/dashboard/claims')}
-                    className="p-2 rounded-[var(--radius-md)] text-surface-500 hover:bg-surface-100 cursor-pointer transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+                <BackButton href="/dashboard/claims" />
                 <div>
                     <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Report New Claim (FNOL)</h1>
                     <p className="text-sm text-surface-500">First Notice of Loss wizard.</p>

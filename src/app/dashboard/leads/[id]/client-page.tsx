@@ -20,6 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { getLeadById, LEAD_STAGES, mockLeads } from '@/mock/leads';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { BackButton } from '@/components/ui/back-button';
 import Link from 'next/link';
 
 
@@ -46,12 +47,7 @@ export default function LeadDetailPage() {
         <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-3">
-                <button
-                    onClick={() => router.push('/dashboard/leads')}
-                    className="p-2 rounded-[var(--radius-md)] text-surface-500 hover:bg-surface-100 transition-colors"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+                <BackButton href="/dashboard/leads" />
                 <div className="flex-1">
                     <div className="flex items-center gap-3">
                         <h1 className="text-2xl font-bold text-surface-900 tracking-tight">{lead.companyName || lead.contactName}</h1>

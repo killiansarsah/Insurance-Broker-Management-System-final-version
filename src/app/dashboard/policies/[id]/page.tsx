@@ -24,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { formatCurrency, cn, formatDate } from '@/lib/utils';
+import { BackButton } from '@/components/ui/back-button';
 import type { Policy, PolicyStatus } from '@/types';
 import { mockPolicies } from '@/mock/policies';
 
@@ -106,12 +107,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
         <div className="max-w-7xl mx-auto space-y-6 pb-20 animate-fade-in">
             {/* Breadcrumb / Back */}
             <div>
-                <Link
-                    href="/dashboard/policies"
-                    className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-surface-900 transition-colors mb-4"
-                >
-                    <ChevronLeft size={16} /> Back to Policies
-                </Link>
+                <BackButton href="/dashboard/policies" className="mb-4" />
 
                 {/* Header Section */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">

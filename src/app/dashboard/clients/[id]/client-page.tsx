@@ -27,6 +27,7 @@ import {
 import { getClientById, getClientDisplayName } from '@/mock/clients';
 import { getPoliciesByClientId } from '@/mock/policies';
 import { formatCurrency, formatDate, getInitials, cn } from '@/lib/utils';
+import { BackButton } from '@/components/ui/back-button';
 
 export default function ClientProfilePage() {
     const params = useParams();
@@ -69,12 +70,7 @@ export default function ClientProfilePage() {
             >
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
-                <button
-                    onClick={() => router.push('/dashboard/clients')}
-                    className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-surface-400 hover:text-primary-600 hover:shadow-lg hover:scale-105 transition-all active:scale-90 shadow-sm border border-surface-100 shrink-0"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+                <BackButton href="/dashboard/clients" />
 
                 <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div>

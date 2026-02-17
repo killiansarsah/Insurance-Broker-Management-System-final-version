@@ -14,6 +14,7 @@ import {
     FileSpreadsheet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { CustomSelect } from '@/components/ui/select-custom';
 
 interface Column<T> {
     key: string;
@@ -31,7 +32,7 @@ interface DataTableProps<T> {
     searchKeys?: string[];
     pageSize?: number;
     onRowClick?: (row: T) => void;
-    emptyMessage?: string;
+    emptyMessage?: React.ReactNode;
     headerActions?: React.ReactNode;
     className?: string;
 }
@@ -271,15 +272,19 @@ export function DataTable<T>({
                                     colSpan={columns.length}
                                     className="px-5 py-20 text-center"
                                 >
-                                    <div className="flex flex-col items-center gap-4">
-                                        <div className="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center">
-                                            <Inbox size={32} className="text-surface-300" />
+                                    {typeof emptyMessage === 'string' ? (
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center">
+                                                <Inbox size={32} className="text-surface-300" />
+                                            </div>
+                                            <div>
+                                                <p className="text-base font-semibold text-surface-600">{emptyMessage}</p>
+                                                <p className="text-sm text-surface-400 mt-1">Try adjusting your search or filters to find what you&apos;re looking for.</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-base font-semibold text-surface-600">{emptyMessage}</p>
-                                            <p className="text-sm text-surface-400 mt-1">Try adjusting your search or filters to find what you&apos;re looking for.</p>
-                                        </div>
-                                    </div>
+                                    ) : (
+                                        emptyMessage
+                                    )}
                                 </td>
                             </tr>
                         ) : (
@@ -331,16 +336,14 @@ export function DataTable<T>({
                     </p>
                     <div className="flex items-center gap-2 border-l border-surface-200 pl-4">
                         <label htmlFor="page-size" className="text-xs text-surface-400 font-medium">Rows per page</label>
-                        <select
-                            id="page-size"
+                        <CustomSelect
+                            options={PAGE_SIZE_OPTIONS}
                             value={currentPageSize}
-                            onChange={(e) => handlePageSizeChange(Number(e.target.value))}
-                            className="px-2 py-1 text-xs font-semibold text-surface-700 bg-white border border-surface-200 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-400 transition-all"
-                        >
-                            {PAGE_SIZE_OPTIONS.map((size) => (
-                                <option key={size} value={size}>{size}</option>
-                            ))}
-                        </select>
+                            onChange={(val) => handlePageSizeChange(Number(val))}
+                            className="scale-90 origin-left"
+                            position="top"
+                            align="right"
+                        />
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5">

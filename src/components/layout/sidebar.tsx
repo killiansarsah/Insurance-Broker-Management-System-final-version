@@ -117,6 +117,11 @@ const navigation: NavSection[] = [
                 icon: <LineChart size={18} />, // Using LineChart as a proxy for growth/leads
             },
             {
+                label: 'Premium Financing',
+                href: '/dashboard/premium-financing',
+                icon: <Wallet size={18} />,
+            },
+            {
                 label: 'Accounting',
                 href: '/dashboard/finance',
                 icon: <Wallet size={18} />,
