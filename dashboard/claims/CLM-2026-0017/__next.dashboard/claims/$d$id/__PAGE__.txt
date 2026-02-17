@@ -1,7 +1,0 @@
-1:"$Sreact.fragment"
-2:I[79170,["/Insurance-Broker-Management-System-final-version/_next/static/chunks/d0855144c177f661.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/0bd93f88d7f62dde.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/dd49a6c345d4051d.js"],"default"]
-4:I[97367,["/Insurance-Broker-Management-System-final-version/_next/static/chunks/ff1a16fafef87110.js","/Insurance-Broker-Management-System-final-version/_next/static/chunks/a2dfb6fc5208ab9b.js"],"OutletBoundary"]
-5:"$Sreact.suspense"
-0:{"buildId":"nFJrbJ_ngKaIY-9UvTKBH","rsc":["$","$1","c",{"children":[["$","$L2",null,{"params":"$@3"}],[["$","script","script-0",{"src":"/Insurance-Broker-Management-System-final-version/_next/static/chunks/dd49a6c345d4051d.js","async":true}]],["$","$L4",null,{"children":["$","$5",null,{"name":"Next.MetadataOutlet","children":"$@6"}]}]]}],"loading":null,"isPartial":false}
-3:{"id":"CLM-2026-0017"}
-6:null

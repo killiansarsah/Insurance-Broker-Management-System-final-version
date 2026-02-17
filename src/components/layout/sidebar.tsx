@@ -97,12 +97,13 @@ const navigation: NavSection[] = [
                 ],
             },
             {
-                label: 'Quotes',
-                href: '/dashboard/quotes',
+                label: 'Renewals',
+                href: '/dashboard/renewals',
                 icon: <FileBarChart size={18} />,
                 children: [
-                    { label: 'Recent Quotes', href: '/dashboard/quotes' },
-                    { label: 'Create Measure', href: '/dashboard/quotes/new' },
+                    { label: 'Upcoming (30 Days)', href: '/dashboard/renewals?status=upcoming' },
+                    { label: 'Overdue', href: '/dashboard/renewals?status=overdue' },
+                    { label: 'Processed', href: '/dashboard/renewals?status=processed' },
                 ],
             },
         ],
