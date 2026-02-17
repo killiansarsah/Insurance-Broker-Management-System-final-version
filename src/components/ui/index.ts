@@ -5,6 +5,4 @@ export { Badge } from './badge';
 export { Modal } from './modal';
 export { Avatar } from './avatar';
 export { Spinner, PageLoader } from './spinner';
-export { EmptyState } from './empty-state';
-export { Skeleton, SkeletonCard, SkeletonTable } from './skeleton';
 export { Textarea } from './textarea';
