@@ -22,6 +22,7 @@ function generateClaims(count: number): Claim[] {
             id: `CLM-${new Date().getFullYear()}-${String(i + 1).padStart(4, '0')}`,
             policyId: policy.id,
             policyNumber: policy.policyNumber,
+            insuranceType: policy.insuranceType,
             clientId: policy.clientId,
             clientName: policy.clientName || 'Unknown Client',
             claimNumber: `CLM-${new Date().getFullYear()}-${String(i + 1).padStart(4, '0')}`,

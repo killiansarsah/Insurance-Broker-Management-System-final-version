@@ -92,8 +92,8 @@ const navigation: NavSection[] = [
                 href: '/dashboard/claims',
                 icon: <Shield size={18} />,
                 children: [
-                    { label: 'Open Claims', href: '/dashboard/claims' },
-                    { label: 'File New Claim', href: '/dashboard/claims/new' },
+                    { label: 'Motor', href: '/dashboard/claims?type=motor' },
+                    { label: 'Non-Motor', href: '/dashboard/claims?type=non-motor' },
                 ],
             },
             {

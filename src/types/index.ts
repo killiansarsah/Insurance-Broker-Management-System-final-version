@@ -250,6 +250,7 @@ export interface Claim {
     // Related
     policyId: string;
     policyNumber: string;
+    insuranceType: InsuranceType;
     clientId: string;
     clientName: string;
 
