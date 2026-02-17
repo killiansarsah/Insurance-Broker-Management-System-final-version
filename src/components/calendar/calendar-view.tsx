@@ -74,64 +74,85 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     };
 
     const renderHeader = () => {
+        const monthYear = format(currentDate, 'MMMM yyyy').split(' ');
         const headerText = view === 'month'
-            ? format(currentDate, 'MMMM yyyy')
+            ? null // handled by custom layout below
             : view === 'week'
                 ? `Week of ${format(startOfWeek(currentDate), 'MMM d, yyyy')}`
                 : format(currentDate, 'MMMM d, yyyy');
 
         return (
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 px-2 gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="p-2.5 rounded-[var(--radius-lg)] bg-primary-500/10 text-primary-500">
-                        <CalendarIcon size={24} />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-bold text-surface-900 tracking-tight">
-                            {headerText}
-                        </h2>
-                        <p className="text-sm text-surface-500">
-                            {view.charAt(0).toUpperCase() + view.slice(1)} View • Manage your schedule
-                        </p>
+            <div className="flex flex-col lg:flex-row items-end lg:items-center justify-between mb-8 gap-6 relative z-50">
+                {/* Compact Asymmetric Header */}
+                <div className="flex flex-col lg:flex-row lg:items-baseline gap-4 w-full lg:w-auto overflow-hidden">
+                    <div className="relative group min-w-[300px] h-20 md:h-24 flex items-center">
+                        {/* Ghost Background Text */}
+                        <motion.span
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 0.05, x: 0 }}
+                            key={monthYear[1]}
+                            className="text-5xl md:text-7xl font-black tracking-tighter text-surface-900 uppercase leading-none select-none absolute left-0"
+                        >
+                            {view === 'month' ? monthYear[1] : format(currentDate, 'yyyy')}
+                        </motion.span>
+                        {/* Primary Label */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            key={currentDate.toString() + "fg"}
+                            className="relative z-10"
+                        >
+                            <h2 className="text-2xl md:text-3xl font-black text-surface-900 tracking-[0.05em] uppercase pl-1 drop-shadow-sm whitespace-nowrap">
+                                {view === 'month' ? monthYear[0] : format(currentDate, 'MMMM')}
+                            </h2>
+                        </motion.div>
                     </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex bg-surface-100 p-1 rounded-[var(--radius-md)] mr-2 overflow-hidden">
-                        {(['month', 'week', 'day'] as const).map((v) => (
+                <div className="flex flex-col md:flex-row items-center gap-4 w-full md:w-auto">
+                    {/* Compact View Switcher */}
+                    <div className="flex bg-white/60 backdrop-blur-xl p-1 rounded-full border border-surface-200/50 shadow-sm">
+                        {(['day', 'week', 'month'] as const).map((v) => (
                             <button
                                 key={v}
                                 onClick={() => setView(v)}
                                 className={cn(
-                                    "px-4 py-1.5 text-xs font-semibold rounded-[var(--radius-sm)] transition-all uppercase tracking-wider",
+                                    "relative px-5 py-1.5 text-[10px] font-black rounded-full transition-all uppercase tracking-widest z-10",
                                     view === v
-                                        ? "bg-[var(--bg-card)] backdrop-blur text-primary-600 shadow-sm border border-[var(--glass-border)]"
-                                        : "text-surface-500 hover:text-surface-700 hover:bg-[var(--sidebar-hover)]"
+                                        ? "text-primary-600"
+                                        : "text-surface-400 hover:text-surface-600"
                                 )}
                             >
+                                {view === v && (
+                                    <motion.div
+                                        layoutId="activeView"
+                                        className="absolute inset-0 bg-white rounded-full shadow-md z-[-1] border border-surface-100"
+                                    />
+                                )}
                                 {v}
                             </button>
                         ))}
                     </div>
 
+                    {/* Minimal Navigation */}
                     <div className="flex items-center gap-2">
                         <button
                             onClick={prev}
-                            className="p-2 rounded-[var(--radius-md)] hover:bg-surface-100 text-surface-600 transition-colors border border-surface-200 bg-white"
+                            className="group flex items-center justify-center w-10 h-10 rounded-full border border-surface-200 bg-white/80 backdrop-blur-sm hover:border-primary-500/50 transition-all active:scale-90 shadow-sm"
                         >
-                            <ChevronLeft size={20} />
+                            <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
                         </button>
                         <button
                             onClick={resetToToday}
-                            className="px-4 py-2 text-sm font-bold hover:bg-surface-100 rounded-[var(--radius-md)] transition-colors border border-surface-200 bg-white"
+                            className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest bg-surface-900 text-white rounded-full hover:bg-black transition-all shadow-lg shadow-black/5 active:scale-95"
                         >
                             Today
                         </button>
                         <button
                             onClick={next}
-                            className="p-2 rounded-[var(--radius-md)] hover:bg-surface-100 text-surface-600 transition-colors border border-surface-200 bg-white"
+                            className="group flex items-center justify-center w-10 h-10 rounded-full border border-surface-200 bg-white/80 backdrop-blur-sm hover:border-primary-500/50 transition-all active:scale-90 shadow-sm"
                         >
-                            <ChevronRight size={20} />
+                            <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>
                     </div>
                 </div>
@@ -145,207 +166,332 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         const startDate = startOfWeek(monthStart);
         const endDate = endOfWeek(monthEnd);
 
-        const days = [];
-        let day = startDate;
+        const daysInMonthView = eachDayOfInterval({ start: startDate, end: endDate });
 
-        while (day <= endDate) {
-            for (let i = 0; i < 7; i++) {
-                const formattedDate = format(day, 'd');
-                const cloneDay = day;
-                const dayEvents = events.filter(event => isSameDay(event.start, cloneDay));
+        const dayCells = daysInMonthView.map((day, i) => {
+            const dayEvents = events.filter(e => isSameDay(e.start, day));
+            const isTodayDay = isToday(day);
+            const isSelected = isSameDay(day, selectedDate);
+            const isOutsideMonth = !isSameMonth(day, currentDate);
 
-                days.push(
-                    <motion.div
-                        key={day.toString()}
-                        whileHover={{ scale: 1.01 }}
-                        className={cn(
-                            "relative min-h-[130px] p-2 border-r border-b border-[var(--glass-border)] transition-colors group",
-                            !isSameMonth(day, monthStart) ? "bg-surface-50/20" : "bg-transparent",
-                            isSameDay(day, selectedDate) && "bg-primary-50/20 ring-1 ring-inset ring-primary-500/20",
-                            i === 0 && "border-l border-surface-100"
-                        )}
-                        onClick={() => {
-                            setSelectedDate(cloneDay);
-                            if (isSameDay(day, selectedDate)) {
-                                // Double click mock
-                            }
-                        }}
-                    >
-                        <div className="flex justify-between items-start mb-2">
-                            <span className={cn(
-                                "text-sm font-semibold w-8 h-8 flex items-center justify-center rounded-full transition-colors",
-                                isToday(day) ? "bg-primary-600 text-white shadow-md shadow-primary-500/20" : "text-surface-700",
-                                !isSameMonth(day, monthStart) && !isToday(day) && "text-surface-300"
-                            )}>
-                                {formattedDate}
-                            </span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleOpenModal(cloneDay);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 p-1 rounded-md bg-primary-100 text-primary-600 hover:bg-primary-200 transition-all"
+            return (
+                <motion.div
+                    key={day.toString()}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.01 }}
+                    whileHover={{ y: -4, boxShadow: "0 15px 30px rgba(0,0,0,0.08)" }}
+                    onClick={() => setSelectedDate(day)}
+                    className={cn(
+                        "relative min-h-[60px] p-1 rounded-[var(--radius-lg)] transition-all cursor-pointer group flex flex-col gap-0.5",
+                        isOutsideMonth ? "bg-surface-50/10 opacity-30" : "bg-white/40 border border-surface-200/50 shadow-sm backdrop-blur-sm",
+                        isTodayDay && "border-primary-500/50 bg-primary-500/5 shadow-primary-500/10",
+                        isSelected && "ring-2 ring-primary-500 ring-offset-2"
+                    )}
+                >
+                    <div className="flex items-center justify-between">
+                        <span className={cn(
+                            "text-[10px] font-black tracking-tighter w-6 h-6 flex items-center justify-center rounded-lg transition-colors",
+                            isTodayDay ? "bg-primary-600 text-white shadow-lg shadow-primary-500/30" : "text-surface-900"
+                        )}>
+                            {format(day, 'd')}
+                        </span>
+
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenModal(day);
+                            }}
+                            className="opacity-0 group-hover:opacity-100 p-1 rounded-full bg-surface-900 text-white transition-opacity active:scale-90"
+                        >
+                            <Plus size={10} />
+                        </button>
+                    </div>
+
+                    <div className="flex-1 space-y-1.5 overflow-hidden">
+                        {dayEvents.slice(0, 3).map(event => (
+                            <div
+                                key={event.id}
+                                className={cn(
+                                    "px-1 py-0 rounded-md text-[7px] font-bold truncate transition-transform hover:scale-105",
+                                    event.type === 'policy' && "bg-blue-500 text-white",
+                                    event.type === 'meeting' && "bg-amber-500 text-white",
+                                    event.type === 'claim' && "bg-red-500 text-white",
+                                    event.type === 'team' && "bg-emerald-500 text-white"
+                                )}
                             >
-                                <Plus size={14} />
-                            </button>
+                                {event.title}
+                            </div>
+                        ))}
+                        {dayEvents.length > 3 && (
+                            <div className="text-[8px] font-black text-surface-400 uppercase tracking-widest pl-1">
+                                +{dayEvents.length - 3} More
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Gloss Reflection */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none rounded-[var(--radius-2xl)]" />
+                </motion.div>
+            );
+        });
+
+        return (
+            <div className="relative">
+                {/* Background Shadow Glow */}
+                <div className="absolute inset-0 bg-primary-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+                {/* Floating Glass Panes Grid */}
+                <div className="grid grid-cols-7 gap-1 mb-1">
+                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                        <div key={d} className="text-center text-[9px] font-black text-surface-400/60 uppercase tracking-[3px] py-0.5">{d}</div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-1">
+                    {dayCells}
+                </div>
+
+                {/* Refined Liquid Info Section */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 grid grid-cols-1 lg:grid-cols-3 gap-6"
+                >
+                    <div className="lg:col-span-2 bg-white/40 backdrop-blur-xl rounded-[var(--radius-2xl)] p-3 shadow-xl border border-surface-200/50 relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+                        <div className="flex items-center justify-between mb-6">
+                            <h3 className="text-sm font-black text-surface-900 flex items-center gap-3 uppercase tracking-tighter">
+                                <Clock size={18} className="text-primary-500" />
+                                Timeline • {format(selectedDate, 'MMM d, yyyy')}
+                            </h3>
+                            <div className="px-3 py-1 rounded-full bg-surface-100/50 text-surface-400 text-[9px] font-black uppercase tracking-widest border border-surface-200/50">
+                                {events.filter(e => isSameDay(e.start, selectedDate)).length} Actions
+                            </div>
                         </div>
 
-                        <div className="space-y-1">
-                            {dayEvents.slice(0, 3).map(event => (
-                                <div
-                                    key={event.id}
-                                    className={cn(
-                                        "px-2 py-1 text-[10px] font-bold rounded-[var(--radius-sm)] border truncate shadow-xs transition-transform hover:scale-[1.02]",
-                                        event.type === 'policy' && "bg-blue-50 text-blue-700 border-blue-100",
-                                        event.type === 'meeting' && "bg-amber-50 text-amber-700 border-amber-100",
-                                        event.type === 'claim' && "bg-red-50 text-red-700 border-red-100",
-                                        event.type === 'team' && "bg-emerald-50 text-emerald-700 border-emerald-100"
-                                    )}
-                                >
-                                    {event.title}
-                                </div>
-                            ))}
-                            {dayEvents.length > 3 && (
-                                <div className="text-[10px] text-surface-400 font-bold pl-1">
-                                    + {dayEvents.length - 3} more
+                        <div className="space-y-3">
+                            {events.filter(e => isSameDay(e.start, selectedDate)).length > 0 ? (
+                                events.filter(e => isSameDay(e.start, selectedDate)).map((event, idx) => (
+                                    <motion.div
+                                        key={event.id}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.1 }}
+                                        className="group flex items-center gap-4 p-4 rounded-xl bg-white/60 border border-surface-100/50 hover:border-primary-500/30 transition-all hover:shadow-lg"
+                                    >
+                                        <div className={cn(
+                                            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform",
+                                            event.type === 'policy' && "bg-blue-500 text-white",
+                                            event.type === 'meeting' && "bg-amber-500 text-white",
+                                            event.type === 'claim' && "bg-red-500 text-white",
+                                            event.type === 'team' && "bg-emerald-500 text-white"
+                                        )}>
+                                            <CalendarIcon size={16} strokeWidth={2.5} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex justify-between items-center gap-2">
+                                                <h4 className="font-black text-[12px] text-surface-900 uppercase tracking-tight truncate">{event.title}</h4>
+                                                <span className="text-[9px] font-black text-surface-400 uppercase shrink-0">
+                                                    {format(event.start, 'HH:mm')}
+                                                </span>
+                                            </div>
+                                            <p className="text-[10px] text-surface-500 font-medium truncate opacity-60">
+                                                {event.description || 'Liquid scheduling active...'}
+                                            </p>
+                                        </div>
+                                    </motion.div>
+                                ))
+                            ) : (
+                                <div className="text-center py-12 bg-surface-50/20 rounded-[var(--radius-2xl)] border border-dashed border-surface-200/50">
+                                    <p className="text-surface-400 font-black uppercase tracking-widest text-[9px]">Horizon clear for this anchor</p>
                                 </div>
                             )}
                         </div>
-                    </motion.div>
-                );
-                day = addDays(day, 1);
-            }
-        }
+                    </div>
 
-        return (
-            <div className="border-t border-surface-100 rounded-[var(--radius-lg)] overflow-hidden shadow-xl border-l border-r border-b">
-                <div className="grid grid-cols-7 bg-surface-50/80 backdrop-blur-sm border-b border-surface-100 py-3">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                        <div key={d} className="text-center text-xs font-black text-surface-400 uppercase tracking-widest">{d}</div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-7">
-                    {days}
-                </div>
+                    <div className="bg-surface-900 rounded-[var(--radius-xl)] p-3 shadow-2xl text-white relative overflow-hidden group flex flex-col justify-center border border-white/5">
+                        <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
+                        <div className="relative z-10 text-center">
+                            <div className="w-12 h-12 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-primary-500/30">
+                                <Plus size={20} className="text-primary-500" />
+                            </div>
+                            <h3 className="text-lg font-black mb-1 tracking-tighter uppercase">Generate Flux</h3>
+                            <p className="text-white/40 text-[9px] mb-6 font-black uppercase tracking-widest">Accelerate your scheduling pipeline</p>
+                            <button
+                                onClick={() => handleOpenModal(selectedDate)}
+                                className="w-full bg-white text-surface-900 font-black py-3 rounded-full text-[10px] uppercase tracking-[3px] shadow-xl hover:bg-primary-50 transition-all active:scale-95"
+                            >
+                                New Entry
+                            </button>
+                        </div>
+                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary-500/10 rounded-full blur-2xl group-hover:bg-primary-500/20 transition-all" />
+                    </div>
+                </motion.div>
             </div>
         );
     };
 
     const renderWeekView = () => {
         const startDate = startOfWeek(currentDate);
-        const days = [];
-
-        for (let i = 0; i < 7; i++) {
-            const day = addDays(startDate, i);
-            const dayEvents = events.filter(event => isSameDay(event.start, day));
-
-            days.push(
-                <div key={i} className={cn(
-                    "min-h-[500px] border-r border-surface-100 bg-white flex flex-col group",
-                    isToday(day) && "bg-primary-50/5"
-                )}>
-                    <div className={cn(
-                        "p-4 text-center border-b border-surface-100 flex flex-col items-center gap-1",
-                        isToday(day) && "bg-primary-50/30"
-                    )}>
-                        <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest">{format(day, 'EEE')}</span>
-                        <span className={cn(
-                            "text-xl font-bold w-10 h-10 flex items-center justify-center rounded-full transition-all",
-                            isToday(day) ? "bg-primary-600 text-white shadow-lg" : "text-surface-700"
-                        )}>{format(day, 'd')}</span>
-                        <button
-                            onClick={() => handleOpenModal(day)}
-                            className="mt-2 opacity-0 group-hover:opacity-100 flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-100 text-primary-600 text-[10px] font-bold transition-all border border-primary-200"
-                        >
-                            <Plus size={12} /> Add
-                        </button>
-                    </div>
-                    <div className="flex-1 p-3 space-y-3">
-                        {dayEvents.map(event => (
-                            <div key={event.id} className={cn(
-                                "p-3 rounded-[var(--radius-lg)] border shadow-sm transition-all hover:shadow-md hover:scale-[1.02]",
-                                event.type === 'policy' && "bg-blue-50/50 border-blue-100 text-blue-900",
-                                event.type === 'meeting' && "bg-amber-50/50 border-amber-100 text-amber-900",
-                                event.type === 'claim' && "bg-red-50/50 border-red-100 text-red-900",
-                                event.type === 'team' && "bg-emerald-50/50 border-emerald-100 text-emerald-900"
-                            )}>
-                                <div className="text-xs font-black truncate">{event.title}</div>
-                                <div className="text-[10px] opacity-70 mt-1 flex items-center gap-1">
-                                    <Clock size={10} /> {format(event.start, 'HH:mm')}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            );
-        }
+        const days = eachDayOfInterval({ start: startDate, end: addDays(startDate, 6) });
 
         return (
-            <div className="border border-surface-100 rounded-[var(--radius-lg)] overflow-hidden shadow-2xl flex">
-                {days}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
+                {days.map((day, i) => {
+                    const dayEvents = events.filter(e => isSameDay(e.start, day));
+                    const isTodayDay = isToday(day);
+
+                    return (
+                        <div key={i} className={cn(
+                            "min-h-[420px] border border-surface-200/50 bg-white/40 backdrop-blur-sm flex flex-col group transition-all relative overflow-hidden rounded-[var(--radius-2xl)] shadow-sm hover:shadow-md",
+                            isTodayDay && "ring-2 ring-primary-500 shadow-xl shadow-primary-500/10"
+                        )}>
+                            <div className={cn(
+                                "p-3 text-center border-b border-surface-200/40 flex flex-col items-center gap-2 relative z-10",
+                                isTodayDay && "bg-primary-500/5"
+                            )}>
+                                <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest leading-none">{format(day, 'EEE')}</span>
+                                <span className={cn(
+                                    "text-xl font-black w-10 h-10 flex items-center justify-center rounded-xl transition-all shadow-sm",
+                                    isTodayDay ? "bg-primary-600 text-white shadow-lg" : "text-surface-900 bg-white/50"
+                                )}>{format(day, 'd')}</span>
+
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    onClick={() => handleOpenModal(day)}
+                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-900 text-white text-[9px] font-black transition-all shadow-lg uppercase tracking-wider"
+                                >
+                                    <Plus size={12} strokeWidth={3} /> Add
+                                </motion.button>
+                            </div>
+
+                            <div className="flex-1 p-3 space-y-2 relative z-10 overflow-y-auto custom-scrollbar">
+                                {dayEvents.map(event => (
+                                    <motion.div
+                                        key={event.id}
+                                        whileHover={{ scale: 1.02, x: 2 }}
+                                        className={cn(
+                                            "p-3 rounded-xl border shadow-sm transition-all flex flex-col gap-1.5 relative overflow-hidden group/event",
+                                            event.type === 'policy' && "bg-blue-500 text-white border-blue-400",
+                                            event.type === 'meeting' && "bg-amber-500 text-white border-amber-400",
+                                            event.type === 'claim' && "bg-red-500 text-white border-red-400",
+                                            event.type === 'team' && "bg-emerald-500 text-white border-emerald-400"
+                                        )}
+                                    >
+                                        <div className="text-[10px] font-black uppercase tracking-tight leading-tight line-clamp-2">{event.title}</div>
+                                        <div className="text-[8px] font-bold opacity-80 flex items-center gap-1.5 uppercase">
+                                            <Clock size={10} strokeWidth={3} /> {format(event.start, 'HH:mm')}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
             </div>
         );
     };
 
     const renderDayView = () => {
         const dayEvents = events.filter(event => isSameDay(event.start, currentDate));
+        const dateParts = format(currentDate, 'EEEE,d,MMMM').split(',');
 
         return (
-            <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] border-0 border-[var(--glass-border)] rounded-[var(--radius-lg)] shadow-[var(--glass-shadow)] overflow-hidden min-h-[600px] flex flex-col md:flex-row">
-                <div className="md:w-64 border-r border-surface-100 p-8 flex flex-col items-center bg-surface-50/30">
-                    <span className="text-sm font-black text-surface-400 uppercase tracking-widest mb-2">{format(currentDate, 'EEEE')}</span>
-                    <span className={cn(
-                        "text-6xl font-black w-24 h-24 flex items-center justify-center rounded-full transition-all",
-                        isToday(currentDate) ? "bg-primary-600 text-white shadow-2xl" : "text-surface-900 bg-surface-100"
-                    )}>{format(currentDate, 'd')}</span>
-                    <div className="mt-8 w-full">
-                        <button
-                            onClick={() => handleOpenModal(currentDate)}
-                            className="w-full py-4 rounded-[var(--radius-xl)] bg-primary-600 text-white font-black flex items-center justify-center gap-3 shadow-xl hover:bg-primary-700 transition-all active:scale-95"
-                        >
-                            <Plus size={20} /> Create Event
-                        </button>
-                    </div>
+            <div className="bg-white/40 backdrop-blur-xl border border-surface-200/50 rounded-[var(--radius-2xl)] shadow-2xl overflow-hidden min-h-[550px] flex flex-col lg:flex-row relative">
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+                {/* Compact Focus Pillar */}
+                <div className="lg:w-56 border-r border-surface-200/40 p-8 flex flex-col items-center justify-between bg-surface-900 text-white relative overflow-hidden shrink-0">
+                    <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-primary-500/20 to-transparent" />
+
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="relative z-10 text-center"
+                    >
+                        <span className="text-[9px] font-black uppercase tracking-[5px] opacity-40 mb-6 block leading-none">{dateParts[0]}</span>
+                        <span className="text-7xl font-black tracking-tighter leading-none block mb-2">{dateParts[1]}</span>
+                        <span className="text-lg font-black uppercase tracking-[3px] opacity-60 block">{dateParts[2]}</span>
+                        <div className="h-0.5 bg-primary-500 w-10 mx-auto my-8 opacity-50" />
+                    </motion.div>
+
+                    <button
+                        onClick={() => handleOpenModal(currentDate)}
+                        className="relative z-10 w-full py-4 rounded-full bg-white text-surface-900 font-black flex items-center justify-center gap-2 shadow-2xl hover:bg-primary-50 transition-all active:scale-95 group text-[10px] tracking-[2px]"
+                    >
+                        <Plus size={16} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
+                        NEW ACTION
+                    </button>
+
+                    <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl" />
                 </div>
-                <div className="flex-1 p-8 space-y-6 bg-transparent overflow-y-auto">
-                    <h3 className="text-xl font-bold text-surface-900 flex items-center gap-2 mb-4">
-                        <Clock className="text-primary-500" size={24} />
-                        Daily Schedule • {dayEvents.length} Events
-                    </h3>
-                    <div className="space-y-4">
+
+                {/* Refined Timeline narrative */}
+                <div className="flex-1 p-6 lg:p-10 space-y-8 bg-transparent overflow-y-auto max-h-[800px] custom-scrollbar relative z-10">
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-xl font-black text-surface-900 tracking-tighter flex items-center gap-3 uppercase">
+                            <Clock className="text-primary-500" size={24} />
+                            Daily Focus
+                        </h3>
+                        <div className="px-4 py-1.5 rounded-full bg-white/60 text-surface-400 text-[10px] font-black uppercase tracking-widest border border-surface-200/50 shadow-sm">
+                            {dayEvents.length} Tasks
+                        </div>
+                    </div>
+
+                    <div className="space-y-6 relative ml-2">
+                        {/* Elegant Timeline Line */}
+                        <div className="absolute left-[19px] top-4 bottom-4 w-px bg-surface-200/60" />
+
                         {dayEvents.length > 0 ? (
-                            dayEvents.sort((a, b) => a.start.getTime() - b.start.getTime()).map(event => (
-                                <div key={event.id} className={cn(
-                                    "p-6 rounded-[var(--radius-xl)] border border-[var(--glass-border)] flex items-center gap-6 group transition-all hover:shadow-[var(--glass-shadow)] bg-[var(--bg-card)]",
-                                    event.type === 'policy' && "bg-blue-50/20 border-blue-100 hover:bg-blue-50/50",
-                                    event.type === 'meeting' && "bg-amber-50/20 border-amber-100 hover:bg-amber-50/50",
-                                    event.type === 'claim' && "bg-red-50/20 border-red-100 hover:bg-red-50/50",
-                                    event.type === 'team' && "bg-emerald-50/20 border-emerald-100 hover:bg-emerald-50/50"
-                                )}>
-                                    <div className="text-center min-w-[80px]">
-                                        <div className="text-2xl font-black text-surface-900">{format(event.start, 'HH:mm')}</div>
-                                        <div className="text-[10px] font-bold text-surface-400 uppercase uppercase tracking-tighter">to {format(event.end, 'HH:mm')}</div>
-                                    </div>
-                                    <div className="w-px h-12 bg-surface-100" />
-                                    <div className="flex-1">
-                                        <div className="font-black text-lg text-surface-900">{event.title}</div>
-                                        <p className="text-sm text-surface-600 line-clamp-1">{event.description}</p>
-                                    </div>
+                            dayEvents.map((event, idx) => (
+                                <motion.div
+                                    key={event.id}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                    className="relative pl-12 group/timeline"
+                                >
+                                    {/* Timeline Marker */}
                                     <div className={cn(
-                                        "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider",
-                                        event.type === 'policy' && "bg-blue-100 text-blue-700",
-                                        event.type === 'meeting' && "bg-amber-100 text-amber-700",
-                                        event.type === 'claim' && "bg-red-100 text-red-700",
-                                        event.type === 'team' && "bg-emerald-100 text-emerald-700"
+                                        "absolute left-0 top-1 w-10 h-10 rounded-full border-4 border-surface-50 flex items-center justify-center z-10 transition-transform group-hover/timeline:scale-110 shadow-lg shadow-surface-900/5",
+                                        event.type === 'policy' && "bg-blue-500",
+                                        event.type === 'meeting' && "bg-amber-500",
+                                        event.type === 'claim' && "bg-red-500",
+                                        event.type === 'team' && "bg-emerald-500"
                                     )}>
-                                        {event.type}
+                                        <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                                     </div>
-                                </div>
+
+                                    <div className="bg-white/80 backdrop-blur-sm p-5 rounded-[var(--radius-2xl)] border border-surface-100/80 shadow-sm hover:shadow-xl transition-all group-hover/timeline:-translate-y-1">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="text-[10px] font-black text-surface-400 flex items-center gap-2 uppercase tracking-tight">
+                                                <Clock size={12} />
+                                                {format(event.start, 'HH:mm')} — {format(event.end, 'HH:mm')}
+                                            </div>
+                                            <span className={cn(
+                                                "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                                event.status === 'upcoming' ? "bg-primary-50 text-primary-600" : "bg-success-50 text-success-600"
+                                            )}>{event.status}</span>
+                                        </div>
+                                        <h4 className="text-sm font-black text-surface-900 uppercase tracking-tight mb-2 leading-tight">{event.title}</h4>
+                                        <p className="text-[11px] text-surface-500 font-medium leading-relaxed opacity-80">{event.description || 'No detailed flux provided for this action segment.'}</p>
+                                    </div>
+                                </motion.div>
                             ))
                         ) : (
-                            <div className="h-64 flex flex-col items-center justify-center bg-surface-50/50 rounded-[var(--radius-xl)] border border-dashed border-surface-200">
-                                <CalendarIcon size={48} className="text-surface-200 mb-4" />
-                                <p className="text-surface-400 font-bold">No events booked for today</p>
+                            <div className="h-96 flex flex-col items-center justify-center bg-surface-50/40 rounded-[var(--radius-2xl)] border border-dashed border-surface-200">
+                                <motion.div
+                                    animate={{
+                                        y: [0, -10, 0],
+                                        rotate: [0, 5, -5, 0]
+                                    }}
+                                    transition={{ duration: 4, repeat: Infinity }}
+                                >
+                                    <CalendarIcon size={64} className="text-surface-200 mb-6" />
+                                </motion.div>
+                                <p className="text-surface-400 font-bold tracking-widest uppercase text-sm">No scheduled events for this anchor</p>
                             </div>
                         )}
                     </div>
@@ -375,53 +521,70 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
                 {/* Additional Sidebar Info in Month View */}
                 {view === 'month' && (
-                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-xl)] p-6 shadow-[var(--glass-shadow)] border border-[var(--glass-border)]">
-                            <h3 className="text-lg font-bold text-surface-900 mb-4 flex items-center gap-2">
-                                <Clock size={20} className="text-primary-500" />
-                                Selected Date: {format(selectedDate, 'MMMM d, yyyy')}
+                    <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="lg:col-span-2 bg-white/40 backdrop-blur-xl rounded-[var(--radius-2xl)] p-8 shadow-2xl border border-surface-200/60 relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+                            <h3 className="text-2xl font-black text-surface-900 mb-8 flex items-center gap-4">
+                                <motion.div
+                                    animate={{ rotate: [0, 10, -10, 0] }}
+                                    transition={{ duration: 5, repeat: Infinity }}
+                                >
+                                    <Clock size={28} className="text-primary-500" />
+                                </motion.div>
+                                <span className="tracking-tight uppercase">TIMELINE • {format(selectedDate, 'MMM d, yyyy')}</span>
                             </h3>
+
                             <div className="space-y-4">
                                 {events.filter(e => isSameDay(e.start, selectedDate)).length > 0 ? (
-                                    events.filter(e => isSameDay(e.start, selectedDate)).map(event => (
-                                        <div key={event.id} className="group relative flex items-start gap-4 p-4 rounded-[var(--radius-lg)] bg-surface-50 border border-surface-100 hover:border-primary-200 transition-all hover:shadow-md">
+                                    events.filter(e => isSameDay(e.start, selectedDate)).map((event, idx) => (
+                                        <motion.div
+                                            key={event.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            className="group relative flex items-center gap-6 p-6 rounded-[var(--radius-xl)] bg-white border border-surface-100 hover:border-primary-500/30 transition-all hover:shadow-xl"
+                                        >
                                             <div className={cn(
-                                                "w-12 h-12 rounded-[var(--radius-md)] flex items-center justify-center shrink-0",
-                                                event.type === 'policy' && "bg-blue-100 text-blue-600",
-                                                event.type === 'meeting' && "bg-amber-100 text-amber-600",
-                                                event.type === 'claim' && "bg-red-100 text-red-600",
-                                                event.type === 'team' && "bg-emerald-100 text-emerald-600"
+                                                "w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-inner transition-transform group-hover:scale-110",
+                                                event.type === 'policy' && "bg-blue-500 text-white",
+                                                event.type === 'meeting' && "bg-amber-500 text-white",
+                                                event.type === 'claim' && "bg-red-500 text-white",
+                                                event.type === 'team' && "bg-emerald-500 text-white"
                                             )}>
-                                                <CalendarIcon size={24} />
+                                                <CalendarIcon size={28} strokeWidth={2.5} />
                                             </div>
                                             <div className="flex-1">
-                                                <div className="flex justify-between items-start mb-1">
-                                                    <h4 className="font-bold text-surface-900">{event.title}</h4>
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <h4 className="font-black text-lg text-surface-900 uppercase tracking-tight">{event.title}</h4>
                                                     <span className={cn(
-                                                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                                                        event.status === 'upcoming' ? "bg-primary-100 text-primary-700" : "bg-success-100 text-success-700"
+                                                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border",
+                                                        event.status === 'upcoming' ? "bg-primary-50 text-primary-600 border-primary-100" : "bg-success-50 text-success-600 border-success-100"
                                                     )}>
                                                         {event.status}
                                                     </span>
                                                 </div>
-                                                <p className="text-sm text-surface-600 mb-3">{event.description}</p>
-                                                <div className="flex flex-wrap gap-4 text-xs text-surface-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <Clock size={14} />
-                                                        {format(event.start, 'HH:mm')}
+                                                <p className="text-sm text-surface-500 font-medium line-clamp-1">{event.description}</p>
+                                                <div className="flex items-center gap-4 mt-3">
+                                                    <div className="flex items-center gap-1.5 text-[10px] font-black text-surface-400 uppercase tracking-tighter">
+                                                        <Clock size={14} className="text-primary-400" />
+                                                        {format(event.start, 'HH:mm')} — {format(event.end, 'HH:mm')}
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        </motion.div>
                                     ))
                                 ) : (
-                                    <div className="text-center py-12 bg-surface-50/50 rounded-[var(--radius-lg)] border border-dashed border-surface-200">
-                                        <p className="text-surface-400 font-bold">No events scheduled for this day</p>
+                                    <div className="text-center py-20 bg-surface-50/30 rounded-[var(--radius-2xl)] border border-dashed border-surface-200">
+                                        <div className="mb-4 opacity-20">
+                                            <CalendarIcon size={48} className="mx-auto" />
+                                        </div>
+                                        <p className="text-surface-400 font-black uppercase tracking-widest text-xs">Horizon clear for this anchor</p>
                                         <button
                                             onClick={() => handleOpenModal(selectedDate)}
-                                            className="mt-4 px-6 py-2 rounded-full bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-all active:scale-95"
+                                            className="mt-6 px-10 py-3 rounded-full bg-surface-900 text-white font-black text-[10px] hover:bg-black transition-all shadow-xl shadow-black/10 active:scale-95 uppercase tracking-[2px]"
                                         >
-                                            + Add First Event
+                                            + ADD FIRST ACTIVITY
                                         </button>
                                     </div>
                                 )}
@@ -429,21 +592,25 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         </div>
 
                         <div className="space-y-6">
-                            <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-[var(--radius-xl)] p-6 shadow-xl text-white relative overflow-hidden h-full">
+                            <div className="bg-surface-900 rounded-[var(--radius-2xl)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.2)] text-white relative overflow-hidden group h-full flex flex-col justify-center">
+                                <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />
+
                                 <div className="relative z-10">
-                                    <h3 className="text-xl font-bold mb-2">Calendar Pro</h3>
-                                    <p className="text-primary-100 text-sm mb-6 leading-relaxed font-medium">
-                                        Click on any day's "+" icon to quickly book a meeting or renewal reminder.
+                                    <h3 className="text-3xl font-black mb-4 tracking-tighter uppercase leading-tight">TEMPORAL<br />ACCELERATION</h3>
+                                    <p className="text-white/50 text-xs mb-8 leading-relaxed font-black uppercase tracking-widest">
+                                        Fragment your schedule. <br />
+                                        Maximize the flux.
                                     </p>
                                     <button
                                         onClick={() => handleOpenModal()}
-                                        className="w-full bg-white text-primary-600 font-bold py-4 rounded-[var(--radius-xl)] hover:bg-primary-50 transition-colors shadow-2xl active:scale-95"
+                                        className="w-full bg-primary-600 text-white font-black py-5 rounded-2xl hover:bg-primary-500 transition-all shadow-2xl active:scale-95 uppercase tracking-[3px] text-xs border border-primary-400/30"
                                     >
-                                        Quick Create Event
+                                        Flux Generator
                                     </button>
                                 </div>
-                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary-400/20 rounded-full blur-3xl" />
+
+                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-500/20 rounded-full blur-3xl group-hover:bg-primary-500/30 transition-all" />
+                                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-500/30 transition-all" />
                             </div>
                         </div>
                     </div>

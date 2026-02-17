@@ -7,7 +7,7 @@
     "build": "GENERATE_SOURCEMAP=false next build",
     "start": "next start",
     "lint": "eslint",
-    "predeploy": "npm run build && echo. > out/.nojekyll",
+    "predeploy": "npm run build && node -e \"require('fs').writeFileSync('out/.nojekyll', '')\"",
     "deploy": "gh-pages -d out"
   },
   "dependencies": {

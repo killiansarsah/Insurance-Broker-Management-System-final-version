@@ -4,7 +4,7 @@ import React, { useState, useRef } from 'react';
 import { CalendarView, CalendarViewHandle } from '@/components/calendar/calendar-view';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { RefreshCw, Globe, CheckCircle2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Globe, RefreshCw, Plus, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export default function CalendarPage() {
@@ -52,57 +52,57 @@ export default function CalendarPage() {
     };
 
     return (
-        <div className="p-6 lg:p-10 space-y-8 min-h-screen">
+        <div className="p-4 md:p-8 space-y-8 min-h-screen bg-surface-50/30">
             <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col md:flex-row md:items-center justify-between gap-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-2"
             >
-                <div>
-                    <h1 className="text-3xl font-extrabold text-surface-900 tracking-tight">
-                        Broker Calendar
+                <div className="space-y-1">
+                    <h1 className="text-2xl font-black text-surface-900 tracking-tight uppercase flex items-center gap-3">
+                        <CalendarIcon className="text-primary-600" size={24} />
+                        Broker <span className="opacity-40">Calendar</span>
                     </h1>
-                    <p className="text-surface-500 mt-1">
-                        Track policy renewals, client meetings, and claim deadlines.
-                    </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
-                    <button
-                        onClick={handleConnect}
-                        disabled={connectionStatus === 'connecting'}
-                        className={cn(
-                            "flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-lg)] font-bold text-sm shadow-sm transition-all cursor-pointer border",
-                            connectionStatus === 'connected'
-                                ? "bg-success-50 border-success-200 text-success-700"
-                                : "bg-white border-surface-200 text-surface-700 hover:bg-surface-50"
-                        )}
-                    >
-                        <Globe size={18} className={cn(connectionStatus === 'connecting' && "animate-spin")} />
-                        {connectionStatus === 'disconnected' && "Connect Google"}
-                        {connectionStatus === 'connecting' && "Connecting..."}
-                        {connectionStatus === 'connected' && "Connected"}
-                    </button>
+                {/* Satellite Control Pill */}
+                <div className="flex items-center gap-1 p-1 bg-white/60 backdrop-blur-xl border border-surface-200/50 rounded-full shadow-xl shadow-surface-900/5">
+                    <div className="flex items-center gap-1 pr-2 border-r border-surface-100/80 mr-1 ml-1">
+                        <button
+                            onClick={handleConnect}
+                            disabled={connectionStatus === 'connecting'}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all",
+                                connectionStatus === 'connected'
+                                    ? "text-success-600"
+                                    : "text-surface-500 hover:text-surface-900 hover:bg-surface-50/50"
+                            )}
+                        >
+                            <Globe size={14} className={cn(connectionStatus === 'connecting' && "animate-spin")} />
+                            {connectionStatus === 'disconnected' && "Connect"}
+                            {connectionStatus === 'connecting' && "Linking..."}
+                            {connectionStatus === 'connected' && "Linked"}
+                        </button>
 
-                    <button
-                        onClick={handleSync}
-                        disabled={isSyncing}
-                        className={cn(
-                            "flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-lg)] font-bold text-sm shadow-sm transition-all cursor-pointer border",
-                            "bg-white border-surface-200 text-surface-700 hover:bg-surface-50",
-                            isSyncing && "opacity-50 cursor-not-allowed"
-                        )}
-                    >
-                        <RefreshCw size={18} className={cn(isSyncing && "animate-spin")} />
-                        {isSyncing ? "Syncing..." : "Sync Now"}
-                    </button>
+                        <button
+                            onClick={handleSync}
+                            disabled={isSyncing}
+                            className={cn(
+                                "flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all text-surface-500 hover:text-surface-900 hover:bg-surface-50/50",
+                                isSyncing && "opacity-50 cursor-not-allowed"
+                            )}
+                        >
+                            <RefreshCw size={14} className={cn(isSyncing && "animate-spin")} />
+                            {isSyncing ? "Syncing" : "Sync"}
+                        </button>
+                    </div>
 
                     <button
                         onClick={() => calendarRef.current?.openModal()}
-                        className="px-5 py-2.5 rounded-[var(--radius-lg)] bg-primary-600 text-white font-bold text-sm shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all cursor-pointer"
+                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all active:scale-95"
                     >
-                        + New Event
+                        <Plus size={14} strokeWidth={3} />
+                        New Action
                     </button>
                 </div>
             </motion.div>
