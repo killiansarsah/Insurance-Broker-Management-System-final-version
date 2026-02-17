@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "GENERATE_SOURCEMAP=false next build",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "predeploy": "npm run build && node -e \"require('fs').writeFileSync('out/.nojekyll', '')\"",
-    "deploy": "gh-pages -d out"
+    "predeploy": "next build && node -e \"require('fs').writeFileSync('out/.nojekyll', '')\"",
+    "deploy": "gh-pages -d out -t true"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

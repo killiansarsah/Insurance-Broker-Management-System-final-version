@@ -2,11 +2,10 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft,
-    Mail,
-    Phone,
-    MapPin,
+    ArrowUpRight,
     ShieldCheck,
     AlertTriangle,
     FileText,
@@ -15,306 +14,497 @@ import {
     Building2,
     Calendar,
     CreditCard,
-    ExternalLink,
+    DollarSign,
+    Clock,
+    CheckCircle2,
+    ArrowRight,
+    MessageSquare,
+    Bell,
+    Check,
+    Plus,
+    MapPin
 } from 'lucide-react';
-import { Card, CardHeader } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { StatusBadge } from '@/components/data-display/status-badge';
-import { getClientById, getClientDisplayName, mockClients } from '@/mock/clients';
+import { getClientById, getClientDisplayName } from '@/mock/clients';
 import { getPoliciesByClientId } from '@/mock/policies';
-import { formatCurrency, formatDate, formatPhone, getInitials, cn } from '@/lib/utils';
-import type { Policy } from '@/types';
-import Link from 'next/link';
-
-const TABS = ['Overview', 'Policies', 'Claims', 'Documents', 'Activity'];
-
-
+import { formatCurrency, formatDate, getInitials, cn } from '@/lib/utils';
 
 export default function ClientProfilePage() {
     const params = useParams();
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState('Overview');
-
     const client = getClientById(params.id as string);
 
     if (!client) {
         return (
-            <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
-                <p className="text-surface-500 text-lg">Client not found.</p>
-                <Button variant="outline" className="mt-4" onClick={() => router.push('/dashboard/clients')}>
-                    Back to Clients
-                </Button>
+            <div className="flex flex-col items-center justify-center py-24 animate-fade-in text-center px-6">
+                <div className="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center mb-6 text-surface-400">
+                    <Users size={32} />
+                </div>
+                <h2 className="text-xl font-black text-surface-900 uppercase tracking-tighter mb-2">Anchor Not Found</h2>
+                <p className="text-surface-500 text-sm max-w-[280px] mb-8">The client record you are looking for has been moved or does not exist in the current flux.</p>
+                <button
+                    onClick={() => router.push('/dashboard/clients')}
+                    className="px-8 py-3 bg-surface-900 text-white rounded-full font-black text-[11px] uppercase tracking-widest hover:bg-primary-600 transition-all active:scale-95 shadow-xl"
+                >
+                    Return to Fleet
+                </button>
             </div>
         );
     }
 
-    const clientPolicies = getPoliciesByClientId(client.id);
     const name = getClientDisplayName(client);
-    const initials = getInitials(name);
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            {/* Back + Header */}
-            <div className="flex items-center gap-3">
+        <div className="max-w-[1400px] mx-auto space-y-6 pb-20 p-4 lg:p-6 animate-fade-in relative">
+            {/* Background Decorative Blur */}
+            <div className="fixed top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
+                <div className="absolute top-1/4 -right-20 w-[600px] h-[600px] bg-primary-500/5 blur-[120px] rounded-full" />
+                <div className="absolute -bottom-20 -left-20 w-[500px] h-[500px] bg-accent-500/5 blur-[100px] rounded-full" />
+            </div>
+
+            {/* --- Executive Header Pillar --- */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col lg:flex-row lg:items-center gap-6 bg-white/60 backdrop-blur-xl p-6 lg:p-8 rounded-[var(--radius-3xl)] border border-surface-200/50 shadow-xl relative overflow-hidden ring-1 ring-white/20"
+            >
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
                 <button
                     onClick={() => router.push('/dashboard/clients')}
-                    className="p-2 rounded-[var(--radius-md)] text-surface-500 hover:bg-surface-100 cursor-pointer transition-colors"
+                    className="w-12 h-12 flex items-center justify-center rounded-full bg-white text-surface-400 hover:text-primary-600 hover:shadow-lg hover:scale-105 transition-all active:scale-90 shadow-sm border border-surface-100 shrink-0"
                 >
                     <ArrowLeft size={20} />
                 </button>
-                <div>
-                    <h1 className="text-2xl font-bold text-surface-900 tracking-tight">{name}</h1>
-                    <p className="text-sm text-surface-500">{client.clientNumber}</p>
-                </div>
-            </div>
 
-            {/* Summary Card */}
-            <Card padding="lg">
-                <div className="flex flex-col sm:flex-row gap-6">
-                    {/* Avatar */}
-                    <div className={cn(
-                        'w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold shrink-0',
-                        client.type === 'corporate'
-                            ? 'bg-primary-100 text-primary-700'
-                            : 'bg-accent-50 text-accent-700'
-                    )}>
-                        {client.type === 'corporate' ? <Building2 size={32} /> : initials}
-                    </div>
-
-                    {/* Info Grid */}
-                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <InfoItem icon={<Users size={14} />} label="Type" value={client.type === 'corporate' ? 'Corporate' : 'Individual'} />
-                        <InfoItem icon={<ShieldCheck size={14} />} label="Status">
-                            <StatusBadge status={client.status} />
-                        </InfoItem>
-                        <InfoItem icon={<ShieldCheck size={14} />} label="KYC">
-                            <div className="flex items-center gap-1.5">
-                                <StatusBadge status={client.kycStatus} />
-                                {client.isPep && <Badge variant="danger" size="sm">PEP</Badge>}
-                            </div>
-                        </InfoItem>
-                        <InfoItem icon={<AlertTriangle size={14} />} label="AML Risk">
-                            <StatusBadge status={client.amlRiskLevel} />
-                        </InfoItem>
-                        <InfoItem icon={<Phone size={14} />} label="Phone" value={formatPhone(client.phone)} />
-                        <InfoItem icon={<Mail size={14} />} label="Email" value={client.email || '—'} />
-                        <InfoItem icon={<MapPin size={14} />} label="Location" value={`${client.city || ''}, ${client.region || ''}`.replace(/^, |, $/g, '') || '—'} />
-                        <InfoItem icon={<Calendar size={14} />} label="Joined" value={formatDate(client.createdAt, 'long')} />
-                        <InfoItem icon={<CreditCard size={14} />} label="Digital Address" value={client.digitalAddress || '—'} />
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex sm:flex-col gap-4 shrink-0">
-                        <StatBox label="Active Policies" value={client.activePolicies} color="text-primary-600" />
-                        <StatBox label="Total Premium" value={formatCurrency(client.totalPremium)} color="text-success-600" />
-                        <StatBox label="Total Policies" value={client.totalPolicies} color="text-surface-600" />
-                    </div>
-                </div>
-            </Card>
-
-            {/* Tabs */}
-            <div className="border-b border-surface-200">
-                <nav className="flex gap-0 -mb-px">
-                    {TABS.map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={cn(
-                                'px-5 py-3 text-sm font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap',
-                                activeTab === tab
-                                    ? 'border-primary-500 text-primary-600'
-                                    : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
-                            )}
-                        >
-                            {tab}
-                        </button>
-                    ))}
-                </nav>
-            </div>
-
-            {/* Tab Content */}
-            <div className="animate-fade-in">
-                {activeTab === 'Overview' && <OverviewTab client={client} />}
-                {activeTab === 'Policies' && <PoliciesTab policies={clientPolicies} />}
-                {activeTab === 'Claims' && <EmptyTab icon={<AlertTriangle />} text="No claims associated with this client." />}
-                {activeTab === 'Documents' && <EmptyTab icon={<FileText />} text="No documents uploaded yet." />}
-                {activeTab === 'Activity' && <EmptyTab icon={<Activity />} text="Activity log will be available when connected to backend." />}
-            </div>
-        </div>
-    );
-}
-
-function OverviewTab({ client }: { client: ReturnType<typeof getClientById> }) {
-    if (!client) return null;
-    return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card padding="lg">
-                <CardHeader title="Personal Details" />
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                    {client.type === 'individual' ? (
-                        <>
-                            <DetailField label="First Name" value={client.firstName} />
-                            <DetailField label="Last Name" value={client.lastName} />
-                            <DetailField label="Other Names" value={client.otherNames} />
-                            <DetailField label="Date of Birth" value={client.dateOfBirth ? formatDate(client.dateOfBirth) : undefined} />
-                            <DetailField label="Gender" value={client.gender} />
-                            <DetailField label="Nationality" value={client.nationality} />
-                            <DetailField label="Ghana Card" value={client.ghanaCardNumber} />
-                        </>
-                    ) : (
-                        <>
-                            <DetailField label="Company Name" value={client.companyName} />
-                            <DetailField label="Registration #" value={client.registrationNumber} />
-                            <DetailField label="TIN" value={client.tin} />
-                            <DetailField label="Industry" value={client.industry} />
-                            <DetailField label="Incorporated" value={client.dateOfIncorporation ? formatDate(client.dateOfIncorporation) : undefined} />
-                        </>
-                    )}
-                </div>
-            </Card>
-
-            <Card padding="lg">
-                <CardHeader title="Contact & Address" />
-                <div className="grid grid-cols-2 gap-4 mt-4">
-                    <DetailField label="Phone" value={formatPhone(client.phone)} />
-                    <DetailField label="Alt. Phone" value={client.alternatePhone ? formatPhone(client.alternatePhone) : undefined} />
-                    <DetailField label="Email" value={client.email} />
-                    <DetailField label="Digital Address" value={client.digitalAddress} />
-                    <DetailField label="Postal Address" value={client.postalAddress} />
-                    <DetailField label="Region" value={client.region} />
-                    <DetailField label="City" value={client.city} />
-                </div>
-            </Card>
-
-            <Card padding="lg">
-                <CardHeader title="KYC / AML Compliance" />
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-8">
                     <div>
-                        <p className="text-xs text-surface-400 uppercase tracking-wider font-semibold">KYC Status</p>
-                        <div className="mt-1"><StatusBadge status={client.kycStatus} /></div>
-                    </div>
-                    <div>
-                        <p className="text-xs text-surface-400 uppercase tracking-wider font-semibold">AML Risk Level</p>
-                        <div className="mt-1"><StatusBadge status={client.amlRiskLevel} /></div>
-                    </div>
-                    <div>
-                        <p className="text-xs text-surface-400 uppercase tracking-wider font-semibold">PEP</p>
-                        <p className="text-sm font-medium text-surface-800 mt-0.5">{client.isPep ? 'Yes ⚠️' : 'No'}</p>
-                    </div>
-                    <div>
-                        <p className="text-xs text-surface-400 uppercase tracking-wider font-semibold">EDD Required</p>
-                        <p className="text-sm font-medium text-surface-800 mt-0.5">{client.eddRequired ? 'Yes' : 'No'}</p>
-                    </div>
-                    {client.kycVerifiedAt && (
-                        <DetailField label="Verified At" value={formatDate(client.kycVerifiedAt, 'long')} />
-                    )}
-                </div>
-            </Card>
-
-            <Card padding="lg">
-                <CardHeader title="Assigned Broker" />
-                <div className="flex items-center gap-4 mt-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-sm">
-                        {client.assignedBrokerName ? getInitials(client.assignedBrokerName) : '—'}
-                    </div>
-                    <div>
-                        <p className="text-sm font-semibold text-surface-900">{client.assignedBrokerName || 'Unassigned'}</p>
-                        <p className="text-xs text-surface-500">{client.assignedBrokerId || ''}</p>
-                    </div>
-                </div>
-            </Card>
-        </div>
-    );
-}
-
-function PoliciesTab({ policies }: { policies: Policy[] }) {
-    if (policies.length === 0) {
-        return <EmptyTab icon={<FileText />} text="No policies linked to this client." />;
-    }
-
-    return (
-        <div className="space-y-3">
-            {policies.map((pol) => (
-                <Card key={pol.id} padding="md" hover className="group">
-                    <Link href={`/dashboard/policies/${pol.id}`}>
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center">
-                                    <FileText size={18} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-semibold text-surface-900 group-hover:text-primary-600 transition-colors">
-                                        {pol.policyNumber}
-                                    </p>
-                                    <p className="text-xs text-surface-500 mt-0.5">
-                                        {pol.insuranceType.replace(/_/g, ' ')} • {pol.insurerName}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                                <div className="text-right">
-                                    <p className="text-sm font-semibold text-surface-900">{formatCurrency(pol.premiumAmount)}</p>
-                                    <p className="text-xs text-surface-400 mt-0.5">{formatDate(pol.inceptionDate)} → {formatDate(pol.expiryDate)}</p>
-                                </div>
-                                <StatusBadge status={pol.status} />
-                                <ExternalLink size={14} className="text-surface-300 group-hover:text-primary-500 transition-colors" />
+                        <div className="flex items-center flex-wrap gap-3 mb-2">
+                            <h1 className="text-3xl font-black text-surface-900 tracking-tighter uppercase leading-none">{name}</h1>
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full border border-emerald-200/50 shadow-sm">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[10px] font-black uppercase tracking-widest leading-none">Status: Active</span>
                             </div>
                         </div>
-                    </Link>
-                </Card>
-            ))}
+                        <div className="flex flex-wrap gap-x-6 gap-y-2 text-[11px] font-bold text-surface-500 uppercase tracking-tight">
+                            <span className="flex items-center gap-1.5"><Building2 size={13} className="text-primary-500" /> {client.type === 'corporate' ? 'Corporate Entity' : 'Individual'}</span>
+                            <span className="flex items-center gap-1.5"><MapPinIcon size={13} className="text-primary-500" /> {client.region || 'Greater Accra'}</span>
+                            <span className="flex items-center gap-1.5"><Users size={13} className="text-primary-500" /> Account: A. Boateng</span>
+                            <span className="flex items-center gap-1.5"><Calendar size={13} className="text-primary-500" /> Partner Since: 2021</span>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4">
+                        <StatusPill label="KYC Status" value="Complete" icon={<CheckCircle2 size={14} />} color="text-emerald-600" />
+                        <StatusPill label="NIC Compliance" value="Verified OK" icon={<ShieldCheck size={14} />} color="text-emerald-600" />
+                    </div>
+                </div>
+            </motion.div>
+
+            {/* --- Insight Grid Row 1: Financials & Alerts --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Financial Summary */}
+                <GlassCard title="Financial Summary" icon={<DollarSign size={16} />}>
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+                        <MetricItem label="Total Premium (YTD)" value="₵2.4M" sub="Based on 8 ACTIVE policies" />
+                        <MetricItem label="Outstanding Premium" value="₵180,000" color="text-danger-500" sub="OVERDUE: 14 DAYS" />
+                        <MetricItem label="Commission Earned" value="₵310,240" sub="Ref Settlement: M-122" />
+                        <MetricItem label="Commission Outstanding" value="₵95,400" sub="ACCRUALS PENDING" />
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-surface-200/40 flex justify-between items-center">
+                        <div>
+                            <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest block mb-1">Financial Health Status</span>
+                            <div className="px-3 py-1 bg-amber-50 text-amber-600 rounded-full border border-amber-200/50 text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 shadow-sm">
+                                <AlertTriangle size={12} /> Part Paid - Attention Required
+                            </div>
+                        </div>
+                        <button className="text-[10px] font-black text-primary-600 uppercase tracking-[2px] hover:bg-primary-50 p-2 rounded-lg transition-colors">Generate Statement</button>
+                    </div>
+                </GlassCard>
+
+                {/* Key Dates & Alerts */}
+                <GlassCard title="Emergency Intelligence" icon={<Clock size={16} />}>
+                    <div className="grid grid-cols-2 gap-x-12 gap-y-6">
+                        <MetricItem label="Next Policy Expiry" value="18 Days" sub="TERMINATION: JUN 12, 2025" />
+                        <MetricItem label="Policies Expiring (30d)" value="02" color="text-amber-500" sub="RENEWAL PIPELINE ACTIVE" />
+                        <MetricItem label="Outstanding Docs" value="01" color="text-danger-500" sub="MOTOR CERT PENDING" />
+                        <MetricItem label="Claims Pending" value="01" sub="REF INQUIRY: CL-88412" />
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-surface-200/40">
+                        <div className="flex items-center justify-between text-[11px] font-black text-surface-500 uppercase tracking-widest mb-3">
+                            <span>Relationship Retention Probability</span>
+                            <span className="text-emerald-600">82% High</span>
+                        </div>
+                        <div className="h-2 bg-surface-100 rounded-full overflow-hidden shadow-inner p-[1px]">
+                            <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: '82%' }}
+                                transition={{ duration: 1.5, ease: "easeOut" }}
+                                className="h-full bg-gradient-to-r from-emerald-400 to-emerald-600 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.3)]"
+                            />
+                        </div>
+                    </div>
+                </GlassCard>
+            </div>
+
+            {/* --- Policies Held Table --- */}
+            <section className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                    <h3 className="text-[13px] font-black text-surface-900 uppercase tracking-[3px] flex items-center gap-3">
+                        <FileText size={16} className="text-primary-500" /> Policies Held
+                    </h3>
+                    <div className="flex gap-2">
+                        <button className="text-[10px] font-black text-surface-400 uppercase tracking-widest hover:text-primary-600 px-3 py-1.5 rounded-lg border border-transparent hover:border-surface-200 bg-white/40 transition-all">Export Report</button>
+                        <button className="text-[10px] font-black text-primary-600 uppercase tracking-widest bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-100 hover:bg-primary-100 transition-all">View All Records</button>
+                    </div>
+                </div>
+                <div className="bg-white/60 backdrop-blur-xl rounded-[var(--radius-2xl)] border border-surface-200/50 overflow-hidden shadow-xl ring-1 ring-white/20">
+                    <table className="w-full text-left border-collapse table-fixed lg:table-auto">
+                        <thead>
+                            <tr className="bg-surface-50/50 border-b border-surface-200/30">
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest w-[120px]">Policy ID</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest">Insurance Product</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest">Primary Insurer</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest">Gross Premium</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest">Status</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest text-center">Expiry</th>
+                                <th className="px-6 py-5 text-[10px] font-black text-surface-400 uppercase tracking-widest text-center">Docs</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-surface-200/30">
+                            {[
+                                { id: 'P-10231', product: 'Motor (Fleet)', insurer: 'SIC Insurance', premium: '₵420,000', status: 'Active', expiry: '12 Jun', docWarn: 'CERT' },
+                                { id: 'P-10244', product: 'Fire & Allied', insurer: 'Enterprise', premium: '₵980,000', status: 'Active', expiry: '02 Jul', docWarn: null },
+                                { id: 'P-10288', product: 'Health Master', insurer: 'Hollard', premium: '₵1.04M', status: 'Active', expiry: '28 Aug', docWarn: null },
+                            ].map((row, idx) => (
+                                <tr key={row.id} className="hover:bg-primary-500/[0.02] transition-colors group cursor-pointer">
+                                    <td className="px-6 py-5 text-[11px] font-black text-primary-600 tracking-tight">{row.id}</td>
+                                    <td className="px-6 py-5">
+                                        <div className="text-[12px] font-black text-surface-900 uppercase">{row.product}</div>
+                                        <div className="text-[9px] font-bold text-surface-400 uppercase tracking-tighter">Corporate Package</div>
+                                    </td>
+                                    <td className="px-6 py-5">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-6 h-6 rounded-full bg-surface-100 flex items-center justify-center text-[8px] font-black">{row.insurer[0]}</div>
+                                            <span className="text-[11px] font-bold text-surface-600 uppercase tracking-tight">{row.insurer}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-5 text-[12px] font-black text-surface-900">{row.premium}</td>
+                                    <td className="px-6 py-5">
+                                        <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100 shadow-sm">Active</span>
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
+                                        <div className="text-[11px] font-black text-surface-900 uppercase leading-none mb-1">{row.expiry}</div>
+                                        <div className="text-[8px] font-black text-surface-400 uppercase tracking-tighter">2025</div>
+                                    </td>
+                                    <td className="px-6 py-5 text-center">
+                                        {row.docWarn ? (
+                                            <div className="inline-flex items-center gap-1.5 font-black text-danger-500 text-[10px] bg-danger-50 px-2.5 py-1 rounded-full border border-danger-100 animate-pulse">
+                                                <AlertTriangle size={12} /> {row.docWarn}
+                                            </div>
+                                        ) : (
+                                            <div className="w-7 h-7 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mx-auto border border-emerald-100 shadow-sm">
+                                                <CheckCircle2 size={16} strokeWidth={2.5} />
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            {/* --- Broker Intelligence row: Renewals & Claims History --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+                {/* Renewals & Retention */}
+                <GlassCard title="Renewals & Retention" icon={<Activity size={16} />}>
+                    <div className="space-y-4">
+                        <RenewalItem label="Motor Fleet Renewal" target="P-10231" status="Quoted" expiry="18 Days" prev="Won (SIC)" progress={65} />
+                        <RenewalItem label="Fire & Allied Asset" target="P-10244" status="Analyzing" expiry="34 Days" prev="Won (Enterprise)" progress={20} />
+                        <button className="w-full py-3 bg-surface-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[3px] shadow-xl hover:scale-[1.02] transition-transform active:scale-95 mt-2">
+                            Initiate Bulk Review
+                        </button>
+                    </div>
+                </GlassCard>
+
+                {/* Claims History (Broker View) */}
+                <GlassCard title="Claims History (Live Feed)" icon={<Activity size={16} />}>
+                    <div className="space-y-4">
+                        <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-500/[0.03] to-surface-500/[0.01] border border-primary-200/20 shadow-inner relative overflow-hidden group">
+                            <div className="flex justify-between items-start mb-4 relative z-10">
+                                <div>
+                                    <span className="text-[11px] font-black text-surface-900 uppercase block">Ref Code: CL-88412</span>
+                                    <span className="text-[10px] font-bold text-surface-400 uppercase">Policy Link: P-10231 (Motor)</span>
+                                </div>
+                                <span className="text-[9px] font-black text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100 uppercase tracking-widest shadow-sm">Pending with Insurer</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-6 relative z-10 border-t border-surface-200/30 pt-4">
+                                <div className="flex flex-col"><span className="text-[8px] font-black text-surface-400 uppercase tracking-widest mb-1">Insurer</span><span className="text-[11px] font-black uppercase text-surface-700">SIC Insurance</span></div>
+                                <div className="flex flex-col"><span className="text-[8px] font-black text-surface-400 uppercase tracking-widest mb-1">Claim Amount</span><span className="text-[12px] font-black text-primary-600 tracking-tight">₵75,500</span></div>
+                                <div className="flex flex-col"><span className="text-[8px] font-black text-surface-400 uppercase tracking-widest mb-1">Days Open</span><span className="text-[11px] font-black uppercase text-surface-900 animate-pulse">26 Days</span></div>
+                            </div>
+                            <div className="absolute top-0 right-0 p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <ArrowUpRight size={14} className="text-surface-300" />
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 mt-2">
+                            <div className="p-3 bg-surface-50/50 rounded-xl border border-surface-200/30 text-center">
+                                <div className="text-[14px] font-black text-surface-900">14%</div>
+                                <div className="text-[8px] font-black text-surface-400 uppercase tracking-widest">Active Loss Ratio</div>
+                            </div>
+                            <div className="p-3 bg-surface-50/50 rounded-xl border border-surface-200/30 text-center">
+                                <div className="text-[14px] font-black text-surface-900">03</div>
+                                <div className="text-[8px] font-black text-surface-400 uppercase tracking-widest">Past 12m Claims</div>
+                            </div>
+                        </div>
+                    </div>
+                </GlassCard>
+            </div>
+
+            {/* --- Documents & Timeline row --- */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Documents & Compliance */}
+                <GlassCard title="Documents & Compliance Checklist" icon={<ShieldCheck size={16} />}>
+                    <div className="space-y-1">
+                        <ChecklistItem label="Proposal Form (Digital)" type="Mandatory" status="uploaded" date="10 Jan 2025" />
+                        <ChecklistItem label="Master Policy Schedule" type="Mandatory" status="uploaded" date="12 Jan 2025" />
+                        <ChecklistItem label="Temporary Cover Note" type="Mandatory" status="issued" date="14 Jan 2025" />
+                        <ChecklistItem label="Motor Fleet Certificate" type="Mandatory" status="pending" isAlert />
+                        <ChecklistItem label="KYC Document Suite" type="NIC Required" status="complete" date="05 Feb 2025" />
+                    </div>
+                </GlassCard>
+
+                {/* Communication & Activity Timeline */}
+                <GlassCard title="Communication & Activity Feed" icon={<MessageSquare size={16} />}>
+                    <div className="space-y-6">
+                        <div className="space-y-4">
+                            <TimelineItem date="12 Mar" category="Call logged" text="Renewal discussion with CFO regarding Motor Fleet expansion" owner="A. Boateng" />
+                            <TimelineItem date="08 Mar" category="Email sent" text="Sent finalized Renewal quotation for SIC Fire policy" src="Outbound" />
+                            <TimelineItem date="02 Mar" category="Claim alert" text="Follow-up with SIC regarding claim CL-88412 assessment" />
+                            <TimelineItem date="18 Feb" category="Payment" text="Premium payment reminder sent for Q1 installments" isLate />
+                        </div>
+                        <button className="w-full py-3 bg-white border border-surface-200/50 text-surface-500 rounded-xl text-[10px] font-black uppercase tracking-[3px] hover:bg-surface-50 hover:text-surface-900 transition-all shadow-sm">
+                            View Extensive History
+                        </button>
+                    </div>
+                </GlassCard>
+            </div>
+
+            {/* --- Tasks & Follow-ups Column (Vertical Pillar) --- */}
+            <section className="pt-4">
+                <div className="flex items-center justify-between mb-4 px-2">
+                    <h3 className="text-[13px] font-black text-surface-900 uppercase tracking-[3px] flex items-center gap-3">
+                        <Bell size={16} className="text-danger-500" /> Pending Tasks & Follow-ups
+                    </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <TaskCard label="Issue Motor Certificate" status="CRITICAL" due="Today" owner="Ops Dept" highlight="danger" />
+                    <TaskCard label="Premium Debt Recovery (₵180k)" status="URGENT" due="3 Days" owner="Finance" highlight="amber" />
+                    <TaskCard label="Renewal Confirmation" status="NORMAL" due="7 Days" owner="AO" />
+                </div>
+            </section>
+
+            {/* --- Client Health Indicator HUD / Floating Anchor --- */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.005 }}
+                className="bg-surface-900 rounded-[var(--radius-3xl)] p-8 shadow-2xl text-white relative overflow-hidden border border-white/10 ring-8 ring-surface-900/5 mt-12"
+            >
+                <div className="absolute inset-0 opacity-10 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+                <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-10">
+                    <div className="flex items-center gap-8">
+                        <div className="relative shrink-0">
+                            <div className="w-20 h-20 rounded-full bg-amber-500 flex items-center justify-center shadow-xl ring-[12px] ring-amber-500/10 animate-pulse">
+                                <AlertTriangle size={36} className="text-white" />
+                            </div>
+                            <div className="absolute -top-1 -right-1 w-6 h-6 bg-danger-500 rounded-full border-4 border-surface-900 flex items-center justify-center text-[10px] font-black">!</div>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-4 mb-3">
+                                <span className="text-xs font-black uppercase tracking-[5px] text-amber-400 leading-none">Intelligence Engine</span>
+                                <div className="h-1px flex-1 bg-white/20 min-w-[50px]" />
+                                <span className="px-4 py-1 bg-amber-500 text-white rounded-full text-[11px] font-black uppercase tracking-[3px] shadow-lg ring-4 ring-amber-500/20">Client At Risk</span>
+                            </div>
+                            <h4 className="text-3xl font-black uppercase tracking-tighter mb-4 leading-none">O/S Prem + Expiring Motor Units</h4>
+                            <p className="text-[12px] font-bold text-white/60 uppercase tracking-widest leading-relaxed max-w-[600px]">
+                                <span className="text-amber-400">ANALYSIS:</span> Significant risk detected due to outstanding premiums (₵180k), upcoming Motor policy expiry in 18 days, and a missing compliance certificate.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4 lg:self-center shrink-0">
+                        <button className="px-10 py-5 bg-white text-surface-900 rounded-full font-black text-[11px] uppercase tracking-[4px] hover:bg-primary-50 transition-all shadow-2xl hover:-translate-y-1 active:scale-95">
+                            Escalate Renewal & Payment
+                        </button>
+                        <button className="px-10 py-5 bg-surface-800 text-white rounded-full font-black text-[11px] uppercase tracking-[4px] border border-white/10 hover:bg-white/5 transition-all active:scale-95">
+                            Ignore Warning
+                        </button>
+                    </div>
+                </div>
+
+                {/* Visual Flair */}
+                <div className="absolute -top-20 -right-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-primary-500/10 rounded-full blur-[80px] pointer-events-none" />
+            </motion.div>
         </div>
     );
 }
 
-function EmptyTab({ icon, text }: { icon: React.ReactNode; text: string }) {
+// --- Subcomponents & Utilities ---
+
+function GlassCard({ title, icon, children }: { title: string; icon: React.ReactNode; children: React.ReactNode }) {
     return (
-        <Card padding="lg" className="text-center py-16">
-            <div className="w-12 h-12 rounded-xl bg-surface-100 text-surface-400 flex items-center justify-center mx-auto mb-4">
+        <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white/60 backdrop-blur-xl p-6 lg:p-8 rounded-[var(--radius-3xl)] border border-surface-200/50 shadow-xl relative overflow-hidden flex flex-col h-full ring-1 ring-white/20"
+        >
+            <div className="flex items-center gap-3 mb-8">
+                <div className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center text-primary-500 border border-primary-500/20">
+                    {icon}
+                </div>
+                <h3 className="text-[13px] font-black text-surface-900 uppercase tracking-[3px] leading-none">{title}</h3>
+                <div className="flex-1 h-px bg-surface-200/30 ml-2" />
+            </div>
+            <div className="flex-1">{children}</div>
+        </motion.div>
+    );
+}
+
+function StatusPill({ label, value, icon, color }: { label: string; value: string; icon: React.ReactNode; color: string }) {
+    return (
+        <div className="bg-white/80 px-5 py-3 rounded-2xl border border-surface-200/50 flex flex-col items-center justify-center shadow-lg ring-1 ring-white/20 min-w-[120px]">
+            <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest mb-1.5 leading-none">{label}</span>
+            <div className={cn("flex items-center gap-2 font-black uppercase text-[12px] leading-none", color)}>
                 {icon}
-            </div>
-            <p className="text-sm text-surface-500">{text}</p>
-        </Card>
-    );
-}
-
-function InfoItem({
-    icon,
-    label,
-    value,
-    children,
-}: {
-    icon: React.ReactNode;
-    label: string;
-    value?: string;
-    children?: React.ReactNode;
-}) {
-    return (
-        <div className="flex items-start gap-2">
-            <span className="text-surface-400 mt-0.5">{icon}</span>
-            <div>
-                <p className="text-[10px] text-surface-400 uppercase tracking-wider font-semibold">{label}</p>
-                {children || <p className="text-sm font-medium text-surface-800">{value || '—'}</p>}
+                {value}
             </div>
         </div>
     );
 }
 
-function StatBox({ label, value, color }: { label: string; value: string | number; color: string }) {
+function MetricItem({ label, value, sub, color = "text-surface-900" }: { label: string; value: string; sub?: string; color?: string }) {
     return (
-        <div className="text-center bg-surface-50 rounded-[var(--radius-md)] p-3 min-w-[100px]">
-            <p className={cn('text-xl font-bold', color)}>{value}</p>
-            <p className="text-[10px] text-surface-500 uppercase tracking-wider font-semibold mt-0.5">{label}</p>
+        <div className="flex flex-col">
+            <p className="text-[10px] font-black text-surface-400 uppercase tracking-widest mb-2 leading-none">{label}</p>
+            <p className={cn("text-3xl font-black tracking-tighter leading-none mb-2", color)}>{value}</p>
+            {sub && <p className="text-[10px] font-bold text-surface-400 uppercase tracking-tight">{sub}</p>}
         </div>
     );
 }
 
-function DetailField({ label, value }: { label: string; value?: string }) {
+function RenewalItem({ label, target, status, expiry, prev, progress }: { label: string; target: string; status: string; expiry: string; prev: string; progress: number }) {
     return (
-        <div>
-            <p className="text-xs text-surface-400 uppercase tracking-wider font-semibold">{label}</p>
-            <p className="text-sm font-medium text-surface-800 mt-0.5 capitalize">{value || '—'}</p>
+        <div className="p-4 rounded-2xl hover:bg-white/40 border border-transparent hover:border-surface-200/40 transition-all cursor-pointer group">
+            <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                    <div className="text-[12px] font-black text-surface-900 uppercase mb-1 tracking-tight group-hover:text-primary-600 transition-colors">{label} <span className="opacity-40">{target}</span></div>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black text-surface-400 uppercase tracking-widest">History: {prev}</span>
+                    </div>
+                </div>
+                <div className="text-right">
+                    <div className="text-[11px] font-black text-surface-900 uppercase leading-none mb-1">{status}</div>
+                    <div className="text-[10px] font-black text-danger-500 uppercase tracking-tighter">{expiry} EXPR</div>
+                </div>
+            </div>
+            <div className="h-1 w-full bg-surface-100 rounded-full overflow-hidden">
+                <div className="h-full bg-primary-500" style={{ width: `${progress}%` }} />
+            </div>
         </div>
     );
+}
+
+function ChecklistItem({ label, type, status, date, isAlert }: { label: string; type: string; status: string; date?: string; isAlert?: boolean }) {
+    const isDone = status === 'uploaded' || status === 'complete' || status === 'issued';
+    return (
+        <div className="flex items-center justify-between py-4 border-b border-surface-200/30 last:border-0 group px-2">
+            <div className="flex items-center gap-4">
+                <div className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all shadow-sm",
+                    isDone ? "bg-emerald-500 border-emerald-500 text-white" : "border-surface-300 group-hover:border-primary-500 bg-white"
+                )}>
+                    {isDone ? <Check size={12} strokeWidth={4} /> : <div className="w-2 h-2 rounded-full bg-surface-300 group-hover:bg-primary-500" />}
+                </div>
+                <div>
+                    <span className={cn("text-[12px] font-black uppercase tracking-tight block leading-none mb-1", isAlert ? "text-danger-500 animate-pulse" : "text-surface-900")}>{label}</span>
+                    <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest leading-none">{type}</span>
+                </div>
+            </div>
+            {date && (
+                <div className="text-right">
+                    <span className="text-[10px] font-black text-surface-900 uppercase block leading-none mb-1">{date}</span>
+                    <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest leading-none">UPLOADED</span>
+                </div>
+            )}
+            {isAlert && (
+                <span className="px-3 py-1 bg-danger-50 text-danger-600 rounded-full text-[9px] font-black uppercase tracking-widest border border-danger-100 shadow-sm">Required</span>
+            )}
+        </div>
+    );
+}
+
+function TaskCard({ label, status, due, owner, highlight }: { label: string; status: string; due: string; owner: string; highlight?: 'danger' | 'amber' }) {
+    return (
+        <div className={cn(
+            "p-5 rounded-[var(--radius-2xl)] bg-white/60 backdrop-blur-xl border border-surface-200/50 shadow-lg ring-1 ring-white/20 group hover:-translate-y-1 hover:shadow-2xl transition-all cursor-pointer",
+            highlight === 'danger' && "border-l-4 border-l-danger-500",
+            highlight === 'amber' && "border-l-4 border-l-amber-500"
+        )}>
+            <div className="flex items-center justify-between mb-4">
+                <span className={cn(
+                    "text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest shadow-sm border",
+                    highlight === 'danger' ? "bg-danger-50 text-danger-600 border-danger-100" :
+                        highlight === 'amber' ? "bg-amber-50 text-amber-600 border-amber-100" :
+                            "bg-surface-50 text-surface-500 border-surface-100"
+                )}>{status}</span>
+                <span className="w-8 h-8 rounded-lg bg-surface-50 flex items-center justify-center text-surface-300 group-hover:bg-primary-50 group-hover:text-primary-500 transition-colors">
+                    <Plus size={16} />
+                </span>
+            </div>
+            <h4 className="text-[13px] font-black text-surface-900 uppercase tracking-tight mb-4 leading-tight group-hover:text-primary-600 transition-colors">{label}</h4>
+            <div className="flex items-center justify-between border-t border-surface-100 pt-4">
+                <div className="flex flex-col">
+                    <span className="text-[8px] font-black text-surface-400 uppercase tracking-widest mb-1">Due Date</span>
+                    <span className={cn("text-[11px] font-black uppercase leading-none", highlight === 'danger' ? "text-danger-500" : "text-surface-900")}>{due}</span>
+                </div>
+                <div className="text-right">
+                    <span className="text-[8px] font-black text-surface-400 uppercase tracking-widest mb-1 leading-none">Assigned To</span>
+                    <span className="text-[11px] font-black uppercase leading-none text-surface-500">{owner}</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function TimelineItem({ date, category, text, owner, src, isLate }: { date: string; category: string; text: string; owner?: string; src?: string; isLate?: boolean }) {
+    return (
+        <div className="flex gap-5 relative group">
+            <div className="absolute top-8 left-3.5 bottom-0 w-px bg-surface-200/50 group-last:hidden" />
+            <div className={cn(
+                "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border-2 z-10 transition-all group-hover:scale-110",
+                isLate ? "bg-danger-50 border-danger-500 text-danger-500" : "bg-white border-primary-500/20 text-primary-500"
+            )}>
+                <div className={cn("w-1.5 h-1.5 rounded-full", isLate ? "bg-danger-500" : "bg-primary-500")} />
+            </div>
+            <div className="flex-1 pb-6">
+                <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-3">
+                        <span className="text-[10px] font-black text-surface-900 uppercase tracking-tight">{category}</span>
+                        <span className="w-1 h-1 bg-surface-300 rounded-full" />
+                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest">{date}</span>
+                    </div>
+                    {src && <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest">{src}</span>}
+                </div>
+                <p className="text-[12px] font-bold text-surface-600 leading-snug mb-1 tracking-tight">{text}</p>
+                {owner && <span className="text-[9px] font-black text-surface-400 uppercase tracking-widest italic">Action by: {owner}</span>}
+            </div>
+        </div>
+    );
+}
+
+// Missing icon component
+function MapPinIcon({ size, className }: { size?: number, className?: string }) {
+    return <MapPin size={size} className={className} />
 }
