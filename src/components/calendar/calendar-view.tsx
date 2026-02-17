@@ -17,7 +17,8 @@ import {
     startOfDay,
     endOfDay,
     addWeeks,
-    subWeeks
+    subWeeks,
+    subDays
 } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Users, Plus } from 'lucide-react';
@@ -54,7 +55,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     const prev = () => {
         if (view === 'month') setCurrentDate(subMonths(currentDate, 1));
         else if (view === 'week') setCurrentDate(subWeeks(currentDate, 1));
-        else setCurrentDate(addDays(currentDate, 1));
+        else setCurrentDate(subDays(currentDate, 1));
     };
 
     const resetToToday = () => {
@@ -169,10 +170,14 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         const daysInMonthView = eachDayOfInterval({ start: startDate, end: endDate });
 
         const dayCells = daysInMonthView.map((day, i) => {
-            const dayEvents = events.filter(e => isSameDay(e.start, day));
+            const normalizedDay = startOfDay(day);
+            const dayEvents = events.filter(e => isSameDay(startOfDay(e.start), normalizedDay));
             const isTodayDay = isToday(day);
-            const isSelected = isSameDay(day, selectedDate);
+            const isSelected = isSameDay(normalizedDay, startOfDay(selectedDate));
             const isOutsideMonth = !isSameMonth(day, currentDate);
+
+            // Get primary event type for color accent
+            const primaryType = dayEvents.length > 0 ? dayEvents[0].type : null;
 
             return (
                 <motion.div
@@ -184,9 +189,18 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     onClick={() => setSelectedDate(day)}
                     className={cn(
                         "relative min-h-[60px] p-1 rounded-[var(--radius-lg)] transition-all cursor-pointer group flex flex-col gap-0.5",
-                        isOutsideMonth ? "bg-surface-50/10 opacity-30" : "bg-white/40 border border-surface-200/50 shadow-sm backdrop-blur-sm",
-                        isTodayDay && "border-primary-500/50 bg-primary-500/5 shadow-primary-500/10",
-                        isSelected && "ring-2 ring-primary-500 ring-offset-2"
+                        isOutsideMonth ? "bg-surface-50/10 opacity-30" : "bg-white/40 border-surface-200/50 shadow-sm backdrop-blur-sm",
+                        isTodayDay && "border-primary-500/50 bg-primary-500/5 shadow-primary-500/20 ring-1 ring-primary-500/20",
+                        isSelected && "ring-2 ring-primary-500 ring-offset-2 z-10",
+
+                        // Liquid Color Accents
+                        !isOutsideMonth && primaryType === 'policy' && "bg-blue-500/5 border-blue-500/20",
+                        !isOutsideMonth && primaryType === 'meeting' && "bg-amber-500/5 border-amber-500/20",
+                        !isOutsideMonth && primaryType === 'claim' && "bg-red-500/5 border-red-500/20",
+                        !isOutsideMonth && primaryType === 'team' && "bg-emerald-500/5 border-emerald-500/20",
+
+                        // Default border if no event
+                        !isOutsideMonth && !primaryType && "border"
                     )}
                 >
                     <div className="flex items-center justify-between">
@@ -207,6 +221,15 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                             <Plus size={10} />
                         </button>
                     </div>
+
+                    {/* Vibrancy Indicators for multiple events */}
+                    {dayEvents.length > 1 && (
+                        <div className="absolute top-1 right-8 flex gap-0.5">
+                            {dayEvents.slice(0, 3).map((_, idx) => (
+                                <div key={idx} className="w-1 h-1 rounded-full bg-primary-500/60" />
+                            ))}
+                        </div>
+                    )}
 
                     <div className="flex-1 space-y-1.5 overflow-hidden">
                         {dayEvents.slice(0, 3).map(event => (
@@ -266,13 +289,13 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 Timeline • {format(selectedDate, 'MMM d, yyyy')}
                             </h3>
                             <div className="px-3 py-1 rounded-full bg-surface-100/50 text-surface-400 text-[9px] font-black uppercase tracking-widest border border-surface-200/50">
-                                {events.filter(e => isSameDay(e.start, selectedDate)).length} Actions
+                                {events.filter(e => isSameDay(startOfDay(e.start), startOfDay(selectedDate))).length} Actions
                             </div>
                         </div>
 
                         <div className="space-y-3">
-                            {events.filter(e => isSameDay(e.start, selectedDate)).length > 0 ? (
-                                events.filter(e => isSameDay(e.start, selectedDate)).map((event, idx) => (
+                            {events.filter(e => isSameDay(startOfDay(e.start), startOfDay(selectedDate))).length > 0 ? (
+                                events.filter(e => isSameDay(startOfDay(e.start), startOfDay(selectedDate))).map((event, idx) => (
                                     <motion.div
                                         key={event.id}
                                         initial={{ opacity: 0, x: -10 }}
@@ -339,7 +362,8 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         return (
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-4">
                 {days.map((day, i) => {
-                    const dayEvents = events.filter(e => isSameDay(e.start, day));
+                    const normalizedDay = startOfDay(day);
+                    const dayEvents = events.filter(e => isSameDay(startOfDay(e.start), normalizedDay));
                     const isTodayDay = isToday(day);
 
                     return (
@@ -395,7 +419,8 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     };
 
     const renderDayView = () => {
-        const dayEvents = events.filter(event => isSameDay(event.start, currentDate));
+        const normalizedCurrent = startOfDay(currentDate);
+        const dayEvents = events.filter(event => isSameDay(startOfDay(event.start), normalizedCurrent));
         const dateParts = format(currentDate, 'EEEE,d,MMMM').split(',');
 
         return (

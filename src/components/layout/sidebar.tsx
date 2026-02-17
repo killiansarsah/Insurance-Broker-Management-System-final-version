@@ -167,6 +167,9 @@ const navigation: NavSection[] = [
 
 // --- Components ---
 
+// --- Utilities ---
+const normalizePath = (p: string) => p.replace(/\/$/, "") || "/";
+
 // --- Components ---
 
 function GlobalRail() {
@@ -223,9 +226,12 @@ function GlobalRail() {
 function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean }) {
     const pathname = usePathname();
     const [expanded, setExpanded] = useState(false);
+
+    // Normalize paths to handle trailing slashes for active state
+    const normalizedPath = normalizePath(pathname);
     const isActive =
-        pathname === item.href ||
-        item.children?.some((child) => pathname === child.href);
+        normalizedPath === normalizePath(item.href) ||
+        item.children?.some((child) => normalizedPath === normalizePath(child.href));
 
     const hasChildren = item.children && item.children.length > 0;
 
@@ -261,7 +267,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                         'text-sm font-medium cursor-pointer group',
                         'hover:translate-x-1', // Lateral movement
                         isActive
-                            ? 'bg-gradient-to-r from-primary-200/70 to-primary-100/40 text-surface-900 font-semibold shadow-sm border border-primary-300/60'
+                            ? 'bg-gradient-to-r from-primary-100/80 to-primary-50/40 text-surface-900 font-bold shadow-sm border border-primary-200/60'
                             : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'
                     )}
                 >
@@ -291,8 +297,8 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                         'text-sm font-medium cursor-pointer group',
                         'hover:translate-x-1', // Lateral movement
                         isActive
-                            ? 'bg-gradient-to-r from-primary-200/70 to-primary-100/40 border-l-[3px] border-primary-700 text-surface-900 font-semibold pl-3.5'
-                            : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900 border-l-[3px] border-transparent'
+                            ? 'bg-gradient-to-r from-primary-100/80 to-primary-50/40 border-l-[4px] border-primary-600 text-surface-900 font-bold pl-3.5 shadow-sm'
+                            : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900 border-l-[4px] border-transparent'
                     )}
                 >
                     <span className={cn("transition-colors duration-200", isActive ? "text-primary-700" : "text-surface-400 group-hover:text-primary-500")}>

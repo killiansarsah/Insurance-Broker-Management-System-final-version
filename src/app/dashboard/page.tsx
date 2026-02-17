@@ -21,6 +21,7 @@ import {
     X,
     Check,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -236,7 +237,6 @@ function formatCompact(n: number): string {
     return `₵${n}`;
 }
 
-// --- Dropdown Filter Component ---
 function FilterDropdown({
     label,
     options,
@@ -265,17 +265,17 @@ function FilterDropdown({
             <button
                 onClick={() => setOpen(!open)}
                 className={cn(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition-colors cursor-pointer',
+                    'inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border rounded-full transition-all cursor-pointer shadow-sm backdrop-blur-md',
                     value
-                        ? 'text-primary-700 bg-primary-50 border-primary-200 hover:bg-primary-100'
-                        : 'text-surface-600 bg-white border-surface-200 hover:bg-surface-50 hover:border-surface-300'
+                        ? 'text-primary-600 bg-primary-50/50 border-primary-200/50'
+                        : 'text-surface-400 bg-white/60 border-surface-200/50 hover:bg-white hover:text-surface-600 hover:border-surface-300'
                 )}
             >
                 {value ? (
                     <>
                         <span className="max-w-[100px] truncate">{value}</span>
                         <X
-                            size={12}
+                            size={10}
                             className="text-surface-400 hover:text-danger-500 shrink-0"
                             onClick={(e) => { e.stopPropagation(); onChange(null); setOpen(false); }}
                         />
@@ -283,30 +283,37 @@ function FilterDropdown({
                 ) : (
                     <>
                         {label}
-                        <ChevronDown size={12} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
+                        <ChevronDown size={10} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
                     </>
                 )}
             </button>
 
-            {open && (
-                <div className="absolute top-full left-0 mt-1 w-52 bg-white border border-surface-200 rounded-xl shadow-lg z-50 overflow-hidden animate-scale-in">
-                    <div className="py-1">
-                        {options.map((opt) => (
-                            <button
-                                key={opt}
-                                onClick={() => { onChange(opt === value ? null : opt); setOpen(false); }}
-                                className={cn(
-                                    'flex items-center justify-between w-full px-3 py-2 text-sm text-left hover:bg-surface-50 transition-colors cursor-pointer',
-                                    value === opt ? 'text-primary-700 font-semibold bg-primary-50/50' : 'text-surface-700'
-                                )}
-                            >
-                                {opt}
-                                {value === opt && <Check size={14} className="text-primary-500" />}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full left-0 mt-2 w-52 bg-white/90 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    >
+                        <div className="py-1">
+                            {options.map((opt) => (
+                                <button
+                                    key={opt}
+                                    onClick={() => { onChange(opt === value ? null : opt); setOpen(false); }}
+                                    className={cn(
+                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left hover:bg-primary-50/50 transition-colors cursor-pointer uppercase tracking-tight',
+                                        value === opt ? 'text-primary-600 bg-primary-50/80 shadow-inner' : 'text-surface-600'
+                                    )}
+                                >
+                                    {opt}
+                                    {value === opt && <Check size={12} className="text-primary-500" />}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -336,32 +343,39 @@ function YearDropdown({
         <div className="relative" ref={ref}>
             <button
                 onClick={() => setOpen(!open)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-surface-700 bg-white border border-surface-200 rounded-lg hover:bg-surface-50 hover:border-surface-300 transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest text-surface-400 bg-white/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-white hover:text-surface-600 hover:border-surface-300 transition-all cursor-pointer shadow-sm"
             >
-                <Calendar size={14} className="text-surface-400" />
+                <Calendar size={12} className="text-primary-500/60" />
                 <span>{selectedYear}</span>
-                <ChevronDown size={12} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
+                <ChevronDown size={10} className={cn('text-surface-400 transition-transform', open && 'rotate-180')} />
             </button>
 
-            {open && (
-                <div className="absolute top-full left-0 mt-1 w-32 bg-white border border-surface-200 rounded-xl shadow-lg z-50 overflow-hidden animate-scale-in">
-                    <div className="py-1">
-                        {years.map((year) => (
-                            <button
-                                key={year}
-                                onClick={() => { onChange(year); setOpen(false); }}
-                                className={cn(
-                                    'flex items-center justify-between w-full px-3 py-2 text-sm text-left hover:bg-surface-50 transition-colors cursor-pointer',
-                                    selectedYear === year ? 'text-primary-700 font-semibold bg-primary-50/50' : 'text-surface-700'
-                                )}
-                            >
-                                {year}
-                                {selectedYear === year && <Check size={14} className="text-primary-500" />}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
+            <AnimatePresence>
+                {open && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute top-full left-0 mt-2 w-32 bg-white/90 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                    >
+                        <div className="py-1">
+                            {years.map((year) => (
+                                <button
+                                    key={year}
+                                    onClick={() => { onChange(year); setOpen(false); }}
+                                    className={cn(
+                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left hover:bg-primary-50/50 transition-colors cursor-pointer uppercase tracking-tight',
+                                        selectedYear === year ? 'text-primary-600 bg-primary-50/80 shadow-inner' : 'text-surface-600'
+                                    )}
+                                >
+                                    {year}
+                                    {selectedYear === year && <Check size={12} className="text-primary-500" />}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -436,13 +450,20 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         {activeFilterCount > 0 && (
-                            <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={clearAllFilters}>
-                                Clear Filters
-                            </Button>
+                            <button
+                                onClick={clearAllFilters}
+                                className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-danger-500 bg-danger-50/50 border border-danger-200/50 rounded-full hover:bg-danger-100/50 transition-all cursor-pointer shadow-sm backdrop-blur-md active:scale-95"
+                            >
+                                <X size={12} />
+                                <span>Clear Filters</span>
+                            </button>
                         )}
-                        <Button variant="outline" size="sm" leftIcon={<RefreshCw size={14} />}>
-                            Refresh
-                        </Button>
+                        <button
+                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-white/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-white hover:text-primary-600 hover:border-primary-300 transition-all cursor-pointer shadow-sm group active:scale-95"
+                        >
+                            <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out" />
+                            <span>Refresh</span>
+                        </button>
                     </div>
                 </div>
 
@@ -451,19 +472,26 @@ export default function DashboardPage() {
                     {/* Year Selector */}
                     <YearDropdown years={availableYears} selectedYear={selectedYear} onChange={setSelectedYear} />
 
-                    {/* Period Toggle */}
-                    <div className="inline-flex items-center bg-white rounded-lg border border-surface-200 p-1 shadow-sm">
+                    {/* Period Toggle - Liquid Glass Switcher */}
+                    <div className="inline-flex items-center bg-white/60 backdrop-blur-xl p-0.5 rounded-full border border-surface-200/50 shadow-sm">
                         {(['today', 'mtd', 'ytd'] as Period[]).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
                                 className={cn(
-                                    'px-4 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-md transition-all duration-200 cursor-pointer',
+                                    'relative px-5 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-200 cursor-pointer z-10',
                                     period === p
-                                        ? 'bg-primary-600 text-white shadow-sm'
-                                        : 'text-surface-500 hover:text-surface-900 hover:bg-surface-50'
+                                        ? 'text-primary-600'
+                                        : 'text-surface-400 hover:text-surface-600'
                                 )}
                             >
+                                {period === p && (
+                                    <motion.div
+                                        layoutId="activePeriod"
+                                        className="absolute inset-0 bg-white rounded-full shadow-sm z-[-1] border border-surface-100"
+                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                    />
+                                )}
                                 {p}
                             </button>
                         ))}

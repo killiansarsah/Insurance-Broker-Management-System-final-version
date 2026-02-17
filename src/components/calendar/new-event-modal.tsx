@@ -34,13 +34,17 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
             return;
         }
 
+        // Ensure times are properly parsed as local time to avoid timezone offsets
+        const startDateTime = new Date(`${date}T${startTime}:00`);
+        const endDateTime = new Date(`${date}T${endTime}:00`);
+
         const newEvent = {
             id: Math.random().toString(36).substr(2, 9),
             title,
             participant, // Include in event object
             description,
-            start: new Date(`${date}T${startTime}`),
-            end: new Date(`${date}T${endTime}`),
+            start: startDateTime,
+            end: endDateTime,
             type,
             status: 'upcoming' as const,
         };
