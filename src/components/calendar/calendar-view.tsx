@@ -90,7 +90,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         {/* Ghost Background Text */}
                         <motion.span
                             initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 0.05, x: 0 }}
+                            animate={{ opacity: 0.12, x: 0 }}
                             key={monthYear[1]}
                             className="text-5xl md:text-7xl font-black tracking-tighter text-surface-900 uppercase leading-none select-none absolute left-0"
                         >
