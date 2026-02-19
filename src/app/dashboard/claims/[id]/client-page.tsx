@@ -22,10 +22,11 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { claims } from '@/mock/claims';
+import { claims as initialClaims } from '@/mock/claims';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Claim } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
+import { ClaimStatusModal } from '@/components/claims/claim-status-modal';
 
 function InfoItem({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: React.ReactNode; className?: string }) {
     return (
@@ -39,37 +40,22 @@ function InfoItem({ icon, label, value, className }: { icon: React.ReactNode; la
     );
 }
 
-function TimelineItem({ date, title, desc, icon, active, warning, last }: { date?: string; title: string; desc: string; icon: React.ReactNode; active?: boolean; warning?: boolean; last?: boolean }) {
-    return (
-        <div className="relative pl-8 pb-8 last:pb-0">
-            {!last && (
-                <div className="absolute left-[11px] top-8 bottom-0 w-0.5 bg-surface-200" />
-            )}
-            <div className={cn(
-                "absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white",
-                active
-                    ? (warning ? "bg-warning-500 text-white" : "bg-primary-500 text-white")
-                    : "bg-surface-100 text-surface-400"
-            )}>
-                {icon}
-            </div>
-            <div>
-                <p className="text-xs text-surface-500 font-medium mb-0.5">{date ? formatDate(date) : 'Pending'}</p>
-                <h4 className="text-sm font-bold text-surface-900">{title}</h4>
-                <p className="text-xs text-surface-500 mt-1">{desc}</p>
-            </div>
-        </div>
-    );
-}
-
-
-
 export default function ClaimDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
-    const claim = claims.find((c) => c.id === id) || claims[0]; // Fallback for dev
+
+    // Use local state to handle updates for this session
+    const [claim, setClaim] = useState<Claim>(() => {
+        return initialClaims.find((c) => c.id === id) || initialClaims[0];
+    });
+
+    const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
     if (!claim) return <div>Claim not found</div>;
+
+    const handleUpdateClaim = (updates: Partial<Claim>) => {
+        setClaim(prev => ({ ...prev, ...updates }));
+    };
 
     const timeline = [
         { date: claim.intimationDate, title: 'Claim Intimated', desc: 'First Notice of Loss (FNOL) recorded', icon: <AlertCircle size={14} />, active: true },
@@ -87,7 +73,7 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
     const isAcknowledged = !!claim.registrationDate;
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
+        <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-12">
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">
@@ -102,7 +88,12 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline" leftIcon={<Download size={16} />}>Export PDF</Button>
-                    <Button variant="primary">Update Status</Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsStatusModalOpen(true)}
+                    >
+                        Update Status
+                    </Button>
                 </div>
             </div>
 
@@ -224,6 +215,16 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
                     </Card>
                 </div>
             </div>
+
+            {/* Modals */}
+            {isStatusModalOpen && (
+                <ClaimStatusModal
+                    isOpen={isStatusModalOpen}
+                    onClose={() => setIsStatusModalOpen(false)}
+                    claim={claim}
+                    onUpdate={handleUpdateClaim}
+                />
+            )}
         </div>
     );
 }
