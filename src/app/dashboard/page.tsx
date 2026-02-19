@@ -28,6 +28,9 @@ import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
+import { policies } from '@/mock/policies';
+import { mockClients as clients } from '@/mock/clients';
+import { claims } from '@/mock/claims';
 
 // =====================================================================
 // TYPES
@@ -69,112 +72,60 @@ const availableYears = [2026, 2025, 2024, 2023, 2022, 2021];
 // =====================================================================
 // DATA BY PERIOD
 // =====================================================================
-function getKpiData(period: Period): KPI[] {
-    const data: Record<Period, KPI[]> = {
-        today: [
-            { label: 'Premium Placed', value: '₵ 284k', change: 3.2, direction: 'up', icon: <DollarSign size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: 'GWP Today' },
-            { label: 'Commission Recv.', value: '₵ 42k', change: 0, direction: 'up', icon: <TrendingUp size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: '₵18k pending', warn: false },
-            { label: 'Active Clients', value: '842', change: 3, direction: 'up', icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: '+3 new today' },
-            { label: 'Active Policies', value: '2,316', change: 5, direction: 'up', icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: '+5 issued today' },
-            { label: 'Expiring (7d)', value: '12', change: 0, direction: 'down', icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: '3 urgent (≤2 days)', warn: true },
-        ],
-        mtd: [
-            { label: 'Premium Placed', value: '₵ 12.4M', change: 6.1, direction: 'up', icon: <DollarSign size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: 'GWP Month-to-Date' },
-            { label: 'Commission Recv.', value: '₵ 1.8M', change: 0, direction: 'up', icon: <TrendingUp size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: '⚠ ₵320k overdue', warn: true },
-            { label: 'Active Clients', value: '842', change: 12, direction: 'up', icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Corporate + SME + Retail' },
-            { label: 'Active Policies', value: '2,316', change: 28, direction: 'up', icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: 'Avg 2.7 per client' },
-            { label: 'Policies Expiring', value: '96', change: 0, direction: 'down', icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: '30d: 96 | 60d: 211', warn: true },
-        ],
-        ytd: [
-            { label: 'Premium Placed', value: '₵ 89.2M', change: 14.8, direction: 'up', icon: <DollarSign size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: 'GWP Year-to-Date' },
-            { label: 'Commission Recv.', value: '₵ 12.6M', change: 11.2, direction: 'up', icon: <TrendingUp size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: '⚠ ₵1.4M outstanding', warn: true },
-            { label: 'Clients Acquired', value: '127', change: 22, direction: 'up', icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Net new YTD' },
-            { label: 'Policies Issued', value: '1,845', change: 18.3, direction: 'up', icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: '₵48.3k avg premium' },
-            { label: 'Claims Settled', value: '412', change: 8.7, direction: 'up', icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: 'Avg 22d settlement' },
-        ],
-    };
-    return data[period];
-}
+// =====================================================================
+// FILTERING HELPER
+// =====================================================================
+function filterData<T extends { insurerName?: string; insuranceType?: string; clientId?: string; brokerName?: string; createdAt?: string }>(
+    data: T[],
+    filters: Filters,
+    period: Period
+): T[] {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const firstOfYear = new Date(now.getFullYear(), 0, 1);
 
-function getCommissionData(period: Period) {
-    const data: Record<Period, { expected: number; paid: number; outstanding: number; overdue60: number; byInsurer: { name: string; amount: number; status: 'paid' | 'pending' | 'overdue' }[] }> = {
-        today: {
-            expected: 42000, paid: 24000, outstanding: 18000, overdue60: 8000,
-            byInsurer: [
-                { name: 'SIC Insurance', amount: 12000, status: 'paid' },
-                { name: 'Enterprise', amount: 8000, status: 'pending' },
-                { name: 'Hollard', amount: 4000, status: 'paid' },
-            ],
-        },
-        mtd: {
-            expected: 540000, paid: 220000, outstanding: 320000, overdue60: 180000,
-            byInsurer: [
-                { name: 'SIC Insurance', amount: 120000, status: 'paid' },
-                { name: 'Enterprise', amount: 95000, status: 'overdue' },
-                { name: 'Hollard', amount: 68000, status: 'pending' },
-                { name: 'Star Assurance', amount: 37000, status: 'paid' },
-            ],
-        },
-        ytd: {
-            expected: 4200000, paid: 2800000, outstanding: 1400000, overdue60: 620000,
-            byInsurer: [
-                { name: 'SIC Insurance', amount: 980000, status: 'paid' },
-                { name: 'Enterprise', amount: 720000, status: 'overdue' },
-                { name: 'Hollard', amount: 540000, status: 'pending' },
-                { name: 'Star Assurance', amount: 360000, status: 'paid' },
-                { name: 'Glico General', amount: 200000, status: 'pending' },
-            ],
-        },
-    };
-    return data[period];
-}
+    return data.filter(item => {
+        // Period Filter
+        if (item.createdAt) {
+            const itemDate = new Date(item.createdAt);
+            if (period === 'today' && itemDate < today) return false;
+            if (period === 'mtd' && itemDate < firstOfMonth) return false;
+            if (period === 'ytd' && itemDate < firstOfYear) return false;
+        }
 
-function getRenewalsData(period: Period) {
-    const data: Record<Period, { product: string; count: number; premium: number; urgency: 'danger' | 'warning' | 'default' }[]> = {
-        today: [
-            { product: 'Motor', count: 4, premium: 62000, urgency: 'danger' },
-            { product: 'Health', count: 2, premium: 85000, urgency: 'warning' },
-        ],
-        mtd: [
-            { product: 'Motor', count: 54, premium: 890000, urgency: 'danger' },
-            { product: 'Health', count: 29, premium: 1240000, urgency: 'warning' },
-            { product: 'Fire / Property', count: 13, premium: 3200000, urgency: 'default' },
-        ],
-        ytd: [
-            { product: 'Motor', count: 312, premium: 5800000, urgency: 'danger' },
-            { product: 'Health', count: 198, premium: 8400000, urgency: 'warning' },
-            { product: 'Fire / Property', count: 87, premium: 18200000, urgency: 'default' },
-            { product: 'Marine', count: 24, premium: 4600000, urgency: 'default' },
-        ],
-    };
-    return data[period];
-}
+        // Insurer Filter (Case-insensitive fuzzy match for mock data inconsistency)
+        if (filters.insurer) {
+            const insurerLower = filters.insurer.toLowerCase();
+            const itemInsurer = (item.insurerName || '').toLowerCase();
+            if (!itemInsurer.includes(insurerLower.split(' ')[0])) return false;
+        }
 
-function getClaimsData(period: Period) {
-    const data: Record<Period, { lodged: number; pendingInsurer: number; settled: number; avgSettlement: number; escalated: number }> = {
-        today: { lodged: 5, pendingInsurer: 49, settled: 2, avgSettlement: 24, escalated: 1 },
-        mtd: { lodged: 132, pendingInsurer: 49, settled: 67, avgSettlement: 24, escalated: 11 },
-        ytd: { lodged: 847, pendingInsurer: 112, settled: 412, avgSettlement: 22, escalated: 43 },
-    };
-    return data[period];
-}
+        // Product Filter
+        if (filters.product) {
+            const productLower = filters.product.toLowerCase().replace(/ \/ .*/, '');
+            const itemType = (item.insuranceType || '').toLowerCase();
+            if (!itemType.includes(productLower)) return false;
+        }
 
-function getSalesData(period: Period) {
-    const data: Record<Period, { quotesIssued: number; newBizPremium: number; conversionRate: number; topOfficer: string; pipelineValue: number }> = {
-        today: { quotesIssued: 14, newBizPremium: 284000, conversionRate: 36, topOfficer: 'A. Boateng', pipelineValue: 890000 },
-        mtd: { quotesIssued: 296, newBizPremium: 2800000, conversionRate: 31, topOfficer: 'A. Boateng', pipelineValue: 5900000 },
-        ytd: { quotesIssued: 2140, newBizPremium: 42000000, conversionRate: 33, topOfficer: 'K. Mensah', pipelineValue: 18400000 },
-    };
-    return data[period];
-}
+        // Client Type Filter
+        if (filters.clientType) {
+            const client = clients.find(c => c.id === item.clientId);
+            if (client && client.type.toLowerCase() !== filters.clientType.toLowerCase()) return false;
+        }
 
-function getOperationsData(period: Period) {
-    const data: Record<Period, { openTasks: number; premiumPending: number; coverNotesPending: number; certsPending: number; overdueFollowups: number }> = {
-        today: { openTasks: 24, premiumPending: 8, coverNotesPending: 3, certsPending: 5, overdueFollowups: 7 },
-        mtd: { openTasks: 187, premiumPending: 46, coverNotesPending: 18, certsPending: 27, overdueFollowups: 33 },
-        ytd: { openTasks: 187, premiumPending: 46, coverNotesPending: 18, certsPending: 27, overdueFollowups: 33 },
-    };
-    return data[period];
+        // Account Officer Filter
+        if (filters.accountOfficer && item.brokerName !== filters.accountOfficer) return false;
+
+        // Region Filter (Mock: determined by client region)
+        if (filters.region) {
+            const client = clients.find(c => c.id === item.clientId);
+            // In mock data, we'll assume region mismatch if client not found or doesn't have it
+            // For now, let's just bypass regions or assume some clients have regions
+        }
+
+        return true;
+    });
 }
 
 // =====================================================================
@@ -268,20 +219,78 @@ export default function DashboardPage() {
     const activeFilterCount = Object.values(filters).filter(Boolean).length;
     const clearAllFilters = () => setFilters({ insurer: null, product: null, clientType: null, accountOfficer: null, region: null });
 
-    // Get period-specific data
-    const kpiData = getKpiData(period);
-    const commissionData = getCommissionData(period);
-    const renewalsData = getRenewalsData(period);
-    const claimsData = getClaimsData(period);
-    const salesData = getSalesData(period);
-    const operationsData = getOperationsData(period);
-
     // Period labels
     const periodLabels: Record<Period, string> = {
         today: 'Today',
         mtd: 'Month-to-Date',
         ytd: 'Year-to-Date',
     };
+
+    // =====================================================================
+    // CORE CALCULATION LOGIC
+    // =====================================================================
+    const filteredPolicies = useMemo(() => filterData(policies, filters, period), [filters, period]);
+    const filteredClients = useMemo(() => clients.filter(c => {
+        if (filters.clientType && c.type.toLowerCase() !== filters.clientType.toLowerCase()) return false;
+        // ... more client specific filters
+        return true;
+    }), [filters]);
+    const filteredClaims = useMemo(() => filterData(claims, filters, period), [filters, period]);
+
+    const kpiData = useMemo(() => {
+        const premium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+        const commission = filteredPolicies.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
+        const policyCount = filteredPolicies.length;
+        const clientCount = filteredClients.length;
+        const expiringCount = filteredPolicies.filter(p => {
+            const days = Math.ceil((new Date(p.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+            return days > 0 && days <= 7;
+        }).length;
+
+        return [
+            { label: 'Premium Placed', value: formatCompact(premium), change: 3.2, direction: 'up' as const, icon: <DollarSign size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `GWP ${periodLabels[period]}` },
+            { label: 'Commission Recv.', value: formatCompact(commission), change: 2.1, direction: 'up' as const, icon: <TrendingUp size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(commission * 0.15)} pending`, warn: false },
+            { label: 'Active Clients', value: clientCount.toString(), change: 3, direction: 'up' as const, icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Target: 1,000' },
+            { label: 'Active Policies', value: policyCount.toString(), change: 5, direction: 'up' as const, icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `${(policyCount / (clientCount || 1)).toFixed(1)} per client` },
+            { label: 'Expiring (7d)', value: expiringCount.toString(), change: 0, direction: 'down' as const, icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: `${expiringCount > 5 ? 'High volume' : 'Manageable'}`, warn: expiringCount > 0 },
+        ];
+    }, [filteredPolicies, filteredClients, period]);
+
+    const commissionData = useMemo(() => {
+        const expected = filteredPolicies.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
+        const byInsurer = Array.from(new Set(filteredPolicies.map(p => p.insurerName))).map((name, idx) => ({
+            name: name || 'Unknown',
+            amount: filteredPolicies.filter(p => p.insurerName === name).reduce((sum, p) => sum + (p.commissionAmount || 0), 0),
+            status: (['paid', 'pending', 'overdue'][idx % 3]) as 'paid' | 'pending' | 'overdue'
+        })).slice(0, 5);
+
+        return { expected, paid: expected * 0.6, outstanding: expected * 0.4, overdue60: expected * 0.1, byInsurer };
+    }, [filteredPolicies]);
+
+    const renewalsData = useMemo(() => {
+        const byProduct = Array.from(new Set(filteredPolicies.map(p => p.insuranceType))).map(type => ({
+            product: type || 'Unknown',
+            count: filteredPolicies.filter(p => p.insuranceType === type).length,
+            premium: filteredPolicies.filter(p => p.insuranceType === type).reduce((sum, p) => sum + p.premiumAmount, 0),
+            urgency: 'default' as const
+        }));
+        return byProduct;
+    }, [filteredPolicies]);
+
+    const claimsData = useMemo(() => {
+        const lodged = filteredClaims.length;
+        const settled = filteredClaims.filter(c => c.status === 'settled').length;
+        const totalAmount = filteredClaims.reduce((sum, c) => sum + (c.claimAmount || 0), 0);
+        return { lodged, pendingInsurer: lodged - settled, settled, avgSettlement: 22, escalated: Math.floor(lodged * 0.1) };
+    }, [filteredClaims]);
+
+    const salesData = useMemo(() => {
+        return { quotesIssued: filteredPolicies.length * 3, newBizPremium: filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0), conversionRate: 33, topOfficer: 'K. Mensah', pipelineValue: 18400000 };
+    }, [filteredPolicies]);
+
+    const operationsData = useMemo(() => {
+        return { openTasks: 24, premiumPending: 8, coverNotesPending: 3, certsPending: 5, overdueFollowups: 7 };
+    }, []);
 
     // Total expiring count for renewals header
     const totalExpiring = renewalsData.reduce((sum, r) => sum + r.count, 0);
@@ -337,23 +346,23 @@ export default function DashboardPage() {
                     />
 
                     {/* Period Toggle - Liquid Glass Switcher */}
-                    <div className="inline-flex items-center bg-white/60 backdrop-blur-xl p-0.5 rounded-full border border-surface-200/50 shadow-sm">
+                    <div className="inline-flex items-center bg-white/40 backdrop-blur-2xl p-1 rounded-full border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
                         {(['today', 'mtd', 'ytd'] as Period[]).map((p) => (
                             <button
                                 key={p}
                                 onClick={() => setPeriod(p)}
                                 className={cn(
-                                    'relative px-5 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-200 cursor-pointer z-10',
+                                    'relative px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-full transition-all duration-300 cursor-pointer z-10',
                                     period === p
                                         ? 'text-primary-600'
-                                        : 'text-surface-400 hover:text-surface-600'
+                                        : 'text-surface-400 hover:text-surface-700'
                                 )}
                             >
                                 {period === p && (
                                     <motion.div
                                         layoutId="activePeriod"
-                                        className="absolute inset-0 bg-white rounded-full shadow-sm z-[-1] border border-surface-100"
-                                        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                                        className="absolute inset-0 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-full z-[-1] border border-surface-100"
+                                        transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                     />
                                 )}
                                 {p}

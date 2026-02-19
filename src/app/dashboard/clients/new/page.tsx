@@ -20,10 +20,11 @@ import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
 
 const STEPS = [
-    { id: 1, label: 'Personal Info', icon: <User size={16} /> },
-    { id: 2, label: 'Contact & Address', icon: <MapPin size={16} /> },
-    { id: 3, label: 'ID & KYC', icon: <CreditCard size={16} /> },
-    { id: 4, label: 'Review', icon: <FileCheck size={16} /> },
+    { id: 1, label: 'Basic Info', icon: <User size={16} /> },
+    { id: 2, label: 'Contact & Family', icon: <MapPin size={16} /> },
+    { id: 3, label: 'KYC & Banking', icon: <CreditCard size={16} /> },
+    { id: 4, label: 'ID Documents', icon: <FileCheck size={16} /> },
+    { id: 5, label: 'Review', icon: <Check size={16} /> },
 ];
 
 interface FormData {
@@ -33,6 +34,9 @@ interface FormData {
     otherNames: string;
     dateOfBirth: string;
     gender: string;
+    occupation: string;
+    employerName: string;
+    employerAddress: string;
     companyName: string;
     registrationNumber: string;
     tin: string;
@@ -48,6 +52,17 @@ interface FormData {
     ghanaCardNumber: string;
     nationality: string;
     assignedBrokerId: string;
+    sourceOfFunds: string;
+    purposeOfRelationship: string;
+    expectedVolume: string;
+    isPep: boolean;
+    bankName: string;
+    bankAccountName: string;
+    bankAccountNumber: string;
+    bankBranch: string;
+    nextOfKinName: string;
+    nextOfKinRelationship: string;
+    nextOfKinPhone: string;
 }
 
 const INITIAL_FORM: FormData = {
@@ -57,6 +72,9 @@ const INITIAL_FORM: FormData = {
     otherNames: '',
     dateOfBirth: '',
     gender: '',
+    occupation: '',
+    employerName: '',
+    employerAddress: '',
     companyName: '',
     registrationNumber: '',
     tin: '',
@@ -72,6 +90,17 @@ const INITIAL_FORM: FormData = {
     ghanaCardNumber: '',
     nationality: 'Ghanaian',
     assignedBrokerId: '',
+    sourceOfFunds: '',
+    purposeOfRelationship: '',
+    expectedVolume: '',
+    isPep: false,
+    bankName: '',
+    bankAccountName: '',
+    bankAccountNumber: '',
+    bankBranch: '',
+    nextOfKinName: '',
+    nextOfKinRelationship: '',
+    nextOfKinPhone: '',
 };
 
 const REGIONS = [
@@ -168,6 +197,7 @@ export default function NewClientPage() {
                 if (!form.lastName.trim()) newErrors.lastName = 'Required';
                 if (!form.dateOfBirth) newErrors.dateOfBirth = 'Required';
                 if (!form.gender) newErrors.gender = 'Required';
+                if (!form.occupation.trim()) newErrors.occupation = 'Required';
             } else {
                 if (!form.companyName.trim()) newErrors.companyName = 'Required';
                 if (!form.registrationNumber.trim()) newErrors.registrationNumber = 'Required';
@@ -181,9 +211,18 @@ export default function NewClientPage() {
                 newErrors.phone = 'Use format +233XXXXXXXXX';
             if (!form.region) newErrors.region = 'Required';
             if (!form.city.trim()) newErrors.city = 'Required';
+            if (!form.nextOfKinName.trim()) newErrors.nextOfKinName = 'Required';
+            if (!form.nextOfKinPhone.trim()) newErrors.nextOfKinPhone = 'Required';
         }
 
         if (s === 3) {
+            if (!form.sourceOfFunds) newErrors.sourceOfFunds = 'Required';
+            if (!form.purposeOfRelationship) newErrors.purposeOfRelationship = 'Required';
+            if (!form.bankAccountNumber.trim()) newErrors.bankAccountNumber = 'Required';
+            if (!form.bankName.trim()) newErrors.bankName = 'Required';
+        }
+
+        if (s === 4) {
             if (form.type === 'individual' && !form.ghanaCardNumber.trim())
                 newErrors.ghanaCardNumber = 'Required';
         }
@@ -193,7 +232,7 @@ export default function NewClientPage() {
     }
 
     function next() {
-        if (validateStep(step)) setStep((s) => Math.min(4, s + 1));
+        if (validateStep(step)) setStep((s) => Math.min(5, s + 1));
     }
 
     function prev() {
@@ -210,13 +249,13 @@ export default function NewClientPage() {
         : `${form.firstName} ${form.lastName}`.trim();
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-4xl">
+        <div className="space-y-6 animate-fade-in max-w-4xl pb-12">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href="/dashboard/clients" />
                 <div>
                     <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Register New Client</h1>
-                    <p className="text-sm text-surface-500">Complete all steps to register a new client.</p>
+                    <p className="text-sm text-surface-500">Complete NIC-compliant registration process.</p>
                 </div>
             </div>
 
@@ -304,6 +343,12 @@ export default function NewClientPage() {
                             ]} />
                         <InputField label="Nationality" value={form.nationality}
                             onChange={(e) => update('nationality', e.target.value)} />
+                        <InputField label="Occupation" required value={form.occupation} error={errors.occupation}
+                            onChange={(e) => update('occupation', e.target.value)} placeholder="e.g. Software Engineer" />
+                        <InputField label="Employer Name" value={form.employerName}
+                            onChange={(e) => update('employerName', e.target.value)} placeholder="e.g. Google Ghana" />
+                        <InputField label="Employer Address" value={form.employerAddress}
+                            onChange={(e) => update('employerAddress', e.target.value)} placeholder="Employer location" className="sm:col-span-2" />
                     </div>
                 )}
 
@@ -323,36 +368,90 @@ export default function NewClientPage() {
                     </div>
                 )}
 
-                {/* Step 2: Contact */}
+                {/* Step 2: Contact & Family */}
                 {step === 2 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <InputField label="Phone Number" required value={form.phone} error={errors.phone}
-                            onChange={(e) => update('phone', e.target.value)} placeholder="+233XXXXXXXXX" />
-                        <InputField label="Alternate Phone" value={form.alternatePhone}
-                            onChange={(e) => update('alternatePhone', e.target.value)} placeholder="+233XXXXXXXXX" />
-                        <InputField label="Email" type="email" value={form.email}
-                            onChange={(e) => update('email', e.target.value)} placeholder="name@example.com" />
-                        <InputField label="Digital Address" value={form.digitalAddress}
-                            onChange={(e) => update('digitalAddress', e.target.value)} placeholder="XX-XXX-XXXX" />
-                        <InputField label="Postal Address" value={form.postalAddress}
-                            onChange={(e) => update('postalAddress', e.target.value)} placeholder="P.O. Box…" />
-                        <SelectField label="Region" required value={form.region} error={errors.region}
-                            onChange={(e) => update('region', e.target.value)}
-                            options={REGIONS.map((r) => ({ label: r, value: r }))} />
-                        <InputField label="City / Town" required value={form.city} error={errors.city}
-                            onChange={(e) => update('city', e.target.value)} placeholder="e.g. Accra" />
-                        <SelectField label="Assigned Broker" value={form.assignedBrokerId}
-                            onChange={(e) => update('assignedBrokerId', e.target.value)}
-                            options={[
-                                { label: 'Esi Donkor', value: 'brk-001' },
-                                { label: 'Kofi Asante', value: 'brk-002' },
-                                { label: 'Abena Nyarko', value: 'brk-003' },
-                            ]} />
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <InputField label="Phone Number" required value={form.phone} error={errors.phone}
+                                onChange={(e) => update('phone', e.target.value)} placeholder="+233XXXXXXXXX" />
+                            <InputField label="Email" type="email" value={form.email}
+                                onChange={(e) => update('email', e.target.value)} placeholder="name@example.com" />
+                            <InputField label="Digital Address" value={form.digitalAddress}
+                                onChange={(e) => update('digitalAddress', e.target.value)} placeholder="XX-XXX-XXXX" />
+                            <SelectField label="Region" required value={form.region} error={errors.region}
+                                onChange={(e) => update('region', e.target.value)}
+                                options={REGIONS.map((r) => ({ label: r, value: r }))} />
+                            <InputField label="City / Town" required value={form.city} error={errors.city}
+                                onChange={(e) => update('city', e.target.value)} placeholder="e.g. Accra" className="sm:col-span-2" />
+                        </div>
+
+                        <div className="pt-4 border-t border-surface-100">
+                            <h3 className="text-sm font-bold text-surface-900 mb-4">Next of Kin / Emergency Contact</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InputField label="Full Name" required value={form.nextOfKinName} error={errors.nextOfKinName}
+                                    onChange={(e) => update('nextOfKinName', e.target.value)} placeholder="Next of Kin Name" />
+                                <InputField label="Relationship" value={form.nextOfKinRelationship}
+                                    onChange={(e) => update('nextOfKinRelationship', e.target.value)} placeholder="e.g. Spouse, Parent" />
+                                <InputField label="Phone Number" required value={form.nextOfKinPhone} error={errors.nextOfKinPhone}
+                                    onChange={(e) => update('nextOfKinPhone', e.target.value)} placeholder="+233XXXXXXXXX" />
+                            </div>
+                        </div>
                     </div>
                 )}
 
-                {/* Step 3: ID & KYC */}
+                {/* Step 3: KYC & Banking */}
                 {step === 3 && (
+                    <div className="space-y-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <SelectField label="Source of Funds" required value={form.sourceOfFunds} error={errors.sourceOfFunds}
+                                onChange={(e) => update('sourceOfFunds', e.target.value)}
+                                options={[
+                                    { label: 'Salary', value: 'salary' },
+                                    { label: 'Business Income', value: 'business' },
+                                    { label: 'Inheritance', value: 'inheritance' },
+                                    { label: 'Investment', value: 'investment' },
+                                    { label: 'Other', value: 'other' },
+                                ]} />
+                            <SelectField label="Purpose of Relationship" required value={form.purposeOfRelationship} error={errors.purposeOfRelationship}
+                                onChange={(e) => update('purposeOfRelationship', e.target.value)}
+                                options={[
+                                    { label: 'Personal Insurance', value: 'personal' },
+                                    { label: 'Business Insurance', value: 'business' },
+                                    { label: 'Investment', value: 'investment' },
+                                ]} />
+                            <InputField label="Expected Transaction Volume (Annual)" value={form.expectedVolume}
+                                onChange={(e) => update('expectedVolume', e.target.value)} placeholder="e.g. GHS 50,000" />
+                            <div className="flex flex-col">
+                                <label className="block text-xs font-semibold text-surface-600 mb-1.5">Are you a Politically Exposed Person (PEP)?</label>
+                                <div className="flex gap-4 mt-2">
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input type="radio" checked={form.isPep} onChange={() => setForm(f => ({ ...f, isPep: true }))} /> Yes
+                                    </label>
+                                    <label className="flex items-center gap-2 text-sm">
+                                        <input type="radio" checked={!form.isPep} onChange={() => setForm(f => ({ ...f, isPep: false }))} /> No
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-4 border-t border-surface-100">
+                            <h3 className="text-sm font-bold text-surface-900 mb-4">Banking Details (For Claims)</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <InputField label="Bank Name" required value={form.bankName} error={errors.bankName}
+                                    onChange={(e) => update('bankName', e.target.value)} placeholder="e.g. GCB Bank" />
+                                <InputField label="Account Name" required value={form.bankAccountName} error={errors.bankAccountName}
+                                    onChange={(e) => update('bankAccountName', e.target.value)} placeholder="Name on Account" />
+                                <InputField label="Account Number" required value={form.bankAccountNumber} error={errors.bankAccountNumber}
+                                    onChange={(e) => update('bankAccountNumber', e.target.value)} />
+                                <InputField label="Branch" value={form.bankBranch}
+                                    onChange={(e) => update('bankBranch', e.target.value)} placeholder="Branch Name" />
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Step 4: ID Documents */}
+                {step === 4 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {form.type === 'individual' && (
                             <InputField label="Ghana Card Number" required value={form.ghanaCardNumber}
@@ -360,23 +459,38 @@ export default function NewClientPage() {
                                 onChange={(e) => update('ghanaCardNumber', e.target.value)}
                                 placeholder="GHA-XXXXXXXXX-X" />
                         )}
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-2 space-y-4">
                             <label className="block text-xs font-semibold text-surface-600 mb-1.5">
-                                Upload ID Document
+                                Identification Documents (Mandatory for Compliance)
                             </label>
-                            <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-8 text-center hover:border-primary-400 transition-colors cursor-pointer">
-                                <CreditCard size={32} className="mx-auto text-surface-300 mb-3" />
-                                <p className="text-sm text-surface-500">
-                                    Drag & drop or <span className="text-primary-600 font-medium">browse</span> to upload
-                                </p>
-                                <p className="text-xs text-surface-400 mt-1">PDF, JPG or PNG up to 5MB</p>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                    <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />
+                                    <p className="text-xs font-medium text-surface-600">Ghana Card (Front)</p>
+                                    <p className="text-[10px] text-surface-400 mt-1">Click to upload</p>
+                                </div>
+                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                    <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />
+                                    <p className="text-xs font-medium text-surface-600">Ghana Card (Back)</p>
+                                    <p className="text-[10px] text-surface-400 mt-1">Click to upload</p>
+                                </div>
+                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                    <User size={24} className="mx-auto text-surface-300 mb-2" />
+                                    <p className="text-xs font-medium text-surface-600">Passport Photo</p>
+                                    <p className="text-[10px] text-surface-400 mt-1">Click to upload</p>
+                                </div>
+                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                    <MapPin size={24} className="mx-auto text-surface-300 mb-2" />
+                                    <p className="text-xs font-medium text-surface-600">Proof of Address</p>
+                                    <p className="text-[10px] text-surface-400 mt-1">Utility Bill/Bank Statement</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Step 4: Review */}
-                {step === 4 && (
+                {/* Step 5: Review */}
+                {step === 5 && (
                     <div className="space-y-6">
                         <div className="text-center py-4">
                             <div className="w-16 h-16 rounded-full bg-success-50 text-success-600 flex items-center justify-center mx-auto mb-4">
@@ -393,21 +507,16 @@ export default function NewClientPage() {
                                 <>
                                     <ReviewField label="Date of Birth" value={form.dateOfBirth || '—'} />
                                     <ReviewField label="Gender" value={form.gender || '—'} />
+                                    <ReviewField label="Occupation" value={form.occupation || '—'} />
                                     <ReviewField label="Ghana Card" value={form.ghanaCardNumber || '—'} />
-                                </>
-                            )}
-                            {form.type === 'corporate' && (
-                                <>
-                                    <ReviewField label="Registration #" value={form.registrationNumber || '—'} />
-                                    <ReviewField label="TIN" value={form.tin || '—'} />
-                                    <ReviewField label="Industry" value={form.industry || '—'} />
                                 </>
                             )}
                             <ReviewField label="Phone" value={form.phone || '—'} />
                             <ReviewField label="Email" value={form.email || '—'} />
-                            <ReviewField label="Digital Address" value={form.digitalAddress || '—'} />
-                            <ReviewField label="Region" value={form.region || '—'} />
-                            <ReviewField label="City" value={form.city || '—'} />
+                            <ReviewField label="Region / City" value={`${form.region}, ${form.city}`} />
+                            <ReviewField label="Source of Funds" value={form.sourceOfFunds || '—'} />
+                            <ReviewField label="Bank" value={`${form.bankName} (${form.bankAccountNumber})`} />
+                            <ReviewField label="PEP Status" value={form.isPep ? 'Politically Exposed Person' : 'No'} />
                         </div>
                     </div>
                 )}
@@ -422,7 +531,7 @@ export default function NewClientPage() {
                 >
                     {step === 1 ? 'Cancel' : 'Previous'}
                 </Button>
-                {step < 4 ? (
+                {step < 5 ? (
                     <Button variant="primary" onClick={next} rightIcon={<ArrowRight size={16} />}>
                         Continue
                     </Button>
