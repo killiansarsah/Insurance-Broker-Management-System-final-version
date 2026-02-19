@@ -72,5 +72,30 @@ export const users: User[] = [
         isActive: false,
         lastLogin: new Date(Date.now() - 2592000000).toISOString(), // 30 days ago
         createdAt: '2023-05-20T16:00:00Z'
+    },
+    {
+        id: 'usr-007',
+        email: 'mercy.danquah@ibms.com.gh',
+        firstName: 'Mercy',
+        lastName: 'Danquah',
+        role: 'secretary',
+        phone: '+233 24 555 1122',
+        branchId: 'BR-ACC-01',
+        isActive: true,
+        lastLogin: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
+        createdAt: '2023-06-01T08:30:00Z'
+    },
+    {
+        id: 'usr-008',
+        email: 'john.mensah@ibms.com.gh',
+        firstName: 'John',
+        lastName: 'Mensah',
+        role: 'broker',
+        phone: '+233 24 999 0011',
+        branchId: 'BR-KUM-01',
+        isActive: true,
+        delegatedTo: 'usr-004', // Delegated to Ama Serwaa
+        lastLogin: new Date(Date.now() - 3600000).toISOString(),
+        createdAt: '2023-06-15T10:00:00Z'
     }
 ];

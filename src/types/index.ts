@@ -10,6 +10,7 @@ export type UserRole =
     | 'branch_manager'
     | 'senior_broker'
     | 'broker'
+    | 'secretary'
     | 'data_entry'
     | 'viewer';
 
@@ -116,6 +117,8 @@ export interface User {
     avatarUrl?: string;
     isActive: boolean;
     lastLogin?: string;
+    delegatedTo?: string; // User ID of the person handling backup
+    isActingAsBackupFor?: string[]; // Array of User IDs this person is covering for
     createdAt: string;
 }
 

@@ -102,7 +102,7 @@ export function CustomSelect({
                         exit={{ opacity: 0, y: position === 'top' ? -10 : 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         className={cn(
-                            'absolute min-w-[140px] bg-white/95 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-50 overflow-hidden',
+                            'absolute min-w-[140px] bg-white/95 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-[100] overflow-hidden',
                             position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
                             align === 'right' ? 'right-0' : 'left-0'
                         )}
