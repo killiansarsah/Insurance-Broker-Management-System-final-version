@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     ArrowLeft,
     ArrowRight,
@@ -179,9 +179,32 @@ function SelectField({
 
 export default function NewClientPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
+    // Pre-populate from query params (e.g., from Lead Conversion)
+    useEffect(() => {
+        const type = searchParams.get('type');
+        const firstName = searchParams.get('firstName');
+        const lastName = searchParams.get('lastName');
+        const email = searchParams.get('email');
+        const phone = searchParams.get('phone');
+        const companyName = searchParams.get('companyName');
+
+        if (type || firstName || lastName || email || phone || companyName) {
+            setForm(prev => ({
+                ...prev,
+                type: (type === 'corporate' ? 'corporate' : 'individual') as 'individual' | 'corporate',
+                firstName: firstName || prev.firstName,
+                lastName: lastName || prev.lastName,
+                email: email || prev.email,
+                phone: phone || prev.phone,
+                companyName: companyName || prev.companyName,
+            }));
+        }
+    }, [searchParams]);
 
     function update(field: keyof FormData, value: string) {
         setForm((prev) => ({ ...prev, [field]: value }));

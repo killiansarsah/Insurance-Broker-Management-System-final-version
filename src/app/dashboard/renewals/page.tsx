@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     Clock,
@@ -35,7 +35,7 @@ export default function RenewalsPage() {
     const [localFilter, setLocalFilter] = useState<RenewalStatus>(statusParam);
 
     // Sync local state if URL changes
-    useMemo(() => {
+    useEffect(() => {
         setLocalFilter(statusParam);
     }, [statusParam]);
 
@@ -117,9 +117,17 @@ export default function RenewalsPage() {
                     </div>
                     <p className="text-sm text-surface-500 mt-1 ml-3.5">View a list of all renewals and associated details.</p>
                 </div>
-                <Button variant="outline" rightIcon={<Filter size={16} />}>
-                    Filters
-                </Button>
+                <div className="flex gap-2">
+                    <Button
+                        variant="primary"
+                        onClick={() => alert('Sending bulk renewal notifications (Email/SMS)...')}
+                    >
+                        Notify All
+                    </Button>
+                    <Button variant="outline" rightIcon={<Filter size={16} />}>
+                        Filters
+                    </Button>
+                </div>
             </div>
 
             {/* KPI Cards - Top Row */}
