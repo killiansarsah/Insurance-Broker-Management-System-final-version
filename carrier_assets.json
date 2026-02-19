@@ -1,0 +1,362 @@
+[
+  {
+    "name": "Old Mutual Life Assurance Company LTD",
+    "slug": "old-mutual-life-assurance-company-ltd",
+    "type": "life",
+    "website": "https://www.oldmutual.com.gh",
+    "logoPath": "/images/carriers/old-mutual-life-assurance-company-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-2.png"
+  },
+  {
+    "name": "Pinnacle Life Insurance",
+    "slug": "pinnacle-life-insurance",
+    "type": "life",
+    "website": "https://pinnaclelife.com.gh/",
+    "logoPath": "/images/carriers/pinnacle-life-insurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-4.png"
+  },
+  {
+    "name": "SICLife ",
+    "slug": "siclife",
+    "type": "life",
+    "website": "http://mysiclife.com",
+    "logoPath": "/images/carriers/siclife.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-5.png"
+  },
+  {
+    "name": "Prudential Life",
+    "slug": "prudential-life",
+    "type": "life",
+    "website": "https://www.prudential.com.gh",
+    "logoPath": "/images/carriers/prudential-life.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-8.png"
+  },
+  {
+    "name": "Enterprise Life",
+    "slug": "enterprise-life",
+    "type": "life",
+    "website": "https://myenterprisegroup.io/gh-life",
+    "logoPath": "/images/carriers/enterprise-life.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-18.png"
+  },
+  {
+    "name": "Hollard Life",
+    "slug": "hollard-life",
+    "type": "life",
+    "website": "https://www.hollard.com.gh",
+    "logoPath": "/images/carriers/hollard-life.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-23.png"
+  },
+  {
+    "name": "Quality Life Assurance LTD",
+    "slug": "quality-life-assurance-ltd",
+    "type": "life",
+    "website": "https://qlac.com.gh",
+    "logoPath": "/images/carriers/quality-life-assurance-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-24.png"
+  },
+  {
+    "name": "miLife",
+    "slug": "milife",
+    "type": "life",
+    "website": "https://milifeghana.com",
+    "logoPath": "/images/carriers/milife.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-25.png"
+  },
+  {
+    "name": "Impact Life Insurance",
+    "slug": "impact-life-insurance",
+    "type": "life",
+    "website": "https://impactlife.com.gh",
+    "logoPath": "/images/carriers/impact-life-insurance.jpg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf.jpg"
+  },
+  {
+    "name": "AsterLife Assurance",
+    "slug": "asterlife-assurance",
+    "type": "life",
+    "website": "https://asterlifeassurance.com",
+    "logoPath": "/images/carriers/asterlife-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/AsterLife.png"
+  },
+  {
+    "name": "Glico Life Insurance Ghana",
+    "slug": "glico-life-insurance-ghana",
+    "type": "life",
+    "website": "https://glicolife.com",
+    "logoPath": "/images/carriers/glico-life-insurance-ghana.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/GlicoLife.png"
+  },
+  {
+    "name": "emPLE",
+    "slug": "emple",
+    "type": "life",
+    "website": "https://emple.com.gh",
+    "logoPath": "/images/carriers/emple.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/emple.png"
+  },
+  {
+    "name": "Sanlam Allianz",
+    "slug": "sanlam-allianz",
+    "type": "life",
+    "website": "https://gh.sanlamallianz.com",
+    "logoPath": "/images/carriers/sanlam-allianz.jpeg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Sanlam-Allianz.jpeg"
+  },
+  {
+    "name": "StarLife Assurance ",
+    "slug": "starlife-assurance",
+    "type": "life",
+    "website": "https://starlifeassurance.com",
+    "logoPath": "/images/carriers/starlife-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/StarLife.png"
+  },
+  {
+    "name": "Vanguard Life Assurance",
+    "slug": "vanguard-life-assurance",
+    "type": "life",
+    "website": "https://vanguardlife.com",
+    "logoPath": "/images/carriers/vanguard-life-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Vanguard-Life.png"
+  },
+  {
+    "name": "First Insurance Co. Ltd",
+    "slug": "first-insurance-co-ltd",
+    "type": "life",
+    "website": "https://www.firstinsurance.net",
+    "logoPath": "/images/carriers/first-insurance-co-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/First-Insurance.png"
+  },
+  {
+    "name": "Donewell Insurance Company LTD",
+    "slug": "donewell-insurance-company-ltd",
+    "type": "non-life",
+    "website": "http://www.donewellinsurance.com",
+    "logoPath": "/images/carriers/donewell-insurance-company-ltd.webp",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/donewell.webp"
+  },
+  {
+    "name": "Serene Insurance ",
+    "slug": "serene-insurance",
+    "type": "non-life",
+    "website": "https://www.sereneinsurance.com",
+    "logoPath": "/images/carriers/serene-insurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-9.png"
+  },
+  {
+    "name": "Prime Insurance ",
+    "slug": "prime-insurance",
+    "type": "non-life",
+    "website": "https://www.primeinsuranceghana.com",
+    "logoPath": "/images/carriers/prime-insurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-13.png"
+  },
+  {
+    "name": "Hollard Insurance Ghana LTD",
+    "slug": "hollard-insurance-ghana-ltd",
+    "type": "non-life",
+    "website": "https://www.hollard.com.gh",
+    "logoPath": "/images/carriers/hollard-insurance-ghana-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-11-1.png"
+  },
+  {
+    "name": "SIC Insurance PLC",
+    "slug": "sic-insurance-plc",
+    "type": "non-life",
+    "website": "https://www.sic-gh.com",
+    "logoPath": "/images/carriers/sic-insurance-plc.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-11.png"
+  },
+  {
+    "name": "NSIA Insurance LTD",
+    "slug": "nsia-insurance-ltd",
+    "type": "non-life",
+    "website": "https://www.nsiainsurance.com.gh",
+    "logoPath": "/images/carriers/nsia-insurance-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-14.png"
+  },
+  {
+    "name": "Imperial General Assurance ",
+    "slug": "imperial-general-assurance",
+    "type": "non-life",
+    "website": "https://www.imperialgeneral.com",
+    "logoPath": "/images/carriers/imperial-general-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-15.png"
+  },
+  {
+    "name": "Ghana Union Assurance ",
+    "slug": "ghana-union-assurance",
+    "type": "non-life",
+    "website": "https://ghanaunionassurance.com",
+    "logoPath": "/images/carriers/ghana-union-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-21.png"
+  },
+  {
+    "name": "Millennium Insurance LTD",
+    "slug": "millennium-insurance-ltd",
+    "type": "non-life",
+    "website": "https://millenniuminsurancegh.com",
+    "logoPath": "/images/carriers/millennium-insurance-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-22-1.png"
+  },
+  {
+    "name": "Activa International Insurance Ghana",
+    "slug": "activa-international-insurance-ghana",
+    "type": "non-life",
+    "website": "https://ghana.group-activa.com",
+    "logoPath": "/images/carriers/activa-international-insurance-ghana.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/New-Project-1.png"
+  },
+  {
+    "name": "Glico General",
+    "slug": "glico-general",
+    "type": "non-life",
+    "website": "https://glicogen.com",
+    "logoPath": "/images/carriers/glico-general.jpg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/New-Project-2.jpg"
+  },
+  {
+    "name": "Coronation Insurance Ghana LTD",
+    "slug": "coronation-insurance-ghana-ltd",
+    "type": "non-life",
+    "website": "https://coronation.ng/institutional/about-us/coronation-insurance-ghana",
+    "logoPath": "/images/carriers/coronation-insurance-ghana-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/New-Project-3.png"
+  },
+  {
+    "name": "Best Assurance ",
+    "slug": "best-assurance",
+    "type": "non-life",
+    "website": "https://www.bestassurance.com.gh",
+    "logoPath": "/images/carriers/best-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/New-Project-4.png"
+  },
+  {
+    "name": "Enterprise Insurance ",
+    "slug": "enterprise-insurance",
+    "type": "non-life",
+    "website": "https://myenterprisegroup.io/gh-insurance",
+    "logoPath": "/images/carriers/enterprise-insurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/New-Project-6.png"
+  },
+  {
+    "name": "Bedrock Insurance",
+    "slug": "bedrock-insurance",
+    "type": "non-life",
+    "website": "https://bedrockinsurancegh.com",
+    "logoPath": "/images/carriers/bedrock-insurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/New-Project-7.png"
+  },
+  {
+    "name": "Sunu Assurances",
+    "slug": "sunu-assurances",
+    "type": "non-life",
+    "website": "https://www.sunuassurancesghana.com",
+    "logoPath": "/images/carriers/sunu-assurances.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/sunu-assurance-logo-png_seeklogo-440246.png"
+  },
+  {
+    "name": "Sanlam Allianz",
+    "slug": "sanlam-allianz",
+    "type": "non-life",
+    "website": "https://gh.sanlamallianz.com",
+    "logoPath": "/images/carriers/sanlam-allianz-1.jpeg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Sanlam-Allianz.jpeg"
+  },
+  {
+    "name": "Loyalty Insurance",
+    "slug": "loyalty-insurance",
+    "type": "non-life",
+    "website": "https://loyaltyinsurancegh.com",
+    "logoPath": "/images/carriers/loyalty-insurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Loyalty-Insurance.png"
+  },
+  {
+    "name": "Phoenix Insurance ",
+    "slug": "phoenix-insurance",
+    "type": "non-life",
+    "website": "https://phoenixinsurancegh.com",
+    "logoPath": "/images/carriers/phoenix-insurance.jpeg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Phoenix.jpeg"
+  },
+  {
+    "name": "Priority Insurance ",
+    "slug": "priority-insurance",
+    "type": "non-life",
+    "website": "https://priorityinsuranceghana.net",
+    "logoPath": "/images/carriers/priority-insurance.jpeg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Priority.jpeg"
+  },
+  {
+    "name": "Provident Insurance LTD.",
+    "slug": "provident-insurance-ltd",
+    "type": "non-life",
+    "website": "https://www.providentgh.com/",
+    "logoPath": "/images/carriers/provident-insurance-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Provident.png"
+  },
+  {
+    "name": "Quality Insurance Company",
+    "slug": "quality-insurance-company",
+    "type": "non-life",
+    "website": "https://www.qicghana.com",
+    "logoPath": "/images/carriers/quality-insurance-company.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Quality-Insurance.png"
+  },
+  {
+    "name": "Star Assurance ",
+    "slug": "star-assurance",
+    "type": "non-life",
+    "website": "https://www.starassurance.com",
+    "logoPath": "/images/carriers/star-assurance.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Star-Assurance.png"
+  },
+  {
+    "name": "Unique Insurance Company Ltd",
+    "slug": "unique-insurance-company-ltd",
+    "type": "non-life",
+    "website": "https://uicghana.org",
+    "logoPath": "/images/carriers/unique-insurance-company-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Unique-Insurance.png"
+  },
+  {
+    "name": "Vanguard Assurance Company Ltd",
+    "slug": "vanguard-assurance-company-ltd",
+    "type": "non-life",
+    "website": "https://www.vanguardassurance.com",
+    "logoPath": "/images/carriers/vanguard-assurance-company-ltd.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Vanguard-Assurance.png"
+  },
+  {
+    "name": "WAICA Re",
+    "slug": "waica-re",
+    "type": "reinsurer",
+    "website": "https://waicare.com",
+    "logoPath": "/images/carriers/waica-re.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-7.png"
+  },
+  {
+    "name": "Ghana Re",
+    "slug": "ghana-re",
+    "type": "reinsurer",
+    "website": "https://ghanare.com",
+    "logoPath": "/images/carriers/ghana-re.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-10.png"
+  },
+  {
+    "name": "GN Re",
+    "slug": "gn-re",
+    "type": "reinsurer",
+    "website": "https://gnreghana.com",
+    "logoPath": "/images/carriers/gn-re.png",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/10/drtrsdfsdf-20.png"
+  },
+  {
+    "name": "Mainstream Reinsurance ",
+    "slug": "mainstream-reinsurance",
+    "type": "reinsurer",
+    "website": "https://www.mainstream-gh.com",
+    "logoPath": "/images/carriers/mainstream-reinsurance.jpg",
+    "originalUrl": "https://ghanainsurers.org.gh/wp-content/uploads/2025/12/Mainstream-Re.jpg"
+  }
+]
