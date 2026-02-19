@@ -2,7 +2,6 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import {
-    ArrowLeft,
     Phone,
     Mail,
     Building2,
@@ -10,18 +9,16 @@ import {
     Clock,
     User,
     CheckCircle2,
-    AlertCircle,
-    MessageSquare,
     DollarSign,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { getLeadById, LEAD_STAGES, mockLeads } from '@/mock/leads';
+import { getLeadById, LEAD_STAGES } from '@/mock/leads';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
-import Link from 'next/link';
+
 
 
 
@@ -58,7 +55,23 @@ export default function LeadDetailPage() {
                 </div>
                 <div className="flex gap-2">
                     <Button variant="outline">Log Activity</Button>
-                    <Button variant="primary">Convert Lead</Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => {
+                            const params = new URLSearchParams({
+                                sourceLeadId: lead.id,
+                                firstName: lead.contactName.split(' ')[0],
+                                lastName: lead.contactName.split(' ').slice(1).join(' '),
+                                phone: lead.phone || '',
+                                email: lead.email || '',
+                                companyName: lead.companyName || '',
+                                type: lead.companyName ? 'corporate' : 'individual'
+                            });
+                            router.push(`/dashboard/clients/new?${params.toString()}`);
+                        }}
+                    >
+                        Convert Lead
+                    </Button>
                 </div>
             </div>
 
@@ -119,7 +132,7 @@ export default function LeadDetailPage() {
                         <Card padding="lg">
                             <CardHeader title="Notes" />
                             <div className="mt-4 bg-surface-50 p-4 rounded-[var(--radius-md)] border border-surface-200 text-sm text-surface-700 italic">
-                                "{lead.notes}"
+                                &quot;{lead.notes}&quot;
                             </div>
                         </Card>
                     )}
