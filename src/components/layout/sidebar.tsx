@@ -22,10 +22,7 @@ import {
     X,
     Calendar,
     Search,
-    Bell,
-    Plus,
     UserCircle,
-    LogOut
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -85,7 +82,7 @@ const navigation: NavSection[] = [
                 icon: <FileText size={18} />,
                 children: [
                     { label: 'Motor', href: '/dashboard/policies?type=motor' },
-                    { label: 'Non-Motor', href: '/dashboard/policies?type=non-motor' },
+                    { label: 'Other Policies', href: '/dashboard/policies?type=non-motor' },
                 ],
             },
             {
@@ -94,7 +91,7 @@ const navigation: NavSection[] = [
                 icon: <Shield size={18} />,
                 children: [
                     { label: 'Motor', href: '/dashboard/claims?type=motor' },
-                    { label: 'Non-Motor', href: '/dashboard/claims?type=non-motor' },
+                    { label: 'Other Policies', href: '/dashboard/claims?type=non-motor' },
                 ],
             },
             {

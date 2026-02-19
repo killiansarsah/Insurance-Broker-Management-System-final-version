@@ -1,6 +1,6 @@
 'use client';
 
-import { ArrowLeft, ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink, MapPin, Calendar, Users, FileText } from 'lucide-react';
+import { ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink, MapPin, Calendar, Users, FileText, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { type Carrier } from '@/mock/carriers';
@@ -8,7 +8,13 @@ import { type CarrierProduct } from '@/mock/carrier-products';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Reusing the logo component with size prop for the hero
 function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?: 'normal' | 'large' }) {
@@ -51,14 +57,24 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
     );
 }
 
+import { BackButton } from '@/components/ui/back-button';
+
 export default function CarrierClientPage({ carrier, products = [] }: { carrier: Carrier; products?: CarrierProduct[] }) {
     const router = useRouter();
 
-    const groupedProducts = (products || []).reduce((acc, product) => {
-        if (!acc[product.category]) acc[product.category] = [];
-        acc[product.category].push(product);
-        return acc;
-    }, {} as Record<string, CarrierProduct[]>);
+    const groupedProducts = useMemo(() => {
+        return (products || []).reduce((acc, product) => {
+            if (!acc[product.category]) acc[product.category] = [];
+            acc[product.category].push(product);
+            return acc;
+        }, {} as Record<string, CarrierProduct[]>);
+    }, [products]);
+
+    // Split into Motor vs Others as requested by user
+    const motorProducts = groupedProducts['motor'] || [];
+    const otherProducts = Object.entries(groupedProducts)
+        .filter(([cat]) => cat !== 'motor')
+        .flatMap(([, items]) => items);
 
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in relative">
@@ -72,15 +88,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
 
             {/* Navigation */}
             <div className="flex items-center gap-4">
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => router.back()}
-                    className="text-surface-500 hover:text-surface-900 group"
-                    leftIcon={<ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />}
-                >
-                    Back to Carriers
-                </Button>
+                <BackButton />
             </div>
 
             {/* Hero Section - Redesigned */}
@@ -153,12 +161,42 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
 
                         {/* Action Buttons */}
                         <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
-                            <Button className="shimmer-button h-12 px-8 text-base shadow-xl shadow-primary-500/20" leftIcon={<FileText size={18} />}>
-                                View Contracts
+                            <Button
+                                className="shimmer-button h-12 px-8 text-base shadow-xl shadow-primary-500/20"
+                                leftIcon={<FileText size={18} />}
+                                onClick={() => router.push(`/dashboard/carriers/products?carrier=${carrier.id}`)}
+                            >
+                                View Products
                             </Button>
-                            <Button variant="outline" className="h-12 px-8 text-base bg-white/50 backdrop-blur-md border-surface-200 hover:bg-white" leftIcon={<ExternalLink size={18} />}>
+                            <Button
+                                variant="outline"
+                                className="h-12 px-8 text-base bg-white/50 backdrop-blur-md border-surface-200 hover:bg-white"
+                                leftIcon={<ExternalLink size={18} />}
+                                onClick={() => window.open(carrier.website, '_blank')}
+                            >
                                 Visit Website
                             </Button>
+
+                            {/* Jump to Category Dropdown */}
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="h-12 px-6 text-sm font-bold border border-transparent hover:border-surface-200" rightIcon={<ChevronDown size={16} />}>
+                                        Jump to Section
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="start" className="w-48">
+                                    {motorProducts.length > 0 && (
+                                        <DropdownMenuItem onClick={() => document.getElementById('motor-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                                            Motor Policies ({motorProducts.length})
+                                        </DropdownMenuItem>
+                                    )}
+                                    {otherProducts.length > 0 && (
+                                        <DropdownMenuItem onClick={() => document.getElementById('other-section')?.scrollIntoView({ behavior: 'smooth' })}>
+                                            Other Policies ({otherProducts.length})
+                                        </DropdownMenuItem>
+                                    )}
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     </div>
                 </div>
@@ -168,48 +206,46 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
                 {/* Left Column: Products */}
-                <div className="lg:col-span-2 space-y-8">
-                    {Object.entries(groupedProducts).map(([category, items], sectionIndex) => (
-                        <motion.div
-                            key={category}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.4, delay: 0.2 + (sectionIndex * 0.1) }}
-                        >
+                <div className="lg:col-span-2 space-y-12">
+                    {/* Motor Products Section */}
+                    {motorProducts.length > 0 && (
+                        <div id="motor-section" className="scroll-mt-24">
                             <div className="flex items-center gap-3 mb-5">
                                 <div className="h-px bg-surface-200 flex-1" />
-                                <h3 className="text-sm font-black text-surface-400 uppercase tracking-widest">{category} Products</h3>
+                                <h3 className="text-sm font-black text-surface-400 uppercase tracking-widest">Motor Policies</h3>
                                 <div className="h-px bg-surface-200 flex-1" />
                             </div>
 
                             <div className="grid grid-cols-1 gap-4">
-                                {items.map((product) => (
-                                    <div
-                                        key={product.id}
-                                        className="group bg-white/60 backdrop-blur-md border border-surface-200 rounded-2xl p-5 hover:bg-white hover:border-primary-200 hover:shadow-lg transition-all duration-300 flex items-start gap-4"
-                                    >
-                                        <div className="w-12 h-12 rounded-xl bg-surface-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                            <Shield size={20} className="text-surface-400 group-hover:text-primary-500 transition-colors" />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between gap-4 mb-1">
-                                                <h4 className="text-base font-bold text-surface-900 truncate">{product.name}</h4>
-                                                <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-md whitespace-nowrap">
-                                                    {product.commissionRate}% comm.
-                                                </span>
-                                            </div>
-                                            <p className="text-sm text-surface-500 line-clamp-2">{product.description}</p>
-                                        </div>
-                                        <div className="shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
-                                            <Button variant="ghost" size="icon" className="rounded-full">
-                                                <ArrowRight size={18} />
-                                            </Button>
-                                        </div>
-                                    </div>
+                                {motorProducts.map((product) => (
+                                    <ProductCard key={product.id} product={product} />
                                 ))}
                             </div>
-                        </motion.div>
-                    ))}
+                        </div>
+                    )}
+
+                    {/* Other Products Section */}
+                    {otherProducts.length > 0 && (
+                        <div id="other-section" className="scroll-mt-24">
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="h-px bg-surface-200 flex-1" />
+                                <h3 className="text-sm font-black text-surface-400 uppercase tracking-widest">Other Policies</h3>
+                                <div className="h-px bg-surface-200 flex-1" />
+                            </div>
+
+                            <div className="grid grid-cols-1 gap-4">
+                                {otherProducts.map((product) => (
+                                    <ProductCard key={product.id} product={product} />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {motorProducts.length === 0 && otherProducts.length === 0 && (
+                        <div className="text-center py-20 bg-surface-50 rounded-[32px] border-2 border-dashed border-surface-200">
+                            <p className="text-surface-500 font-medium">No products listed for this carrier yet.</p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Column: Contact & Info */}
@@ -268,5 +304,34 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                 </div>
             </div>
         </div>
+    );
+}
+
+function ProductCard({ product }: { product: CarrierProduct }) {
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="group bg-white/60 backdrop-blur-md border border-surface-200 rounded-2xl p-5 hover:bg-white hover:border-primary-200 hover:shadow-lg transition-all duration-300 flex items-start gap-4"
+        >
+            <div className="w-12 h-12 rounded-xl bg-surface-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                <Shield size={20} className="text-surface-400 group-hover:text-primary-500 transition-colors" />
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-4 mb-1">
+                    <h4 className="text-base font-bold text-surface-900 truncate">{product.name}</h4>
+                    <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded-md whitespace-nowrap">
+                        {product.commissionRate}% comm.
+                    </span>
+                </div>
+                <p className="text-sm text-surface-500 line-clamp-2">{product.description}</p>
+            </div>
+            <div className="shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
+                <Button variant="ghost" size="icon" className="rounded-full">
+                    <ArrowRight size={18} />
+                </Button>
+            </div>
+        </motion.div>
     );
 }
