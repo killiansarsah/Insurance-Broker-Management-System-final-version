@@ -246,42 +246,40 @@ export default function ClientProfilePage() {
                             </thead>
                             <tbody className="divide-y divide-surface-200/30">
                                 {clientPolicies.map((pol) => (
-                                    <Link key={pol.id} href={`/dashboard/policies/${pol.id}`} className="contents">
-                                        <tr className="hover:bg-primary-500/[0.02] transition-colors group cursor-pointer">
-                                            <td className="px-6 py-5 text-[11px] font-black text-primary-600 tracking-tight">{pol.policyNumber}</td>
-                                            <td className="px-6 py-5">
-                                                <div className="text-[12px] font-black text-surface-900 uppercase">{pol.insuranceType?.replace(/_/g, ' ')}</div>
-                                                <div className="text-[9px] font-bold text-surface-400 uppercase tracking-tighter">{pol.insurerName}</div>
-                                            </td>
-                                            <td className="px-6 py-5">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-6 h-6 rounded-full bg-surface-100 flex items-center justify-center text-[8px] font-black">{pol.insurerName?.[0]}</div>
-                                                    <span className="text-[11px] font-bold text-surface-600 uppercase tracking-tight">{pol.insurerName}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-5 text-[12px] font-black text-surface-900">{formatCurrency(pol.premiumAmount)}</td>
-                                            <td className="px-6 py-5"><StatusBadge status={pol.status} /></td>
-                                            <td className="px-6 py-5 text-center">
-                                                {pol.daysToExpiry !== undefined ? (
-                                                    <span className={cn(
-                                                        'text-[11px] font-black uppercase',
-                                                        pol.daysToExpiry < 30 ? 'text-danger-500' : pol.daysToExpiry < 60 ? 'text-amber-500' : 'text-surface-600'
-                                                    )}>{pol.daysToExpiry} days</span>
-                                                ) : <span className="text-surface-400 text-xs">—</span>}
-                                            </td>
-                                        </tr>
-                                    </Link>
+                                    <tr key={pol.id} onClick={() => router.push(`/dashboard/policies/${pol.id}`)} className="hover:bg-primary-500/[0.02] transition-colors group cursor-pointer">
+                                        <td className="px-6 py-5 text-[11px] font-black text-primary-600 tracking-tight">{pol.policyNumber}</td>
+                                        <td className="px-6 py-5">
+                                            <div className="text-[12px] font-black text-surface-900 uppercase">{pol.insuranceType?.replace(/_/g, ' ')}</div>
+                                            <div className="text-[9px] font-bold text-surface-400 uppercase tracking-tighter">{pol.insurerName}</div>
+                                        </td>
+                                        <td className="px-6 py-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-6 h-6 rounded-full bg-surface-100 flex items-center justify-center text-[8px] font-black">{pol.insurerName?.[0]}</div>
+                                                <span className="text-[11px] font-bold text-surface-600 uppercase tracking-tight">{pol.insurerName}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-5 text-[12px] font-black text-surface-900">{formatCurrency(pol.premiumAmount)}</td>
+                                        <td className="px-6 py-5"><StatusBadge status={pol.status} /></td>
+                                        <td className="px-6 py-5 text-center">
+                                            {pol.daysToExpiry !== undefined ? (
+                                                <span className={cn(
+                                                    'text-[11px] font-black uppercase',
+                                                    pol.daysToExpiry < 30 ? 'text-danger-500' : pol.daysToExpiry < 60 ? 'text-amber-500' : 'text-surface-600'
+                                                )}>{pol.daysToExpiry} days</span>
+                                            ) : <span className="text-surface-400 text-xs">—</span>}
+                                        </td>
+                                    </tr>
                                 ))}
                             </tbody>
                         </table>
                     )}
                 </div>
-            </section>
+            </section >
 
             {/* --- Broker Intelligence row: Renewals & Claims History --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
+            < div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4" >
                 {/* Renewals & Retention */}
-                <GlassCard title="Renewals & Retention" icon={<Activity size={16} />}>
+                < GlassCard title="Renewals & Retention" icon={< Activity size={16} />}>
                     <div className="space-y-4">
                         <RenewalItem label="Motor Fleet Renewal" target="P-10231" status="Quoted" expiry="18 Days" prev="Won (SIC)" progress={65} />
                         <RenewalItem label="Fire & Allied Asset" target="P-10244" status="Analyzing" expiry="34 Days" prev="Won (Enterprise)" progress={20} />
@@ -289,10 +287,10 @@ export default function ClientProfilePage() {
                             Initiate Bulk Review
                         </button>
                     </div>
-                </GlassCard>
+                </GlassCard >
 
                 {/* Claims History (Broker View) */}
-                <GlassCard title="Claims History (Live Feed)" icon={<Activity size={16} />}>
+                < GlassCard title="Claims History (Live Feed)" icon={< Activity size={16} />}>
                     <div className="space-y-4">
                         <div className="p-5 rounded-2xl bg-gradient-to-br from-primary-500/[0.03] to-surface-500/[0.01] border border-primary-200/20 shadow-inner relative overflow-hidden group">
                             <div className="flex justify-between items-start mb-4 relative z-10">
@@ -322,13 +320,13 @@ export default function ClientProfilePage() {
                             </div>
                         </div>
                     </div>
-                </GlassCard>
-            </div>
+                </GlassCard >
+            </div >
 
             {/* --- Documents & Timeline row --- */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            < div className="grid grid-cols-1 lg:grid-cols-2 gap-6" >
                 {/* Documents & Compliance */}
-                <GlassCard title="Documents & Compliance Checklist" icon={<ShieldCheck size={16} />}>
+                < GlassCard title="Documents & Compliance Checklist" icon={< ShieldCheck size={16} />}>
                     <div className="space-y-1">
                         <ChecklistItem label="Proposal Form (Digital)" type="Mandatory" status="uploaded" date="10 Jan 2025" />
                         <ChecklistItem label="Master Policy Schedule" type="Mandatory" status="uploaded" date="12 Jan 2025" />
@@ -336,10 +334,10 @@ export default function ClientProfilePage() {
                         <ChecklistItem label="Motor Fleet Certificate" type="Mandatory" status="pending" isAlert />
                         <ChecklistItem label="KYC Document Suite" type="NIC Required" status="complete" date="05 Feb 2025" />
                     </div>
-                </GlassCard>
+                </GlassCard >
 
                 {/* Communication & Activity Timeline */}
-                <GlassCard title="Communication & Activity Feed" icon={<MessageSquare size={16} />}>
+                < GlassCard title="Communication & Activity Feed" icon={< MessageSquare size={16} />}>
                     <div className="space-y-6">
                         <div className="space-y-4">
                             <TimelineItem date="12 Mar" category="Call logged" text="Renewal discussion with CFO regarding Motor Fleet expansion" owner="A. Boateng" />
@@ -351,11 +349,11 @@ export default function ClientProfilePage() {
                             View Extensive History
                         </button>
                     </div>
-                </GlassCard>
-            </div>
+                </GlassCard >
+            </div >
 
             {/* --- Tasks & Follow-ups Column (Vertical Pillar) --- */}
-            <section className="pt-4">
+            < section className="pt-4" >
                 <div className="flex items-center justify-between mb-4 px-2">
                     <h3 className="text-[13px] font-black text-surface-900 uppercase tracking-[3px] flex items-center gap-3">
                         <Bell size={16} className="text-danger-500" /> Pending Tasks & Follow-ups
@@ -366,10 +364,10 @@ export default function ClientProfilePage() {
                     <TaskCard label="Premium Debt Recovery (₵180k)" status="URGENT" due="3 Days" owner="Finance" highlight="amber" />
                     <TaskCard label="Renewal Confirmation" status="NORMAL" due="7 Days" owner="AO" />
                 </div>
-            </section>
+            </section >
 
             {/* --- Client Health Indicator HUD / Floating Anchor --- */}
-            <motion.div
+            < motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.005 }}
@@ -410,8 +408,8 @@ export default function ClientProfilePage() {
                 {/* Visual Flair */}
                 <div className="absolute -top-20 -right-20 w-80 h-80 bg-amber-500/10 rounded-full blur-[100px] pointer-events-none" />
                 <div className="absolute -bottom-20 -left-20 w-60 h-60 bg-primary-500/10 rounded-full blur-[80px] pointer-events-none" />
-            </motion.div>
-        </div>
+            </motion.div >
+        </div >
     );
 }
 

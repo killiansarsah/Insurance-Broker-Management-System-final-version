@@ -22,12 +22,16 @@ import {
     X,
     Calendar,
     Search,
-    UserCircle,
+    Zap,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
+import { useProfileStore } from '@/stores/profile-store';
 import { useState } from 'react';
+import { GlobalSearch } from '@/components/features/global-search';
+import { QuickAddMenu } from '@/components/features/quick-add';
+import { NotificationsPopover } from '@/components/features/notifications';
 
 // --- Types ---
 
@@ -151,6 +155,11 @@ const navigation: NavSection[] = [
                 icon: <ShieldCheck size={18} />,
             },
             {
+                label: 'Data Inflow',
+                href: '/dashboard/data-onboarding',
+                icon: <Zap size={18} />,
+            },
+            {
                 label: 'Settings',
                 href: '/dashboard/settings',
                 icon: <Settings size={18} />,
@@ -164,16 +173,22 @@ const navigation: NavSection[] = [
 // --- Utilities ---
 const normalizePath = (p: string) => p.replace(/\/$/, "") || "/";
 
+function SidebarCompanyHeader() {
+    const { companyName } = useProfileStore();
+    return (
+        <div className="min-w-0">
+            <h2 className="text-surface-900 font-bold text-base tracking-tight truncate">{companyName}</h2>
+            <p className="text-[11px] text-surface-500 font-medium uppercase tracking-wider">Broker [MID 899597]</p>
+        </div>
+    );
+}
+
 // --- Components ---
 
-// --- Global Rail with Features ---
-
-import { GlobalSearch } from '@/components/features/global-search';
-import { QuickAddMenu } from '@/components/features/quick-add';
-import { NotificationsPopover } from '@/components/features/notifications';
 
 function GlobalRail() {
     const [searchOpen, setSearchOpen] = useState(false);
+    const { firstName, lastName, avatarUrl } = useProfileStore();
 
     return (
         <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white border-r border-surface-200 shrink-0 z-20">
@@ -212,10 +227,16 @@ function GlobalRail() {
             <div className="flex flex-col gap-3 w-full items-center mb-2">
                 <Link
                     href="/dashboard/settings"
-                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-surface-900 hover:bg-surface-100 rounded-lg transition-colors"
-                    title="Profile & Settings"
+                    className="w-10 h-10 flex items-center justify-center overflow-hidden rounded-full border-2 border-surface-200 hover:border-primary-400 transition-all shadow-sm"
+                    title={`${firstName} ${lastName} — Settings`}
                 >
-                    <UserCircle size={22} />
+                    {avatarUrl ? (
+                        <Image src={avatarUrl} alt="Profile" fill className="object-cover" />
+                    ) : (
+                        <span className="text-xs font-black text-surface-600 bg-surface-100 w-full h-full flex items-center justify-center">
+                            {firstName[0]}{lastName[0]}
+                        </span>
+                    )}
                 </Link>
             </div>
         </div>
@@ -417,10 +438,7 @@ export function Sidebar() {
                                 />
                             </div>
                         ) : (
-                            <div>
-                                <h2 className="text-surface-900 font-bold text-base tracking-tight">Dezag Brokers</h2>
-                                <p className="text-[11px] text-surface-500 font-medium uppercase tracking-wider">Broker [MID 899597]</p>
-                            </div>
+                            <SidebarCompanyHeader />
                         )}
 
                         {/* Mobile Close */}
@@ -476,7 +494,7 @@ export function Sidebar() {
                         </button>
                     </div>
                 </div>
-            </aside>
+            </aside >
         </>
     );
 }

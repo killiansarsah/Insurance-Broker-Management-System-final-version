@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
-import { StatusBadge } from '@/components/data-display/status-badge';
 import { Card } from '@/components/ui/card';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';

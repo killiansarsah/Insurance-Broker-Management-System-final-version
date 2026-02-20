@@ -433,3 +433,36 @@ export interface SelectOption {
     value: string;
     disabled?: boolean;
 }
+
+// --- Data Import Types ---
+
+export type ImportEntityType = 'clients' | 'policies' | 'claims' | 'leads' | 'universal';
+
+export interface ImportColumnMapping {
+    sourceColumn: string;
+    targetField: string;
+    isRequired: boolean;
+    entityGroup?: 'client' | 'policy' | 'asset' | 'claim' | 'lead'; // Used for universal import grouping
+}
+
+export interface ImportValidationError {
+    row: number;
+    column: string;
+    value: string;
+    message: string;
+    entityGroup?: string;
+}
+
+export interface ImportResult {
+    totalRows: number;
+    imported: number;
+    skipped: number;
+    errors: ImportValidationError[];
+    duplicates: number;
+    entitiesCreated: {
+        clients: number;
+        policies: number;
+        claims: number;
+        leads: number;
+    };
+}

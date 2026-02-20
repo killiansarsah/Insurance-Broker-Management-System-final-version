@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Shield, Search, Building2, Briefcase,
@@ -43,14 +43,12 @@ export function SettingsUsers() {
         { label: 'Branches', value: 2, icon: Building2, color: 'text-amber-600', bg: 'bg-amber-50' },
     ];
 
-    const filteredUsers = useMemo(() => {
-        return users.filter(u => {
-            const matchesSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(searchQuery.toLowerCase());
-            const matchesRole = !roleFilter || u.role === roleFilter;
-            const matchesBranch = !branchFilter || u.branchId === branchFilter;
-            return matchesSearch && matchesRole && matchesBranch;
-        });
-    }, [users, searchQuery, roleFilter, branchFilter]);
+    const filteredUsers = users.filter(u => {
+        const matchesSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesRole = !roleFilter || u.role === roleFilter;
+        const matchesBranch = !branchFilter || u.branchId === branchFilter;
+        return matchesSearch && matchesRole && matchesBranch;
+    });
 
     const handleUpdateDelegation = (staffId: string, backupId: string | null) => {
         setUsers(prev => prev.map(u => {

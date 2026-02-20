@@ -14,7 +14,7 @@ interface CustomSelectProps {
     label?: string;
     options: (string | number | SelectOption)[];
     value: string | number | null;
-    onChange: (value: any) => void;
+    onChange: (value: string | number | null) => void;
     placeholder?: string;
     className?: string;
     clearable?: boolean;

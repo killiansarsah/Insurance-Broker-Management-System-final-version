@@ -257,23 +257,28 @@ export default function TasksPage() {
         if (!binRef.current) return;
         const binRect = binRef.current.getBoundingClientRect();
 
-        // Calculate point center
+        // info.point is in PAGE coords (includes scroll); getBoundingClientRect is in VIEWPORT coords.
+        // Normalise by subtracting scroll offset.
+        const viewportX = point.x - window.scrollX;
+        const viewportY = point.y - window.scrollY;
+
         const centerX = binRect.left + binRect.width / 2;
         const centerY = binRect.top + binRect.height / 2;
 
         const distance = Math.sqrt(
-            Math.pow(point.x - centerX, 2) +
-            Math.pow(point.y - centerY, 2)
+            Math.pow(viewportX - centerX, 2) +
+            Math.pow(viewportY - centerY, 2)
         );
 
-        // expansion/gasp threshold
-        if (distance < 200) {
+        // gasping threshold — bin "notices" the note approaching
+        if (distance < 250) {
             setCrumplingTaskId(taskId);
         } else {
             setCrumplingTaskId(null);
         }
 
-        const isOver = distance < 100;
+        // isOver threshold — note is close enough to drop
+        const isOver = distance < 120;
         if (isOver !== binHovered) {
             setBinHovered(isOver);
         }
@@ -288,17 +293,20 @@ export default function TasksPage() {
         }
         const binRect = binRef.current.getBoundingClientRect();
 
-        // Calculate bin center
+        // Normalise page → viewport coords (same fix as handleDrag)
+        const viewportX = point.x - window.scrollX;
+        const viewportY = point.y - window.scrollY;
+
         const centerX = binRect.left + binRect.width / 2;
         const centerY = binRect.top + binRect.height / 2;
 
         const distance = Math.sqrt(
-            Math.pow(point.x - centerX, 2) +
-            Math.pow(point.y - centerY, 2)
+            Math.pow(viewportX - centerX, 2) +
+            Math.pow(viewportY - centerY, 2)
         );
 
-        // Match the 100px threshold used in handleDrag
-        if (distance < 100) {
+        // Match the 120px threshold used in handleDrag
+        if (distance < 120) {
             // Keep crumpling active so the note visually shrinks before removal
             setCrumplingTaskId(taskId);
             setJustSwallowed(true);

@@ -29,7 +29,7 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
                     opacity: isOver ? 0.5 : isGasping ? 0.25 : 0.1,
                     scale: isOver ? [1, 1.2, 1.15] : isGasping ? 1.1 : 1,
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                transition={{ type: "tween", duration: 0.35, ease: "easeOut" }}
                 className={cn(
                     "absolute -inset-14 rounded-full blur-[60px] transition-colors duration-500",
                     isOver ? "bg-primary-400" : isGasping ? "bg-accent-300" : "bg-surface-200"
@@ -69,9 +69,9 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
                     animate={{
                         rotateX: isOver ? -35 : isGasping ? -12 : 0,
                         rotateZ: isOver ? -50 : isGasping ? -8 : 0,
-                        y: isOver ? -24 : isGasping ? -6 : justSwallowed ? [0, -8, 0] : 0,
+                        y: isOver ? -24 : isGasping ? -6 : 0,
                         x: isOver ? -12 : isGasping ? -3 : 0,
-                        scale: isOver ? 1.15 : justSwallowed ? [1, 1.1, 1] : 1,
+                        scale: isOver ? 1.15 : 1,
                     }}
                     transition={{
                         type: "spring",
@@ -91,13 +91,13 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
                 {/* Bin Body - Frosted Glass */}
                 <motion.div
                     animate={{
-                        scale: isOver ? 1.45 : isGasping ? 1.15 : justSwallowed ? [1, 1.08, 1] : 1,
-                        y: isOver ? 10 : isGasping ? -3 : justSwallowed ? [0, 2, 0] : 0,
-                        rotateZ: isGasping && !isOver ? [0, -3, 3, -2, 0] : 0,
+                        scale: isOver ? 1.45 : isGasping ? 1.15 : 1,
+                        y: isOver ? 10 : isGasping ? -3 : 0,
+                        rotateZ: 0,
                     }}
                     transition={{
                         scale: { type: "spring", stiffness: 500, damping: 15 },
-                        rotateZ: { repeat: Infinity, duration: 1.5 },
+                        rotateZ: { type: "tween", duration: 0.3 },
                         y: { type: "spring", stiffness: 400, damping: 20 },
                     }}
                     className={cn(
@@ -156,7 +156,7 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
             <div className="mt-5 flex flex-col items-center">
                 <motion.span
                     animate={{
-                        scale: justSwallowed ? [1, 1.1, 1] : 1,
+                        scale: justSwallowed ? 1.1 : 1,
                         color: justSwallowed ? "rgb(34, 197, 94)" : undefined,
                     }}
                     className={cn(

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     ArrowLeft,
@@ -170,7 +170,7 @@ function SelectField({
                 placeholder={placeholder}
                 options={options}
                 value={value ?? ''}
-                onChange={(v) => onChange?.({ target: { value: v ?? '' } } as any)}
+                onChange={(v) => onChange?.({ target: { value: v ?? '' } } as React.ChangeEvent<HTMLSelectElement>)}
             />
             {error && <p className="text-xs text-danger-500 mt-1">{error}</p>}
         </div>
@@ -181,11 +181,9 @@ export default function NewClientPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
-    const [form, setForm] = useState<FormData>(INITIAL_FORM);
-    const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
     // Pre-populate from query params (e.g., from Lead Conversion)
-    useEffect(() => {
+    const [form, setForm] = useState<FormData>(() => {
         const type = searchParams.get('type');
         const firstName = searchParams.get('firstName');
         const lastName = searchParams.get('lastName');
@@ -194,17 +192,19 @@ export default function NewClientPage() {
         const companyName = searchParams.get('companyName');
 
         if (type || firstName || lastName || email || phone || companyName) {
-            setForm(prev => ({
-                ...prev,
+            return {
+                ...INITIAL_FORM,
                 type: (type === 'corporate' ? 'corporate' : 'individual') as 'individual' | 'corporate',
-                firstName: firstName || prev.firstName,
-                lastName: lastName || prev.lastName,
-                email: email || prev.email,
-                phone: phone || prev.phone,
-                companyName: companyName || prev.companyName,
-            }));
+                firstName: firstName || INITIAL_FORM.firstName,
+                lastName: lastName || INITIAL_FORM.lastName,
+                email: email || INITIAL_FORM.email,
+                phone: phone || INITIAL_FORM.phone,
+                companyName: companyName || INITIAL_FORM.companyName,
+            };
         }
-    }, [searchParams]);
+        return INITIAL_FORM;
+    });
+    const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
     function update(field: keyof FormData, value: string) {
         setForm((prev) => ({ ...prev, [field]: value }));

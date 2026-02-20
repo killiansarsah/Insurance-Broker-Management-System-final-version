@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink, MapPin, Calendar, Users, FileText, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -38,11 +39,14 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
                 containerClass
             )}>
                 {carrier.logoUrl && !imgError ? (
-                    <img
+                    <Image
                         src={carrier.logoUrl}
                         alt={`${carrier.name} logo`}
+                        width={size === 'large' ? 128 : 48}
+                        height={size === 'large' ? 128 : 48}
                         className={cn("object-contain", imgClass)}
                         onError={() => setImgError(true)}
+                        unoptimized
                     />
                 ) : (
                     <div

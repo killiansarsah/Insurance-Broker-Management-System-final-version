@@ -5,7 +5,6 @@ import {
     Phone,
     Mail,
     Building2,
-    Calendar,
     Clock,
     User,
     CheckCircle2,

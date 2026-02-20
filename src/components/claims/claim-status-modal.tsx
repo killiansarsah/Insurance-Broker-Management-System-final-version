@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import {
-    CheckCircle2,
     XCircle,
     Search,
     DollarSign,
@@ -15,7 +14,7 @@ import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { CustomSelect } from '@/components/ui/select-custom';
+
 import { Claim, ClaimStatus } from '@/types';
 import { cn } from '@/lib/utils';
 
