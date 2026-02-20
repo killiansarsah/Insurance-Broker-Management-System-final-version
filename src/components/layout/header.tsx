@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth-store';
 import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { useRouter } from 'next/navigation';
+import { CalculatorModal } from '@/components/ui/calculator-modal';
 
 export function Header() {
     const router = useRouter();
@@ -14,6 +15,7 @@ export function Header() {
     const [searchOpen, setSearchOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
+    const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
 
     // Click outside handlers
     const profileRef = useClickOutside<HTMLDivElement>(() => setProfileOpen(false));
@@ -104,7 +106,7 @@ export function Header() {
             <div className="flex items-center gap-2">
                 {/* Utilities */}
                 <button
-                    onClick={() => alert("Code Calculator utility")}
+                    onClick={() => setIsCalculatorOpen(true)}
                     className="p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
                     title="Code Calculator"
                 >
@@ -275,6 +277,11 @@ export function Header() {
                     />
                 </div>
             )}
+
+            <CalculatorModal
+                isOpen={isCalculatorOpen}
+                onClose={() => setIsCalculatorOpen(false)}
+            />
         </header>
     );
 }

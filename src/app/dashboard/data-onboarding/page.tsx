@@ -3,146 +3,96 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-    Zap, ShieldCheck, Layers,
-    Binary, Fingerprint, Box
+    Upload, Info, FileText,
+    CheckCircle2, ArrowRight
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LiquidFilters } from '@/components/ui/liquid-filters';
-import { AuroraBlob } from '@/components/ui/aurora-blob';
 import { Modal } from '@/components/ui/modal';
 import { SettingsDataImport } from '@/components/features/settings/settings-data-import';
-import Image from 'next/image';
 
-export default function DataOnboardingPage() {
+export default function ImportPage() {
     const [isWizardOpen, setIsWizardOpen] = useState(false);
 
     return (
-        <div className="relative min-h-[calc(100vh-140px)] overflow-hidden rounded-[48px] bg-[#0a0a0b] text-white">
-            <LiquidFilters />
+        <div className="max-w-5xl mx-auto py-12 px-6">
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-8"
+            >
+                {/* Simple Header */}
+                <div className="space-y-2">
+                    <h1 className="text-3xl font-bold text-surface-900 tracking-tight">Data Import</h1>
+                    <p className="text-surface-500 text-lg">Upload and migrate your client and policy records into the system.</p>
+                </div>
 
-            {/* Background Kinetic Layer */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-40">
-                <AuroraBlob color="bg-emerald-500/30" size="w-[800px] h-[800px]" x={-200} y={-200} index={0} />
-                <AuroraBlob color="bg-primary-600/20" size="w-[900px] h-[900px]" x={500} y={100} index={1} />
-                <AuroraBlob color="bg-cyan-400/10" size="w-[600px] h-[600px]" x={100} y={400} index={2} />
-            </div>
-
-            {/* Brutalist Watermark */}
-            <div className="absolute top-0 right-0 p-12 select-none pointer-events-none">
-                <h1 className="text-[20vw] font-black leading-none text-white/[0.03] tracking-tighter italic">
-                    INGEST
-                </h1>
-            </div>
-
-            <div className="relative z-10 p-12 lg:p-20 grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-20 h-full">
-                {/* Primary Intelligence Section */}
-                <div className="space-y-16">
-                    <div className="space-y-6">
-                        <motion.div
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-3xl"
-                        >
-                            <span className="relative flex h-3 w-3">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
-                            </span>
-                            <span className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400">System Ready</span>
-                        </motion.div>
-
-                        <div style={{ filter: 'url(#liquid-glass)' }}>
-                            <motion.h1
-                                initial={{ opacity: 0, y: 40 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                                className="text-[7rem] lg:text-[10rem] font-black leading-[0.85] tracking-tighter"
-                            >
-                                Data <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-cyan-300 to-primary-500">
-                                    Inflow
-                                </span>
-                            </motion.h1>
-                        </div>
-
-                        <motion.p
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 0.7, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            className="max-w-2xl text-2xl font-medium leading-relaxed text-surface-200"
-                        >
-                            The Universal Relational Ingestion Engine is online. Accelerate the transition from legacy silos to a hyper-connected insurance architecture.
-                        </motion.p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-6 items-center">
-                        <motion.div
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                        >
-                            <Button
-                                size="lg"
-                                className="h-28 px-16 rounded-full bg-white text-black hover:bg-emerald-50 transition-all text-3xl font-black uppercase tracking-widest gap-6 group"
-                                onClick={() => setIsWizardOpen(true)}
-                            >
-                                Start Migration
-                                <Zap className="w-10 h-10 text-emerald-500 fill-emerald-500 transition-transform group-hover:rotate-12" />
-                            </Button>
-                        </motion.div>
-
-                        <div className="flex -space-x-4">
-                            {[1, 2, 3, 4].map((i) => (
-                                <div key={i} className="w-14 h-14 rounded-full border-4 border-[#0a0a0b] bg-surface-800 flex items-center justify-center overflow-hidden relative">
-                                    <Image src={`https://i.pravatar.cc/150?u=${i}`} alt="user" fill className="object-cover" />
-                                </div>
-                            ))}
-                            <div className="w-14 h-14 rounded-full border-4 border-[#0a0a0b] bg-emerald-500 text-black flex items-center justify-center text-xs font-black relative">
-                                +12
+                {/* Main Action Card */}
+                <Card padding="none" className="overflow-hidden border-surface-200 shadow-sm bg-white rounded-[32px]">
+                    <div className="p-10 border-b border-surface-100 bg-surface-50/30">
+                        <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+                            <div className="w-20 h-20 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
+                                <Upload size={32} />
                             </div>
+                            <div className="flex-1 space-y-2">
+                                <h2 className="text-xl font-bold text-surface-900">Launch Import Wizard</h2>
+                                <p className="text-surface-500 text-sm leading-relaxed max-w-[600px]">
+                                    Our intelligent migration engine supports CSV and Excel files.
+                                    Records will be automatically linked and validated against system standards.
+                                </p>
+                            </div>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                onClick={() => setIsWizardOpen(true)}
+                                className="h-14 px-8 font-bold shadow-lg shadow-primary-500/20 rounded-2xl"
+                                rightIcon={<ArrowRight size={18} />}
+                            >
+                                Start Import
+                            </Button>
                         </div>
-                        <span className="text-xs font-bold text-surface-500 uppercase tracking-widest pl-4">Recently Processed</span>
                     </div>
 
-                    {/* Meta Info Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12">
-                        <StatsCard icon={<Binary className="text-emerald-400" />} label="Avg Extraction" value="98.2%" />
-                        <StatsCard icon={<Fingerprint className="text-cyan-400" />} label="Deduplication" value="Active" />
-                        <StatsCard icon={<Box className="text-primary-400" />} label="Entity Links" value="Relational" />
+                    {/* Features Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-surface-100">
+                        <FeatureItem
+                            icon={<FileText className="text-blue-500" />}
+                            title="Format Support"
+                            desc="Optimized for CSV, XLS, and XLSX standard formats."
+                        />
+                        <FeatureItem
+                            icon={<CheckCircle2 className="text-emerald-500" />}
+                            title="Auto-Validation"
+                            desc="Real-time data integrity and compliance checks."
+                        />
+                        <FeatureItem
+                            icon={<Info className="text-amber-500" />}
+                            title="Help Center"
+                            desc="Access templates and migration documentation."
+                        />
                     </div>
-                </div>
+                </Card>
 
-                {/* Vertical Secondary Info (Asymmetric Tension) */}
-                <div className="hidden lg:flex flex-col gap-8 justify-end">
-                    <Card className="bg-white/5 border-white/10 backdrop-blur-2xl p-8 rounded-[32px] space-y-6">
-                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                            <ShieldCheck size={28} />
-                        </div>
-                        <h3 className="text-xl font-bold italic tracking-tight">Compliance Guard</h3>
-                        <p className="text-sm text-surface-400 leading-relaxed">
-                            Auto-validated against GIA standards and NIC regulatory frameworks in real-time.
-                        </p>
-                    </Card>
-
-                    <Card className="bg-white/5 border-white/10 backdrop-blur-2xl p-8 rounded-[32px] space-y-6">
-                        <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-                            <Layers size={28} />
-                        </div>
-                        <h3 className="text-xl font-bold italic tracking-tight">Cross-Entity Mapping</h3>
-                        <p className="text-sm text-surface-400 leading-relaxed">
-                            Flat data is intelligently decomposed into Clients, Policies, and Claims automatically.
-                        </p>
-                    </Card>
+                {/* Info Alert */}
+                <div className="p-4 bg-primary-50/50 border border-primary-100 rounded-2xl flex items-start gap-3">
+                    <Info size={18} className="text-primary-600 mt-0.5" />
+                    <p className="text-sm text-primary-900/80 leading-relaxed">
+                        <strong>Need help getting started?</strong> Download our
+                        <button className="text-primary-700 font-bold underline px-1 hover:text-primary-800">standard import template</button>
+                        to ensure your data structure matches the system requirements for a seamless migration.
+                    </p>
                 </div>
-            </div>
+            </motion.div>
 
             {/* Ingestion Wizard Modal */}
             <Modal
                 isOpen={isWizardOpen}
                 onClose={() => setIsWizardOpen(false)}
-                size="2xl"
-                className="h-[90vh]"
+                size="full"
+                className="h-[95vh] p-0"
             >
-                <div className="bg-[#0f0f11] h-full p-8 overflow-hidden rounded-[32px]">
+                <div className="bg-white h-full rounded-[32px] overflow-hidden">
                     <SettingsDataImport />
                 </div>
             </Modal>
@@ -150,18 +100,14 @@ export default function DataOnboardingPage() {
     );
 }
 
-function StatsCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function FeatureItem({ icon, title, desc }: { icon: React.ReactNode; title: string, desc: string }) {
     return (
-        <Card className="bg-white/[0.03] border-white/5 p-6 rounded-[24px] hover:bg-white/[0.06] transition-colors">
-            <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                    {icon}
-                </div>
-                <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-surface-500 italic">{label}</p>
-                    <p className="text-2xl font-black tracking-tighter">{value}</p>
-                </div>
+        <div className="p-8 space-y-3 hover:bg-surface-50/50 transition-colors">
+            <div className="w-10 h-10 rounded-xl bg-surface-50 flex items-center justify-center">
+                {icon}
             </div>
-        </Card>
+            <h3 className="font-bold text-surface-900 text-sm tracking-tight">{title}</h3>
+            <p className="text-xs text-surface-500 leading-relaxed font-medium">{desc}</p>
+        </div>
     );
 }

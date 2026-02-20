@@ -22,7 +22,7 @@ import {
     X,
     Calendar,
     Search,
-    Zap,
+    Upload,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -155,9 +155,9 @@ const navigation: NavSection[] = [
                 icon: <ShieldCheck size={18} />,
             },
             {
-                label: 'Data Inflow',
+                label: 'Import',
                 href: '/dashboard/data-onboarding',
-                icon: <Zap size={18} />,
+                icon: <Upload size={18} />,
             },
             {
                 label: 'Settings',
