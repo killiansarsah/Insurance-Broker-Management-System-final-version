@@ -40,6 +40,7 @@ This document provides comprehensive specifications for developing an Insurance 
 
 ### 1.2 Scope
 The IBMS will cover:
+- **Multi-tenant SaaS platform** enabling multiple independent brokerage firms to operate on a single shared infrastructure with complete data isolation
 - Complete client lifecycle management with KYC/AML compliance
 - Policy administration for Life and Non-Life insurance products
 - Lead generation and conversion tracking
@@ -49,8 +50,11 @@ The IBMS will cover:
 - Document management with retention policies
 - Commission tracking and reconciliation
 - Real-time dashboards and analytics
+- Tenant management, onboarding, subscription billing, and platform administration
 
 ### 1.3 Target Users
+- **Platform Super Administrator** (manages the entire multi-tenant platform)
+- **Tenant Administrator** (manages a single brokerage firm's instance)
 - Insurance Brokers and Agents
 - Brokerage Managers and Administrators
 - Compliance Officers
@@ -63,23 +67,27 @@ The IBMS will cover:
 ## 2. SYSTEM OVERVIEW
 
 ### 2.1 System Vision
-To create a comprehensive, user-friendly platform that streamlines insurance brokerage operations while ensuring full compliance with Ghana's regulatory framework.
+To create a comprehensive, multi-tenant SaaS platform that enables multiple independent insurance brokerage firms in Ghana to streamline their operations while ensuring full compliance with the national regulatory framework. Each brokerage firm (tenant) operates in a fully isolated environment with its own data, users, branding, and configuration, all running on a shared, scalable infrastructure.
 
 ### 2.2 Key Features
-1. **Client Management** - Full KYC with Ghana Card integration, digital addresses, and beneficiary tracking
-2. **Policy Administration** - Multi-product support with automated renewal workflows
-3. **Lead Management** - Track leads from acquisition to conversion
-4. **Claims Processing** - NIC-compliant workflow with document management
-5. **Internal Chat System** - Real-time messaging for client and claim follow-ups
-6. **Compliance Module** - Automated AML checks and regulatory reporting
-7. **Document Management** - Secure storage with 6-year retention
-8. **Analytics Dashboard** - Real-time business intelligence and reporting
+1. **Multi-Tenant Platform** - SaaS architecture allowing multiple brokerage firms to use the system independently with complete data isolation, custom branding, and per-tenant configuration
+2. **Client Management** - Full KYC with Ghana Card integration, digital addresses, and beneficiary tracking
+3. **Policy Administration** - Multi-product support with automated renewal workflows
+4. **Lead Management** - Track leads from acquisition to conversion
+5. **Claims Processing** - NIC-compliant workflow with document management
+6. **Internal Chat System** - Real-time messaging for client and claim follow-ups
+7. **Compliance Module** - Automated AML checks and regulatory reporting
+8. **Document Management** - Secure storage with 6-year retention
+9. **Analytics Dashboard** - Real-time business intelligence and reporting
+10. **Tenant Management** - Self-service onboarding, subscription billing, and platform administration
 
 ### 2.3 System Benefits
 - **For Brokers:** Streamlined workflow, instant client information access
 - **For Managers:** Real-time oversight, performance tracking, compliance monitoring
 - **For Compliance:** Automated checks, audit trails, easy NIC reporting
 - **For Clients:** Faster service, transparent processes, better communication
+- **For Platform Operators:** Single codebase serving multiple firms, centralized monitoring, scalable revenue model
+- **For Brokerage Firms (Tenants):** Zero infrastructure management, rapid onboarding, pay-per-use pricing, automatic updates and security patches
 
 ---
 
@@ -162,13 +170,20 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLIENT LAYER                         │
 ├─────────────────────────────────────────────────────────────┤
-│  Web Application          Mobile App         Admin Portal   │
-│  (React/Angular)          (iOS/Android)      (React)        │
+│  Tenant Web App        Mobile App       Platform Admin      │
+│  (firmname.ibms.com)   (iOS/Android)    (admin.ibms.com)    │
 └────────────────┬────────────────┬───────────────────────────┘
                  │                │
                  │  HTTPS/WSS     │
                  │                │
 ┌────────────────┴────────────────┴───────────────────────────┐
+│                TENANT RESOLUTION LAYER                      │
+├─────────────────────────────────────────────────────────────┤
+│  Subdomain Resolver → Tenant Context Injection → Auth      │
+│  (firmname.ibms.com → tenant_id)                            │
+└────────────────┬────────────────────────────────────────────┘
+                 │
+┌────────────────┴────────────────────────────────────────────┐
 │                    APPLICATION LAYER                        │
 ├─────────────────────────────────────────────────────────────┤
 │              API Gateway (Load Balancer)                    │
@@ -184,10 +199,10 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 │  │ Service  │  │ Service  │  │ Service  │  │ Service  │  │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
 │                                                             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                │
-│  │ Reporting│  │  Payment │  │   Email  │                │
-│  │ Service  │  │ Service  │  │  Service │                │
-│  └──────────┘  └──────────┘  └──────────┘                │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
+│  │ Reporting│  │  Payment │  │   Email  │  │  Tenant  │  │
+│  │ Service  │  │ Service  │  │  Service │  │ Service  │  │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
 └─────────────────────┬───────────────────────────────────────┘
                       │
 ┌─────────────────────┴───────────────────────────────────────┐
@@ -196,11 +211,14 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 │  ┌────────────────┐    ┌────────────────┐                  │
 │  │   PostgreSQL   │    │     Redis      │                  │
 │  │  (Primary DB)  │    │ (Cache/Queue)  │                  │
+│  │  + RLS per     │    │ + tenant-keyed │                  │
+│  │    tenant      │    │   namespaces   │                  │
 │  └────────────────┘    └────────────────┘                  │
 │                                                             │
 │  ┌────────────────┐    ┌────────────────┐                  │
 │  │   MongoDB      │    │   S3/MinIO     │                  │
 │  │  (Chat/Logs)   │    │  (Documents)   │                  │
+│  │  + tenant_id   │    │ + tenant/ prefix│                 │
 │  └────────────────┘    └────────────────┘                  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -306,6 +324,121 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 - DDoS protection (Cloudflare)
 - Vulnerability scanning (Snyk, OWASP ZAP)
 
+### 4.3 Multi-Tenancy Architecture
+
+The IBMS operates as a **multi-tenant SaaS platform** where each brokerage firm (tenant) has a logically isolated environment within a shared infrastructure. This section defines the architectural decisions for tenant management, data isolation, and security boundaries.
+
+#### 4.3.1 Tenant Resolution Strategy
+
+**Subdomain-Based Resolution (Primary):**
+- Each tenant is assigned a unique subdomain: `{firm-slug}.ibms.com`
+- Example: `starbrokerage.ibms.com`, `goldshieldinsurance.ibms.com`
+- The API Gateway / Tenant Resolution Layer extracts the subdomain, resolves it to a `tenant_id`, and injects this into the request context
+- Platform administration portal is accessible at `admin.ibms.com` (Platform Super Admin only)
+
+**Custom Domain Support (Optional - Enterprise Tier):**
+- Tenants on the Enterprise plan may configure a custom domain (e.g., `portal.starbrokerage.com`)
+- DNS CNAME mapping to `{firm-slug}.ibms.com`
+- SSL provisioned via Let's Encrypt or tenant-managed certificate
+
+**Tenant Context Flow:**
+1. User navigates to `firmname.ibms.com`
+2. API Gateway resolves subdomain → `tenant_id`
+3. `tenant_id` is injected into JWT claims on login
+4. Every API request carries `tenant_id` in the JWT
+5. All database queries are automatically scoped to `tenant_id` via Row-Level Security (RLS)
+
+#### 4.3.2 Data Isolation Strategy
+
+**Approach: Shared Database, Shared Schema, Row-Level Security (RLS)**
+
+This is the recommended approach for cost-effective multi-tenancy while maintaining strong data isolation:
+
+- **Single PostgreSQL database** shared across all tenants
+- **Every table** includes a mandatory `tenant_id UUID NOT NULL` column
+- **PostgreSQL Row-Level Security (RLS)** policies enforce that queries only return rows matching the authenticated user's `tenant_id`
+- Application code sets `current_setting('app.current_tenant')` at the start of every request
+- RLS policies automatically filter all SELECT, INSERT, UPDATE, DELETE operations
+
+**Example RLS Policy:**
+```sql
+-- Enable RLS on the clients table
+ALTER TABLE clients ENABLE ROW LEVEL SECURITY;
+
+-- Policy: users can only see rows belonging to their tenant
+CREATE POLICY tenant_isolation_policy ON clients
+  USING (tenant_id = current_setting('app.current_tenant')::uuid);
+
+-- Policy: new rows must match the authenticated tenant
+CREATE POLICY tenant_insert_policy ON clients
+  FOR INSERT
+  WITH CHECK (tenant_id = current_setting('app.current_tenant')::uuid);
+```
+
+**Cross-Tenant Access Prevention:**
+- No API endpoint allows querying across tenants (except Platform Super Admin)
+- `tenant_id` is never accepted from client input; it is always derived from the JWT
+- Foreign key references are scoped within the same tenant (e.g., a policy's client must belong to the same tenant)
+
+**Referential Integrity:**
+- Multi-column foreign keys may include `tenant_id` where needed to prevent cross-tenant references
+- Example: `FOREIGN KEY (tenant_id, client_id) REFERENCES clients(tenant_id, client_id)`
+
+#### 4.3.3 Tenant-Aware Services
+
+All application services operate in a tenant-aware manner:
+
+**Authentication Service:**
+- Login is tenant-scoped (users log in on their tenant's subdomain)
+- JWT tokens include `tenant_id`, `user_id`, and `role`
+- Password policies can be customized per tenant (within platform-defined minimums)
+
+**Caching (Redis):**
+- All cache keys are prefixed with `tenant:{tenant_id}:`
+- Example: `tenant:abc123:client:list:page1`
+- Tenant data eviction does not affect other tenants
+
+**Message Queue (Redis/RabbitMQ):**
+- Background jobs are tagged with `tenant_id`
+- Job processing always sets tenant context before execution
+- Per-tenant rate limiting for background operations
+
+**File Storage (S3/MinIO):**
+- Tenant files are stored using tenant-prefixed paths: `/{tenant_id}/documents/...`
+- Bucket-level or prefix-level access policies enforce isolation
+- No tenant can access another tenant's files
+- Per-tenant storage quotas based on subscription plan
+
+**Email & SMS Services:**
+- Outbound communications are branded with the tenant's company name and logo
+- Reply-to addresses can be customized per tenant
+- Sending limits apply per tenant based on subscription plan
+
+**WebSocket (Chat):**
+- WebSocket connections are authenticated with tenant context
+- Chat rooms, messages, and participants are all tenant-scoped
+- Broadcast messages are scoped to a single tenant (no cross-tenant broadcasts)
+
+#### 4.3.4 Tenant Lifecycle
+
+**Provisioning (Onboarding a New Tenant):**
+1. Tenant signs up on the platform landing page
+2. System creates a new `tenants` record with a unique `tenant_id`
+3. Domain/subdomain is registered (`{slug}.ibms.com`)
+4. First admin user is created within the tenant
+5. Default configuration is applied (roles, permissions, settings)
+6. Welcome email is sent with login credentials
+
+**Suspension:**
+- Platform Super Admin can suspend a tenant (e.g., for non-payment)
+- Suspended tenants cannot log in; data is preserved
+- Grace period before permanent deactivation (30 days)
+
+**Deactivation & Data Deletion:**
+- After grace period, tenant data may be archived or deleted
+- Data export is offered before deletion (GDPR/Data Protection Act compliance)
+- Audit logs of deletion are permanently retained
+
 ---
 
 ## 5. FUNCTIONAL REQUIREMENTS
@@ -316,15 +449,35 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 
 **Role Hierarchy:**
 
-1. **System Administrator**
-   - Full system access
+> **Note:** Roles 1-2 are platform-level roles that operate across tenants. Roles 3-9 are tenant-scoped roles that only have access within their own brokerage firm.
+
+0. **Platform Super Administrator** (Platform-Level)
+   - Manage all tenants (create, suspend, deactivate)
+   - View platform-wide analytics and usage metrics
+   - System-wide configuration and settings
+   - Subscription and billing management
+   - Cross-tenant access for support and troubleshooting
+   - Platform security and infrastructure management
+   - No access to individual tenant business data unless explicitly granted
+
+1. **Tenant Administrator** (Tenant-Level)
+   - Full access within own tenant/brokerage firm
+   - Tenant configuration (branding, settings, preferences)
+   - User management within their tenant (create, edit, deactivate)
+   - Role assignment within their tenant
+   - Subscription management and billing overview
+   - Tenant-level security settings
+   - Data export for their tenant
+
+2. **System Administrator**
+   - Full system access within own tenant
    - User management (create, edit, deactivate)
-   - System configuration
+   - System configuration within tenant
    - Security settings
    - Audit log access
    - Backup management
 
-2. **Brokerage Manager**
+3. **Brokerage Manager**
    - View all organizational data
    - Approve policy submissions
    - Review compliance reports
@@ -332,7 +485,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
    - Team management
    - Commission approval
 
-3. **Compliance Officer**
+4. **Compliance Officer**
    - KYC/AML review and approval
    - Compliance dashboard access
    - Regulatory report generation
@@ -340,7 +493,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
    - Risk assessment oversight
    - Suspicious activity reports
 
-4. **Claims Officer**
+5. **Claims Officer**
    - Claims processing
    - Document verification
    - Payment processing
@@ -348,7 +501,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
    - Insurer communication
    - Claims reporting
 
-5. **Finance Officer**
+6. **Finance Officer**
    - Commission management
    - Payment reconciliation
    - Financial reporting
@@ -356,7 +509,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
    - Premium tracking
    - Accounts receivable/payable
 
-6. **Broker/Agent**
+7. **Broker/Agent**
    - Client management (assigned clients)
    - Lead management
    - Policy application
@@ -364,7 +517,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
    - Claims submission
    - Commission tracking (own)
 
-7. **Customer Service Representative**
+8. **Customer Service Representative**
    - Client inquiry handling
    - Basic information updates
    - Document submission assistance
@@ -373,6 +526,12 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
    - Internal chat access
 
 #### 5.1.2 User Authentication
+- **Tenant-Aware Login**
+  - Users access their tenant's login page via `{firm-slug}.ibms.com`
+  - Tenant is resolved from the subdomain before authentication
+  - Same email can exist in different tenants (scoped uniqueness)
+  - Platform Super Admin logs in via `admin.ibms.com`
+  
 - **Username/Email + Password**
   - Minimum 8 characters
   - Must include uppercase, lowercase, number, special character
@@ -392,6 +551,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 - **Single Sign-On (SSO)** (Future enhancement)
   - Active Directory integration
   - SAML 2.0 support
+  - Per-tenant SSO configuration
 
 #### 5.1.3 User Management Features
 - User registration workflow (pending approval)
@@ -406,6 +566,7 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 
 #### 5.1.4 Audit Trail
 - All user actions logged with:
+  - **Tenant ID** (which brokerage firm)
   - User ID and name
   - Timestamp (with timezone)
   - Action performed
@@ -416,10 +577,14 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 - Logs retained for 6 years
 - Tamper-proof logging
 - Searchable and exportable
+- **Tenant-scoped:** Each tenant can only view their own audit logs
+- **Platform Super Admin:** Can view audit logs across all tenants
 
 ---
 
 ### 5.2 Client Management Module
+
+> **Multi-Tenancy:** All client data is tenant-scoped. Each brokerage firm can only view, create, and manage clients belonging to their own tenant. Client IDs, Ghana Card numbers, and other identifiers are unique within a tenant. Cross-tenant client sharing is not permitted.
 
 #### 5.2.1 Client Registration
 
@@ -588,6 +753,8 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 ---
 
 ### 5.3 Policy Management Module
+
+> **Multi-Tenancy:** All policies, premiums, commissions, and renewal data are tenant-scoped. Policy numbers are unique within a tenant. Each brokerage firm's policy portfolio is completely isolated from other tenants.
 
 #### 5.3.1 Policy Types Supported
 
@@ -864,6 +1031,8 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 
 ### 5.4 Lead Management Module
 
+> **Multi-Tenancy:** Leads are tenant-scoped. Each brokerage firm captures and manages its own leads independently. Lead assignment, scoring, and conversion tracking are isolated per tenant.
+
 #### 5.4.1 Lead Capture
 
 **Lead Sources:**
@@ -967,6 +1136,8 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 ---
 
 ### 5.5 Claims Management Module
+
+> **Multi-Tenancy:** All claims data, timelines, and assessments are tenant-scoped. Claims submitted by one brokerage firm are invisible to other tenants. NIC compliance tracking operates independently per tenant.
 
 #### 5.5.1 Claims Types
 
@@ -1156,6 +1327,8 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 
 ### 5.6 Complaints Management Module
 
+> **Multi-Tenancy:** Complaints are tenant-scoped. Each brokerage firm manages its own complaint register, resolution workflows, and NIC reporting independently.
+
 #### 5.6.1 Complaint Types
 
 **Service Complaints:**
@@ -1267,6 +1440,8 @@ To create a comprehensive, user-friendly platform that streamlines insurance bro
 ---
 
 ### 5.7 Internal Messaging/Chat System Module
+
+> **Multi-Tenancy:** The chat system is fully tenant-scoped. Users can only message colleagues within their own brokerage firm. Chat rooms, messages, and file sharing are completely isolated between tenants. No cross-tenant communication is possible through the internal chat.
 
 #### 5.7.1 Chat System Overview
 
@@ -1443,6 +1618,8 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 
 ### 5.8 Document Management Module
 
+> **Multi-Tenancy:** All documents are stored in tenant-isolated storage paths. Each brokerage firm can only access documents belonging to their own tenant. Storage quotas and retention policies can be configured per tenant.
+
 #### 5.8.1 Document Types
 
 **Client Documents:**
@@ -1565,6 +1742,8 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 ---
 
 ### 5.9 Reporting & Analytics Module
+
+> **Multi-Tenancy:** All reports and analytics are tenant-scoped. Each brokerage firm sees dashboards and KPIs reflecting only their own data. The Platform Super Admin has access to a separate cross-tenant analytics dashboard for platform-wide metrics.
 
 #### 5.9.1 Executive Dashboard
 
@@ -1728,6 +1907,220 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 
 ---
 
+### 5.11 Tenant Management Module
+
+> This module is unique to the multi-tenant SaaS architecture. It manages the lifecycle of brokerage firms (tenants) on the platform, including onboarding, configuration, billing, and platform administration.
+
+#### 5.11.1 Tenant Registration & Onboarding
+
+**Self-Service Registration:**
+- Brokerage firm name and slug (used for subdomain: `{slug}.ibms.com`)
+- Company registration number (RGD number)
+- NIC broker license number (validated)
+- TIN (Tax Identification Number)
+- Primary contact person (Tenant Administrator):
+  - Full name
+  - Email address
+  - Phone number
+  - Ghana Card number
+- Physical address and digital address
+- Business size (number of brokers/agents)
+- Subscription plan selection
+
+**Onboarding Workflow:**
+1. Registration form submission
+2. Automatic validation of NIC license (if API available)
+3. Tenant record creation and subdomain provisioning (`{slug}.ibms.com`)
+4. Tenant Administrator account creation with temporary password
+5. Welcome email with login credentials and setup guide
+6. First-login setup wizard:
+   - Company logo upload
+   - Brand colors selection
+   - Default roles and permissions configuration
+   - Insurer/carrier selection (which insurers the firm works with)
+   - Commission structure setup
+   - First user invitations (invite other staff members)
+7. Onboarding completion notification to Platform Super Admin
+
+**Verification:**
+- Platform Super Admin reviews and approves new tenant registrations
+- Manual verification of NIC license and company registration
+- Approval/rejection notification sent to tenant contact
+- Suspended accounts for pending verification (limited access)
+
+#### 5.11.2 Tenant Configuration
+
+**Company Branding:**
+- Company name (displayed in header and documents)
+- Company logo (used in dashboard, PDF reports, client communications)
+- Brand primary color and accent color
+- Custom favicon
+- Custom login page background
+- Company tagline/slogan
+- Company address and contact details (for document headers/footers)
+
+**Operational Settings:**
+- Default currency (GHS - Ghana Cedis)
+- Business hours (for SLA calculations)
+- Fiscal year start date
+- Default commission percentages per product type
+- Premium payment grace periods
+- Auto-renewal preferences
+- Lead assignment rules (round-robin, geographic, manual)
+- Notification preferences (email, SMS, in-app)
+
+**Policy Numbering:**
+- Custom policy number prefix (e.g., `SB-POL-`)
+- Custom claim number prefix (e.g., `SB-CLM-`)
+- Custom client number prefix (e.g., `SB-CLI-`)
+- Custom lead number prefix (e.g., `SB-LED-`)
+- Sequential numbering resets (yearly, never)
+
+**Compliance Settings:**
+- KYC/AML strictness level (standard, enhanced)
+- AML risk scoring thresholds
+- Mandatory fields configuration
+- Document retention overrides (minimum 6 years, configurable higher)
+- PEP screening configuration
+
+**Integration Settings (Per Tenant):**
+- SMS gateway credentials (Hubtel, Twilio, etc.)
+- Email service credentials (SendGrid, SES, etc.)
+- Payment gateway credentials (Paystack, Flutterwave, etc.)
+- Mobile Money merchant IDs
+- Insurer API credentials
+- Each tenant manages their own third-party integrations
+
+#### 5.11.3 Subscription & Billing
+
+**Subscription Plans:**
+
+| Feature | Basic | Professional | Enterprise |
+|---------|-------|-------------|------------|
+| Monthly Price | GHS 500 | GHS 1,500 | Custom |
+| Max Users | 10 | 50 | Unlimited |
+| Max Clients | 1,000 | 10,000 | Unlimited |
+| Max Policies | 2,000 | 20,000 | Unlimited |
+| Document Storage | 5 GB | 50 GB | Unlimited |
+| SMS Credits/Month | 500 | 5,000 | Custom |
+| Email Sends/Month | 2,000 | 20,000 | Unlimited |
+| Chat System | ✓ | ✓ | ✓ |
+| Claims Module | ✗ | ✓ | ✓ |
+| Advanced Analytics | ✗ | ✓ | ✓ |
+| API Access | ✗ | ✗ | ✓ |
+| Custom Domain | ✗ | ✗ | ✓ |
+| Dedicated Support | ✗ | ✗ | ✓ |
+| SLA | 99.5% | 99.9% | 99.99% |
+
+**Billing Cycle:**
+- Monthly billing (default)
+- Annual billing (10% discount)
+- Invoice generation on the 1st of each month
+- Payment due within 15 days
+- Automatic payment collection (mobile money, card)
+- Manual bank transfer option
+
+**Usage Tracking:**
+- Active users count
+- Client count
+- Policy count
+- Document storage used
+- SMS credits consumed
+- Email sends consumed
+- API calls (for Enterprise tier)
+
+**Overage Handling:**
+- Soft limits: Warning notification at 80% and 95% of plan limits
+- Hard limits: Service degradation (cannot create new records) when limits exceeded
+- Automatic plan upgrade suggestion
+- Grace period: 7 days to upgrade before service restrictions
+
+**Billing Management:**
+- Invoice history and download (PDF)
+- Payment history
+- Payment method management (add/update cards, mobile money numbers)
+- Subscription upgrade/downgrade
+- Subscription cancellation with exit process
+- Outstanding balance tracking
+- Late payment notifications and penalties
+
+#### 5.11.4 Tenant Administration
+
+**Tenant Dashboard:**
+- Subscription plan and usage summary
+- Active users count
+- Storage utilization
+- Upcoming billing date and amount
+- Account health score
+- Quick links to configuration sections
+
+**User Management Within Tenant:**
+- Invite users via email
+- Assign roles (from tenant-level roles: System Admin, Manager, Broker, etc.)
+- Set user permissions (fine-grained)
+- Activate/deactivate user accounts
+- View user activity logs
+- Manage user passwords (forced reset)
+
+**Data Management:**
+- Full data export (CSV, JSON) for all modules
+- Data import tools (for migrating from another system)
+- Data backup request (manual backup snapshot)
+- Data deletion request (with regulatory compliance checks)
+
+**Tenant Settings:**
+- Update company information
+- Change subscription plan
+- Manage integrations
+- Configure notification preferences
+- Set up automated workflows
+- Manage approval chains
+
+#### 5.11.5 Platform Super Admin Dashboard
+
+**Tenant Overview:**
+- Total registered tenants
+- Active tenants vs. suspended/deactivated
+- New tenant registrations (this month)
+- Tenant subscription distribution (Basic/Professional/Enterprise)
+- Revenue summary (MRR - Monthly Recurring Revenue)
+
+**Tenant Management:**
+- Approve/reject new tenant registrations
+- View tenant details and configuration
+- Suspend tenant (for non-payment, TOS violation)
+- Reactivate suspended tenant
+- Deactivate tenant (permanent, with data archival)
+- Impersonate tenant admin (for support, with audit logging)
+- Force password reset for tenant users
+
+**Platform Analytics:**
+- Total users across all tenants
+- Total clients across all tenants
+- Total policies across all tenants
+- Platform usage trends (growth, churn)
+- Revenue analytics (by plan, by month, ARR)
+- Feature usage analytics (most/least used modules)
+- Performance metrics (response times, error rates per tenant)
+
+**System Administration:**
+- Global configuration (default settings for new tenants)
+- Subscription plan management (create/edit plans, pricing)
+- Feature flag management (enable/disable features globally or per tenant)
+- Platform maintenance scheduling
+- System health monitoring
+- Database administration
+- Background job monitoring
+
+**Support Tools:**
+- Tenant issue tracker
+- Cross-tenant search (for support purposes, with audit trail)
+- Tenant communication (announcements, maintenance notices)
+- Knowledge base management
+- Incident management
+
+---
+
 ## 6. NON-FUNCTIONAL REQUIREMENTS
 
 ### 6.1 Performance Requirements
@@ -1748,10 +2141,16 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 **Scalability:**
 - Horizontal scaling capability
 - Auto-scaling based on load
-- Support up to 20,000 clients
-- Support up to 50,000 policies
-- Support up to 10,000 claims per year
-- Database size: Up to 1TB
+- **Multi-Tenant Scale Targets:**
+  - Support up to 500 tenants (brokerage firms)
+  - Support up to 500 concurrent users per tenant
+  - Support up to 20,000 clients per tenant
+  - Support up to 50,000 policies per tenant
+  - Support up to 10,000 claims per year per tenant
+  - Total platform capacity: 10 million clients, 25 million policies
+  - Database size: Up to 5TB (shared across all tenants)
+- Per-tenant resource isolation (no single tenant can degrade platform performance)
+- Tenant-aware auto-scaling (scale services based on aggregate and individual tenant load)
 
 ### 6.2 Security Requirements
 
@@ -1766,7 +2165,9 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 - Role-based access control (RBAC)
 - Granular permissions
 - Data access restrictions based on assignment
+- **Tenant-scoped RBAC:** Roles and permissions are enforced within tenant boundaries
 - Audit trail for all access
+- **Tenant isolation:** No user can access data from another tenant (enforced at database level via RLS)
 
 **Data Security:**
 - Encryption at rest (AES-256)
@@ -1901,6 +2302,8 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 - Rollback capability
 - Blue-green deployment
 - Feature flags for gradual rollout
+- **Tenant-aware migrations:** Database migrations must not disrupt active tenants
+- **Per-tenant feature flags:** Ability to enable/disable features for specific tenants
 
 **Monitoring:**
 - Application performance monitoring
@@ -1909,6 +2312,8 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 - Server monitoring
 - Database monitoring
 - Alerting for critical issues
+- **Per-tenant monitoring:** Track resource usage, error rates, and performance per tenant
+- **Tenant health dashboard:** Platform-wide view of all tenant statuses
 
 **Documentation:**
 - API documentation
@@ -2094,6 +2499,131 @@ The internal messaging system provides a WhatsApp-like communication platform fo
 ---
 
 ## 8. DATABASE SCHEMA
+
+> [!IMPORTANT]
+> **Multi-Tenancy Database Strategy:** The IBMS uses a **shared database, shared schema** approach with **Row-Level Security (RLS)** for tenant data isolation. Every table listed below (except the `tenants` and `tenant_subscriptions` tables themselves) **must include a `tenant_id UUID NOT NULL REFERENCES tenants(tenant_id)` column** as the first column after the primary key. All indexes should include `tenant_id` as a leading column for optimal query performance. PostgreSQL RLS policies (see Section 4.3.2) enforce automatic filtering on every query.
+
+### 8.0 Multi-Tenancy Tables
+
+#### 8.0.1 Tenants Table
+```sql
+CREATE TABLE tenants (
+    tenant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_name VARCHAR(200) NOT NULL,           -- Brokerage firm name
+    tenant_slug VARCHAR(100) UNIQUE NOT NULL,    -- Used for subdomain: {slug}.ibms.com
+    company_registration_no VARCHAR(50),          -- RGD number
+    nic_license_number VARCHAR(50),               -- NIC broker license
+    tin VARCHAR(50),                               -- Tax Identification Number
+    physical_address TEXT,
+    digital_address VARCHAR(50),                  -- Ghana Post GPS
+    primary_contact_name VARCHAR(100) NOT NULL,
+    primary_contact_email VARCHAR(100) NOT NULL,
+    primary_contact_phone VARCHAR(15) NOT NULL,
+    logo_url VARCHAR(500),
+    brand_primary_color VARCHAR(7) DEFAULT '#1a73e8',
+    brand_accent_color VARCHAR(7) DEFAULT '#fbbc04',
+    favicon_url VARCHAR(500),
+    tagline VARCHAR(200),
+    status VARCHAR(20) NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'active', 'suspended', 'deactivated')),
+    subscription_plan VARCHAR(20) NOT NULL DEFAULT 'basic'
+        CHECK (subscription_plan IN ('basic', 'professional', 'enterprise')),
+    max_users INT NOT NULL DEFAULT 10,
+    max_clients INT NOT NULL DEFAULT 1000,
+    max_policies INT NOT NULL DEFAULT 2000,
+    max_storage_gb INT NOT NULL DEFAULT 5,
+    custom_domain VARCHAR(200),                   -- Enterprise tier only
+    settings JSONB DEFAULT '{}',                  -- Tenant-specific configurations
+    verified_at TIMESTAMP,
+    verified_by UUID,
+    suspended_at TIMESTAMP,
+    suspended_reason TEXT,
+    deactivated_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX idx_tenants_slug ON tenants(tenant_slug);
+CREATE INDEX idx_tenants_status ON tenants(status);
+CREATE INDEX idx_tenants_nic ON tenants(nic_license_number);
+```
+
+#### 8.0.2 Tenant Subscriptions Table
+```sql
+CREATE TABLE tenant_subscriptions (
+    subscription_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+    plan VARCHAR(20) NOT NULL CHECK (plan IN ('basic', 'professional', 'enterprise')),
+    billing_cycle VARCHAR(10) NOT NULL DEFAULT 'monthly'
+        CHECK (billing_cycle IN ('monthly', 'annual')),
+    amount_ghs DECIMAL(10,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'GHS',
+    status VARCHAR(20) NOT NULL DEFAULT 'active'
+        CHECK (status IN ('active', 'past_due', 'cancelled', 'suspended')),
+    current_period_start DATE NOT NULL,
+    current_period_end DATE NOT NULL,
+    next_billing_date DATE,
+    payment_method VARCHAR(50),                   -- 'card', 'mobile_money', 'bank_transfer'
+    payment_reference VARCHAR(100),
+    auto_renew BOOLEAN DEFAULT TRUE,
+    cancelled_at TIMESTAMP,
+    cancellation_reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_subscriptions_tenant ON tenant_subscriptions(tenant_id);
+CREATE INDEX idx_subscriptions_status ON tenant_subscriptions(status);
+CREATE INDEX idx_subscriptions_billing ON tenant_subscriptions(next_billing_date);
+```
+
+#### 8.0.3 Tenant Usage Tracking Table
+```sql
+CREATE TABLE tenant_usage (
+    usage_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(tenant_id) ON DELETE CASCADE,
+    period_start DATE NOT NULL,
+    period_end DATE NOT NULL,
+    active_users_count INT DEFAULT 0,
+    clients_count INT DEFAULT 0,
+    policies_count INT DEFAULT 0,
+    storage_used_mb DECIMAL(10,2) DEFAULT 0,
+    sms_sent INT DEFAULT 0,
+    emails_sent INT DEFAULT 0,
+    api_calls INT DEFAULT 0,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_usage_tenant ON tenant_usage(tenant_id);
+CREATE INDEX idx_usage_period ON tenant_usage(period_start, period_end);
+```
+
+#### 8.0.4 Multi-Tenancy Column Requirements
+
+> The following table summarizes the `tenant_id` column and index requirements for all existing tables. Each table below must add:
+> - `tenant_id UUID NOT NULL REFERENCES tenants(tenant_id)` as a column
+> - A composite index including `tenant_id` as the leading column
+> - Row-Level Security (RLS) policy for tenant isolation
+
+| Table | Tenant Column | Composite Index | Notes |
+|-------|--------------|-----------------|-------|
+| `users` | `tenant_id` | `(tenant_id, email)` UNIQUE | Same email allowed in different tenants |
+| `roles` | `tenant_id` | `(tenant_id, role_name)` UNIQUE | Tenant-specific roles |
+| `permissions` | `tenant_id` | `(tenant_id, permission_name)` | Tenant-specific permissions |
+| `clients` | `tenant_id` | `(tenant_id, ghana_card_number)` | Client data fully isolated |
+| `beneficiaries` | `tenant_id` | `(tenant_id, client_id)` | Via client relationship |
+| `policies` | `tenant_id` | `(tenant_id, policy_number)` UNIQUE | Policy numbers unique per tenant |
+| `policy_payments` | `tenant_id` | `(tenant_id, policy_id)` | Payment records |
+| `claims` | `tenant_id` | `(tenant_id, claim_number)` UNIQUE | Claim numbers unique per tenant |
+| `leads` | `tenant_id` | `(tenant_id, status)` | Lead tracking |
+| `complaints` | `tenant_id` | `(tenant_id, complaint_number)` | Complaint management |
+| `chat_rooms` | `tenant_id` | `(tenant_id, room_type)` | Tenant-scoped chat |
+| `chat_messages` | `tenant_id` | `(tenant_id, room_id, sent_at)` | Message isolation |
+| `documents` | `tenant_id` | `(tenant_id, entity_type, entity_id)` | Document storage |
+| `audit_logs` | `tenant_id` | `(tenant_id, action_timestamp)` | Audit trail |
+| `insurers` | `tenant_id` | `(tenant_id, insurer_name)` | Tenant-specific insurer config |
+| `products` | `tenant_id` | `(tenant_id, insurer_id)` | Product catalog |
+| `commissions` | `tenant_id` | `(tenant_id, policy_id)` | Commission tracking |
 
 ### 8.1 Core Tables
 
@@ -2660,10 +3190,17 @@ CREATE TABLE products (
 ### 9.1 API Architecture
 
 **API Style:** RESTful API
-**Base URL:** `https://api.ibms.com/v1/`
-**Authentication:** JWT (JSON Web Tokens)
+**Base URL:** `https://{tenant-slug}.ibms.com/api/v1/` (tenant-specific) or `https://api.ibms.com/v1/` (platform-level)
+**Authentication:** JWT (JSON Web Tokens) with `tenant_id` claim
 **Content Type:** `application/json`
 **Character Encoding:** UTF-8
+
+**Tenant Context Resolution:**
+- Tenant-specific endpoints: `tenant_id` is resolved from the subdomain in the request URL
+- All JWT tokens include `tenant_id` as a claim: `{ "sub": "user_id", "tenant_id": "uuid", "role": "broker" }`
+- Platform Super Admin endpoints (`/admin/*`) are only accessible from `admin.ibms.com`
+- All data-modifying endpoints automatically scope operations to the authenticated user's `tenant_id`
+- The `tenant_id` is **never** accepted as a request parameter (except for Platform Super Admin endpoints)
 
 ### 9.2 Authentication API
 
@@ -2682,6 +3219,9 @@ Response (Success - 200 OK):
   "success": true,
   "data": {
     "user_id": "uuid",
+    "tenant_id": "uuid",
+    "tenant_name": "Star Brokerage Ltd",
+    "tenant_slug": "starbrokerage",
     "username": "john.doe@example.com",
     "first_name": "John",
     "last_name": "Doe",
@@ -3122,6 +3662,169 @@ Rate limit headers included in every response:
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 995
 X-RateLimit-Reset: 1736779200
+X-Tenant-ID: uuid
+```
+
+> **Multi-Tenancy Rate Limiting:** Rate limits are applied per-tenant. Each tenant has its own quota based on subscription plan (Basic: 1,000/hour, Professional: 5,000/hour, Enterprise: custom). Platform Super Admin endpoints have separate, higher limits.
+
+### 9.10 Tenant Management API
+
+> These endpoints are used for tenant lifecycle management. Tenant registration is publicly accessible; all other endpoints require authentication. Platform-level endpoints require Platform Super Admin role.
+
+#### 9.10.1 Tenant Registration
+```
+POST /tenants/register
+
+Request:
+{
+  "tenant_name": "Star Brokerage Ltd",
+  "tenant_slug": "starbrokerage",
+  "company_registration_no": "CS-123456",
+  "nic_license_number": "NIC-BR-2024-001",
+  "tin": "C0012345678",
+  "primary_contact": {
+    "name": "Kwame Asante",
+    "email": "kwame@starbrokerage.com",
+    "phone": "+233201234567",
+    "ghana_card": "GHA-123456789-0"
+  },
+  "physical_address": "15 Independence Ave, Accra",
+  "digital_address": "GA-123-4567",
+  "subscription_plan": "professional"
+}
+
+Response (Success - 201 Created):
+{
+  "success": true,
+  "data": {
+    "tenant_id": "uuid",
+    "tenant_slug": "starbrokerage",
+    "subdomain": "starbrokerage.ibms.com",
+    "status": "pending",
+    "message": "Registration submitted. Awaiting verification."
+  }
+}
+```
+
+#### 9.10.2 Get Tenant Configuration
+```
+GET /tenant/config
+Authorization: Bearer {jwt_token}
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "tenant_id": "uuid",
+    "tenant_name": "Star Brokerage Ltd",
+    "logo_url": "/uploads/logo.png",
+    "brand_colors": {
+      "primary": "#1a73e8",
+      "accent": "#fbbc04"
+    },
+    "subscription": {
+      "plan": "professional",
+      "status": "active",
+      "max_users": 50,
+      "max_clients": 10000,
+      "storage_gb": 50
+    },
+    "usage": {
+      "active_users": 12,
+      "clients": 3456,
+      "storage_used_gb": 8.5
+    },
+    "settings": { ... }
+  }
+}
+```
+
+#### 9.10.3 Update Tenant Configuration
+```
+PUT /tenant/config
+Authorization: Bearer {jwt_token}  (Tenant Admin only)
+
+Request:
+{
+  "tenant_name": "Star Brokerage Ltd",
+  "brand_primary_color": "#2196F3",
+  "brand_accent_color": "#FF9800",
+  "settings": {
+    "policy_number_prefix": "SB-POL-",
+    "fiscal_year_start": "01-01",
+    "notification_preferences": {
+      "email": true,
+      "sms": true,
+      "in_app": true
+    }
+  }
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Tenant configuration updated"
+}
+```
+
+#### 9.10.4 Platform Super Admin - List All Tenants
+```
+GET /admin/tenants?status=active&page=1&per_page=20
+Authorization: Bearer {jwt_token}  (Platform Super Admin only)
+Host: admin.ibms.com
+
+Response (200 OK):
+{
+  "success": true,
+  "data": {
+    "tenants": [
+      {
+        "tenant_id": "uuid",
+        "tenant_name": "Star Brokerage Ltd",
+        "tenant_slug": "starbrokerage",
+        "status": "active",
+        "plan": "professional",
+        "users_count": 12,
+        "clients_count": 3456,
+        "created_at": "2024-01-15T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "total": 45,
+      "page": 1,
+      "per_page": 20,
+      "total_pages": 3
+    }
+  }
+}
+```
+
+#### 9.10.5 Platform Super Admin - Suspend/Activate Tenant
+```
+PATCH /admin/tenants/{tenant_id}/status
+Authorization: Bearer {jwt_token}  (Platform Super Admin only)
+
+Request:
+{
+  "status": "suspended",
+  "reason": "Non-payment of subscription"
+}
+
+Response (200 OK):
+{
+  "success": true,
+  "message": "Tenant suspended successfully"
+}
+```
+
+#### 9.10.6 Tenant Subscription Management
+```
+GET /tenant/subscription
+PUT /tenant/subscription/upgrade
+POST /tenant/subscription/cancel
+GET /tenant/invoices
+GET /tenant/invoices/{invoice_id}
+GET /tenant/usage
 ```
 
 ---
@@ -3542,6 +4245,20 @@ X-RateLimit-Reset: 1736779200
   - IP whitelisting where possible
   - Request signing
   - Webhook verification
+
+#### 11.1.7 Tenant Isolation Security
+- **Logical Isolation:**
+  - Mandatory `tenant_id` in all database queries (RLS)
+  - Application-level separate of tenant contexts
+  - No cross-tenant data access allowed
+- **Storage Isolation:**
+  - Tenant-specific paths in object storage (`/tenant-id/files/`)
+  - Strict access policies for file retrieval
+- **Network Isolation (Optional - Enterprise):**
+  - Dedicated VPC or subnet for high-value tenants (future)
+- **Data Leak Prevention:**
+  - Prevent tenant data from leaking into logs (masking PII)
+  - Strict input validation to prevent SQL injection bypassing RLS
 
 ### 11.2 Infrastructure Security
 
@@ -4161,7 +4878,20 @@ X-RateLimit-Reset: 1736779200
 - Gradually increase percentage
 - Full rollout if no issues
 
-### 14.3 Release Management
+### 14.3 Tenant Provisioning Strategy
+- **Automated Provisioning:**
+  - Scripted setup of new tenant environment
+  - Creation of tenant record and admin user
+  - DNS record creation (if using AWS Route53 or similar)
+- **Database Migrations:**
+  - Migrations run across the shared database
+  - Zero-downtime migration strategy required
+  - Backward compatibility maintenance
+- **Feature Flags:**
+  - Use feature flags to roll out features to specific tenants
+  - "Canary" tenants receive updates first
+
+### 14.4 Release Management
 
 #### 14.3.1 Release Schedule
 - **Major Releases:** Quarterly (Q1, Q2, Q3, Q4)
@@ -4187,7 +4917,7 @@ X-RateLimit-Reset: 1736779200
 - Known issues
 - Upgrade instructions
 
-### 14.4 Rollback Strategy
+### 14.5 Rollback Strategy
 
 **When to Rollback:**
 - Critical bugs in production
@@ -4450,11 +5180,13 @@ X-RateLimit-Reset: 1736779200
 - UI mockups and prototypes
 - Project plan
 
-#### Phase 2: Development - Foundation (6 weeks)
-**Weeks 5-10**
+#### Phase 2: Development - Foundation (8 weeks)
+**Weeks 5-12**
 - Development environment setup
+- **Multi-tenancy Architecture Implementation** (RLS, Context)
+- **Tenant Management Module** (Registration, Admin)
 - CI/CD pipeline setup
-- Authentication module
+- Authentication module (Tenant-aware)
 - User management module
 - Role-based access control
 - Basic UI framework
@@ -4589,6 +5321,9 @@ X-RateLimit-Reset: 1736779200
 
 ## 17. APPENDICES
 
+
+
+
 ### Appendix A: Glossary
 
 **AML** - Anti-Money Laundering: Regulations to prevent money laundering and terrorism financing.
@@ -4605,6 +5340,8 @@ X-RateLimit-Reset: 1736779200
 
 **KYC** - Know Your Customer: The process of verifying the identity of clients.
 
+**Multi-Tenancy** - Architecture where a single instance of software serves multiple distinct user groups (tenants).
+
 **NIC** - National Insurance Commission: Ghana's insurance regulatory authority.
 
 **OWASP** - Open Web Application Security Project: Non-profit focused on software security.
@@ -4615,7 +5352,13 @@ X-RateLimit-Reset: 1736779200
 
 **RTO** - Recovery Time Objective: Maximum acceptable downtime.
 
+**RLS** - Row-Level Security: database security feature restricting access to rows based on user characteristics.
+
+**SaaS** - Software as a Service: Distribution model where applications are hosted by a provider.
+
 **SRS** - Software Requirements Specification: Document describing software system requirements.
+
+**Tenant** - A brokerage firm subscribing to the IBMS platform.
 
 **TLS** - Transport Layer Security: Cryptographic protocol for secure communication.
 
@@ -4647,12 +5390,15 @@ X-RateLimit-Reset: 1736779200
 | OTP | One-Time Password |
 | RBAC | Role-Based Access Control |
 | REST | Representational State Transfer |
+| RLS | Row-Level Security |
+| SaaS | Software as a Service |
 | SLA | Service Level Agreement |
 | SMS | Short Message Service |
 | SQL | Structured Query Language |
 | SSL | Secure Sockets Layer |
 | TIN | Tax Identification Number |
 | UBO | Ultimate Beneficial Owner |
+| UUID | Universally Unique Identifier |
 | VPN | Virtual Private Network |
 
 ### Appendix D: Contact Information

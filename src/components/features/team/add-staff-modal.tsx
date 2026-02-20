@@ -18,6 +18,7 @@ const roleOptions = [
     { label: 'Broker', value: 'broker' },
     { label: 'Senior Broker', value: 'senior_broker' },
     { label: 'Branch Manager', value: 'branch_manager' },
+    { label: 'Tenant Admin', value: 'tenant_admin' },
     { label: 'Secretary', value: 'secretary' },
     { label: 'Data Entry', value: 'data_entry' },
 ];

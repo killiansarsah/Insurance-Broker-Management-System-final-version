@@ -1,27 +1,30 @@
 'use client';
 
-import { useState } from 'react';
-import Link from 'next/link';
+import { useState, useRef, useEffect } from 'react';
 import {
     Briefcase,
     CheckCircle2,
     Clock,
     AlertCircle,
-    Search,
     Filter,
     Plus,
-    ArrowUpRight,
     MoreVertical,
-    Check,
     Calendar,
+    Check,
     Tag,
+    Trash2,
+    ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Card, CardHeader } from '@/components/ui/card';
-import { StatusBadge } from '@/components/data-display/status-badge';
-import { Button, Modal, Input, Textarea } from '@/components/ui';
+import { Card } from '@/components/ui/card';
+import { Button, Modal } from '@/components/ui';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
+import { StickyNoteTask } from '@/components/features/tasks/sticky-note-task';
+import { RecycleBin } from '@/components/features/tasks/recycle-bin';
+import { ArchiveModal } from '@/components/features/tasks/archive-modal';
+
+import { AnimatePresence, motion } from 'framer-motion';
 
 // Enhanced Mock Data including Priorities
 interface Task {
@@ -91,9 +94,20 @@ function MetricCard({ label, value, icon, colorClass, status, trend }: { label: 
 
 export default function TasksPage() {
     const [taskList, setTaskList] = useState<Task[]>(INITIAL_TASKS);
+    const [archivedTasks, setArchivedTasks] = useState<Task[]>([]);
     const [completedCount, setCompletedCount] = useState(28);
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'desk' | 'list'>('desk');
+    const [crumplingTaskId, setCrumplingTaskId] = useState<string | null>(null);
+    const [binHovered, setBinHovered] = useState(false);
+    const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+    const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+    const [justSwallowed, setJustSwallowed] = useState(false);
+    const binRef = useRef<HTMLDivElement>(null);
+    const deskScrollRef = useRef<HTMLDivElement>(null);
+    // Filters State
 
     // Filters State
     const [activeFilters, setActiveFilters] = useState({
@@ -103,9 +117,15 @@ export default function TasksPage() {
     });
 
     // New Task Form State
-    const [newTask, setNewTask] = useState({
+    const [newTask, setNewTask] = useState<{
+        title: string;
+        priority: 'hot' | 'warm' | 'cold';
+        type: string;
+        description: string;
+        due: string;
+    }>({
         title: '',
-        priority: 'warm' as const,
+        priority: 'warm',
         type: '',
         description: '',
         due: 'Next Week'
@@ -118,18 +138,177 @@ export default function TasksPage() {
         return true;
     });
 
-    const handleComplete = (e: React.MouseEvent, taskId: string) => {
-        e.stopPropagation();
-        setTaskList(prev => prev.map(t => t.id === taskId ? { ...t, isCompleted: !t.isCompleted } : t));
+    const handleDeskScroll = () => {
+        if (!deskScrollRef.current) return;
+        const { scrollTop, scrollHeight, clientHeight } = deskScrollRef.current;
+        const hasMore = scrollHeight - scrollTop - clientHeight > 20;
+        setShowScrollIndicator(hasMore);
+    };
 
+    useEffect(() => {
+        if (viewMode === 'desk') {
+            handleDeskScroll();
+            const container = deskScrollRef.current;
+            if (container) {
+                container.addEventListener('scroll', handleDeskScroll);
+                return () => container.removeEventListener('scroll', handleDeskScroll);
+            }
+        }
+    }, [filteredTasks, viewMode]);
+
+    const handleComplete = (taskId: string) => {
         const task = taskList.find(t => t.id === taskId);
-        if (task && !task.isCompleted) {
+        if (task) {
+            setTaskList(prev => prev.filter(t => t.id !== taskId));
+            setArchivedTasks(prev => [{ ...task, isCompleted: true }, ...prev]);
             setCompletedCount(prev => prev + 1);
-            toast.success('Task marked as completed', {
-                description: task.title
+
+            // Remove from selection if it was selected
+            if (selectedTaskIds.has(taskId)) {
+                const newSelection = new Set(selectedTaskIds);
+                newSelection.delete(taskId);
+                setSelectedTaskIds(newSelection);
+            }
+
+            toast.success('Task Archived', {
+                description: task.title,
+                icon: <CheckCircle2 className="text-success-500" />
             });
+        }
+    };
+
+    const handleDelete = (taskId: string) => {
+        const task = taskList.find(t => t.id === taskId);
+        if (task) {
+            setTaskList(prev => prev.filter(t => t.id !== taskId));
+
+            // Remove from selection if it was selected
+            if (selectedTaskIds.has(taskId)) {
+                const newSelection = new Set(selectedTaskIds);
+                newSelection.delete(taskId);
+                setSelectedTaskIds(newSelection);
+            }
+
+            toast.error('Task Deleted', {
+                description: task.title,
+                icon: <Trash2 className="text-danger-500" />
+            });
+        }
+    };
+
+    const toggleTaskSelection = (taskId: string) => {
+        setSelectedTaskIds(prev => {
+            const next = new Set(prev);
+            if (next.has(taskId)) {
+                next.delete(taskId);
+            } else {
+                next.add(taskId);
+            }
+            return next;
+        });
+    };
+
+    const toggleAllSelection = () => {
+        if (selectedTaskIds.size === filteredTasks.length) {
+            setSelectedTaskIds(new Set());
         } else {
-            setCompletedCount(prev => prev - 1);
+            setSelectedTaskIds(new Set(filteredTasks.map(t => t.id)));
+        }
+    };
+
+    const handleBulkArchive = () => {
+        const selectedTasks = taskList.filter(t => selectedTaskIds.has(t.id));
+        setTaskList(prev => prev.filter(t => !selectedTaskIds.has(t.id)));
+        setArchivedTasks(prev => [...selectedTasks.map(t => ({ ...t, isCompleted: true })), ...prev]);
+        setCompletedCount(prev => prev + selectedTasks.length);
+        setSelectedTaskIds(new Set());
+        toast.success(`Archived ${selectedTasks.length} tasks`);
+    };
+
+    const handleBulkDelete = () => {
+        const count = selectedTaskIds.size;
+        setTaskList(prev => prev.filter(t => !selectedTaskIds.has(t.id)));
+        setSelectedTaskIds(new Set());
+        toast.error(`Deleted ${count} tasks`);
+    };
+
+    const handleRestore = (taskId: string) => {
+        const task = archivedTasks.find(t => t.id === taskId);
+        if (task) {
+            setArchivedTasks(prev => prev.filter(t => t.id !== taskId));
+            setTaskList(prev => [{ ...task, isCompleted: false }, ...prev]);
+            setCompletedCount(prev => Math.max(0, prev - 1));
+
+            toast.success('Task Restored', {
+                description: task.title,
+                icon: <Plus className="text-primary-500" />
+            });
+        }
+    };
+
+    const handleEmptyBin = () => {
+        setArchivedTasks([]);
+        toast.error('Bin Emptied', {
+            description: 'All archived records have been permanently removed.'
+        });
+    };
+
+    const handleDrag = (point: { x: number; y: number }, taskId: string) => {
+        if (!binRef.current) return;
+        const binRect = binRef.current.getBoundingClientRect();
+
+        // Calculate point center
+        const centerX = binRect.left + binRect.width / 2;
+        const centerY = binRect.top + binRect.height / 2;
+
+        const distance = Math.sqrt(
+            Math.pow(point.x - centerX, 2) +
+            Math.pow(point.y - centerY, 2)
+        );
+
+        // expansion/gasp threshold
+        if (distance < 200) {
+            setCrumplingTaskId(taskId);
+        } else {
+            setCrumplingTaskId(null);
+        }
+
+        const isOver = distance < 100;
+        if (isOver !== binHovered) {
+            setBinHovered(isOver);
+        }
+    };
+
+    const handleDragEnd = (taskId: string, point: { x: number; y: number }) => {
+        setBinHovered(false);
+
+        if (!binRef.current) {
+            setCrumplingTaskId(null);
+            return;
+        }
+        const binRect = binRef.current.getBoundingClientRect();
+
+        // Calculate bin center
+        const centerX = binRect.left + binRect.width / 2;
+        const centerY = binRect.top + binRect.height / 2;
+
+        const distance = Math.sqrt(
+            Math.pow(point.x - centerX, 2) +
+            Math.pow(point.y - centerY, 2)
+        );
+
+        // Match the 100px threshold used in handleDrag
+        if (distance < 100) {
+            // Keep crumpling active so the note visually shrinks before removal
+            setCrumplingTaskId(taskId);
+            setJustSwallowed(true);
+            setTimeout(() => {
+                handleComplete(taskId);
+                setCrumplingTaskId(null);
+            }, 500);
+            setTimeout(() => setJustSwallowed(false), 1000);
+        } else {
+            setCrumplingTaskId(null);
         }
     };
 
@@ -176,17 +355,42 @@ export default function TasksPage() {
                         <p className="text-sm text-surface-500 mt-1">Operational Command Center & Workflow queue</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        leftIcon={<Filter size={14} />}
-                        onClick={() => setIsFilterModalOpen(true)}
-                        className={cn(Object.values(activeFilters).some(v => v !== 'all') && "border-primary-500 bg-primary-50 text-primary-700")}
-                    >
-                        Filter {Object.values(activeFilters).some(v => v !== 'all') && '•'}
-                    </Button>
-                    <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={() => setIsCreateModalOpen(true)}>Create Task</Button>
+
+                <div className="flex items-center gap-4">
+                    {/* View Toggle */}
+                    <div className="flex items-center bg-surface-100 p-1 rounded-lg border border-surface-200 mr-2">
+                        <button
+                            onClick={() => setViewMode('desk')}
+                            className={cn(
+                                "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                                viewMode === 'desk' ? "bg-white text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
+                            )}
+                        >
+                            Desk
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={cn(
+                                "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                                viewMode === 'list' ? "bg-white text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
+                            )}
+                        >
+                            List
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            leftIcon={<Filter size={14} />}
+                            onClick={() => setIsFilterModalOpen(true)}
+                            className={cn(Object.values(activeFilters).some(v => v !== 'all') && "border-primary-500 bg-primary-50 text-primary-700")}
+                        >
+                            Filter {Object.values(activeFilters).some(v => v !== 'all') && '•'}
+                        </Button>
+                        <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={() => setIsCreateModalOpen(true)}>Create Task</Button>
+                    </div>
                 </div>
             </div>
 
@@ -216,132 +420,267 @@ export default function TasksPage() {
                 />
             </div>
 
-            {/* Main Work Area */}
-            <Card padding="none" className="overflow-hidden">
-                <CardHeader
-                    title="Active Workflow Queue"
-                    subtitle={Object.values(activeFilters).some(v => v !== 'all') ? "Filtered view of operational tasks" : "Centralized management for policies, claims, and lead follow-ups"}
-                    action={
-                        <div className="flex items-center gap-2">
-                            <div className="relative hidden sm:block">
-                                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400" size={14} />
-                                <input
-                                    className="pl-8 pr-4 py-1.5 bg-surface-50 border border-surface-200 rounded-lg text-xs focus:ring-1 focus:ring-primary-500 outline-none w-48 transition-all"
-                                    placeholder="Search command..."
-                                />
-                            </div>
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical size={14} /></Button>
-                        </div>
-                    }
-                    className="border-b border-surface-100"
-                />
 
-                <div className="divide-y divide-surface-100">
-                    {filteredTasks.length > 0 ? filteredTasks.map((task) => (
-                        <div
-                            key={task.id}
-                            className={cn(
-                                "group flex flex-col sm:flex-row sm:items-center justify-between p-5 transition-all duration-200 cursor-pointer overflow-hidden relative",
-                                task.isCompleted ? "opacity-60 bg-surface-50/30" : "hover:bg-surface-50/50"
-                            )}
-                        >
-                            {/* Completion Indicator for background */}
-                            {task.isCompleted && (
-                                <div className="absolute right-[-20px] top-[-20px] text-surface-100 rotate-12 pointer-events-none">
-                                    <Check size={120} strokeWidth={4} />
-                                </div>
-                            )}
+            {/* Conditional Interface Rendering */}
+            {viewMode === 'desk' ? (
+                /* Interactive Desk Area - Scrollable */
+                <div className="relative h-[700px] bg-surface-50/50 rounded-[40px] border border-surface-200/50 shadow-inner overflow-hidden flex flex-col group/desk">
+                    {/* Desk Background Decoration */}
+                    <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]" />
 
-                            <div className="flex gap-4 relative z-10">
-                                <div className={cn(
-                                    "mt-1 w-1.5 h-12 rounded-full hidden sm:block transition-all duration-500",
-                                    task.isCompleted ? "bg-surface-200" :
-                                        task.priority === 'hot' ? "bg-danger-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]" :
-                                            task.priority === 'warm' ? "bg-accent-500 shadow-[0_0_8px_rgba(245,124,0,0.4)]" :
-                                                "bg-primary-500/30"
-                                )} />
-
-                                <div className="space-y-1">
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={(e) => handleComplete(e, task.id)}
-                                            className={cn(
-                                                "w-5 h-5 rounded-md border flex items-center justify-center transition-all",
-                                                task.isCompleted
-                                                    ? "bg-success-500 border-success-500 text-white"
-                                                    : "border-surface-300 bg-white hover:border-primary-500"
-                                            )}
-                                        >
-                                            {task.isCompleted && <Check size={14} />}
-                                        </button>
-                                        <h4 className={cn(
-                                            "text-sm font-bold transition-all uppercase tracking-tight",
-                                            task.isCompleted ? "text-surface-400 line-through" : "text-surface-900 group-hover:text-primary-600"
-                                        )}>
-                                            {task.title}
-                                        </h4>
-                                        <StatusBadge status={task.isCompleted ? 'closed' : task.priority} showDot={false} className="text-[9px] h-4" />
-                                    </div>
-                                    <p className={cn(
-                                        "text-xs line-clamp-1 max-w-md transition-colors",
-                                        task.isCompleted ? "text-surface-400" : "text-surface-500"
-                                    )}>
-                                        {task.description}
+                    {/* Scrollable Workspace Container */}
+                    <div
+                        ref={deskScrollRef}
+                        onScroll={handleDeskScroll}
+                        className="flex-1 overflow-y-auto custom-scrollbar-subtle scroll-smooth p-8 pt-0 relative"
+                        id="desk-scroll-container"
+                    >
+                        {/* Sticky Header Wrapper */}
+                        <div className="sticky top-0 z-30 pt-8 pb-12 bg-gradient-to-b from-surface-50/80 via-surface-50/40 to-transparent backdrop-blur-[2px]">
+                            <div className="flex justify-between items-start relative z-10">
+                                <div className="animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <h2 className="text-xl font-bold text-surface-900 tracking-tight">Daily Workspace</h2>
+                                    <p className="text-xs text-surface-500 font-medium italic opacity-70">
+                                        Drag and crumple papers into the glass bin when finished
                                     </p>
-                                    <div className="flex items-center gap-4 mt-2">
-                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
-                                            <Briefcase size={12} className="text-surface-300" />
-                                            {task.type}
+                                </div>
+
+                                <div className="flex items-center gap-4">
+                                    {selectedTaskIds.size > 0 && (
+                                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary-50/80 backdrop-blur-md rounded-xl border border-primary-200/50 shadow-sm animate-in zoom-in-95 duration-200 relative z-20">
+                                            <span className="text-[10px] font-black text-primary-700 uppercase tracking-widest mr-2">
+                                                {selectedTaskIds.size} Marked
+                                            </span>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 px-3 bg-white border-primary-200 text-primary-600 hover:bg-primary-50 font-bold text-[9px] uppercase tracking-wider"
+                                                onClick={handleBulkArchive}
+                                            >
+                                                Archive
+                                            </Button>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 px-3 bg-white border-danger-200 text-danger-600 hover:bg-danger-50 font-bold text-[9px] uppercase tracking-wider"
+                                                onClick={handleBulkDelete}
+                                            >
+                                                Delete
+                                            </Button>
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">
-                                            <Clock size={12} className="text-surface-300" />
-                                            {task.isCompleted ? 'Completed' : `Exp: ${task.due}`}
-                                        </div>
+                                    )}
+
+                                    {/* Animated Recycle Bin */}
+                                    <div ref={binRef} className="mr-8">
+                                        <RecycleBin
+                                            isOver={binHovered}
+                                            isEmpty={archivedTasks.length === 0}
+                                            onClick={() => setIsArchiveModalOpen(true)}
+                                            isGasping={crumplingTaskId !== null}
+                                            justSwallowed={justSwallowed}
+                                        />
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-6 mt-4 sm:mt-0 relative z-10">
-                                <div className="flex flex-col items-end gap-1">
-                                    <span className="text-[10px] font-bold text-surface-400 uppercase tracking-widest whitespace-nowrap">Process State</span>
-                                    <StatusBadge status={task.isCompleted ? 'closed' : task.status} />
-                                </div>
-                                <Link href={task.link}>
+                        {/* Task Notes Grid */}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-8">
+                            <AnimatePresence>
+                                {filteredTasks.map((task) => (
+                                    <StickyNoteTask
+                                        key={task.id}
+                                        task={task}
+                                        isCrumpled={crumplingTaskId === task.id}
+                                        isSelected={selectedTaskIds.has(task.id)}
+                                        onToggleSelection={toggleTaskSelection}
+                                        onDelete={handleDelete}
+                                        onDrag={handleDrag}
+                                        onDragEnd={handleDragEnd}
+                                    />
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+
+                    {/* Scroll Indicator */}
+                    <AnimatePresence>
+                        {showScrollIndicator && (
+                            <motion.button
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 20 }}
+                                onClick={() => {
+                                    deskScrollRef.current?.scrollBy({ top: 300, behavior: 'smooth' });
+                                }}
+                                className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-white/80 backdrop-blur-md border border-surface-200 shadow-lg px-4 py-2 rounded-full flex items-center gap-2 text-primary-600 hover:bg-primary-50 transition-all group"
+                            >
+                                <span className="text-[10px] font-black uppercase tracking-widest">More Tasks Below</span>
+                                <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
+
+                    <div className="p-4 border-t border-surface-100 bg-white/40 backdrop-blur-sm text-center relative z-10">
+                        <div className="flex items-center justify-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
+                            <span className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
+                                Real-time Operational Sync Active
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                /* Classic Dashboard List View - Completely different interface */
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center px-2">
+                        <div>
+                            <h2 className="text-xl font-bold text-surface-900 tracking-tight">Active Workflow Pipeline</h2>
+                            <p className="text-sm text-surface-500 mt-1">Manage and track your operational task queue</p>
+                        </div >
+                        <div className="flex items-center gap-2">
+                            {selectedTaskIds.size > 0 && (
+                                <div className="flex items-center gap-2 mr-4 px-3 py-1.5 bg-primary-50 rounded-lg border border-primary-100 animate-in fade-in slide-in-from-right-4">
+                                    <span className="text-[10px] font-black text-primary-700 uppercase tracking-widest mr-2">
+                                        {selectedTaskIds.size} Selected
+                                    </span>
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        rightIcon={<ArrowUpRight size={14} />}
+                                        className="h-7 px-3 bg-white border-primary-200 text-primary-600 hover:bg-primary-50 font-bold text-[9px] uppercase tracking-wider"
+                                        onClick={handleBulkArchive}
+                                    >
+                                        Archive All
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 px-3 bg-white border-danger-200 text-danger-600 hover:bg-danger-50 font-bold text-[9px] uppercase tracking-wider"
+                                        onClick={handleBulkDelete}
+                                    >
+                                        Delete All
+                                    </Button>
+                                </div>
+                            )}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-white"
+                                onClick={() => setIsArchiveModalOpen(true)}
+                            >
+                                View Archive ({archivedTasks.length})
+                            </Button>
+                        </div>
+                    </div >
+
+                    <div className="bg-white rounded-2xl border border-surface-200 shadow-sm overflow-hidden">
+                        <div className="p-4 bg-surface-50/50 border-b border-surface-200 grid grid-cols-12 gap-4 text-[10px] font-black text-surface-400 uppercase tracking-widest items-center">
+                            <div className="col-span-1 flex justify-center">
+                                <button
+                                    onClick={toggleAllSelection}
+                                    className={cn(
+                                        "w-4 h-4 rounded border transition-all flex items-center justify-center",
+                                        selectedTaskIds.size === filteredTasks.length && filteredTasks.length > 0
+                                            ? "bg-primary-600 border-primary-600 text-white"
+                                            : "bg-white border-surface-300 hover:border-primary-400"
+                                    )}
+                                >
+                                    {selectedTaskIds.size === filteredTasks.length && filteredTasks.length > 0 && <Check size={10} strokeWidth={4} />}
+                                </button>
+                            </div>
+                            <div className="col-span-5">Task Details</div>
+                            <div className="col-span-2">Category</div>
+                            <div className="col-span-2">Due Date</div>
+                            <div className="col-span-2 text-right px-2">Actions</div>
+                        </div>
+
+                        <div className="divide-y divide-surface-100">
+                            <AnimatePresence mode="popLayout">
+                                {filteredTasks.length > 0 ? filteredTasks.map((task) => (
+                                    <motion.div
+                                        key={task.id}
+                                        layout
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0, x: -10 }}
                                         className={cn(
-                                            "hidden sm:inline-flex transition-all",
-                                            task.isCompleted ? "opacity-40" : "opacity-0 group-hover:opacity-100"
+                                            "grid grid-cols-12 gap-4 p-4 items-center transition-colors group",
+                                            selectedTaskIds.has(task.id) ? "bg-primary-50/30" : "hover:bg-surface-50"
                                         )}
                                     >
-                                        Open
-                                    </Button>
-                                </Link>
-                            </div>
-                        </div>
-                    )) : (
-                        <div className="p-12 text-center">
-                            <div className="w-16 h-16 bg-surface-50 rounded-full flex items-center justify-center mx-auto mb-4 text-surface-300">
-                                <Search size={32} />
-                            </div>
-                            <h3 className="text-lg font-bold text-surface-900">No tasks found</h3>
-                            <p className="text-sm text-surface-500 mt-1 max-w-xs mx-auto">Try adjusting your filters or search terms to find what you are looking for.</p>
-                            <Button variant="ghost" size="sm" className="mt-6 text-primary-600" onClick={resetFilters}>Clear all filters</Button>
-                        </div>
-                    )}
-                </div>
+                                        <div className="col-span-1 flex justify-center">
+                                            <button
+                                                onClick={() => toggleTaskSelection(task.id)}
+                                                className={cn(
+                                                    "w-4 h-4 rounded border transition-all flex items-center justify-center",
+                                                    selectedTaskIds.has(task.id)
+                                                        ? "bg-primary-600 border-primary-600 text-white"
+                                                        : "bg-white border-surface-300 hover:border-primary-400"
+                                                )}
+                                            >
+                                                {selectedTaskIds.has(task.id) && <Check size={10} strokeWidth={4} />}
+                                            </button>
+                                        </div>
 
-                <div className="p-4 border-t border-surface-100 bg-surface-50/30 text-center">
-                    <button
-                        onClick={() => toast.info('Full Workflow View', { description: 'Loading all historical task data...' })}
-                        className="text-[11px] font-bold text-primary-600 hover:text-primary-700 uppercase tracking-widest transition-colors cursor-pointer"
-                    >
-                        Expand All Desktop Activities
-                    </button>
-                </div>
-            </Card>
+                                        <div className="col-span-5 flex items-center gap-3">
+                                            <div className={cn(
+                                                "w-1 h-8 rounded-full flex-shrink-0",
+                                                task.priority === 'hot' ? "bg-danger-500" : task.priority === 'warm' ? "bg-accent-500" : "bg-primary-500"
+                                            )} />
+                                            <div className="min-w-0">
+                                                <h4 className="font-bold text-surface-900 leading-none truncate">{task.title}</h4>
+                                                <p className="text-[10px] text-surface-400 mt-1 truncate max-w-[250px] font-medium italic">{task.description}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="col-span-2">
+                                            <span className="px-2 py-0.5 rounded-full bg-surface-100 text-surface-600 font-bold text-[9px] uppercase tracking-wider">
+                                                {task.type}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-span-2">
+                                            <span className="text-[11px] font-semibold text-surface-600 flex items-center gap-1.5">
+                                                <Clock size={10} className="text-surface-400" />
+                                                {task.due}
+                                            </span>
+                                        </div>
+
+                                        <div className="col-span-2 flex justify-end gap-1 px-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 text-success-600 hover:bg-success-50"
+                                                onClick={() => handleComplete(task.id)}
+                                                title="Mark as Done"
+                                            >
+                                                <Check size={16} />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 w-8 text-danger-400 hover:bg-danger-50 hover:text-danger-600"
+                                                onClick={() => handleDelete(task.id)}
+                                                title="Delete Permanently"
+                                            >
+                                                <Trash2 size={16} />
+                                            </Button>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-surface-300 hover:text-surface-600">
+                                                <MoreVertical className="w-4 h-4" />
+                                            </Button>
+                                        </div>
+                                    </motion.div>
+                                )) : (
+                                    <div className="py-20 text-center">
+                                        <p className="text-surface-400 font-bold uppercase tracking-widest text-xs">No active tasks found</p>
+                                    </div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                </div >
+            )
+            }
 
             {/* Enhanced Create Task Modal */}
             <Modal
@@ -414,7 +753,7 @@ export default function TasksPage() {
                                     { label: '❄️ Cold (Low)', value: 'cold' },
                                 ]}
                                 value={newTask.priority}
-                                onChange={(v) => setNewTask({ ...newTask, priority: v as any })}
+                                onChange={(v) => setNewTask({ ...newTask, priority: v as 'hot' | 'warm' | 'cold' })}
                             />
                         </div>
                         <div className="space-y-2">
@@ -525,6 +864,15 @@ export default function TasksPage() {
                     </div>
                 </div>
             </Modal>
-        </div>
+
+            {/* Archive View Modal */}
+            <ArchiveModal
+                isOpen={isArchiveModalOpen}
+                onClose={() => setIsArchiveModalOpen(false)}
+                archivedTasks={archivedTasks}
+                onRestore={handleRestore}
+                onClearAll={handleEmptyBin}
+            />
+        </div >
     );
 }

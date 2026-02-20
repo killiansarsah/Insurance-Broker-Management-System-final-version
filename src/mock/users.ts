@@ -3,22 +3,24 @@ import { User } from '@/types';
 export const users: User[] = [
     {
         id: 'usr-001',
+        tenantId: 'platform',
         email: 'admin@ibms.com.gh',
         firstName: 'System',
         lastName: 'Administrator',
-        role: 'super_admin',
+        role: 'platform_super_admin',
         phone: '+233 24 123 4567',
-        branchId: 'BR-ACC-01',
+        branchId: 'HQ',
         isActive: true,
         lastLogin: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
         createdAt: '2023-01-01T08:00:00Z'
     },
     {
         id: 'usr-002',
+        tenantId: 'tenant-001',
         email: 'ernest.osei@ibms.com.gh',
         firstName: 'Dr. Ernest',
         lastName: 'Osei',
-        role: 'branch_manager',
+        role: 'tenant_admin',
         phone: '+233 20 987 6543',
         branchId: 'BR-ACC-01',
         isActive: true,
@@ -87,6 +89,7 @@ export const users: User[] = [
     },
     {
         id: 'usr-008',
+        tenantId: 'tenant-001',
         email: 'john.mensah@ibms.com.gh',
         firstName: 'John',
         lastName: 'Mensah',

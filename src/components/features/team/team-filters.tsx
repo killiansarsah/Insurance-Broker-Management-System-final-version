@@ -2,7 +2,6 @@
 
 import { Users, Building2, Shield } from 'lucide-react';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { UserRole } from '@/types';
 
 interface TeamFiltersProps {
     role: string | null;
@@ -13,11 +12,12 @@ interface TeamFiltersProps {
 
 const roleOptions = [
     { label: 'All Roles', value: '' },
+    { label: 'Platform Admins', value: 'platform_super_admin' },
+    { label: 'Tenant Admins', value: 'tenant_admin' },
     { label: 'Brokers', value: 'broker' },
     { label: 'Secretaries', value: 'secretary' },
     { label: 'Managers', value: 'branch_manager' },
-    { label: 'Admin', value: 'admin' },
-    { label: 'Data Entry', value: 'data_entry' },
+    { label: 'Staff', value: 'data_entry' },
 ];
 
 const branchOptions = [

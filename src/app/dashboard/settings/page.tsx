@@ -5,27 +5,29 @@ import {
     User,
     Bell,
     Shield,
-    Globe,
     Save,
     Camera,
     Check,
     Lock,
-    Key,
     Smartphone,
     Languages,
-    DollarSign,
-    Moon,
-    Layout
+    Layout,
+    Building2,
+    Users,
+    FileText,
+    Globe,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useUiStore } from '@/stores/ui-store';
-import { CustomSelect } from '@/components/ui/select-custom';
+import { SettingsOrganization } from '@/components/features/settings/settings-organization';
+import { SettingsUsers } from '@/components/features/settings/settings-users';
+
+import { SettingsTerms } from '@/components/features/settings/settings-terms';
 
 
-type Tab = 'profile' | 'notifications' | 'security' | 'system';
+type Tab = 'profile' | 'organization' | 'users' | 'notifications' | 'security' | 'terms';
 
 export default function SettingsPage() {
     const [activeTab, setActiveTab] = useState<Tab>('profile');
@@ -85,9 +87,11 @@ export default function SettingsPage() {
                         <nav className="space-y-1">
                             {[
                                 { id: 'profile', label: 'My Profile', icon: User },
+                                { id: 'organization', label: 'Organization', icon: Building2 },
+                                { id: 'users', label: 'Users', icon: Users },
                                 { id: 'notifications', label: 'Notifications', icon: Bell },
                                 { id: 'security', label: 'Security', icon: Shield },
-                                { id: 'system', label: 'System Prefs', icon: Globe },
+                                { id: 'terms', label: 'Terms & Conditions', icon: FileText },
                             ].map((item) => (
                                 <button
                                     key={item.id}
@@ -254,54 +258,9 @@ export default function SettingsPage() {
                         </Card>
                     )}
 
-                    {activeTab === 'system' && (
-                        <Card padding="lg">
-                            <h3 className="text-lg font-bold text-surface-900 mb-6 flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-lg bg-accent-50 text-accent-600 flex items-center justify-center">
-                                    <Globe size={18} />
-                                </div>
-                                System Preferences
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <SelectSetting
-                                    label="Preferred Language"
-                                    desc="Dashboard & communication language."
-                                    icon={<Languages size={16} />}
-                                    options={['English (Ghana)', 'English (UK)', 'French']}
-                                />
-                                <SelectSetting
-                                    label="Currency Unit"
-                                    desc="Primary display currency for financials."
-                                    icon={<DollarSign size={16} />}
-                                    options={['GHS - Cedis', 'USD - Dollars', 'EUR - Euro']}
-                                />
-                                <div className="space-y-3">
-                                    <div>
-                                        <p className="text-sm font-bold text-surface-900 flex items-center gap-2">
-                                            <span className="text-primary-500"><Moon size={16} /></span>
-                                            Color Theme
-                                        </p>
-                                        <p className="text-xs text-surface-500 mt-1 font-medium">Appearance of the platform interface.</p>
-                                    </div>
-                                    <CustomSelect
-                                        options={[
-                                            { label: 'Gold / Industrial (Deep)', value: 'gold' },
-                                            { label: 'Liquid Glass', value: 'glass' },
-                                            { label: 'Compact Classic', value: 'compact' },
-                                        ]}
-                                        value={useUiStore.getState().currentTheme}
-                                        onChange={(v) => useUiStore.getState().setTheme(v as any)}
-                                    />
-                                </div>
-                                <SelectSetting
-                                    label="Timezone"
-                                    desc="Auto-sync reminders with your region."
-                                    icon={<Globe size={16} />}
-                                    options={['(GMT+0) Accra/Ghana', '(GMT+1) Lagos/Nigeria']}
-                                />
-                            </div>
-                        </Card>
-                    )}
+                    {activeTab === 'organization' && <SettingsOrganization />}
+                    {activeTab === 'users' && <SettingsUsers />}
+                    {activeTab === 'terms' && <SettingsTerms />}
                 </div>
             </div>
         </div>
@@ -385,22 +344,3 @@ function SecurityLog({ title, time, ip }: any) {
     );
 }
 
-function SelectSetting({ label, desc, icon, options }: any) {
-    const [val, setVal] = useState(options[0]);
-    return (
-        <div className="space-y-3">
-            <div>
-                <p className="text-sm font-bold text-surface-900 flex items-center gap-2">
-                    <span className="text-primary-500">{icon}</span>
-                    {label}
-                </p>
-                <p className="text-xs text-surface-500 mt-1 font-medium">{desc}</p>
-            </div>
-            <CustomSelect
-                options={options.map((opt: string) => ({ label: opt, value: opt }))}
-                value={val}
-                onChange={(v) => setVal(v as string)}
-            />
-        </div>
-    );
-}

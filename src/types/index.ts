@@ -5,8 +5,8 @@
 // --- Enums ---
 
 export type UserRole =
-    | 'super_admin'
-    | 'admin'
+    | 'platform_super_admin'
+    | 'tenant_admin'
     | 'branch_manager'
     | 'senior_broker'
     | 'broker'
@@ -108,6 +108,7 @@ export type MoMoNetwork = 'mtn' | 'telecel' | 'airteltigo';
 
 export interface User {
     id: string;
+    tenantId?: string; // Multi-tenancy support
     email: string;
     firstName: string;
     lastName: string;

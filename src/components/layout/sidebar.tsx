@@ -144,11 +144,7 @@ const navigation: NavSection[] = [
                     { label: 'Products', href: '/dashboard/carriers/products' },
                 ]
             },
-            {
-                label: 'Team',
-                href: '/dashboard/team',
-                icon: <UserCircle size={18} />,
-            },
+
             {
                 label: 'Compliance',
                 href: '/dashboard/compliance',
