@@ -41,6 +41,42 @@ const INSURANCE_TYPE_MAP = {
     'Travel': 'travel',
 };
 
+// Map real insurer names to the correct carrier IDs in mock/carriers.ts
+const INSURER_ID_MAP = {
+    'LOYALTY': 'carrier-loyalty',
+    'GLICO GEN': 'carrier-glico-general',
+    'IMPERIAL': 'carrier-imperial',
+    'GLICO LIFE': 'carrier-glico-life',
+    'STAR': 'carrier-star',
+    'SIC': 'carrier-sic',
+    'ENTERPRISE': 'carrier-enterprise',
+    'HOLLARD': 'carrier-hollard',
+    'VANGUARD': 'carrier-vanguard',
+    'GUMA': 'carrier-guma',
+    'SUNU': 'carrier-sunu',
+    'PHOENIX': 'carrier-phoenix',
+    'QUALITY': 'carrier-quality',
+    'SERENE': 'carrier-serene',
+    'PRIORITY': 'carrier-priority',
+    'DONEWELL LIFE': 'carrier-donewell-life',
+    'DONEWELL GEN': 'carrier-donewell-general',
+    'OLD MUTUAL': 'carrier-old-mutual',
+    'PRUDENTIAL': 'carrier-prudential',
+    'METROPOLITAN': 'carrier-metropolitan',
+    'MILIFE': 'carrier-milife',
+    'SANLAM': 'carrier-sanlam-general',
+    'ALLIANZ': 'carrier-allianz-general',
+    'CORONATION': 'carrier-coronation',
+    'BEDROCK': 'carrier-bedrock',
+    'BEST': 'carrier-best',
+    'UNIQUE': 'carrier-unique',
+    'PROVIDENT': 'carrier-provident',
+    'QUALITY LIFE': 'carrier-quality-life',
+    'ENTERPRISE LIFE': 'carrier-enterprise-life',
+    'STALIFE': 'carrier-starlife',
+    'STARLIFE': 'carrier-starlife',
+};
+
 // ============================================================
 // HELPERS
 // ============================================================
@@ -181,7 +217,7 @@ rows.forEach(r => {
     const client = clientMap.get(clientName);
     if (!client) return;
 
-    const insurerName = String(r[1]).trim();
+    const insurerName = String(r[1]).trim().toUpperCase();
     const policyCategory = String(r[2]).trim();
     const policyType = String(r[3]).trim();
     const rate = parseFloat(r[5]) || 0;
@@ -211,7 +247,7 @@ rows.forEach(r => {
             clientId: client.id,
             clientName: client.companyName || `${client.firstName} ${client.lastName}`.trim(),
             insurerName,
-            insurerId: `ins-${pad(policyMap.size + 1)}`,
+            insurerId: INSURER_ID_MAP[insurerName] || `ins-${pad(polIdx)}`,
             brokerId: broker.id,
             brokerName: broker.name,
             inceptionDate: inceptionDate || '2023-01-01',
@@ -246,12 +282,6 @@ rows.forEach(r => {
 
 const policies = Array.from(policyMap.values());
 console.log(`Unique policies: ${policies.length}`);
-
-// Normalize insurer IDs — map each unique insurer name to a stable ID
-const insurerNames = [...new Set(policies.map(p => p.insurerName))];
-const insurerIdMap = {};
-insurerNames.forEach((name, i) => { insurerIdMap[name] = `ins-${pad(i + 1)}`; });
-policies.forEach(p => { p.insurerId = insurerIdMap[p.insurerName]; });
 
 // ============================================================
 // STEP 3: DERIVE COMMISSIONS
