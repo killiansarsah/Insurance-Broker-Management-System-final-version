@@ -104,7 +104,7 @@ export default function TasksPage() {
     const [binHovered, setBinHovered] = useState(false);
     const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
     const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-    const [justSwallowed, setJustSwallowed] = useState(false);
+    const [justTrashed, setJustTrashed] = useState(false);
     const binRef = useRef<HTMLDivElement>(null);
     const deskScrollRef = useRef<HTMLDivElement>(null);
     // Filters State
@@ -309,12 +309,12 @@ export default function TasksPage() {
         if (distance < 120) {
             // Keep crumpling active so the note visually shrinks before removal
             setCrumplingTaskId(taskId);
-            setJustSwallowed(true);
+            setJustTrashed(true);
             setTimeout(() => {
                 handleComplete(taskId);
                 setCrumplingTaskId(null);
             }, 500);
-            setTimeout(() => setJustSwallowed(false), 1000);
+            setTimeout(() => setJustTrashed(false), 1000);
         } else {
             setCrumplingTaskId(null);
         }
@@ -485,7 +485,7 @@ export default function TasksPage() {
                                             isEmpty={archivedTasks.length === 0}
                                             onClick={() => setIsArchiveModalOpen(true)}
                                             isGasping={crumplingTaskId !== null}
-                                            justSwallowed={justSwallowed}
+                                            justTrashed={justTrashed}
                                         />
                                     </div>
                                 </div>

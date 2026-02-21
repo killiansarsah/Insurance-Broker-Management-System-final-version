@@ -9,10 +9,10 @@ interface RecycleBinProps {
     isEmpty?: boolean;
     onClick?: () => void;
     isGasping?: boolean;
-    justSwallowed?: boolean;
+    justTrashed?: boolean;
 }
 
-export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false, justSwallowed = false }: RecycleBinProps) {
+export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false, justTrashed = false }: RecycleBinProps) {
 
     return (
         <div
@@ -36,9 +36,9 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
                 )}
             />
 
-            {/* Burst particles on swallow */}
+            {/* Burst particles on trash */}
             <AnimatePresence>
-                {justSwallowed && (
+                {justTrashed && (
                     <>
                         {[...Array(6)].map((_, i) => {
                             const angle = (i / 6) * Math.PI * 2;
@@ -142,7 +142,7 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
                             height: isOver ? "85%" : isEmpty ? "0%" : "30%",
                             backgroundColor: isOver
                                 ? "rgba(59, 130, 246, 0.2)"
-                                : justSwallowed
+                                : justTrashed
                                     ? "rgba(34, 197, 94, 0.15)"
                                     : "rgba(255, 255, 255, 0.05)"
                         }}
@@ -156,15 +156,15 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
             <div className="mt-5 flex flex-col items-center">
                 <motion.span
                     animate={{
-                        scale: justSwallowed ? 1.1 : 1,
-                        color: justSwallowed ? "rgb(34, 197, 94)" : undefined,
+                        scale: justTrashed ? 1.1 : 1,
+                        color: justTrashed ? "rgb(34, 197, 94)" : undefined,
                     }}
                     className={cn(
                         "text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-500",
                         isOver ? "text-primary-600 scale-105" : isGasping ? "text-accent-600" : !isEmpty ? "text-surface-600 font-bold" : "text-surface-400"
                     )}
                 >
-                    {justSwallowed ? "Swallowed!" : isOver ? "Release to Finish" : isGasping ? "Getting close..." : !isEmpty ? "Files Inside" : "Empty Bin"}
+                    {justTrashed ? "Trashed!" : isOver ? "Release to Finish" : isGasping ? "Getting close..." : !isEmpty ? "Files Inside" : "Empty Bin"}
                 </motion.span>
                 <p className="text-[9px] text-surface-400 font-bold uppercase tracking-tighter mt-1 opacity-40">
                     {isOver ? "Dropping into glass..." : !isEmpty ? "Historical records stored" : "Throw tasks here"}
