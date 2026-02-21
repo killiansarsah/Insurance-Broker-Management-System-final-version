@@ -31,6 +31,7 @@ import Link from 'next/link';
 import { policies } from '@/mock/policies';
 import { mockClients as clients } from '@/mock/clients';
 import { claims } from '@/mock/claims';
+import { invoices } from '@/mock/finance';
 
 // =====================================================================
 // TYPES
@@ -131,33 +132,55 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
 // =====================================================================
 // STATIC DATA (unchanged by period)
 // =====================================================================
-const clientSegments = [
-    { label: 'Corporate', pct: 31, color: 'bg-primary-500' },
-    { label: 'SME', pct: 44, color: 'bg-accent-500' },
-    { label: 'Retail / Individual', pct: 25, color: 'bg-success-500' },
-];
+const clientSegments = (() => {
+    const total = clients.length || 1;
+    const corp = clients.filter(c => c.type === 'corporate').length;
+    const ind = clients.filter(c => c.type === 'individual').length;
+    return [
+        { label: 'Corporate', pct: Math.round((corp / total) * 100), color: 'bg-primary-500' },
+        { label: 'Retail / Individual', pct: Math.round((ind / total) * 100), color: 'bg-success-500' },
+    ];
+})();
 
-const insurerDistribution = [
-    { name: 'SIC Insurance', pct: 28, color: 'bg-primary-500' },
-    { name: 'Enterprise Insurance', pct: 22, color: 'bg-accent-500' },
-    { name: 'Hollard Insurance', pct: 18, color: 'bg-success-500' },
-    { name: 'Star Assurance', pct: 15, color: 'bg-danger-400' },
-    { name: 'Others', pct: 17, color: 'bg-surface-300' },
-];
+const insurerDistribution = (() => {
+    const counts: Record<string, number> = {};
+    policies.forEach(p => { counts[p.insurerName] = (counts[p.insurerName] || 0) + 1; });
+    const total = policies.length || 1;
+    const colors = ['bg-primary-500', 'bg-accent-500', 'bg-success-500', 'bg-danger-400', 'bg-surface-300'];
+    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    const top4 = sorted.slice(0, 4).map(([name, count], i) => ({
+        name, pct: Math.round((count / total) * 100), color: colors[i]
+    }));
+    const otherPct = sorted.slice(4).reduce((s, [, c]) => s + c, 0);
+    if (otherPct > 0) top4.push({ name: 'Others', pct: Math.round((otherPct / total) * 100), color: colors[4] });
+    return top4;
+})();
 
-const insurerPerformance = [
-    { name: 'SIC Insurance', avgDays: 2.1, trend: 'down' as const },
-    { name: 'Enterprise', avgDays: 2.8, trend: 'up' as const },
-    { name: 'Hollard', avgDays: 3.5, trend: 'up' as const },
-    { name: 'Star Assurance', avgDays: 1.9, trend: 'down' as const },
-];
+const insurerPerformance = (() => {
+    const insurers = Array.from(new Set(policies.map(p => p.insurerName))).slice(0, 4);
+    return insurers.map((name, i) => ({
+        name: name.length > 18 ? name.slice(0, 18) + '…' : name,
+        avgDays: +(1.5 + (i * 0.7)).toFixed(1),
+        trend: (i % 2 === 0 ? 'down' : 'up') as 'down' | 'up',
+    }));
+})();
 
-const recentActivity = [
-    { id: '1', action: 'New policy created', detail: 'POL-2024-0847 — Motor Comprehensive for Kwame Mensah', time: '15 minutes ago', type: 'policy' },
-    { id: '2', action: 'Client KYC verified', detail: 'Ama Serwaa — Individual client verified', time: '1 hour ago', type: 'client' },
-    { id: '3', action: 'Claim registered', detail: 'CLM-2024-0156 — Fire claim by Asante Holdings Ltd', time: '2 hours ago', type: 'claim' },
-    { id: '4', action: 'Commission received', detail: '₵12,450 commission from Enterprise Insurance (Motor)', time: '5 hours ago', type: 'commission' },
-];
+const recentActivity = (() => {
+    const items: { id: string; action: string; detail: string; time: string; type: string }[] = [];
+    const recentPolicies = [...policies].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 2);
+    const recentClaims = [...claims].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
+    const recentClients = [...clients].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
+    recentPolicies.forEach((p, i) => items.push({
+        id: `ra-p${i}`, action: 'Policy updated', detail: `${p.policyNumber} — ${p.coverageDetails || p.insuranceType} for ${p.clientName}`, time: 'Recently', type: 'policy'
+    }));
+    recentClaims.forEach((c, i) => items.push({
+        id: `ra-c${i}`, action: 'Claim registered', detail: `${c.claimNumber} — ${c.incidentDescription || 'Claim'} by ${c.clientName}`, time: 'Recently', type: 'claim'
+    }));
+    recentClients.forEach((cl, i) => items.push({
+        id: `ra-cl${i}`, action: 'Client updated', detail: `${cl.companyName || (cl.firstName + ' ' + cl.lastName)} — ${cl.type} client`, time: 'Recently', type: 'client'
+    }));
+    return items.slice(0, 4);
+})();
 
 const activityColors: Record<string, string> = {
     policy: 'bg-primary-100 text-primary-600',
@@ -289,8 +312,11 @@ export default function DashboardPage() {
     }, [filteredPolicies]);
 
     const operationsData = useMemo(() => {
-        return { openTasks: 24, premiumPending: 8, coverNotesPending: 3, certsPending: 5, overdueFollowups: 7 };
-    }, []);
+        const openClaims = claims.filter(c => c.status !== 'settled' && c.status !== 'rejected').length;
+        const premiumPending = invoices.filter(i => i.status === 'outstanding' || i.status === 'partial').length;
+        const overdueInvoices = invoices.filter(i => i.status === 'overdue').length;
+        return { openTasks: openClaims + premiumPending, premiumPending, coverNotesPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'pending').length)), certsPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'draft').length)), overdueFollowups: overdueInvoices };
+    }, [filteredPolicies]);
 
     // Total expiring count for renewals header
     const totalExpiring = renewalsData.reduce((sum, r) => sum + r.count, 0);
@@ -370,11 +396,11 @@ export default function DashboardPage() {
                         ))}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                        <CustomSelect label="Insurer" options={filterOptions.insurer} value={filters.insurer} onChange={(v) => updateFilter('insurer', v)} clearable />
-                        <CustomSelect label="Product" options={filterOptions.product} value={filters.product} onChange={(v) => updateFilter('product', v)} clearable />
-                        <CustomSelect label="Client Type" options={filterOptions.clientType} value={filters.clientType} onChange={(v) => updateFilter('clientType', v)} clearable />
-                        <CustomSelect label="Account Officer" options={filterOptions.accountOfficer} value={filters.accountOfficer} onChange={(v) => updateFilter('accountOfficer', v)} clearable />
-                        <CustomSelect label="Region" options={filterOptions.region} value={filters.region} onChange={(v) => updateFilter('region', v)} clearable />
+                        <CustomSelect label="Insurer" options={filterOptions.insurer} value={filters.insurer} onChange={(v) => updateFilter('insurer', v as string | null)} clearable />
+                        <CustomSelect label="Product" options={filterOptions.product} value={filters.product} onChange={(v) => updateFilter('product', v as string | null)} clearable />
+                        <CustomSelect label="Client Type" options={filterOptions.clientType} value={filters.clientType} onChange={(v) => updateFilter('clientType', v as string | null)} clearable />
+                        <CustomSelect label="Account Officer" options={filterOptions.accountOfficer} value={filters.accountOfficer} onChange={(v) => updateFilter('accountOfficer', v as string | null)} clearable />
+                        <CustomSelect label="Region" options={filterOptions.region} value={filters.region} onChange={(v) => updateFilter('region', v as string | null)} clearable />
                     </div>
                 </div>
             </div>

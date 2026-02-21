@@ -113,7 +113,7 @@ export default function NewLeadPage() {
                                     { label: 'Travel Insurance', value: 'travel' },
                                 ]}
                                 value={productInterest}
-                                onChange={setProductInterest}
+                                onChange={(v) => setProductInterest(v as string | null)}
                                 clearable
                                 className="w-full"
                             />
@@ -130,7 +130,7 @@ export default function NewLeadPage() {
                                     { label: 'Cold (Future)', value: 'cold' },
                                 ]}
                                 value={priority}
-                                onChange={setPriority}
+                                onChange={(v) => setPriority(v as string | null)}
                                 className="w-full"
                             />
                         </div>

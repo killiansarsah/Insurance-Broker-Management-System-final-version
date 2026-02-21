@@ -34,7 +34,7 @@ export function TeamFilters({ role, branch, onRoleChange, onBranchChange }: Team
                     placeholder="Filter by Role"
                     options={roleOptions}
                     value={role || ''}
-                    onChange={(v) => onRoleChange(v || null)}
+                    onChange={(v) => onRoleChange(v ? String(v) : null)}
                     icon={<Shield size={14} />}
                     clearable
                 />
@@ -44,7 +44,7 @@ export function TeamFilters({ role, branch, onRoleChange, onBranchChange }: Team
                     placeholder="Filter by Branch"
                     options={branchOptions}
                     value={branch || ''}
-                    onChange={(v) => onBranchChange(v || null)}
+                    onChange={(v) => onBranchChange(v ? String(v) : null)}
                     icon={<Building2 size={14} />}
                     clearable
                 />

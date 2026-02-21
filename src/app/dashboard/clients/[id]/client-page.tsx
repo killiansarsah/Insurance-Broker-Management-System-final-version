@@ -1,10 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-    ArrowLeft,
     ArrowUpRight,
     ShieldCheck,
     AlertTriangle,
@@ -13,11 +11,9 @@ import {
     Activity,
     Building2,
     Calendar,
-    CreditCard,
     DollarSign,
     Clock,
     CheckCircle2,
-    ArrowRight,
     MessageSquare,
     Bell,
     Check,
@@ -28,7 +24,7 @@ import { getClientById, getClientDisplayName } from '@/mock/clients';
 import { getPoliciesByClientId } from '@/mock/policies';
 import { invoices, receipts } from '@/mock/finance';
 import { commissions } from '@/mock/commissions';
-import { formatCurrency, formatDate, getInitials, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import Link from 'next/link';

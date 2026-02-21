@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 
-type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'outline';
+type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'outline' | 'surface';
 type BadgeSize = 'sm' | 'md';
 
 interface BadgeProps {
@@ -18,6 +18,7 @@ const variantStyles: Record<BadgeVariant, string> = {
     warning: 'bg-accent-50 text-accent-700',
     danger: 'bg-danger-50 text-danger-700',
     outline: 'border border-[var(--glass-border)] text-surface-600 bg-[var(--bg-card)] backdrop-blur-sm',
+    surface: 'bg-surface-100 text-surface-600 border border-surface-200',
 };
 
 const dotColors: Record<BadgeVariant, string> = {
@@ -27,6 +28,7 @@ const dotColors: Record<BadgeVariant, string> = {
     warning: 'bg-accent-500',
     danger: 'bg-danger-500',
     outline: 'bg-surface-400',
+    surface: 'bg-surface-400',
 };
 
 const sizeStyles: Record<BadgeSize, string> = {

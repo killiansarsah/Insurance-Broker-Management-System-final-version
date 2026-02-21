@@ -31,18 +31,35 @@ const MOCK_USER: User = {
 
 // Role hierarchy for permission checks
 const ROLE_HIERARCHY: Record<UserRole, number> = {
+    platform_super_admin: 8,
     super_admin: 7,
+    tenant_admin: 6,
     admin: 6,
     branch_manager: 5,
     senior_broker: 4,
     broker: 3,
+    secretary: 2,
     data_entry: 2,
     viewer: 1,
 };
 
 // Module permissions by role
 const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
+    platform_super_admin: { '*': ['*'] },
     super_admin: { '*': ['*'] },
+    tenant_admin: {
+        clients: ['view', 'create', 'edit', 'delete'],
+        policies: ['view', 'create', 'edit', 'delete'],
+        claims: ['view', 'create', 'edit', 'approve'],
+        complaints: ['view', 'create', 'edit', 'resolve'],
+        leads: ['view', 'create', 'edit', 'delete'],
+        reports: ['view', 'export'],
+        settings: ['view', 'edit'],
+        users: ['view', 'create', 'edit', 'delete'],
+        chat: ['view', 'send'],
+        documents: ['view', 'upload', 'delete'],
+        compliance: ['view', 'edit'],
+    },
     admin: {
         clients: ['view', 'create', 'edit', 'delete'],
         policies: ['view', 'create', 'edit', 'delete'],
@@ -84,6 +101,13 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
         claims: ['view', 'create'],
         complaints: ['view', 'create'],
         leads: ['view', 'create', 'edit'],
+        chat: ['view', 'send'],
+        documents: ['view', 'upload'],
+    },
+    secretary: {
+        clients: ['view', 'create', 'edit'],
+        policies: ['view', 'create'],
+        leads: ['view', 'create'],
         chat: ['view', 'send'],
         documents: ['view', 'upload'],
     },

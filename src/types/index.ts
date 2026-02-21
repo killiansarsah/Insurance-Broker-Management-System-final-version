@@ -6,7 +6,9 @@
 
 export type UserRole =
     | 'platform_super_admin'
+    | 'super_admin'
     | 'tenant_admin'
+    | 'admin'
     | 'branch_manager'
     | 'senior_broker'
     | 'broker'

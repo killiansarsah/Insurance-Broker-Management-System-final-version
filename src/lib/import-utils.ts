@@ -93,6 +93,7 @@ const POLICY_FIELDS: FieldDef[] = [
     { key: 'commissionRate', label: 'Commission Rate (%)', required: false, aliases: ['commission rate', 'commission %', 'rate'], validate: validateNumber },
     { key: 'commissionAmount', label: 'Commission Amount', required: false, aliases: ['commission', 'commission amount', 'brokerage', 'gross comm.', 'net comm.'], validate: validateNumber },
     { key: 'coverageDetails', label: 'Coverage Details', required: false, aliases: ['coverage details', 'policy type', 'vehicle number/ location'] },
+    { key: 'sumInsured', label: 'Sum Insured', required: false, aliases: ['sum insured', 'sum_insured', 'insured amount', 'coverage amount'], validate: validateNumber },
 ];
 
 // --- Claim Fields ---
@@ -195,7 +196,19 @@ export async function parseFile(file: File): Promise<string[][]> {
     const buffer = await file.arrayBuffer();
     // cellDates: true converts Excel serial dates to JS Date objects automatically
     const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    // Pick the sheet with the most rows (handles multi-sheet workbooks)
+    let bestSheet = workbook.SheetNames[0];
+    let maxRows = 0;
+    for (const name of workbook.SheetNames) {
+        const s = workbook.Sheets[name];
+        const range = XLSX.utils.decode_range(s['!ref'] || 'A1');
+        const rows = range.e.r - range.s.r + 1;
+        if (rows > maxRows) {
+            maxRows = rows;
+            bestSheet = name;
+        }
+    }
+    const firstSheet = workbook.Sheets[bestSheet];
     const data: unknown[][] = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
 
     // Trim whitespace from all cells and filter completely empty rows

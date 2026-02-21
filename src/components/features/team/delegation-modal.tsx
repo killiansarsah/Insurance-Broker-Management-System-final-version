@@ -70,7 +70,7 @@ export function DelegationModal({ isOpen, onClose, staffMember, allStaff, onSave
                         placeholder="Choose a colleague..."
                         options={availableBackups}
                         value={selectedBackupId}
-                        onChange={(val) => setSelectedBackupId(val)}
+                        onChange={(val) => setSelectedBackupId(val != null ? String(val) : null)}
                         className="w-full"
                         icon={<UserPlus size={14} />}
                         clearable

@@ -23,21 +23,27 @@ import { InviteUserModal } from '@/components/admin/invite-user-modal';
 import { CustomSelect } from '@/components/ui/select-custom';
 
 const ROLE_COLORS: Record<UserRole, 'primary' | 'success' | 'warning' | 'danger' | 'default' | 'outline'> = {
+    platform_super_admin: 'danger',
     super_admin: 'danger',
+    tenant_admin: 'danger',
     admin: 'danger',
     branch_manager: 'warning',
     senior_broker: 'primary',
     broker: 'primary',
+    secretary: 'default',
     data_entry: 'default',
     viewer: 'outline',
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
+    platform_super_admin: 'Platform Admin',
     super_admin: 'Super Admin',
+    tenant_admin: 'Tenant Admin',
     admin: 'Admin',
     branch_manager: 'Branch Manager',
     senior_broker: 'Senior Broker',
     broker: 'Broker',
+    secretary: 'Secretary',
     data_entry: 'Data Entry',
     viewer: 'Viewer',
 };

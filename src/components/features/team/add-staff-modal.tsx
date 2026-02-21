@@ -162,7 +162,7 @@ export function AddStaffModal({ isOpen, onClose, onAdd }: AddStaffModalProps) {
                             <CustomSelect
                                 options={branchOptions}
                                 value={formData.branchId}
-                                onChange={(val) => setFormData(prev => ({ ...prev, branchId: val }))}
+                                onChange={(val) => setFormData(prev => ({ ...prev, branchId: String(val ?? '') }))}
                                 className="w-full"
                                 icon={<Building2 size={14} />}
                             />
