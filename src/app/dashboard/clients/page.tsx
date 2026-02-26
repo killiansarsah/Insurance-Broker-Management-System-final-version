@@ -17,6 +17,12 @@ import {
     Mail,
     RotateCcw,
     Sparkles,
+    Eye,
+    Edit,
+    MessageSquare,
+    MoreVertical,
+    Download,
+    Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +30,8 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { mockClients, getClientDisplayName } from '@/mock/clients';
-import { formatCurrency, formatPhone, cn } from '@/lib/utils';
+import { formatCurrency, formatPhone, formatDate, cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import type { Client, ClientStatus, KycStatus, AmlRiskLevel, ClientType } from '@/types';
 import Link from 'next/link';
 
@@ -92,6 +99,9 @@ const kpis = [
     },
 ];
 
+// Unique brokers for filter
+const uniqueBrokers = [...new Set(mockClients.map(c => c.assignedBrokerName).filter(Boolean))] as string[];
+
 export default function ClientsPage() {
     const router = useRouter();
     const [showFilters, setShowFilters] = useState(false);
@@ -99,16 +109,57 @@ export default function ClientsPage() {
     const [filterKyc, setFilterKyc] = useState<KycStatus | ''>('');
     const [filterRisk, setFilterRisk] = useState<AmlRiskLevel | ''>('');
     const [filterType, setFilterType] = useState<ClientType | ''>('');
+    const [filterBroker, setFilterBroker] = useState('');
+    const [filterDateFrom, setFilterDateFrom] = useState('');
+    const [filterDateTo, setFilterDateTo] = useState('');
+    const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 
     const filteredClients = mockClients.filter((c) => {
         if (filterStatus && c.status !== filterStatus) return false;
         if (filterKyc && c.kycStatus !== filterKyc) return false;
         if (filterRisk && c.amlRiskLevel !== filterRisk) return false;
         if (filterType && c.type !== filterType) return false;
+        if (filterBroker && c.assignedBrokerName !== filterBroker) return false;
+        if (filterDateFrom) {
+            const from = new Date(filterDateFrom);
+            if (new Date(c.createdAt) < from) return false;
+        }
+        if (filterDateTo) {
+            const to = new Date(filterDateTo);
+            to.setHours(23, 59, 59);
+            if (new Date(c.createdAt) > to) return false;
+        }
         return true;
     });
 
-    const activeFilterCount = [filterStatus, filterKyc, filterRisk, filterType].filter(Boolean).length;
+    const activeFilterCount = [filterStatus, filterKyc, filterRisk, filterType, filterBroker, filterDateFrom, filterDateTo].filter(Boolean).length;
+
+    function handleExport() {
+        const headers = ['Client #', 'Name', 'Type', 'Status', 'KYC', 'Risk', 'Phone', 'Email', 'Active Policies', 'Total Premium', 'Broker', 'Created'];
+        const rows = filteredClients.map(c => [
+            c.clientNumber,
+            getClientDisplayName(c),
+            c.type,
+            c.status,
+            c.kycStatus,
+            c.amlRiskLevel,
+            c.phone,
+            c.email || '',
+            String(c.activePolicies),
+            String(c.totalPremium),
+            c.assignedBrokerName || '',
+            formatDate(c.createdAt),
+        ]);
+        const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `clients-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success(`Exported ${filteredClients.length} clients to CSV`);
+    }
 
     const columns = [
         {
@@ -257,6 +308,35 @@ export default function ClientsPage() {
                 </div>
             ),
         },
+        {
+            key: 'actions',
+            label: 'Actions',
+            render: (row: Client) => (
+                <div className="flex items-center gap-1 relative" onClick={(e) => e.stopPropagation()}>
+                    <button
+                        onClick={() => router.push(`/dashboard/clients/${row.id}`)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        title="View"
+                    >
+                        <Eye size={14} />
+                    </button>
+                    <button
+                        onClick={() => router.push(`/dashboard/clients/${row.id}/edit`)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        title="Edit"
+                    >
+                        <Edit size={14} />
+                    </button>
+                    <button
+                        onClick={() => router.push('/dashboard/chat')}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        title="Message"
+                    >
+                        <MessageSquare size={14} />
+                    </button>
+                </div>
+            ),
+        },
     ];
 
     const selectClasses = 'w-full px-3 py-2.5 text-sm bg-white border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer hover:border-surface-300 appearance-none';
@@ -278,11 +358,16 @@ export default function ClientsPage() {
                         </div>
                     </div>
                 </div>
-                <Link href="/dashboard/clients/new">
-                    <Button variant="primary" leftIcon={<Plus size={16} />} rightIcon={<ArrowRight size={14} />}>
-                        New Client
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={handleExport}>
+                        Export
                     </Button>
-                </Link>
+                    <Link href="/dashboard/clients/new">
+                        <Button variant="primary" leftIcon={<Plus size={16} />} rightIcon={<ArrowRight size={14} />}>
+                            New Client
+                        </Button>
+                    </Link>
+                </div>
             </div>
 
             {/* KPI Cards — Re-enhanced */}
@@ -388,6 +473,9 @@ export default function ClientsPage() {
                             setFilterKyc('');
                             setFilterRisk('');
                             setFilterType('');
+                            setFilterBroker('');
+                            setFilterDateFrom('');
+                            setFilterDateTo('');
                         }}
                         className="inline-flex items-center gap-1 text-xs text-danger-600 font-semibold hover:text-danger-700 cursor-pointer transition-colors"
                     >
@@ -407,6 +495,9 @@ export default function ClientsPage() {
                                     setFilterKyc('');
                                     setFilterRisk('');
                                     setFilterType('');
+                                    setFilterBroker('');
+                                    setFilterDateFrom('');
+                                    setFilterDateTo('');
                                 }}
                                 className="inline-flex items-center gap-1.5 text-xs text-primary-500 hover:text-primary-700 font-medium cursor-pointer transition-colors"
                             >
@@ -461,6 +552,33 @@ export default function ClientsPage() {
                             onChange={(v) => setFilterType(v as ClientType | '')}
                             clearable
                         />
+                        <CustomSelect
+                            label="Broker"
+                            options={uniqueBrokers.map(b => ({ label: b, value: b }))}
+                            value={filterBroker}
+                            onChange={(v) => setFilterBroker(String(v || ''))}
+                            clearable
+                        />
+                    </div>
+                    <div className="flex flex-wrap items-end gap-3 mt-4 pt-4 border-t border-surface-100">
+                        <div>
+                            <label className="block text-[10px] font-semibold text-surface-500 uppercase tracking-wider mb-1.5">Registration Date From</label>
+                            <input
+                                type="date"
+                                value={filterDateFrom}
+                                onChange={(e) => setFilterDateFrom(e.target.value)}
+                                className="px-3 py-2 text-sm bg-white border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-semibold text-surface-500 uppercase tracking-wider mb-1.5">Registration Date To</label>
+                            <input
+                                type="date"
+                                value={filterDateTo}
+                                onChange={(e) => setFilterDateTo(e.target.value)}
+                                className="px-3 py-2 text-sm bg-white border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                            />
+                        </div>
                     </div>
                 </div>
             )}

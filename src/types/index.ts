@@ -125,6 +125,30 @@ export interface User {
     createdAt: string;
 }
 
+export interface NextOfKin {
+    fullName: string;
+    relationship: string;
+    phone: string;
+    address?: string;
+}
+
+export interface Beneficiary {
+    fullName: string;
+    relationship: string;
+    dateOfBirth?: string;
+    ghanaCardNumber?: string;
+    phone?: string;
+    percentage: number; // allocation percentage
+    guardianName?: string; // for minor beneficiaries
+}
+
+export interface BankDetails {
+    bankName: string;
+    accountName: string;
+    accountNumber: string;
+    branch: string;
+}
+
 export interface Client {
     id: string;
     clientNumber: string;
@@ -139,6 +163,10 @@ export interface Client {
     gender?: Gender;
     ghanaCardNumber?: string;
     nationality?: string;
+    maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+    occupation?: string;
+    employerName?: string;
+    employerAddress?: string;
 
     // Corporate fields
     companyName?: string;
@@ -146,6 +174,8 @@ export interface Client {
     tin?: string;
     dateOfIncorporation?: string;
     industry?: string;
+    contactPerson?: string;
+    contactPersonPhone?: string;
 
     // Contact
     phone: string;
@@ -155,6 +185,7 @@ export interface Client {
     postalAddress?: string;
     region?: string;
     city?: string;
+    preferredCommunication?: 'phone' | 'email' | 'sms' | 'whatsapp';
 
     // KYC/AML
     kycStatus: KycStatus;
@@ -162,6 +193,18 @@ export interface Client {
     amlRiskLevel: AmlRiskLevel;
     isPep: boolean;
     eddRequired: boolean;
+    sourceOfFunds?: string;
+    purposeOfRelationship?: string;
+    expectedTransactionVolume?: string;
+
+    // Banking
+    bankDetails?: BankDetails;
+
+    // Next of Kin
+    nextOfKin?: NextOfKin;
+
+    // Beneficiaries
+    beneficiaries?: Beneficiary[];
 
     // Assignment
     assignedBrokerId?: string;

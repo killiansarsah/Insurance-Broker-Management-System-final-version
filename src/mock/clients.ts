@@ -1521,6 +1521,120 @@ export const mockClients: Client[] = [
     },
 ];
 
+// --- Deterministic enrichment: realistic activePolicies ---
+const activePolicyRatios = [0.7, 0.6, 0.8, 0.5, 1.0, 0.65, 0.75, 0.55, 0.85, 0.7];
+mockClients.forEach((c, i) => {
+    if (c.status === 'active' && c.totalPolicies > 0) {
+        c.activePolicies = Math.max(1, Math.round(c.totalPolicies * activePolicyRatios[i % 10]));
+    }
+});
+
+// --- Detailed enrichment for key clients ---
+// cli-001: Ghana Shippers' Authority (Corporate)
+Object.assign(mockClients[0], {
+    tin: 'C0012345678',
+    industry: 'Shipping & Logistics',
+    contactPerson: 'Emmanuel Adjei',
+    contactPersonPhone: '+233244112233',
+    digitalAddress: 'GA-018-0045',
+    postalAddress: 'P.O. Box 1321, Accra',
+    sourceOfFunds: 'Business Revenue',
+    purposeOfRelationship: 'Comprehensive fleet & asset insurance coverage',
+    expectedTransactionVolume: 'GHS 300,000 - 500,000 annually',
+    bankDetails: { bankName: 'GCB Bank', accountName: 'Ghana Shippers Authority', accountNumber: '1441234567890', branch: 'High Street, Accra' },
+});
+
+// cli-002: Radiance Petroleum (Corporate)
+Object.assign(mockClients[1], {
+    tin: 'C0023456789',
+    industry: 'Oil & Gas',
+    contactPerson: 'Kwame Mensah',
+    contactPersonPhone: '+233201998877',
+    digitalAddress: 'GA-012-0099',
+    postalAddress: 'P.O. Box 5523, Accra',
+    sourceOfFunds: 'Petroleum Sales Revenue',
+    purposeOfRelationship: 'Industrial & property coverage',
+    expectedTransactionVolume: 'GHS 1,000,000+ annually',
+    bankDetails: { bankName: 'Ecobank Ghana', accountName: 'Radiance Petroleum Ltd', accountNumber: '0011223344556', branch: 'Airport Branch' },
+});
+
+// cli-003: Dorcas Amanda Borquaye (Individual)
+Object.assign(mockClients[2], {
+    dateOfBirth: '1987-03-15',
+    gender: 'female' as const,
+    ghanaCardNumber: 'GHA-712345678-9',
+    nationality: 'Ghanaian',
+    maritalStatus: 'married' as const,
+    occupation: 'Marketing Manager',
+    employerName: 'Unilever Ghana Ltd',
+    employerAddress: 'Industrial Area, Tema',
+    digitalAddress: 'GA-045-1230',
+    sourceOfFunds: 'Employment Income',
+    purposeOfRelationship: 'Personal motor insurance',
+    expectedTransactionVolume: 'GHS 1,000 - 5,000 annually',
+    bankDetails: { bankName: 'Stanbic Bank Ghana', accountName: 'Dorcas Amanda Borquaye', accountNumber: '9200012345670', branch: 'Osu Branch' },
+    nextOfKin: { fullName: 'Kweku Borquaye', relationship: 'Spouse', phone: '+233244887766' },
+    beneficiaries: [
+        { fullName: 'Kweku Borquaye', relationship: 'Spouse', phone: '+233244887766', percentage: 60 },
+        { fullName: 'Ama Borquaye', relationship: 'Daughter', dateOfBirth: '2015-08-12', percentage: 40, guardianName: 'Kweku Borquaye' },
+    ],
+});
+
+// cli-004: Loretta Boakye (Individual)
+Object.assign(mockClients[3], {
+    dateOfBirth: '1992-07-22',
+    gender: 'female' as const,
+    ghanaCardNumber: 'GHA-812345678-0',
+    nationality: 'Ghanaian',
+    maritalStatus: 'single' as const,
+    occupation: 'Software Engineer',
+    employerName: 'MTN Ghana',
+    employerAddress: 'Airport City, Accra',
+    digitalAddress: 'GA-123-4567',
+    sourceOfFunds: 'Employment Income',
+    purposeOfRelationship: 'Motor & personal accident cover',
+    bankDetails: { bankName: 'Fidelity Bank Ghana', accountName: 'Loretta Boakye', accountNumber: '2000123456789', branch: 'Achimota Branch' },
+    nextOfKin: { fullName: 'Grace Boakye', relationship: 'Mother', phone: '+233201223344' },
+});
+
+// cli-005: Ernest Asante Offei (Individual)
+Object.assign(mockClients[4], {
+    dateOfBirth: '1985-11-04',
+    gender: 'male' as const,
+    ghanaCardNumber: 'GHA-612345678-1',
+    nationality: 'Ghanaian',
+    maritalStatus: 'married' as const,
+    occupation: 'Civil Engineer',
+    employerName: 'Ghana Highway Authority',
+    employerAddress: 'Ministries, Accra',
+    digitalAddress: 'GA-098-7654',
+    sourceOfFunds: 'Employment Income',
+    purposeOfRelationship: 'Motor and home insurance',
+    bankDetails: { bankName: 'Absa Bank Ghana', accountName: 'Ernest Asante Offei', accountNumber: '0402345678901', branch: 'Ring Road Central' },
+    nextOfKin: { fullName: 'Janet Asante Offei', relationship: 'Spouse', phone: '+233209876543' },
+    beneficiaries: [
+        { fullName: 'Janet Asante Offei', relationship: 'Spouse', phone: '+233209876543', percentage: 50 },
+        { fullName: 'Kofi Asante Offei', relationship: 'Son', dateOfBirth: '2012-02-28', percentage: 25, guardianName: 'Janet Asante Offei' },
+        { fullName: 'Efua Asante Offei', relationship: 'Daughter', dateOfBirth: '2016-06-10', percentage: 25, guardianName: 'Janet Asante Offei' },
+    ],
+});
+
+// cli-008: Edmund Nii Lante (Individual — has claims)
+Object.assign(mockClients.find(c => c.id === 'cli-008')!, {
+    dateOfBirth: '1979-09-18',
+    gender: 'male' as const,
+    ghanaCardNumber: 'GHA-512345678-2',
+    nationality: 'Ghanaian',
+    maritalStatus: 'married' as const,
+    occupation: 'Business Owner',
+    employerName: 'Self-employed — NiiLante Trading',
+    digitalAddress: 'GA-076-3210',
+    sourceOfFunds: 'Business Income',
+    purposeOfRelationship: 'Motor comprehensive',
+    bankDetails: { bankName: 'Zenith Bank Ghana', accountName: 'Edmund Nii Lante', accountNumber: '6010023456789', branch: 'Accra New Town' },
+    nextOfKin: { fullName: 'Vida Nii Lante', relationship: 'Spouse', phone: '+233261234567' },
+});
+
 export function getClientById(id: string): Client | undefined {
     return mockClients.find((c) => c.id === id);
 }

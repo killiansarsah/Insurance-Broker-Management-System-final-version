@@ -172,7 +172,7 @@ export default function InvoicesPage() {
                         render: (inv) => <span className="text-success-600 font-semibold text-sm tabular-nums">{formatCurrency(inv.amountPaid)}</span>,
                     },
                     {
-                        key: 'amount' as any,
+                        key: 'balance' as any,
                         label: 'Balance',
                         sortable: false,
                         render: (inv) => {
