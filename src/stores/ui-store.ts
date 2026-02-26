@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 
-export type Theme = 'gold' | 'glass' | 'compact';
+export type Theme = 'light' | 'dark' | 'glass';
 
 interface UiState {
     sidebarCollapsed: boolean;
@@ -16,7 +16,7 @@ interface UiState {
 export const useUiStore = create<UiState>((set) => ({
     sidebarCollapsed: false,
     sidebarMobileOpen: false,
-    currentTheme: 'gold',
+    currentTheme: 'light',
 
     toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),

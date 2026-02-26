@@ -155,8 +155,8 @@ const navigation: NavSection[] = [
                 icon: <ShieldCheck size={18} />,
             },
             {
-                label: 'Import',
-                href: '/dashboard/data-onboarding',
+                label: 'Integrations',
+                href: '/dashboard/integrations',
                 icon: <Upload size={18} />,
             },
             {

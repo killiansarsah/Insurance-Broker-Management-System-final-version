@@ -49,3 +49,6 @@ next-env.d.ts
 
 #real data
 .real data
+
+#sample system ui
+.ibms-portal-ai-studio

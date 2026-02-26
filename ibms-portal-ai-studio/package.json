@@ -1,0 +1,15 @@
+{
+  "name": "ibms-ghana",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Insurance Broker Management System for Ghana",
+  "scripts": {
+    "dev": "cd apps/frontend && npm run dev",
+    "build": "cd apps/frontend && npm run build",
+    "preview": "cd apps/frontend && npm run preview"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}

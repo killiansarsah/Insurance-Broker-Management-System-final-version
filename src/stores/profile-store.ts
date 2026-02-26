@@ -9,6 +9,8 @@ interface ProfileState {
     phone: string;
     bio: string;
     avatarUrl: string | null;
+    jobTitle: string;
+    location: string;
 
     // Organization
     companyName: string;
@@ -47,6 +49,8 @@ export const useProfileStore = create<ProfileState>()(
             phone: '+233 24 123 4567',
             bio: 'Experienced insurance broker with over 15 years in the Ghanaian market, specializing in corporate risk and motor insurance.',
             avatarUrl: null,
+            jobTitle: 'Senior Broker Manager',
+            location: 'Accra HQ',
 
             // Org defaults
             companyName: 'Asante & Sons Brokerage',
