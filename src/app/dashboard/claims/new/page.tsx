@@ -62,7 +62,7 @@ export default function NewClaimPage() {
     }
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-4xl">
+        <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '56rem' }}>
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href="/dashboard/claims" />

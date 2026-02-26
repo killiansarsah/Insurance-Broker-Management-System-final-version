@@ -273,84 +273,6 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
                     {dayCells}
                 </div>
-
-                {/* Refined Liquid Info Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-2 grid grid-cols-1 lg:grid-cols-3 gap-6"
-                >
-                    <div className="lg:col-span-2 bg-white/40 backdrop-blur-xl rounded-[var(--radius-2xl)] p-3 shadow-xl border border-surface-200/50 relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-[0.05] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-
-                        <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-sm font-black text-surface-900 flex items-center gap-3 uppercase tracking-tighter">
-                                <Clock size={18} className="text-primary-500" />
-                                Timeline • {format(selectedDate, 'MMM d, yyyy')}
-                            </h3>
-                            <div className="px-3 py-1 rounded-full bg-surface-100/50 text-surface-400 text-[9px] font-black uppercase tracking-widest border border-surface-200/50">
-                                {events.filter(e => isSameDay(startOfDay(e.start), startOfDay(selectedDate))).length} Actions
-                            </div>
-                        </div>
-
-                        <div className="space-y-3">
-                            {events.filter(e => isSameDay(startOfDay(e.start), startOfDay(selectedDate))).length > 0 ? (
-                                events.filter(e => isSameDay(startOfDay(e.start), startOfDay(selectedDate))).map((event, idx) => (
-                                    <motion.div
-                                        key={event.id}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
-                                        className="group flex items-center gap-4 p-4 rounded-xl bg-white/60 border border-surface-100/50 hover:border-primary-500/30 transition-all hover:shadow-lg"
-                                    >
-                                        <div className={cn(
-                                            "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 shadow-inner group-hover:scale-110 transition-transform",
-                                            event.type === 'policy' && "bg-blue-500 text-white",
-                                            event.type === 'meeting' && "bg-amber-500 text-white",
-                                            event.type === 'claim' && "bg-red-500 text-white",
-                                            event.type === 'team' && "bg-emerald-500 text-white"
-                                        )}>
-                                            <CalendarIcon size={16} strokeWidth={2.5} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex justify-between items-center gap-2">
-                                                <h4 className="font-black text-[14px] text-surface-900 uppercase tracking-tight truncate">{event.title}</h4>
-                                                <span className="text-[10px] font-black text-surface-400 uppercase shrink-0">
-                                                    {format(event.start, 'HH:mm')}
-                                                </span>
-                                            </div>
-                                            <p className="text-[11px] text-surface-500 font-medium truncate opacity-60">
-                                                {event.description || 'Liquid scheduling active...'}
-                                            </p>
-                                        </div>
-                                    </motion.div>
-                                ))
-                            ) : (
-                                <div className="text-center py-12 bg-surface-50/20 rounded-[var(--radius-2xl)] border border-dashed border-surface-200/50">
-                                    <p className="text-surface-400 font-black uppercase tracking-widest text-[9px]">Horizon clear for this anchor</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="bg-surface-900 rounded-[var(--radius-xl)] p-3 shadow-2xl text-white relative overflow-hidden group flex flex-col justify-center border border-white/5">
-                        <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] mix-blend-overlay" />
-                        <div className="relative z-10 text-center">
-                            <div className="w-14 h-14 bg-primary-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-primary-500/30">
-                                <Plus size={24} className="text-primary-500" />
-                            </div>
-                            <h3 className="text-xl font-black mb-2 tracking-tighter uppercase">Generate Flux</h3>
-                            <p className="text-white/40 text-[10px] mb-8 font-black uppercase tracking-widest leading-relaxed">Accelerate your scheduling pipeline</p>
-                            <button
-                                onClick={() => handleOpenModal(selectedDate)}
-                                className="w-full bg-white text-surface-900 font-black py-4 rounded-full text-[11px] uppercase tracking-[3px] shadow-xl hover:bg-primary-50 transition-all active:scale-95"
-                            >
-                                New Entry
-                            </button>
-                        </div>
-                        <div className="absolute -top-10 -right-10 w-32 h-32 bg-primary-500/10 rounded-full blur-2xl group-hover:bg-primary-500/20 transition-all" />
-                    </div>
-                </motion.div>
             </div>
         );
     };
@@ -498,7 +420,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                             )}>{event.status}</span>
                                         </div>
                                         <h4 className="text-sm font-black text-surface-900 uppercase tracking-tight mb-2 leading-tight">{event.title}</h4>
-                                        <p className="text-[11px] text-surface-500 font-medium leading-relaxed opacity-80">{event.description || 'No detailed flux provided for this action segment.'}</p>
+                                        <p className="text-[11px] text-surface-500 font-medium leading-relaxed opacity-80">{event.description || 'No description provided.'}</p>
                                     </div>
                                 </motion.div>
                             ))
@@ -513,7 +435,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 >
                                     <CalendarIcon size={64} className="text-surface-200 mb-6" />
                                 </motion.div>
-                                <p className="text-surface-400 font-bold tracking-widest uppercase text-sm">No scheduled events for this anchor</p>
+                                <p className="text-surface-400 font-bold tracking-widest uppercase text-sm">No events scheduled for this day</p>
                             </div>
                         )}
                     </div>
@@ -523,7 +445,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     };
 
     return (
-        <div className="max-w-7xl mx-auto py-6">
+        <div className="w-full py-6" style={{ maxWidth: '80rem', margin: '0 auto' }}>
             <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-2xl)] p-8 shadow-[var(--glass-shadow)] border border-[var(--glass-border)]">
                 {renderHeader()}
 
@@ -601,12 +523,12 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                         <div className="mb-4 opacity-20">
                                             <CalendarIcon size={48} className="mx-auto" />
                                         </div>
-                                        <p className="text-surface-400 font-black uppercase tracking-widest text-xs">Horizon clear for this anchor</p>
+                                        <p className="text-surface-400 font-black uppercase tracking-widest text-xs">No events scheduled</p>
                                         <button
                                             onClick={() => handleOpenModal(selectedDate)}
                                             className="mt-6 px-10 py-3 rounded-full bg-surface-900 text-white font-black text-[10px] hover:bg-black transition-all shadow-xl shadow-black/10 active:scale-95 uppercase tracking-[2px]"
                                         >
-                                            + ADD FIRST ACTIVITY
+                                            + Add First Event
                                         </button>
                                     </div>
                                 )}
@@ -618,16 +540,16 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />
 
                                 <div className="relative z-10">
-                                    <h3 className="text-3xl font-black mb-4 tracking-tighter uppercase leading-tight">TEMPORAL<br />ACCELERATION</h3>
+                                    <h3 className="text-3xl font-black mb-4 tracking-tighter uppercase leading-tight">Quick<br />Schedule</h3>
                                     <p className="text-white/50 text-xs mb-8 leading-relaxed font-black uppercase tracking-widest">
-                                        Fragment your schedule. <br />
-                                        Maximize the flux.
+                                        Create a new event<br />
+                                        on your calendar.
                                     </p>
                                     <button
                                         onClick={() => handleOpenModal()}
                                         className="w-full bg-primary-600 text-white font-black py-5 rounded-2xl hover:bg-primary-500 transition-all shadow-2xl active:scale-95 uppercase tracking-[3px] text-xs border border-primary-400/30"
                                     >
-                                        Flux Generator
+                                        New Event
                                     </button>
                                 </div>
 

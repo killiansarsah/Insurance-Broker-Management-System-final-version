@@ -131,7 +131,7 @@ export function SettingsSecurityDetails() {
                         <div className="flex items-start justify-between">
                             <div className="flex flex-col gap-2">
                                 <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Authenticator App</h3>
-                                <p className="text-slate-500 font-medium text-sm leading-relaxed max-w-sm">
+                                <p className="text-slate-500 font-medium text-sm leading-relaxed" style={{ maxWidth: '24rem' }}>
                                     Use an app like Google Authenticator or Authy to generate secure verification codes.
                                 </p>
                             </div>

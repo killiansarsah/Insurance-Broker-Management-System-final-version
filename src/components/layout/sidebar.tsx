@@ -396,14 +396,14 @@ export function Sidebar() {
             {/* Mobile overlay */}
             {sidebarMobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+                    className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[200] lg:hidden"
                     onClick={() => setSidebarMobileOpen(false)}
                 />
             )}
 
             <aside
                 className={cn(
-                    'fixed top-0 left-0 h-full bg-white z-50',
+                    'fixed top-0 left-0 h-full bg-white z-[200]',
                     // Using flex-row to accommodate the Double Rail
                     'flex flex-row transition-all duration-300 shadow-xl lg:shadow-none border-r border-surface-200',
                     // Desktop

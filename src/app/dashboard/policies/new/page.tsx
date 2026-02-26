@@ -110,7 +110,7 @@ export default function NewPolicyPage() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in pb-10">
+        <div className="w-full space-y-6 animate-fade-in pb-10" style={{ maxWidth: '56rem', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href="/dashboard/policies" />
@@ -150,12 +150,12 @@ export default function NewPolicyPage() {
             {/* Content */}
             <Card padding="lg" className="min-h-[400px]">
                 {step === 1 && (
-                    <div className="space-y-6 max-w-lg mx-auto">
+                    <div className="flex flex-col items-center gap-6">
                         <div className="text-center">
                             <h2 className="text-lg font-bold text-surface-900">Select Client</h2>
                             <p className="text-sm text-surface-500">Search for an existing client to link this policy.</p>
                         </div>
-                        <div className="relative">
+                        <div className="relative w-full" style={{ maxWidth: '32rem' }}>
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" size={18} />
                             <input
                                 type="text"
@@ -165,7 +165,7 @@ export default function NewPolicyPage() {
                                 onChange={(e) => setClientSearch(e.target.value)}
                             />
                         </div>
-                        <div className="space-y-2">
+                        <div className="w-full" style={{ maxWidth: '32rem' }}>
                             {filteredClients.map(client => (
                                 <button
                                     key={client.id}
@@ -250,8 +250,8 @@ export default function NewPolicyPage() {
                 )}
 
                 {step === 3 && (
-                    <div className="space-y-6 max-w-2xl mx-auto">
-                        <div className="grid grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-6 items-center w-full">
+                        <div className="grid grid-cols-2 gap-4 w-full" style={{ maxWidth: '42rem' }}>
                             <div>
                                 <label className="block text-xs font-medium text-surface-600 mb-1.5">Inception Date</label>
                                 <input
@@ -271,7 +271,7 @@ export default function NewPolicyPage() {
                                 />
                             </div>
                         </div>
-                        <div>
+                        <div className="w-full" style={{ maxWidth: '42rem' }}>
                             <label className="block text-xs font-medium text-surface-600 mb-1.5">Coverage Description / Risk Details</label>
                             <textarea
                                 rows={4}
@@ -285,7 +285,7 @@ export default function NewPolicyPage() {
                 )}
 
                 {step === 4 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start max-w-3xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start w-full" style={{ maxWidth: '48rem', margin: '0 auto' }}>
                         <div className="space-y-4">
                             <div>
                                 <label className="block text-xs font-medium text-surface-600 mb-1.5">Sum Insured ({form.currency})</label>
@@ -342,12 +342,12 @@ export default function NewPolicyPage() {
                 )}
 
                 {step === 5 && (
-                    <div className="max-w-xl mx-auto space-y-6 text-center">
+                    <div className="flex flex-col items-center gap-6 text-center w-full" style={{ maxWidth: '36rem', margin: '0 auto' }}>
                         <div className="w-16 h-16 rounded-full bg-success-50 text-success-600 flex items-center justify-center mx-auto mb-4">
                             <CheckCircle2 size={32} />
                         </div>
                         <h2 className="text-xl font-bold text-surface-900">Ready to Create Policy?</h2>
-                        <div className="bg-surface-50 rounded-[var(--radius-md)] p-6 text-left space-y-3 border border-surface-200">
+                        <div className="bg-surface-50 rounded-[var(--radius-md)] p-6 text-left space-y-3 border border-surface-200 w-full">
                             <ReviewRow label="Client" value={form.clientName} />
                             <ReviewRow label="Insurer" value={form.insurerName} />
                             <ReviewRow label="Type" value={form.insuranceType} />

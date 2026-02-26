@@ -32,6 +32,10 @@ import { policies } from '@/mock/policies';
 import { mockClients as clients } from '@/mock/clients';
 import { claims } from '@/mock/claims';
 import { invoices } from '@/mock/finance';
+import { mockLeads } from '@/mock/leads';
+import { PremiumTrend } from '@/components/charts/premium-trend';
+import { PolicyMix } from '@/components/charts/policy-mix';
+import { TopInsurers } from '@/components/charts/top-insurers';
 
 // =====================================================================
 // TYPES
@@ -276,6 +280,7 @@ export default function DashboardPage() {
             { label: 'Active Clients', value: clientCount.toString(), change: 3, direction: 'up' as const, icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Target: 1,000' },
             { label: 'Active Policies', value: policyCount.toString(), change: 5, direction: 'up' as const, icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `${(policyCount / (clientCount || 1)).toFixed(1)} per client` },
             { label: 'Expiring (7d)', value: expiringCount.toString(), change: 0, direction: 'down' as const, icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: `${expiringCount > 5 ? 'High volume' : 'Manageable'}`, warn: expiringCount > 0 },
+            { label: 'Leads Pipeline', value: mockLeads.filter(l => l.status !== 'converted' && l.status !== 'lost').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(mockLeads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
         ];
     }, [filteredPolicies, filteredClients, period]);
 
@@ -406,7 +411,7 @@ export default function DashboardPage() {
             </div>
 
             {/* === KPI STRIP === */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
                 {kpiData.map((kpi) => (
                     <Card key={kpi.label} padding="md" hover className="relative overflow-hidden group">
                         <div className="flex items-start justify-between">
@@ -432,6 +437,30 @@ export default function DashboardPage() {
                         </div>
                     </Card>
                 ))}
+            </div>
+
+            {/* === VISUAL CHARTS === */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Card padding="none" className="overflow-hidden">
+                    <CardHeader title="Premium Trend" subtitle="Monthly gross written premium" className="p-6 pb-0" />
+                    <div className="px-4 pb-4">
+                        <PremiumTrend />
+                    </div>
+                </Card>
+
+                <Card padding="none" className="overflow-hidden">
+                    <CardHeader title="Policy Mix" subtitle="Distribution by product line" className="p-6 pb-0" />
+                    <div className="px-4 pb-4">
+                        <PolicyMix />
+                    </div>
+                </Card>
+
+                <Card padding="none" className="overflow-hidden">
+                    <CardHeader title="Top Insurers" subtitle="Premium placed by insurer" className="p-6 pb-0" />
+                    <div className="px-4 pb-4">
+                        <TopInsurers />
+                    </div>
+                </Card>
             </div>
 
             {/* === QUICK ACTIONS === */}
@@ -694,6 +723,55 @@ export default function DashboardPage() {
                     </div>
                 </Card>
             </div>
+
+            {/* === UPCOMING RENEWALS === */}
+            <Card padding="none" className="overflow-hidden">
+                <CardHeader
+                    title="Upcoming Renewals"
+                    subtitle="Policies expiring in the next 30 days"
+                    action={<Link href="/dashboard/renewals"><Badge variant="primary" size="md" className="cursor-pointer hover:opacity-80 transition-opacity">View All</Badge></Link>}
+                    className="p-6 pb-4"
+                />
+                <div className="divide-y divide-surface-100">
+                    {filteredPolicies
+                        .filter(p => {
+                            const days = Math.ceil((new Date(p.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                            return days > 0 && days <= 30;
+                        })
+                        .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime())
+                        .slice(0, 5)
+                        .map((policy) => {
+                            const daysLeft = Math.ceil((new Date(policy.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                            return (
+                                <div key={policy.id} className="flex items-center justify-between px-6 py-4 hover:bg-surface-50 transition-colors group">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className={cn(
+                                            'w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
+                                            daysLeft <= 7 ? 'bg-danger-50 text-danger-600' : daysLeft <= 14 ? 'bg-accent-50 text-accent-600' : 'bg-primary-50 text-primary-600'
+                                        )}>
+                                            <AlertCircle size={16} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-sm font-semibold text-surface-900 truncate">{policy.clientName}</p>
+                                            <p className="text-xs text-surface-500 truncate">{policy.policyNumber} • {policy.insuranceType} • {formatCurrency(policy.premiumAmount)}</p>
+                                        </div>
+                                    </div>
+                                    <Badge variant={daysLeft <= 7 ? 'danger' : daysLeft <= 14 ? 'warning' : 'default'} size="sm" className="shrink-0 ml-3">
+                                        {daysLeft}d left
+                                    </Badge>
+                                </div>
+                            );
+                        })}
+                    {filteredPolicies.filter(p => {
+                        const days = Math.ceil((new Date(p.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                        return days > 0 && days <= 30;
+                    }).length === 0 && (
+                        <div className="px-6 py-8 text-center">
+                            <p className="text-sm text-surface-400">No upcoming renewals in the next 30 days</p>
+                        </div>
+                    )}
+                </div>
+            </Card>
 
             {/* === RECENT ACTIVITY === */}
             <Card padding="none" className="overflow-hidden">

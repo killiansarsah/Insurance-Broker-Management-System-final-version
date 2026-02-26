@@ -114,7 +114,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
     const isExpiringSoon = (policy.daysToExpiry || 0) < 30;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-6 pb-20 animate-fade-in">
+        <div className="w-full space-y-6 pb-20 animate-fade-in" style={{ maxWidth: '80rem', margin: '0 auto' }}>
             {/* Breadcrumb / Back */}
             <div>
                 <BackButton href="/dashboard/policies" className="mb-4" />

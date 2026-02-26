@@ -272,7 +272,7 @@ export default function NewClientPage() {
         : `${form.firstName} ${form.lastName}`.trim();
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-4xl pb-12">
+        <div className="space-y-6 animate-fade-in w-full pb-12" style={{ maxWidth: '56rem' }}>
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href="/dashboard/clients" />

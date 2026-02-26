@@ -15,7 +15,7 @@ export default function ImportPage() {
     const [isWizardOpen, setIsWizardOpen] = useState(false);
 
     return (
-        <div className="max-w-5xl mx-auto py-12 px-6">
+        <div className="w-full py-12 px-6" style={{ maxWidth: '64rem', margin: '0 auto' }}>
             <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}

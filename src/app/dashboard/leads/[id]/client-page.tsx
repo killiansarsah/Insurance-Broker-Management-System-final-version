@@ -40,7 +40,7 @@ export default function LeadDetailPage() {
     const currentStageIdx = LEAD_STAGES.findIndex(s => s.key === lead.status);
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-5xl mx-auto">
+        <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '64rem', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href="/dashboard/leads" />

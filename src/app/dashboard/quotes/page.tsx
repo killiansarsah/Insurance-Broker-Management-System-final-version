@@ -18,7 +18,7 @@ export default function QuotesPage() {
 
             {/* Filters Bar */}
             <div className="flex items-center justify-between gap-4 p-2 bg-card border border-border rounded-none shadow-sm">
-                <div className="flex items-center flex-1 max-w-sm relative">
+                <div className="flex items-center flex-1 relative" style={{ maxWidth: '24rem' }}>
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                     <input
                         type="text"
@@ -38,7 +38,7 @@ export default function QuotesPage() {
                     <FileBarChart className="text-muted-foreground w-6 h-6" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground">No Quotes Generated Yet</h3>
-                <p className="text-sm text-muted-foreground max-w-sm mt-2 mb-6">
+                <p className="text-sm text-muted-foreground mt-2 mb-6" style={{ maxWidth: '24rem' }}>
                     Start by creating a new quote for a client. You can compare multiple carriers and products.
                 </p>
                 <button className="px-4 py-2 bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors text-sm font-medium rounded-none">

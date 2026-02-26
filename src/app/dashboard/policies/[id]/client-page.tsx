@@ -49,7 +49,7 @@ export default function PolicyDetailPage() {
 
     return (
         <>
-            <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
+            <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '72rem', margin: '0 auto' }}>
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">

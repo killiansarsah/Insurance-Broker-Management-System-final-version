@@ -358,7 +358,7 @@ export default function PremiumFinancingPage() {
                                 <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-surface-200" />
                             </motion.div>
                             <h3 className="text-lg sm:text-2xl font-black text-surface-900 uppercase tracking-tighter mb-2">No Application Ledger found</h3>
-                            <p className="text-surface-400 text-xs sm:text-sm max-w-[240px] sm:max-w-xs mx-auto leading-relaxed">
+                            <p className="text-surface-400 text-xs sm:text-sm mx-auto leading-relaxed" style={{ maxWidth: '15rem' }}>
                                 Start by creating a new financing request using the button above.
                             </p>
                         </div>

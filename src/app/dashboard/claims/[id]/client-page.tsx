@@ -70,7 +70,7 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
     const isAcknowledged = !!claim.registrationDate;
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-6xl mx-auto pb-12">
+        <div className="space-y-6 animate-fade-in w-full pb-12" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">

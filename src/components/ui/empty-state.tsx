@@ -28,7 +28,7 @@ export function EmptyState({
             </div>
             <h3 className="text-base font-semibold text-surface-900 mb-1">{title}</h3>
             {description && (
-                <p className="text-sm text-surface-500 max-w-sm mb-6">{description}</p>
+                <p className="text-sm text-surface-500 mb-6" style={{ maxWidth: '24rem' }}>{description}</p>
             )}
             {action && <div>{action}</div>}
         </div>

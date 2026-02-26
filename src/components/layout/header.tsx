@@ -58,7 +58,7 @@ export function Header() {
     return (
         <header
             className={cn(
-                'fixed top-0 right-0 h-[var(--header-height)] z-30',
+                'fixed top-0 right-0 h-[var(--header-height)] z-[200]',
                 'bg-[var(--bg-header)] backdrop-blur-[var(--glass-blur)] border-b border-surface-200',
                 'flex items-center justify-between px-4 lg:px-6',
                 'transition-all duration-[var(--transition-slow)]',

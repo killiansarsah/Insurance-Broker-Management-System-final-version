@@ -217,7 +217,7 @@ export function SettingsCommunications() {
                         )}>
                             <div className="flex flex-col gap-1">
                                 <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">{t.title}</h4>
-                                <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-md">{t.desc}</p>
+                                <p className="text-sm font-medium text-slate-500 leading-relaxed" style={{ maxWidth: '28rem' }}>{t.desc}</p>
                             </div>
                             <button
                                 onClick={() => handlePushToggle(t.id)}

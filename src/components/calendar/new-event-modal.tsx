@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, Tag, AlignLeft, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -22,8 +22,21 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
     const [type, setType] = useState<CalendarEventType>('meeting');
-    const [participant, setParticipant] = useState(''); // New field for SRS compliance
+    const [participant, setParticipant] = useState('');
     const [description, setDescription] = useState('');
+
+    // Sync date field and reset form whenever modal opens or initialDate changes
+    useEffect(() => {
+        if (isOpen) {
+            setDate(initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
+            setTitle('');
+            setParticipant('');
+            setDescription('');
+            setStartTime('09:00');
+            setEndTime('10:00');
+            setType('meeting');
+        }
+    }, [isOpen, initialDate]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -56,10 +69,6 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
             icon: <CheckCircle2 className="text-success-500" size={18} />,
         });
 
-        // Reset and close
-        setTitle('');
-        setParticipant('');
-        setDescription('');
         onClose();
     };
 

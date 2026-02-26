@@ -396,12 +396,12 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
 
                                 <motion.div variants={ITEM_VARIANTS} className="space-y-4">
                                     <h3 className="text-4xl font-bold text-slate-900 tracking-tighter italic">Calibration Success</h3>
-                                    <p className="text-slate-500 max-w-sm mx-auto font-medium leading-relaxed text-center">
+                                    <p className="text-slate-500 mx-auto font-medium leading-relaxed text-center" style={{ maxWidth: '24rem' }}>
                                         Data integrity verified. System ready to broadcast financing request for <span className="text-blue-600 font-bold">{selectedClient ? getClientDisplayName(selectedClient) : 'the client'}</span>.
                                     </p>
                                 </motion.div>
 
-                                <motion.div variants={ITEM_VARIANTS} className="w-full max-w-md p-8 bg-white/60 backdrop-blur-md border border-white rounded-[2.5rem] shadow-xl space-y-6 relative group overflow-hidden text-left">
+                                <motion.div variants={ITEM_VARIANTS} className="w-full p-8 bg-white/60 backdrop-blur-md border border-white rounded-[2.5rem] shadow-xl space-y-6 relative group overflow-hidden text-left" style={{ maxWidth: '28rem' }}>
                                     <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:rotate-12 transition-transform">
                                         <Sparkles size={80} className="text-blue-600" />
                                     </div>

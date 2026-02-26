@@ -49,7 +49,7 @@ export default function ChatPage() {
                                 <MessageSquareOff size={32} />
                             </div>
                             <h3 className="text-lg font-bold text-surface-900">No conversation selected</h3>
-                            <p className="text-sm text-surface-500 max-w-xs mt-1">
+                            <p className="text-sm text-surface-500 mt-1" style={{ maxWidth: '20rem' }}>
                                 Select a team member or Kojo AI to start messaging.
                             </p>
                         </Card>

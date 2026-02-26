@@ -82,7 +82,7 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
     ];
 
     return (
-        <div className="space-y-6 animate-fade-in max-w-6xl mx-auto">
+        <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">

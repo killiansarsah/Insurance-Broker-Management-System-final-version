@@ -81,7 +81,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
         .flatMap(([, items]) => items);
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-20 animate-fade-in relative">
+        <div className="w-full space-y-8 pb-20 animate-fade-in relative" style={{ maxWidth: '80rem', margin: '0 auto' }}>
             {/* Background Atmosphere */}
             <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
                 <div
@@ -157,7 +157,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                         </div>
 
                         {/* Description / Bio (Mock) */}
-                        <p className="text-surface-600 leading-relaxed max-w-3xl mx-auto md:mx-0">
+                        <p className="text-surface-600 leading-relaxed md:mx-0" style={{ maxWidth: '48rem' }}>
                             {carrier.name} is a leading provider of {carrier.type} insurance solutions in Ghana.
                             Headquartered in {carrier.hq}, they are known for their strong financial stability and
                             commitment to customer service. Partnered with us since 2020.

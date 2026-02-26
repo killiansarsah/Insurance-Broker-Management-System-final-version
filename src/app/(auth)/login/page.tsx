@@ -60,7 +60,7 @@ export default function LoginPage() {
                         <span className="text-2xl font-bold tracking-tight">IBMS</span>
                     </motion.div>
 
-                    <div className="max-w-xl">
+                    <div style={{ maxWidth: '36rem' }}>
                         <motion.h2
                             initial={{ opacity: 0, x: -30 }}
                             animate={{ opacity: 1, x: 0 }}

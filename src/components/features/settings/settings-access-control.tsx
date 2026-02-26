@@ -151,7 +151,7 @@ export function SettingsAccessControl() {
             {subTab === 'users' && (
                 <div className="flex flex-col gap-8 animate-fade-in">
                     <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col md:flex-row gap-6 items-center justify-between">
-                        <div className="relative w-full md:max-w-md">
+                        <div className="relative w-full" style={{ maxWidth: '28rem' }}>
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-xl">search</span>
                             <input className="w-full h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none pl-12 pr-4 text-sm font-bold focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-slate-400 dark:text-white" placeholder="Search team members..." />
                         </div>
@@ -313,7 +313,7 @@ export function SettingsAccessControl() {
             {modalType === 'edit' && selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-                    <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col gap-6 animate-fade-in">
+                    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col gap-6 animate-fade-in" style={{ maxWidth: '28rem' }}>
                         <div className="flex items-center gap-4">
                             <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                                 <span className="material-symbols-outlined text-2xl">person_edit</span>
@@ -371,7 +371,7 @@ export function SettingsAccessControl() {
             {modalType === 'terminate' && selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-                    <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col items-center gap-5 text-center animate-fade-in">
+                    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col items-center gap-5 text-center animate-fade-in" style={{ maxWidth: '24rem' }}>
                         <div className={cn(
                             "size-16 rounded-2xl flex items-center justify-center",
                             selectedUser.status === 'Suspended' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-rose-50 dark:bg-rose-900/20 text-rose-600"

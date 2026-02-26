@@ -16,13 +16,13 @@ interface ModalProps {
     className?: string;
 }
 
-const sizeStyles = {
-    sm: 'max-w-sm',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    '2xl': 'max-w-6xl',
-    full: 'max-w-[95vw]',
+const sizeMap: Record<string, string> = {
+    sm: '24rem',
+    md: '32rem',
+    lg: '42rem',
+    xl: '56rem',
+    '2xl': '72rem',
+    full: '95vw',
 };
 
 export function Modal({
@@ -84,10 +84,10 @@ export function Modal({
                 'bg-transparent p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
                 'open:animate-in open:fade-in open:zoom-in-95 open:duration-300',
                 'backdrop:animate-in backdrop:fade-in backdrop:duration-300',
-                sizeStyles[size],
                 'w-full min-w-[340px] max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col',
                 className
             )}
+            style={{ maxWidth: sizeMap[size] || sizeMap.md }}
         >
             <div className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full h-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
                 {/* Header */}
