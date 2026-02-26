@@ -19,8 +19,9 @@ type StatusType =
     | LeadPriority
     | ClaimStatus
     | ComplaintStatus
-    | 'earned' | 'paid' | 'clawback'
-    | 'outstanding' | 'overdue' | 'partial';
+    | 'earned' | 'paid' | 'clawback' | 'clawed_back'
+    | 'outstanding' | 'overdue' | 'partial' | 'refunded'
+    | 'approved' | 'pending';
 
 const STATUS_STYLES: Record<string, string> = {
     // Client
@@ -81,17 +82,20 @@ const STATUS_STYLES: Record<string, string> = {
     earned: 'bg-success-50 text-success-700 ring-success-200',
     paid: 'bg-primary-50 text-primary-700 ring-primary-200',
     clawback: 'bg-danger-50 text-danger-700 ring-danger-200',
+    clawed_back: 'bg-danger-50 text-danger-700 ring-danger-200',
 
-    // Finance
+    // Finance / Payment
     outstanding: 'bg-accent-50 text-accent-700 ring-accent-200',
     overdue: 'bg-danger-50 text-danger-700 ring-danger-200',
     partial: 'bg-warning-50 text-warning-700 ring-warning-200',
+    refunded: 'bg-primary-50 text-primary-700 ring-primary-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {
     documents_pending: 'Docs Pending',
     under_review: 'Under Review',
     under_investigation: 'Investigating',
+    clawed_back: 'Clawed Back',
     professional_indemnity: 'Prof. Indemnity',
     oil_gas: 'Oil & Gas',
 };

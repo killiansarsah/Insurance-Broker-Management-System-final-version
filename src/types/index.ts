@@ -106,6 +106,103 @@ export type PaymentMethod = 'cash' | 'cheque' | 'bank_transfer' | 'mobile_money'
 export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'overdue' | 'refunded';
 export type MoMoNetwork = 'mtn' | 'telecel' | 'airteltigo';
 
+// --- Policy-specific enums ---
+
+export type PolicyType = 'life' | 'non-life';
+export type PremiumFrequency = 'monthly' | 'quarterly' | 'semi_annual' | 'annual' | 'single';
+export type CommissionStatus = 'pending' | 'paid' | 'clawed_back';
+
+export type EndorsementType =
+    | 'addition'
+    | 'deletion'
+    | 'alteration'
+    | 'extension'
+    | 'cancellation';
+
+export type EndorsementStatus = 'pending' | 'approved' | 'rejected';
+
+export type MotorCoverType = 'comprehensive' | 'third_party' | 'third_party_fire_theft' | 'commercial';
+export type CancellationReason =
+    | 'non_payment'
+    | 'client_request'
+    | 'insurer_request'
+    | 'fraud'
+    | 'replaced'
+    | 'other';
+
+// --- Policy sub-entities ---
+
+export interface VehicleDetails {
+    registrationNumber: string;
+    chassisNumber?: string;
+    engineNumber?: string;
+    make: string;
+    model: string;
+    year: number;
+    bodyType?: string;
+    color?: string;
+    engineCapacity?: string;
+    seatingCapacity?: number;
+    usageType: 'private' | 'commercial' | 'government' | 'diplomatic';
+    estimatedValue: number;
+}
+
+export interface PropertyDetails {
+    propertyAddress: string;
+    propertyType: 'residential' | 'commercial' | 'industrial' | 'warehouse';
+    constructionType?: string;
+    yearBuilt?: number;
+    contents?: string;
+    occupancy?: string;
+}
+
+export interface MarineDetails {
+    vesselName?: string;
+    voyageFrom?: string;
+    voyageTo?: string;
+    cargoDescription?: string;
+    cargoValue?: number;
+    invoiceNumber?: string;
+}
+
+export interface PolicyEndorsement {
+    id: string;
+    endorsementNumber: string;
+    type: EndorsementType;
+    status: EndorsementStatus;
+    effectiveDate: string;
+    description: string;
+    premiumAdjustment: number;
+    createdAt: string;
+    approvedBy?: string;
+    approvedAt?: string;
+}
+
+export interface PremiumInstallment {
+    id: string;
+    dueDate: string;
+    amount: number;
+    status: PaymentStatus;
+    paidDate?: string;
+    reference?: string;
+}
+
+export interface PolicyDocument {
+    id: string;
+    name: string;
+    type: 'policy_schedule' | 'cover_note' | 'proposal_form' | 'endorsement' | 'certificate' | 'inspection_report' | 'debit_note' | 'credit_note' | 'receipt' | 'other';
+    url?: string;
+    uploadedAt: string;
+}
+
+export interface PolicyTimelineEvent {
+    id: string;
+    date: string;
+    event: string;
+    description: string;
+    performedBy?: string;
+}
+
 // --- Core Entities ---
 
 export interface User {
@@ -223,6 +320,16 @@ export interface Policy {
     policyNumber: string;
     status: PolicyStatus;
     insuranceType: InsuranceType;
+    policyType: PolicyType;
+
+    // Coverage classification
+    coverageType?: string; // e.g. "Comprehensive", "Third Party Only", "Term Life"
+    motorCoverType?: MotorCoverType;
+    nicClassOfBusiness?: string; // NIC regulatory classification
+
+    // Product reference
+    productId?: string;
+    productName?: string;
 
     // Parties
     clientId: string;
@@ -242,17 +349,55 @@ export interface Policy {
     premiumAmount: number;
     commissionRate: number;
     commissionAmount: number;
+    commissionStatus: CommissionStatus;
     currency: string;
+    premiumFrequency: PremiumFrequency;
+    nextPremiumDueDate?: string;
+    paymentStatus: PaymentStatus;
+    outstandingBalance?: number;
 
     // Coverage
     coverageDetails?: string;
-    endorsements?: string[];
+    endorsements?: PolicyEndorsement[];
     exclusions?: string[];
 
-    // Metadata
+    // Motor-specific
+    vehicleDetails?: VehicleDetails;
+
+    // Property/Fire-specific
+    propertyDetails?: PropertyDetails;
+
+    // Marine-specific
+    marineDetails?: MarineDetails;
+
+    // Premium installments
+    installments?: PremiumInstallment[];
+
+    // Documents
+    documents?: PolicyDocument[];
+
+    // Timeline
+    timeline?: PolicyTimelineEvent[];
+
+    // Beneficiaries (for life policies)
+    beneficiaries?: Array<{ name: string; relationship: string; percentage: number }>;
+
+    // Riders (for life/health)
+    riders?: string[];
+
+    // Renewal
     isRenewal: boolean;
     previousPolicyId?: string;
     daysToExpiry?: number;
+
+    // Cancellation
+    cancellationDate?: string;
+    cancellationReason?: CancellationReason;
+    cancellationNotes?: string;
+
+    // Audit
+    createdBy?: string;
+    updatedBy?: string;
     createdAt: string;
     updatedAt: string;
 }
