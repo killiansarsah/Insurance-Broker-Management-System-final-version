@@ -1,370 +1,901 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
-    Plus,
-    Filter,
-    Search,
-    Calendar,
-    ChevronRight,
     FileText,
     CheckCircle2,
     Clock,
-    AlertCircle,
+    AlertTriangle,
     HandCoins,
-    LineChart,
     Wallet,
-    MoreHorizontal,
-    Trash2,
-    Check,
-    X as CloseIcon
+    Eye,
+    Phone,
+    Mail,
+    Send,
+    X,
+    User,
+    Shield,
+    BarChart3,
+    TrendingUp,
+    CalendarDays,
+    DollarSign,
+    Building2,
+    CreditCard,
+    History,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { DataTable } from '@/components/data-display/data-table';
-import { StatusBadge } from '@/components/data-display/status-badge';
-import { formatCurrency } from '@/lib/utils';
+import { CustomSelect } from '@/components/ui/select-custom';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { NewPFAModal } from '@/components/features/premium-financing/new-application-modal';
-import { mockClients, getClientDisplayName } from '@/mock/clients';
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-    DropdownMenuLabel,
-    DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
+    mockPFApplications,
+    pfSummary,
+    PF_STATUS_CONFIG,
+    FINANCIERS,
+    type PFApplication,
+    type PFStatus,
+} from '@/mock/premium-financing';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Mock data for Premium Financing
-const INITIAL_PFA_DATA: any[] = [
-    {
-        id: 'PFA-8821',
-        customer: 'Global Tech Solutions',
-        amount: 45000,
-        status: 'approved',
-        financier: 'Apex Finance',
-        underwriter: 'Enterprise Insurance',
-        createdAt: '2024-03-10T10:00:00Z',
-    },
-    {
-        id: 'PFA-9102',
-        customer: 'Amoah & Sons Ltd',
-        amount: 12500,
-        status: 'under_review',
-        financier: 'Apex Finance',
-        underwriter: 'Enterprise Insurance',
-        createdAt: '2024-03-12T14:30:00Z',
-    }
-];
+// ─── Pipeline Tab Types ───
+type PipelineTab = 'all' | 'pending' | 'active' | 'completed' | 'defaulted' | 'cancelled';
 
+// ─── Status Badge (PF-specific) ───
+function PFStatusBadge({ status }: { status: PFStatus }) {
+    const config = PF_STATUS_CONFIG[status];
+    return (
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[11px] font-bold rounded-full ${config.bg} ${config.color}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
+            {config.label}
+        </span>
+    );
+}
+
+// ─── Overdue Badge ───
+function OverdueBadge({ days }: { days: number }) {
+    if (days <= 0) return null;
+    return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold rounded-full bg-danger-50 text-danger-700 border border-danger-200">
+            <AlertTriangle size={10} />
+            {days}d overdue
+        </span>
+    );
+}
+
+// ─── Detail Modal ───
+function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => void }) {
+    const progressPct = app.numberOfInstallments > 0
+        ? Math.round((app.installmentsPaid / app.numberOfInstallments) * 100)
+        : 0;
+
+    // ESC key + body scroll lock
+    useEffect(() => {
+        const handleKey = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        document.addEventListener('keydown', handleKey);
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.removeEventListener('keydown', handleKey);
+            document.body.style.overflow = '';
+        };
+    }, [onClose]);
+
+    return createPortal(
+        <div className="fixed inset-0 z-[350] flex items-center justify-center p-4" onClick={onClose}>
+            {/* Overlay */}
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 bg-black/50 backdrop-blur-md"
+            />
+
+            {/* Panel */}
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                className="relative w-full max-w-3xl max-h-[90vh] pf-modal-glass rounded-[1.75rem] shadow-2xl overflow-y-auto custom-scrollbar-subtle"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Gradient Header */}
+                <div className="sticky top-0 z-10 pf-modal-header px-7 py-5 rounded-t-[1.75rem]">
+                    <div className="flex items-center justify-between relative z-10">
+                        <div className="flex items-center gap-4">
+                            <div className="p-2.5 rounded-xl bg-white/10 ring-4 ring-white/5">
+                                <Wallet size={22} className="text-white icon-glow" />
+                            </div>
+                            <div>
+                                <h2 className="text-lg font-bold text-white tracking-tight">Financing Details</h2>
+                                <p className="text-sm text-white/50 font-mono">{app.applicationNumber}</p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={onClose}
+                            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
+                    <div className="flex items-center gap-2 mt-3.5 relative z-10">
+                        <PFStatusBadge status={app.status} />
+                        {app.daysOverdue > 0 && <OverdueBadge days={app.daysOverdue} />}
+                    </div>
+                </div>
+
+                <div className="px-7 py-6 space-y-5">
+                    {/* Client & Policy */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="grid grid-cols-2 gap-3"
+                    >
+                        <InfoCard label="Client" value={app.clientName} icon={<User size={16} />} accent="primary" />
+                        <InfoCard label="Client Type" value={app.clientType === 'corporate' ? 'Corporate' : 'Individual'} icon={<Building2 size={16} />} accent="blue" />
+                        <InfoCard label="Policy" value={app.policyNumber} icon={<FileText size={16} />} accent="primary" />
+                        <InfoCard label="Insurer" value={app.insurerName} icon={<Shield size={16} />} accent="success" />
+                        <InfoCard label="Coverage" value={app.coverageType} icon={<BarChart3 size={16} />} accent="amber" />
+                        <InfoCard label="Insurance Type" value={app.insuranceType.replace(/_/g, ' ')} icon={<Shield size={16} />} accent="primary" />
+                    </motion.div>
+
+                    {/* Financing Breakdown */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="pf-section-card p-5"
+                    >
+                        <h3 className="text-sm font-bold text-surface-800 mb-4 flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-lg bg-primary-50">
+                                <DollarSign size={14} className="text-primary-600" />
+                            </div>
+                            Financing Breakdown
+                        </h3>
+                        <div className="grid grid-cols-3 gap-3">
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Total Premium</p>
+                                <p className="text-lg font-black text-surface-900 tracking-tight">{formatCurrency(app.totalPremium)}</p>
+                            </div>
+                            <div className="pf-stat-cell !border-success-200/50">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Down ({app.downPaymentPct}%)</p>
+                                <p className="text-lg font-black text-success-600 tracking-tight">{formatCurrency(app.downPayment)}</p>
+                            </div>
+                            <div className="pf-stat-cell !border-primary-200/50">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Financed</p>
+                                <p className="text-lg font-black text-primary-600 tracking-tight">{formatCurrency(app.financedAmount)}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3 mt-3">
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Interest Rate</p>
+                                <p className="text-sm font-bold text-surface-800">{app.interestRateMonthly}% <span className="text-surface-400">/mo</span></p>
+                            </div>
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Total Interest</p>
+                                <p className="text-sm font-bold text-amber-600">{formatCurrency(app.totalInterest)}</p>
+                            </div>
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Total Repayment</p>
+                                <p className="text-sm font-bold text-surface-900">{formatCurrency(app.totalRepayment)}</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Repayment Progress */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="pf-section-card p-5"
+                    >
+                        <h3 className="text-sm font-bold text-surface-800 mb-4 flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-lg bg-primary-50">
+                                <TrendingUp size={14} className="text-primary-600" />
+                            </div>
+                            Repayment Progress
+                        </h3>
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="flex-1 h-3.5 bg-surface-100 rounded-full overflow-hidden shadow-inner">
+                                <div
+                                    className={`h-full rounded-full pf-progress-bar relative overflow-hidden ${app.daysOverdue > 0 ? 'bg-danger-500' : app.status === 'completed' ? 'bg-success-500' : 'bg-primary-500'}`}
+                                    style={{ width: `${progressPct}%` }}
+                                >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
+                                </div>
+                            </div>
+                            <span className="text-sm font-black text-surface-800 bg-surface-50 px-2.5 py-1 rounded-lg min-w-[3.5rem] text-center">{progressPct}%</span>
+                        </div>
+                        <div className="grid grid-cols-4 gap-3">
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Paid</p>
+                                <p className="text-sm font-black text-success-700">{app.installmentsPaid}<span className="text-surface-400 font-medium">/{app.numberOfInstallments}</span></p>
+                            </div>
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Total Paid</p>
+                                <p className="text-sm font-black text-success-700">{formatCurrency(app.amountPaid)}</p>
+                            </div>
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Outstanding</p>
+                                <p className="text-sm font-black text-danger-600">{formatCurrency(app.outstandingBalance)}</p>
+                            </div>
+                            <div className="pf-stat-cell">
+                                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Monthly</p>
+                                <p className="text-sm font-black text-primary-600">{formatCurrency(app.monthlyInstallment)}</p>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Contact & Financier Info */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        className="pf-section-card p-5"
+                    >
+                        <h3 className="text-sm font-bold text-surface-800 mb-4 flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-lg bg-primary-50">
+                                <Phone size={14} className="text-primary-600" />
+                            </div>
+                            Contact & Financier
+                        </h3>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-surface-50/80 transition-colors">
+                                <span className="text-surface-500 font-medium">Phone</span>
+                                <a href={`tel:${app.clientPhone}`} className="text-primary-600 font-semibold hover:underline flex items-center gap-1.5">
+                                    <Phone size={12} /> {app.clientPhone}
+                                </a>
+                            </div>
+                            <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-surface-50/80 transition-colors">
+                                <span className="text-surface-500 font-medium">Email</span>
+                                <a href={`mailto:${app.clientEmail}`} className="text-primary-600 font-semibold hover:underline flex items-center gap-1.5">
+                                    <Mail size={12} /> {app.clientEmail}
+                                </a>
+                            </div>
+                            <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-surface-50/80 transition-colors">
+                                <span className="text-surface-500 font-medium">Financier</span>
+                                <span className="font-semibold text-surface-800">{app.financier}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-surface-50/80 transition-colors">
+                                <span className="text-surface-500 font-medium">Assigned Broker</span>
+                                <span className="font-semibold text-surface-800">{app.assignedBroker}</span>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Key Dates */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="pf-section-card p-5"
+                    >
+                        <h3 className="text-sm font-bold text-surface-800 mb-4 flex items-center gap-2.5">
+                            <div className="p-1.5 rounded-lg bg-primary-50">
+                                <CalendarDays size={14} className="text-primary-600" />
+                            </div>
+                            Key Dates
+                        </h3>
+                        <div className="space-y-1">
+                            <DateRow label="Application Date" value={app.applicationDate} />
+                            {app.approvalDate && <DateRow label="Approval Date" value={app.approvalDate} />}
+                            {app.disbursementDate && <DateRow label="Disbursement Date" value={app.disbursementDate} />}
+                            {app.firstPaymentDate && <DateRow label="First Payment" value={app.firstPaymentDate} />}
+                            {app.nextPaymentDate && <DateRow label="Next Payment" value={app.nextPaymentDate} highlight={app.daysOverdue > 0} />}
+                            {app.completionDate && <DateRow label="Completed" value={app.completionDate} />}
+                        </div>
+                    </motion.div>
+
+                    {/* Installment Schedule */}
+                    {app.installments.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.35 }}
+                            className="pf-section-card p-5"
+                        >
+                            <h3 className="text-sm font-bold text-surface-800 mb-4 flex items-center gap-2.5">
+                                <div className="p-1.5 rounded-lg bg-primary-50">
+                                    <History size={14} className="text-primary-600" />
+                                </div>
+                                Installment Schedule
+                                <span className="ml-auto text-[10px] font-bold text-surface-400 uppercase tracking-wider">
+                                    {app.installments.filter(i => i.status === 'paid').length}/{app.installments.length} paid
+                                </span>
+                            </h3>
+                            <div className="space-y-2">
+                                {app.installments.map((inst, idx) => (
+                                    <div
+                                        key={inst.id}
+                                        className="pf-installment-row flex items-center justify-between py-2.5 px-4 rounded-xl text-sm transition-all hover:bg-surface-50/80 border border-transparent hover:border-surface-200/60 group"
+                                        style={{ animationDelay: `${idx * 60}ms` }}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
+                                                inst.status === 'paid' ? 'bg-success-500' :
+                                                inst.status === 'overdue' ? 'bg-danger-500 pf-ring-pulse' :
+                                                'bg-surface-300'
+                                            }`}>
+                                                {inst.status === 'paid' ? <CheckCircle2 size={14} /> : inst.number}
+                                            </div>
+                                            <span className="font-semibold text-surface-700">Installment #{inst.number}</span>
+                                        </div>
+                                        <div className="flex items-center gap-5 text-surface-500">
+                                            <span className="text-xs font-medium">{formatDate(inst.dueDate)}</span>
+                                            <span className="font-bold text-surface-800 w-24 text-right">{formatCurrency(inst.amount)}</span>
+                                            <span className={`text-[10px] font-black uppercase tracking-wider w-16 text-right ${
+                                                inst.status === 'paid' ? 'text-success-600' :
+                                                inst.status === 'overdue' ? 'text-danger-600' :
+                                                'text-surface-400'
+                                            }`}>
+                                                {inst.status === 'paid' ? '✓ Paid' : inst.status === 'overdue' ? 'Overdue' : 'Pending'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* Reason & Notes */}
+                    {(app.reason || app.notes) && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="pf-section-card p-5"
+                        >
+                            <h3 className="text-sm font-bold text-surface-800 mb-3 flex items-center gap-2.5">
+                                <div className="p-1.5 rounded-lg bg-primary-50">
+                                    <FileText size={14} className="text-primary-600" />
+                                </div>
+                                Notes
+                            </h3>
+                            {app.reason && (
+                                <p className="text-sm text-surface-600 mb-1"><span className="font-semibold">Reason:</span> {app.reason}</p>
+                            )}
+                            {app.notes && (
+                                <p className="text-sm text-surface-500 italic">{app.notes}</p>
+                            )}
+                        </motion.div>
+                    )}
+
+                    {/* Action Buttons */}
+                    {(app.status === 'active' || app.status === 'submitted' || app.status === 'under_review') && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 12 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.45 }}
+                            className="flex flex-wrap gap-2 pt-4 border-t border-surface-200/60"
+                        >
+                            <Button
+                                variant="primary"
+                                leftIcon={<Phone size={16} />}
+                                className="rounded-xl"
+                                onClick={() => alert(`Calling ${app.clientName} at ${app.clientPhone}`)}
+                            >
+                                Contact Client
+                            </Button>
+                            <Button
+                                variant="outline"
+                                leftIcon={<Send size={16} />}
+                                className="rounded-xl"
+                                onClick={() => alert(`Sending payment reminder to ${app.clientEmail}`)}
+                            >
+                                Send Reminder
+                            </Button>
+                            <Button
+                                variant="outline"
+                                leftIcon={<Mail size={16} />}
+                                className="rounded-xl"
+                                onClick={() => alert(`Opening email for ${app.clientEmail}`)}
+                            >
+                                Email Statement
+                            </Button>
+                            {app.status === 'active' && (
+                                <Button
+                                    variant="primary"
+                                    className="bg-success-600 hover:bg-success-700 ml-auto rounded-xl shadow-lg shadow-success-600/20"
+                                    leftIcon={<CreditCard size={16} />}
+                                    onClick={() => alert(`Recording payment for ${app.applicationNumber}`)}
+                                >
+                                    Record Payment
+                                </Button>
+                            )}
+                        </motion.div>
+                    )}
+                </div>
+            </motion.div>
+        </div>,
+        document.body
+    );
+}
+
+// ─── Helper Components ───
+
+function InfoCard({ label, value, icon, accent = 'primary' }: { label: string; value: string; icon: React.ReactNode; accent?: string }) {
+    const accentColors: Record<string, string> = {
+        primary: 'bg-primary-50 text-primary-600',
+        blue: 'bg-blue-50 text-blue-600',
+        success: 'bg-success-50 text-success-600',
+        amber: 'bg-amber-50 text-amber-600',
+    };
+    return (
+        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/70 border border-surface-100/80 hover:border-surface-200 hover:shadow-sm transition-all group">
+            <div className={`p-1.5 rounded-lg ${accentColors[accent] || accentColors.primary} group-hover:scale-110 transition-transform`}>{icon}</div>
+            <div>
+                <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider">{label}</p>
+                <p className="text-sm font-semibold text-surface-800 capitalize">{value}</p>
+            </div>
+        </div>
+    );
+}
+
+function DateRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+    return (
+        <div className="flex items-center justify-between text-sm py-2 px-3 rounded-lg hover:bg-surface-50/80 transition-colors">
+            <span className="text-surface-500 font-medium">{label}</span>
+            <span className={`font-semibold ${highlight ? 'text-danger-600 font-bold' : 'text-surface-700'}`}>{formatDate(value)}</span>
+        </div>
+    );
+}
+
+// ─── Main Page ───
 export default function PremiumFinancingPage() {
     const router = useRouter();
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const searchParams = useSearchParams();
+
+    const tabParam = (searchParams.get('tab') as PipelineTab) || 'all';
+    const [activeTab, setActiveTab] = useState<PipelineTab>(tabParam);
+    const [financierFilter, setFinancierFilter] = useState<string>('all');
+    const [brokerFilter, setBrokerFilter] = useState<string>('all');
+    const [selectedApp, setSelectedApp] = useState<PFApplication | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [applications, setApplications] = useState<any[]>(INITIAL_PFA_DATA);
+
+    useEffect(() => {
+        setActiveTab(tabParam);
+    }, [tabParam]);
+
+    // Unique brokers
+    const brokers = useMemo(() => {
+        const set = new Set(mockPFApplications.map(a => a.assignedBroker));
+        return Array.from(set).sort();
+    }, []);
+
+    // Pipeline tabs with dot-accent colors (distinct from renewals' pill counts)
+    const pipelineTabs: { id: PipelineTab; label: string; count: number; dotColor: string; activeColor: string }[] = useMemo(() => [
+        { id: 'all', label: 'All', count: pfSummary.total, dotColor: 'bg-surface-400', activeColor: 'border-surface-900' },
+        { id: 'pending', label: 'Pending', count: pfSummary.underReview + pfSummary.approved + pfSummary.submitted, dotColor: 'bg-amber-500', activeColor: 'border-amber-500' },
+        { id: 'active', label: 'Active', count: pfSummary.active, dotColor: 'bg-primary-500', activeColor: 'border-primary-500' },
+        { id: 'completed', label: 'Completed', count: pfSummary.completed, dotColor: 'bg-success-500', activeColor: 'border-success-500' },
+        { id: 'defaulted', label: 'Defaulted', count: pfSummary.defaulted, dotColor: 'bg-danger-500', activeColor: 'border-danger-500' },
+        { id: 'cancelled', label: 'Cancelled', count: pfSummary.cancelled, dotColor: 'bg-surface-400', activeColor: 'border-surface-500' },
+    ], []);
+
+    // Filtered data
+    const filteredApps = useMemo(() => {
+        let data = [...mockPFApplications];
+
+        switch (activeTab) {
+            case 'pending':
+                data = data.filter(a => a.status === 'submitted' || a.status === 'under_review' || a.status === 'approved');
+                break;
+            case 'active':
+                data = data.filter(a => a.status === 'active');
+                break;
+            case 'completed':
+                data = data.filter(a => a.status === 'completed');
+                break;
+            case 'defaulted':
+                data = data.filter(a => a.status === 'defaulted');
+                break;
+            case 'cancelled':
+                data = data.filter(a => a.status === 'cancelled');
+                break;
+        }
+
+        if (financierFilter !== 'all') {
+            data = data.filter(a => a.financier === financierFilter);
+        }
+        if (brokerFilter !== 'all') {
+            data = data.filter(a => a.assignedBroker === brokerFilter);
+        }
+
+        // Sort: overdue first, then by application date desc
+        data.sort((a, b) => {
+            if (a.daysOverdue !== b.daysOverdue) return b.daysOverdue - a.daysOverdue;
+            return new Date(b.applicationDate).getTime() - new Date(a.applicationDate).getTime();
+        });
+
+        return data;
+    }, [activeTab, financierFilter, brokerFilter]);
+
+    const handleTabChange = (tab: PipelineTab) => {
+        setActiveTab(tab);
+        router.push(`/dashboard/premium-financing?tab=${tab}`, { scroll: false });
+    };
 
     const handleNewApplication = (data: any) => {
-        const newApp = {
-            ...data,
-            id: `PFA-${Math.floor(1000 + Math.random() * 9000)}`,
-            customer: getClientDisplayName(mockClients.find(c => c.id === data.clientId)!),
-            financier: 'Apex Finance',
-            underwriter: 'Enterprise Insurance',
-            createdAt: new Date().toISOString(),
-        };
-        setApplications([newApp, ...applications]);
+        // Integration with NewPFAModal
+        console.log('New application submitted:', data);
     };
 
-    const handleUpdateStatus = (id: string, newStatus: string) => {
-        setApplications(apps => apps.map(app =>
-            app.id === id ? { ...app, status: newStatus } : app
-        ));
-    };
-
-    const handleDeleteApplication = (id: string) => {
-        setApplications(apps => apps.filter(app => app.id !== id));
-    };
-
-    const filteredApplications = useMemo(() => {
-        return applications.filter(app => {
-            if (!startDate && !endDate) return true;
-            const appDate = new Date(app.createdAt).getTime();
-            const start = startDate ? new Date(startDate).getTime() : 0;
-            const end = endDate ? new Date(endDate).getTime() : Infinity;
-            return appDate >= start && appDate <= end;
-        });
-    }, [applications, startDate, endDate]);
-
-    const stats = useMemo(() => {
-        const total = applications.length;
-        const approved = applications.filter(a => a.status === 'approved').length;
-        const inApproval = applications.filter(a => a.status === 'registered' || a.status === 'under_review').length;
-        const inReview = applications.filter(a => a.status === 'intimated' || a.status === 'pending').length;
-
-        const approvalRate = total > 0 ? (approved / total) * 100 : 0;
-
-        return { total, approved, inApproval, inReview, approvalRate };
-    }, [applications]);
-
-    const handleCheck = () => {
-        console.log('Filtering applications for range:', startDate, 'to', endDate);
-    };
-
-    const kpis = [
-        {
-            label: 'Total Applications',
-            value: stats.total.toString(),
-            subValue: `${stats.total} application${stats.total !== 1 ? 's' : ''}`,
-            icon: FileText,
-            color: 'text-blue-500',
-            bgIcon: 'bg-blue-500/10',
-            borderColor: 'border-l-blue-500'
-        },
-        {
-            label: 'Approved',
-            value: stats.approved.toString(),
-            subValue: `${stats.approved} approved`,
-            icon: CheckCircle2,
-            color: 'text-success-500',
-            bgIcon: 'bg-success-500/10',
-            borderColor: 'border-l-success-500'
-        },
-        {
-            label: 'In Approval',
-            value: stats.inApproval.toString(),
-            subValue: `${stats.inApproval} processing`,
-            icon: Clock,
-            color: 'text-warning-500',
-            bgIcon: 'bg-warning-500/10',
-            borderColor: 'border-l-warning-500'
-        },
-        {
-            label: 'In Review',
-            value: stats.inReview.toString(),
-            subValue: `${stats.inReview} review`,
-            icon: AlertCircle,
-            color: 'text-accent-500',
-            bgIcon: 'bg-accent-500/10',
-            borderColor: 'border-l-accent-500'
-        },
-    ];
+    // ─── KPI data (no longer a uniform grid — hero + compact blocks) ───
+    const collectionPct = pfSummary.collectionRate;
+    const circumference = 2 * Math.PI * 40; // radius 40
+    const strokeDash = (collectionPct / 100) * circumference;
 
     return (
-        <div className="space-y-6 p-6 min-h-screen">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative">
-                <div className="absolute -top-10 -left-10 w-40 h-40 bg-warning-500/10 blur-[80px] rounded-full pointer-events-none" />
-                <div>
-                    <h1 className="text-3xl font-black text-surface-900 tracking-tight flex items-center gap-3">
-                        Premium Financing
+        <div className="space-y-6 min-h-screen">
+            {/* Header — gradient strip banner (vs renewals' bar + title) */}
+            <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ type: 'spring', damping: 25 }}
+                className="pf-modal-header rounded-2xl px-7 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+            >
+                <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-1">
+                        <Wallet size={14} className="text-white/70" />
+                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.25em]">Premium Financing</p>
+                    </div>
+                    <h1 className="text-2xl font-black text-white tracking-tight">
+                        Financing Dashboard
                     </h1>
-                    <p className="text-surface-500 mt-1 font-medium">Manage and track all financing applications</p>
+                    <p className="text-white/60 text-sm font-medium mt-1">
+                        Manage and track all financing applications
+                    </p>
                 </div>
 
                 <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    className="relative z-10"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.97 }}
                 >
                     <Button
-                        className="shimmer-button bg-warning-500 hover:bg-warning-600 text-surface-900 border-none rounded-full px-8 h-12 font-black shadow-[0_10px_20px_-5px_rgba(245,124,0,0.3)]"
-                        leftIcon={<HandCoins size={20} className="icon-glow" />}
+                        variant="outline"
+                        className="bg-white text-surface-900 hover:bg-surface-50 border-none rounded-xl px-7 h-11 font-black shadow-lg"
+                        leftIcon={<HandCoins size={18} />}
                         onClick={() => setIsModalOpen(true)}
                     >
                         New Application
                     </Button>
                 </motion.div>
-            </div>
+            </motion.div>
 
-            {/* Overview Section */}
+            {/* Overview — Hero Banner + Compact Stats (distinct from renewals) */}
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-4"
             >
-                <Card padding="lg" className="premium-glass-card metallic-border overflow-hidden relative">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary-500/5 blur-[100px] rounded-full pointer-events-none" />
-                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative z-10">
-                        <h2 className="text-xl font-black text-surface-900 uppercase tracking-tighter italic">Overview</h2>
-
-                        {/* Date Filters Bar */}
-                        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
-                            <div className="flex items-center gap-2 bg-white/50 backdrop-blur-sm p-1.5 rounded-full border border-surface-200 shadow-sm pr-4">
-                                <input
-                                    type="date"
-                                    placeholder="Start Date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="bg-transparent border-none text-[12px] px-4 py-1.5 focus:ring-0 w-36 text-center font-bold"
+                {/* Hero Stat — dark gradient banner */}
+                <div className="lg:col-span-5 pf-modal-header rounded-2xl p-6 flex items-center gap-6 relative overflow-hidden min-h-[180px]">
+                    <div className="relative z-10 flex items-center gap-6 w-full">
+                        {/* Circular Collection Gauge */}
+                        <div className="relative flex-shrink-0">
+                            <svg width="100" height="100" viewBox="0 0 100 100" className="-rotate-90">
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+                                <motion.circle
+                                    cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="8"
+                                    strokeLinecap="round"
+                                    strokeDasharray={circumference}
+                                    initial={{ strokeDashoffset: circumference }}
+                                    animate={{ strokeDashoffset: circumference - strokeDash }}
+                                    transition={{ delay: 0.4, duration: 1.5, ease: [0.34, 1.56, 0.64, 1] }}
                                 />
-                                <span className="text-surface-300 text-xs font-black">TO</span>
-                                <input
-                                    type="date"
-                                    placeholder="End Date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="bg-transparent border-none text-[12px] px-4 py-1.5 focus:ring-0 w-36 text-center font-bold"
-                                />
+                            </svg>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <span className="text-xl font-black text-white">{collectionPct.toFixed(0)}%</span>
                             </div>
-                            <Button
-                                variant="primary"
-                                size="sm"
-                                className="bg-surface-900 text-white hover:bg-black border-none rounded-full h-11 px-6 font-black transition-all shadow-lg hover:shadow-black/20"
-                                onClick={handleCheck}
-                            >
-                                Check <ChevronRight size={18} className="ml-1" />
-                            </Button>
+                        </div>
+                        {/* Hero Text */}
+                        <div className="flex-1">
+                            <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.25em] mb-1">Total Financed</p>
+                            <p className="text-3xl font-black text-white tracking-tighter">{formatCurrency(pfSummary.totalFinanced)}</p>
+                            <div className="flex items-center gap-4 mt-3">
+                                <span className="text-xs font-semibold text-white/70">{pfSummary.active + pfSummary.completed} agreements</span>
+                                <span className="text-[10px] font-bold text-success-400 bg-success-500/15 px-2 py-0.5 rounded-full">
+                                    {collectionPct.toFixed(1)}% collection
+                                </span>
+                            </div>
                         </div>
                     </div>
-
-                    {/* Overview KPI Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {kpis.map((item, i) => (
-                            <motion.div
-                                key={i}
-                                whileHover={{ y: -5 }}
-                                className={`p-6 bg-white/40 backdrop-blur-md border border-white/60 border-l-4 ${item.borderColor} rounded-2xl shadow-sm hover:shadow-xl transition-all group`}
-                            >
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className={`p-3 rounded-xl ${item.bgIcon} ${item.color} group-hover:scale-110 transition-transform duration-300`}>
-                                        <item.icon size={24} className="icon-glow" />
-                                    </div>
-                                    <div className="w-8 h-8 rounded-full bg-surface-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <ChevronRight size={14} className="text-surface-400" />
-                                    </div>
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black text-surface-400 uppercase tracking-[0.2em] mb-1">{item.label}</p>
-                                    <p className="text-3xl font-black text-surface-900 tracking-tighter">{item.value}</p>
-                                    <p className="text-xs font-bold text-surface-500 mt-2 flex items-center gap-1.5">
-                                        <span className="w-1.5 h-1.5 rounded-full bg-surface-300" />
-                                        {item.subValue}
-                                    </p>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-
-                    <div className="mt-8 flex items-center gap-3">
-                        <div className="h-1.5 flex-1 bg-surface-100 rounded-full overflow-hidden">
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${stats.approvalRate}%` }}
-                                className="h-full bg-success-500 rounded-full"
-                            />
-                        </div>
-                        <span className="text-xs font-black text-success-600 uppercase tracking-wider">
-                            {stats.approvalRate.toFixed(1)}% Approval Rate
-                        </span>
-                    </div>
-                </Card>
-            </motion.div>
-
-            {/* Table Area */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-4"
-            >
-                <div className="flex items-center justify-between px-2">
-                    <h3 className="text-sm font-black text-surface-900 uppercase tracking-widest flex items-center gap-2">
-                        <span className="w-8 h-[2px] bg-warning-500" />
-                        Applications Ledger
-                    </h3>
-                    <Button variant="outline" size="sm" className="rounded-full border-surface-200 text-surface-600 font-bold px-6 hover:bg-surface-900 hover:text-white transition-all" leftIcon={<Filter size={14} />}>
-                        Filter Results
-                    </Button>
                 </div>
 
+                {/* Compact 2×2 Stat Grid */}
+                <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {/* Active */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15 }}
+                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                                <CreditCard size={18} />
+                            </div>
+                            <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">{pfSummary.active}</span>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Active</p>
+                            <p className="text-sm font-black text-surface-800 tracking-tight mt-0.5">{formatCurrency(pfSummary.totalOutstanding)}</p>
+                            <p className="text-[10px] text-surface-400 mt-1">outstanding</p>
+                        </div>
+                    </motion.div>
+
+                    {/* Overdue */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="p-2 rounded-lg bg-danger-500/10 text-danger-500">
+                                <AlertTriangle size={18} />
+                            </div>
+                            {pfSummary.defaulted > 0 && (
+                                <span className="text-[10px] font-black text-danger-500 bg-danger-50 px-2 py-0.5 rounded-full animate-pulse">{pfSummary.defaulted}</span>
+                            )}
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Overdue</p>
+                            <p className="text-sm font-black text-danger-600 tracking-tight mt-0.5">{formatCurrency(pfSummary.overdueAmount)}</p>
+                            <p className="text-[10px] text-surface-400 mt-1">{pfSummary.defaulted} defaulted</p>
+                        </div>
+                    </motion.div>
+
+                    {/* Completed */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.25 }}
+                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="p-2 rounded-lg bg-success-500/10 text-success-500">
+                                <CheckCircle2 size={18} />
+                            </div>
+                            <span className="text-[10px] font-black text-success-600 bg-success-50 px-2 py-0.5 rounded-full">{pfSummary.completed}</span>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Completed</p>
+                            <p className="text-sm font-black text-success-700 tracking-tight mt-0.5">{pfSummary.completed} settled</p>
+                            <p className="text-[10px] text-surface-400 mt-1">fully repaid</p>
+                        </div>
+                    </motion.div>
+
+                    {/* Pending Review */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                    >
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="p-2 rounded-lg bg-warning-500/10 text-warning-500">
+                                <Clock size={18} />
+                            </div>
+                            <span className="text-[10px] font-black text-warning-600 bg-warning-50 px-2 py-0.5 rounded-full">{pfSummary.underReview}</span>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Pending</p>
+                            <p className="text-sm font-black text-surface-800 tracking-tight mt-0.5">{pfSummary.underReview + pfSummary.submitted} in queue</p>
+                            <p className="text-[10px] text-surface-400 mt-1">{pfSummary.approved} approved</p>
+                        </div>
+                    </motion.div>
+                </div>
+            </motion.div>
+
+            {/* Pipeline Tabs — underline strip (vs renewals' filled pills) */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="border-b border-surface-200"
+            >
+                <div className="flex gap-0 overflow-x-auto">
+                    {pipelineTabs.map((tab) => (
+                        <button
+                            key={tab.id}
+                            onClick={() => handleTabChange(tab.id)}
+                            className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap border-b-2 -mb-px ${
+                                activeTab === tab.id
+                                    ? `${tab.activeColor} text-surface-900`
+                                    : 'border-transparent text-surface-400 hover:text-surface-600 hover:border-surface-300'
+                            }`}
+                        >
+                            <span className={`w-2 h-2 rounded-full ${activeTab === tab.id ? tab.dotColor : 'bg-surface-300'} transition-colors`} />
+                            <span>{tab.label}</span>
+                            <span className={`text-[10px] font-black ${
+                                activeTab === tab.id ? 'text-surface-900' : 'text-surface-400'
+                            }`}>
+                                {tab.count}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </motion.div>
+
+            {/* Data Table */}
+            <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+            >
                 <DataTable
-                    data={filteredApplications}
+                    data={filteredApps}
                     columns={[
-                        { key: 'id', label: 'APPLICATION ID', render: (row: any) => <span className="font-mono font-bold text-primary-600">{row.id}</span> },
-                        { key: 'customer', label: 'CUSTOMER', render: (row: any) => <span className="font-bold">{row.customer}</span> },
-                        { key: 'amount', label: 'FINANCED AMOUNT', render: (row: any) => <span className="font-black text-surface-900">{formatCurrency(row.amount)}</span> },
-                        { key: 'status', label: 'STATUS', render: (row: any) => <StatusBadge status={row.status} /> },
-                        { key: 'financier', label: 'FINANCIER' },
                         {
-                            key: 'actions', label: 'ACTIONS', className: 'w-24 text-center', render: (row: any) => (
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-9 w-9 p-0 rounded-xl bg-white/50 border border-surface-200 shadow-sm hover:bg-surface-900 hover:text-white transition-all group/btn"
-                                        >
-                                            <MoreHorizontal className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end" className="w-56 p-2 premium-glass-card border border-white/60 shadow-2xl">
-                                        <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-surface-400 mb-1 px-2">Application Workflow</DropdownMenuLabel>
-                                        <DropdownMenuSeparator className="bg-surface-100/50" />
-                                        <div className="space-y-1 mt-1">
-                                            <DropdownMenuItem
-                                                onClick={() => handleUpdateStatus(row.id, 'approved')}
-                                                className="rounded-lg h-10 px-3 cursor-pointer hover:bg-success-50 transition-colors"
-                                            >
-                                                <div className="w-7 h-7 rounded-lg bg-success-50 text-success-600 flex items-center justify-center mr-3">
-                                                    <Check size={16} />
-                                                </div>
-                                                <span className="font-bold text-sm text-surface-900">Approve</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() => handleUpdateStatus(row.id, 'under_review')}
-                                                className="rounded-lg h-10 px-3 cursor-pointer hover:bg-warning-50 transition-colors"
-                                            >
-                                                <div className="w-7 h-7 rounded-lg bg-warning-50 text-warning-600 flex items-center justify-center mr-3">
-                                                    <Clock size={16} />
-                                                </div>
-                                                <span className="font-bold text-sm text-surface-900">Under Review</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuItem
-                                                onClick={() => handleUpdateStatus(row.id, 'rejected')}
-                                                className="rounded-lg h-10 px-3 cursor-pointer hover:bg-danger-50 transition-colors"
-                                            >
-                                                <div className="w-7 h-7 rounded-lg bg-danger-50 text-danger-600 flex items-center justify-center mr-3">
-                                                    <CloseIcon size={16} />
-                                                </div>
-                                                <span className="font-bold text-sm text-surface-900">Reject</span>
-                                            </DropdownMenuItem>
+                            key: 'applicationNumber',
+                            label: 'Application',
+                            sortable: true,
+                            render: (r) => (
+                                <div>
+                                    <p className="font-mono font-bold text-surface-800 text-xs tracking-tight">{r.applicationNumber}</p>
+                                    <p className="text-[11px] text-surface-400 capitalize mt-0.5">{r.insuranceType.replace(/_/g, ' ')} • {r.coverageType}</p>
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'clientName',
+                            label: 'Client',
+                            sortable: true,
+                            render: (r) => (
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 flex-shrink-0">
+                                        <User size={14} />
+                                    </div>
+                                    <div>
+                                        <p className="font-semibold text-surface-800 text-sm">{r.clientName}</p>
+                                        <p className="text-[11px] text-surface-400">{r.clientPhone}</p>
+                                    </div>
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'financedAmount',
+                            label: 'Financed',
+                            sortable: true,
+                            render: (r) => (
+                                <div>
+                                    <p className="font-bold text-surface-800">{formatCurrency(r.financedAmount)}</p>
+                                    <p className="text-[11px] text-surface-400">of {formatCurrency(r.totalPremium)}</p>
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'numberOfInstallments',
+                            label: 'Plan',
+                            sortable: true,
+                            render: (r) => (
+                                <div className="text-center">
+                                    <p className="font-bold text-surface-800">{r.numberOfInstallments} <span className="text-surface-400 font-medium text-xs">mo</span></p>
+                                    <p className="text-[11px] text-surface-400">{formatCurrency(r.monthlyInstallment)}/mo</p>
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'installmentsPaid',
+                            label: 'Progress',
+                            sortable: true,
+                            render: (r) => {
+                                const pct = r.numberOfInstallments > 0 ? Math.round((r.installmentsPaid / r.numberOfInstallments) * 100) : 0;
+                                return (
+                                    <div className="min-w-[110px]">
+                                        <div className="flex items-center justify-between text-[11px] mb-1.5">
+                                            <span className="text-surface-500 font-semibold">{r.installmentsPaid}/{r.numberOfInstallments}</span>
+                                            <span className="font-black text-surface-700">{pct}%</span>
                                         </div>
-                                        <DropdownMenuSeparator className="bg-surface-100/50 my-2" />
-                                        <DropdownMenuItem
-                                            onClick={() => handleDeleteApplication(row.id)}
-                                            className="rounded-lg h-10 px-3 cursor-pointer text-danger-600 focus:text-danger-600 focus:bg-danger-50 transition-colors"
-                                        >
-                                            <div className="w-7 h-7 rounded-lg bg-danger-50 flex items-center justify-center mr-3">
-                                                <Trash2 size={16} />
+                                        <div className="h-2 bg-surface-100 rounded-full overflow-hidden shadow-inner">
+                                            <div
+                                                className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
+                                                    r.daysOverdue > 0 ? 'bg-danger-500' :
+                                                    r.status === 'completed' ? 'bg-success-500' :
+                                                    'bg-primary-500'
+                                                }`}
+                                                style={{ width: `${pct}%` }}
+                                            >
+                                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/25 to-transparent" />
                                             </div>
-                                            <span className="font-bold text-sm">Delete Record</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            )
+                                        </div>
+                                    </div>
+                                );
+                            },
+                        },
+                        {
+                            key: 'outstandingBalance',
+                            label: 'Balance',
+                            sortable: true,
+                            render: (r) => (
+                                <span className={`font-bold text-sm ${r.outstandingBalance > 0 ? 'text-danger-600' : 'text-success-600'}`}>
+                                    {r.outstandingBalance > 0 ? formatCurrency(r.outstandingBalance) : (
+                                        <span className="flex items-center gap-1">
+                                            <CheckCircle2 size={14} /> Settled
+                                        </span>
+                                    )}
+                                </span>
+                            ),
+                        },
+                        {
+                            key: 'status',
+                            label: 'Status',
+                            sortable: true,
+                            render: (r) => (
+                                <div className="flex flex-col gap-1.5">
+                                    <PFStatusBadge status={r.status} />
+                                    {r.daysOverdue > 0 && <OverdueBadge days={r.daysOverdue} />}
+                                </div>
+                            ),
+                        },
+                        {
+                            key: 'financier',
+                            label: 'Financier',
+                            sortable: true,
+                            render: (r) => <span className="text-sm text-surface-700 font-medium">{r.financier}</span>,
+                        },
+                        {
+                            key: 'id',
+                            label: '',
+                            render: (r) => (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setSelectedApp(r);
+                                    }}
+                                    className="p-2 rounded-xl hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-all hover:scale-110"
+                                >
+                                    <Eye size={16} />
+                                </button>
+                            ),
                         },
                     ]}
+                    searchKeys={['applicationNumber', 'clientName', 'insurerName', 'financier', 'assignedBroker']}
+                    onRowClick={(row) => setSelectedApp(row)}
                     className="premium-glass-card"
-                    emptyMessage={
-                        <div className="flex flex-col items-center justify-center py-12 sm:py-20 text-center px-6">
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl bg-surface-50 flex items-center justify-center mb-4 sm:mb-6 shadow-inner"
-                            >
-                                <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-surface-200" />
-                            </motion.div>
-                            <h3 className="text-lg sm:text-2xl font-black text-surface-900 uppercase tracking-tighter mb-2">No Application Ledger found</h3>
-                            <p className="text-surface-400 text-xs sm:text-sm mx-auto leading-relaxed" style={{ maxWidth: '15rem' }}>
-                                Start by creating a new financing request using the button above.
-                            </p>
+                    headerActions={
+                        <div className="flex items-center gap-2">
+                            <CustomSelect
+                                label="Financier"
+                                options={[
+                                    { label: 'All Financiers', value: 'all' },
+                                    ...FINANCIERS.map(f => ({ label: f, value: f })),
+                                ]}
+                                value={financierFilter}
+                                onChange={(v) => setFinancierFilter(String(v ?? 'all'))}
+                            />
+                            <CustomSelect
+                                label="Broker"
+                                options={[
+                                    { label: 'All Brokers', value: 'all' },
+                                    ...brokers.map(b => ({ label: b, value: b })),
+                                ]}
+                                value={brokerFilter}
+                                onChange={(v) => setBrokerFilter(String(v ?? 'all'))}
+                            />
                         </div>
                     }
                 />
             </motion.div>
+
+            {/* Detail Modal */}
+            <AnimatePresence>
+                {selectedApp && (
+                    <PFDetailModal
+                        app={selectedApp}
+                        onClose={() => setSelectedApp(null)}
+                    />
+                )}
+            </AnimatePresence>
 
             {/* New Application Modal */}
             <NewPFAModal

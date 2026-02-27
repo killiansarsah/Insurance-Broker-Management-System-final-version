@@ -16,40 +16,53 @@ import {
     Zap,
     Sparkles,
     Shield,
+    Wallet,
+    CalendarDays,
+    TrendingUp,
+    FileCheck,
+    Building2,
+    Phone,
+    CreditCard,
+    BadgeCheck,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatCurrency } from '@/lib/utils';
 import { mockClients, getClientDisplayName } from '@/mock/clients';
 import { mockPolicies } from '@/mock/policies';
 
-// --- Static Data (Moved outside for stability) ---
+// --- Static Data ---
 
 const STEPS = [
-    { id: 1, label: 'Customer', sub: 'Identify client profile', icon: User },
+    { id: 1, label: 'Customer', sub: 'Select client profile', icon: User },
     { id: 2, label: 'Policy', sub: 'Link active coverage', icon: Shield },
-    { id: 3, label: 'Plan', sub: 'Calibrate financing', icon: Zap },
-    { id: 4, label: 'Review', sub: 'Final integrity check', icon: Sparkles },
+    { id: 3, label: 'Financing Plan', sub: 'Choose payment structure', icon: CreditCard },
+    { id: 4, label: 'Review & Submit', sub: 'Confirm application', icon: FileCheck },
 ];
 
 const INSTALLMENT_OPTIONS = [
-    { id: 'full', label: 'Full Payment', total: 7647, period: 'Upfront', recommended: true },
-    { id: '3', label: '3 Months', total: 8215.39, period: 'Short-term' },
-    { id: '6', label: '6 Months', total: 8821.71, period: 'Mid-term' },
-    { id: '9', label: '9 Months', total: 9465.61, period: 'Extended' },
-    { id: '12', label: '12 Months', total: 10146.41, period: 'Full Year' },
+    { id: 'full', label: 'Full Payment', total: 7647, period: 'Upfront', recommended: true, interest: 0, monthly: 7647 },
+    { id: '3', label: '3 Months', total: 8215.39, period: 'Short-term', interest: 7.43, monthly: 2738.46 },
+    { id: '6', label: '6 Months', total: 8821.71, period: 'Mid-term', interest: 15.36, monthly: 1470.29 },
+    { id: '9', label: '9 Months', total: 9465.61, period: 'Extended', interest: 23.78, monthly: 1051.73 },
+    { id: '12', label: '12 Months', total: 10146.41, period: 'Full Year', interest: 32.69, monthly: 845.53 },
 ];
 
 const CONTAINER_VARIANTS = {
     hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-    exit: { opacity: 0, transition: { staggerChildren: 0.05, staggerDirection: -1 } }
+    visible: { opacity: 1, transition: { staggerChildren: 0.08 } },
+    exit: { opacity: 0, transition: { staggerChildren: 0.04, staggerDirection: -1 } }
 };
 
 const ITEM_VARIANTS = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, damping: 25, stiffness: 300 } },
-    exit: { opacity: 0, scale: 0.95 }
+    hidden: { opacity: 0, y: 16 },
+    visible: { opacity: 1, y: 0, transition: { type: 'spring' as const, damping: 28, stiffness: 350 } },
+    exit: { opacity: 0, y: -8, transition: { duration: 0.15 } }
 };
+
+// --- Helpers ---
+function getInitials(name: string) {
+    return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+}
 
 // --- Component ---
 
@@ -82,6 +95,8 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
         INSTALLMENT_OPTIONS.find(o => o.id === installments) || INSTALLMENT_OPTIONS[0]
         , [installments]);
 
+    const basePremium = 7647;
+
     const reset = () => {
         setStep(1);
         setSearchTerm('');
@@ -106,72 +121,90 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
         handleClose();
     };
 
-    // Calculate current step metadata
-    const currentStepData = STEPS[step - 1] || STEPS[0];
-    const StepHeaderIcon = currentStepData.icon;
-
     return (
         <Modal
             isOpen={isOpen}
             onClose={handleClose}
             title=""
             size="2xl"
-            className="overflow-hidden bg-white/80 backdrop-blur-3xl rounded-[2.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.1)] border border-white/40"
+            className="overflow-hidden bg-surface-50 rounded-2xl shadow-2xl border border-surface-200/60"
         >
-            <div className="flex flex-col h-full bg-slate-50/30">
-                {/* Polished Header */}
-                <div className="px-10 pt-10 pb-8 bg-white/60 backdrop-blur-md border-b border-white/20">
-                    <div className="flex items-center justify-between mb-10">
+            <div className="flex flex-col h-full">
+                {/* ── Dark Gradient Header with Step Stepper ── */}
+                <div className="pf-modal-header px-8 pt-7 pb-6 relative overflow-hidden">
+                    {/* Header Content */}
+                    <div className="relative z-10 flex items-center justify-between mb-6">
                         <div>
-                            <div className="flex items-center gap-3 mb-2">
-                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                                    {StepHeaderIcon && <StepHeaderIcon size={16} />}
-                                </div>
-                                <p className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em]">Application Flow</p>
+                            <div className="flex items-center gap-2 mb-1.5">
+                                <Wallet size={14} className="text-white/70" />
+                                <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.25em]">New Financing Application</p>
                             </div>
-                            <h2 className="text-3xl font-bold text-slate-900 tracking-tight">
-                                {currentStepData.label} <span className="text-slate-300">Phase</span>
+                            <h2 className="text-xl font-bold text-white tracking-tight">
+                                {STEPS[step - 1].label}
                             </h2>
+                            <p className="text-white/60 text-xs mt-0.5">{STEPS[step - 1].sub}</p>
                         </div>
-                        <div className="text-right">
-                            <p className="text-sm font-medium text-slate-400 mb-1">{currentStepData.sub}</p>
-                            <div className="flex items-center justify-end gap-1 px-4 py-1.5 bg-slate-100 rounded-full border border-slate-200/50">
-                                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">Step 0{step}</span>
-                                <span className="text-[10px] font-bold text-slate-300 uppercase">/ 04</span>
-                            </div>
+                        <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/10">
+                            <span className="text-xs font-bold text-white">Step {step}</span>
+                            <span className="text-xs font-medium text-white/50">of 4</span>
                         </div>
                     </div>
 
-                    {/* Fluid Step Indicator */}
-                    <div className="flex gap-4">
-                        {STEPS.map((s) => (
-                            <div key={s.id} className="flex-1 space-y-2">
-                                <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden relative">
-                                    <motion.div
-                                        initial={false}
-                                        animate={{
-                                            width: step >= s.id ? '100%' : '0%',
-                                            backgroundColor: step === s.id ? '#3b82f6' : step > s.id ? '#0f172a' : '#f1f5f9'
-                                        }}
-                                        className="h-full relative overflow-hidden"
-                                    >
-                                        {step === s.id && (
+                    {/* Connected Circular Step Indicators */}
+                    <div className="relative z-10 flex items-center justify-between">
+                        {STEPS.map((s, idx) => {
+                            const isCompleted = step > s.id;
+                            const isActive = step === s.id;
+                            const Icon = s.icon;
+                            return (
+                                <div key={s.id} className="flex items-center flex-1 last:flex-none">
+                                    <div className="flex flex-col items-center gap-1.5">
+                                        <motion.div
+                                            initial={false}
+                                            animate={{
+                                                scale: isActive ? 1.1 : 1,
+                                                backgroundColor: isCompleted ? '#22c55e' : isActive ? '#ffffff' : 'rgba(255,255,255,0.1)',
+                                            }}
+                                            className={cn(
+                                                "w-9 h-9 rounded-full flex items-center justify-center transition-all border-2",
+                                                isCompleted ? 'border-green-400' : isActive ? 'border-white shadow-lg shadow-white/20' : 'border-white/20'
+                                            )}
+                                        >
+                                            {isCompleted ? (
+                                                <Check size={16} className="text-white" strokeWidth={3} />
+                                            ) : (
+                                                <Icon size={14} className={isActive ? 'text-surface-900' : 'text-white/50'} />
+                                            )}
+                                        </motion.div>
+                                        <span className={cn(
+                                            "text-[9px] font-bold uppercase tracking-wider whitespace-nowrap",
+                                            isCompleted ? 'text-green-400' : isActive ? 'text-white' : 'text-white/40'
+                                        )}>
+                                            {s.label}
+                                        </span>
+                                    </div>
+                                    {/* Connector line */}
+                                    {idx < STEPS.length - 1 && (
+                                        <div className="flex-1 mx-2 h-0.5 rounded-full overflow-hidden bg-white/10 mt-[-14px]">
                                             <motion.div
-                                                animate={{ x: ['-100%', '100%'] }}
-                                                transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
-                                                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                                                initial={false}
+                                                animate={{ width: isCompleted ? '100%' : '0%' }}
+                                                transition={{ duration: 0.4, ease: 'easeOut' }}
+                                                className="h-full bg-green-400 rounded-full"
                                             />
-                                        )}
-                                    </motion.div>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
-                {/* Smooth Content Canvas */}
-                <div className="flex-1 min-h-[520px] p-10 overflow-y-auto">
+                {/* ── Content Area ── */}
+                <div className="flex-1 min-h-[480px] p-8 overflow-y-auto bg-gradient-to-b from-surface-50 to-white">
                     <AnimatePresence mode="wait">
+
+                        {/* ═══ Step 1: Client Selection ═══ */}
                         {step === 1 && (
                             <motion.div
                                 key="step1"
@@ -179,59 +212,67 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                className="space-y-8"
+                                className="space-y-5"
                             >
-                                <motion.div variants={ITEM_VARIANTS} className="relative group">
-                                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/20 to-transparent blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity" />
-                                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 z-10" size={20} />
+                                {/* Search Bar */}
+                                <motion.div variants={ITEM_VARIANTS} className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-surface-400" size={18} />
                                     <input
                                         type="text"
-                                        placeholder="Identify client..."
+                                        placeholder="Search by client name or number..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-16 pr-6 py-5 bg-white border border-slate-200/60 rounded-3xl text-lg font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/5 focus:border-blue-500 transition-all shadow-sm"
+                                        className="w-full pl-12 pr-5 py-3.5 bg-white border border-surface-200 rounded-xl text-sm font-medium text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
                                     />
+                                    {searchTerm && (
+                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-surface-400 font-medium">
+                                            {filteredClients.length} found
+                                        </span>
+                                    )}
                                 </motion.div>
 
-                                <div className="space-y-4">
-                                    {filteredClients.map((client) => (
-                                        <motion.button
-                                            key={client.id}
-                                            variants={ITEM_VARIANTS}
-                                            whileHover={{ y: -4, scale: 1.01 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => {
-                                                setSelectedClient(client);
-                                                setStep(2);
-                                            }}
-                                            className="w-full p-6 flex items-center gap-6 bg-white/60 backdrop-blur-sm border border-white/40 rounded-3xl hover:border-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/5 transition-all text-left group relative overflow-hidden"
-                                        >
-                                            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500 ring-4 ring-slate-50/50">
-                                                <User size={24} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-3 mb-1">
-                                                    <h4 className="text-xl font-bold text-slate-900 leading-none">{getClientDisplayName(client)}</h4>
-                                                    <span className="px-2 py-0.5 bg-slate-100 rounded text-[10px] font-bold text-slate-500 uppercase tracking-widest">{client.type}</span>
+                                {/* Client List */}
+                                <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
+                                    {filteredClients.map((client) => {
+                                        const displayName = getClientDisplayName(client);
+                                        return (
+                                            <motion.button
+                                                key={client.id}
+                                                variants={ITEM_VARIANTS}
+                                                whileHover={{ x: 4 }}
+                                                whileTap={{ scale: 0.99 }}
+                                                onClick={() => {
+                                                    setSelectedClient(client);
+                                                    setStep(2);
+                                                }}
+                                                className="w-full px-4 py-3.5 flex items-center gap-4 bg-white border border-surface-100 rounded-xl hover:border-primary-300 hover:shadow-md transition-all text-left group"
+                                            >
+                                                {/* Initials Avatar */}
+                                                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-xs font-bold shrink-0 group-hover:shadow-lg group-hover:shadow-primary-500/20 transition-shadow">
+                                                    {getInitials(displayName)}
                                                 </div>
-                                                <div className="flex items-center gap-4 text-sm text-slate-400">
-                                                    <span className="flex items-center gap-2"><Mail size={14} className="opacity-50" /> {client.email}</span>
-                                                    <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                                    <span>{client.clientNumber}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <h4 className="text-sm font-bold text-surface-900 truncate">{displayName}</h4>
+                                                        <span className="px-1.5 py-0.5 bg-surface-100 rounded text-[9px] font-bold text-surface-500 uppercase shrink-0">{client.type}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3 text-xs text-surface-400">
+                                                        <span className="flex items-center gap-1 truncate">
+                                                            <Mail size={11} className="shrink-0" /> {client.email}
+                                                        </span>
+                                                        <span className="text-surface-300">|</span>
+                                                        <span className="shrink-0">{client.clientNumber}</span>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-blue-50 group-hover:text-blue-600 transition-all">
-                                                <ArrowRight size={20} />
-                                            </div>
-                                            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                                            </div>
-                                        </motion.button>
-                                    ))}
+                                                <ArrowRight size={16} className="text-surface-300 group-hover:text-primary-500 transition-colors shrink-0" />
+                                            </motion.button>
+                                        );
+                                    })}
                                 </div>
                             </motion.div>
                         )}
 
+                        {/* ═══ Step 2: Policy Selection ═══ */}
                         {step === 2 && (
                             <motion.div
                                 key="step2"
@@ -239,64 +280,86 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                className="space-y-8"
+                                className="space-y-5"
                             >
-                                <motion.div variants={ITEM_VARIANTS} className="p-8 bg-slate-900 rounded-[2rem] flex items-center justify-between text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 blur-[80px] -translate-y-1/2 translate-x-1/2" />
-                                    <div className="relative z-10 flex items-center gap-6">
-                                        <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center text-white ring-8 ring-white/5">
-                                            <User size={32} />
+                                {/* Selected Client Banner */}
+                                <motion.div
+                                    variants={ITEM_VARIANTS}
+                                    className="p-5 bg-gradient-to-r from-surface-800 to-surface-900 rounded-xl flex items-center justify-between relative overflow-hidden"
+                                >
+                                    <div className="absolute top-0 right-0 w-40 h-40 bg-primary-500/10 blur-[60px] -translate-y-1/2 translate-x-1/4" />
+                                    <div className="relative z-10 flex items-center gap-4">
+                                        <div className="w-11 h-11 rounded-lg bg-white/15 flex items-center justify-center text-white text-sm font-bold">
+                                            {selectedClient ? getInitials(getClientDisplayName(selectedClient)) : ''}
                                         </div>
                                         <div>
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mb-2">Authenticated Profile</p>
-                                            <p className="text-3xl font-bold tracking-tight">{selectedClient ? getClientDisplayName(selectedClient) : ''}</p>
+                                            <p className="text-[9px] font-bold text-white/60 uppercase tracking-[0.2em] mb-0.5">Selected Client</p>
+                                            <p className="text-lg font-bold text-white tracking-tight">{selectedClient ? getClientDisplayName(selectedClient) : ''}</p>
                                         </div>
                                     </div>
-                                    <Button
-                                        variant="ghost"
+                                    <button
                                         onClick={() => setStep(1)}
-                                        className="relative z-10 h-14 w-14 rounded-2xl bg-white/5 hover:bg-white text-slate-400 hover:text-slate-900 transition-all"
+                                        className="relative z-10 text-xs font-semibold text-white/70 hover:text-white px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 transition-all cursor-pointer"
                                     >
-                                        <ChevronLeft size={24} />
-                                    </Button>
+                                        Change
+                                    </button>
                                 </motion.div>
 
-                                <div className="space-y-4">
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Active Policies Found ({clientPolicies.length})</p>
+                                {/* Policy Count */}
+                                <motion.div variants={ITEM_VARIANTS} className="flex items-center gap-2 px-1">
+                                    <ShieldCheck size={14} className="text-primary-500" />
+                                    <p className="text-xs font-semibold text-surface-500">
+                                        {clientPolicies.length} active {clientPolicies.length === 1 ? 'policy' : 'policies'} found
+                                    </p>
+                                </motion.div>
+
+                                {/* Policy Cards */}
+                                <div className="space-y-3">
                                     {clientPolicies.map((policy) => (
                                         <motion.button
                                             key={policy.id}
                                             variants={ITEM_VARIANTS}
-                                            whileHover={{ x: 8 }}
+                                            whileHover={{ y: -2 }}
                                             onClick={() => {
                                                 setSelectedPolicy(policy);
                                                 setStep(3);
                                             }}
-                                            className="w-full p-6 flex items-center gap-6 bg-white border border-slate-100 rounded-3xl hover:border-blue-500/30 hover:shadow-xl hover:shadow-slate-200/50 transition-all text-left group"
+                                            className="w-full p-5 flex items-center gap-4 bg-white border border-surface-100 rounded-xl hover:border-primary-300 hover:shadow-lg transition-all text-left group"
                                         >
-                                            <div className="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-blue-500 group-hover:text-white transition-all duration-500 shadow-inner">
-                                                <ShieldCheck size={28} />
+                                            <div className="w-11 h-11 rounded-lg bg-primary-50 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-all duration-300 shrink-0">
+                                                <ShieldCheck size={22} />
                                             </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-4 mb-2">
-                                                    <h4 className="text-xl font-bold text-slate-900">{policy.policyNumber}</h4>
-                                                    <span className="px-3 py-1 bg-green-50 rounded-full text-[10px] font-bold text-green-700 uppercase tracking-widest">Nominal</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <h4 className="text-sm font-bold text-surface-900">{policy.policyNumber}</h4>
+                                                    <span className="px-2 py-0.5 bg-success-50 rounded text-[9px] font-bold text-success-700 uppercase">Active</span>
                                                 </div>
-                                                <div className="flex items-center gap-4 text-sm text-slate-400 text-left">
-                                                    <span className="font-bold text-slate-900">{policy.insuranceType}</span>
-                                                    <span className="w-1 h-1 rounded-full bg-slate-200" />
-                                                    <span>Expires {policy.expiryDate}</span>
+                                                <div className="flex items-center gap-3 text-xs text-surface-400">
+                                                    <span className="font-semibold text-surface-600">{policy.insuranceType}</span>
+                                                    <span className="text-surface-300">|</span>
+                                                    <span className="flex items-center gap-1">
+                                                        <CalendarDays size={11} /> Exp. {policy.expiryDate}
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Zap size={20} className="text-blue-500 animate-pulse" />
+                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                <p className="text-sm font-bold text-surface-900">{formatCurrency(policy.premiumAmount)}</p>
+                                                <p className="text-[9px] text-surface-400 uppercase">Premium</p>
                                             </div>
                                         </motion.button>
                                     ))}
+
+                                    {clientPolicies.length === 0 && (
+                                        <motion.div variants={ITEM_VARIANTS} className="text-center py-12">
+                                            <Shield size={40} className="mx-auto text-surface-200 mb-3" />
+                                            <p className="text-sm text-surface-400 font-medium">No active policies found for this client</p>
+                                        </motion.div>
+                                    )}
                                 </div>
                             </motion.div>
                         )}
 
+                        {/* ═══ Step 3: Financing Plan ═══ */}
                         {step === 3 && (
                             <motion.div
                                 key="step3"
@@ -304,152 +367,254 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                 initial="hidden"
                                 animate="visible"
                                 exit="exit"
-                                className="space-y-8"
+                                className="space-y-5"
                             >
-                                <div className="grid grid-cols-1 gap-4">
-                                    {INSTALLMENT_OPTIONS.map((option) => (
-                                        <motion.label
-                                            key={option.id}
-                                            variants={ITEM_VARIANTS}
-                                            whileHover={{ scale: 1.01 }}
-                                            className={cn(
-                                                "relative p-7 border rounded-[2rem] flex items-center justify-between cursor-pointer transition-all duration-500 overflow-hidden",
-                                                installments === option.id
-                                                    ? "bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-600/30 ring-8 ring-blue-50"
-                                                    : "bg-white border-slate-100 text-slate-900 hover:border-blue-500/20 shadow-sm"
-                                            )}
-                                        >
-                                            <div className="flex items-center gap-8 relative z-10">
+                                {/* Plan Header Info */}
+                                <motion.div variants={ITEM_VARIANTS} className="flex items-center justify-between bg-primary-50 border border-primary-100 rounded-xl px-5 py-3.5">
+                                    <div className="flex items-center gap-2">
+                                        <TrendingUp size={16} className="text-primary-600" />
+                                        <span className="text-xs font-semibold text-primary-700">Base Premium</span>
+                                    </div>
+                                    <span className="text-sm font-bold text-primary-900">{formatCurrency(basePremium)}</span>
+                                </motion.div>
+
+                                {/* Installment Options */}
+                                <div className="space-y-2.5">
+                                    {INSTALLMENT_OPTIONS.map((option) => {
+                                        const isSelected = installments === option.id;
+                                        return (
+                                            <motion.label
+                                                key={option.id}
+                                                variants={ITEM_VARIANTS}
+                                                whileHover={{ y: -1 }}
+                                                className={cn(
+                                                    "relative p-4 border rounded-xl flex items-center gap-4 cursor-pointer transition-all duration-300",
+                                                    isSelected
+                                                        ? "bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-600/20 ring-2 ring-primary-300"
+                                                        : "bg-white border-surface-150 hover:border-primary-200 hover:shadow-sm"
+                                                )}
+                                            >
                                                 <input
                                                     type="radio"
                                                     name="installments"
                                                     value={option.id}
-                                                    checked={installments === option.id}
+                                                    checked={isSelected}
                                                     onChange={() => setInstallments(option.id)}
                                                     className="hidden"
                                                 />
+                                                {/* Radio Circle */}
                                                 <div className={cn(
-                                                    "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500",
-                                                    installments === option.id ? "bg-white text-blue-600" : "bg-slate-50 text-slate-400"
+                                                    "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all",
+                                                    isSelected ? 'border-white bg-white' : 'border-surface-300'
                                                 )}>
-                                                    {option.recommended ? <Zap size={28} /> : <DollarSign size={28} />}
+                                                    {isSelected && (
+                                                        <motion.div
+                                                            initial={{ scale: 0 }}
+                                                            animate={{ scale: 1 }}
+                                                            className="w-2.5 h-2.5 rounded-full bg-primary-600"
+                                                        />
+                                                    )}
                                                 </div>
-                                                <div className="text-left">
-                                                    <div className="flex items-center gap-3 mb-1">
-                                                        <p className="text-xl font-bold tracking-tight">{option.label}</p>
+
+                                                {/* Plan Details */}
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-center gap-2 mb-0.5">
+                                                        <p className={cn("text-sm font-bold", isSelected ? 'text-white' : 'text-surface-900')}>{option.label}</p>
                                                         {option.recommended && (
                                                             <span className={cn(
-                                                                "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                                                                installments === option.id ? "bg-white/20 text-white" : "bg-blue-50 text-blue-600"
+                                                                "px-2 py-0.5 rounded text-[9px] font-bold uppercase",
+                                                                isSelected ? "bg-white/20 text-white" : "bg-success-50 text-success-700"
                                                             )}>Best Value</span>
                                                         )}
                                                     </div>
-                                                    <p className={cn(
-                                                        "text-sm font-medium",
-                                                        installments === option.id ? "text-blue-100" : "text-slate-400"
-                                                    )}>{option.period} Term • No Hidden Fees</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <p className={cn("text-xs", isSelected ? "text-white/70" : "text-surface-400")}>
+                                                            {option.period}
+                                                        </p>
+                                                        {option.interest > 0 && (
+                                                            <>
+                                                                <span className={cn("text-xs", isSelected ? 'text-white/40' : 'text-surface-300')}>|</span>
+                                                                <p className={cn("text-xs", isSelected ? "text-white/70" : "text-surface-400")}>
+                                                                    {option.interest}% interest
+                                                                </p>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            </div>
-                                            <div className="text-right relative z-10">
-                                                <p className="text-3xl font-black italic tracking-tighter">{formatCurrency(option.total)}</p>
-                                                <p className={cn(
-                                                    "text-[10px] font-bold uppercase tracking-widest",
-                                                    installments === option.id ? "text-blue-200" : "text-slate-300"
-                                                )}>Inclusive Rate</p>
-                                            </div>
-                                            {installments === option.id && (
-                                                <motion.div
-                                                    layoutId="active-bg"
-                                                    className="absolute inset-0 bg-blue-600 opacity-90 -z-0"
-                                                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                                                />
-                                            )}
-                                        </motion.label>
-                                    ))}
+
+                                                {/* Price */}
+                                                <div className="text-right shrink-0">
+                                                    <p className={cn("text-base font-bold", isSelected ? 'text-white' : 'text-surface-900')}>
+                                                        {formatCurrency(option.total)}
+                                                    </p>
+                                                    {option.id !== 'full' && (
+                                                        <p className={cn("text-[10px] font-medium", isSelected ? "text-white/60" : "text-surface-400")}>
+                                                            {formatCurrency(option.monthly)}/mo
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </motion.label>
+                                        );
+                                    })}
                                 </div>
+
+                                {/* Cost Comparison Bar */}
+                                <motion.div variants={ITEM_VARIANTS} className="bg-surface-50 border border-surface-100 rounded-xl p-4 space-y-2">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Cost vs Base Premium</span>
+                                        <span className="text-[10px] font-semibold text-surface-500">
+                                            {selectedOption.interest > 0 ? `+${selectedOption.interest}%` : 'No markup'}
+                                        </span>
+                                    </div>
+                                    <div className="h-2 rounded-full bg-surface-200 overflow-hidden">
+                                        <motion.div
+                                            initial={{ width: 0 }}
+                                            animate={{ width: `${Math.min((selectedOption.total / 10146.41) * 100, 100)}%` }}
+                                            transition={{ duration: 0.5, ease: 'easeOut' }}
+                                            className={cn(
+                                                "h-full rounded-full",
+                                                selectedOption.interest === 0 ? 'bg-success-500' :
+                                                    selectedOption.interest < 20 ? 'bg-primary-500' :
+                                                        'bg-warning-500'
+                                            )}
+                                        />
+                                    </div>
+                                </motion.div>
                             </motion.div>
                         )}
 
+                        {/* ═══ Step 4: Review & Confirm ═══ */}
                         {step === 4 && (
                             <motion.div
                                 key="step4"
                                 variants={CONTAINER_VARIANTS}
                                 initial="hidden"
                                 animate="visible"
-                                className="h-full flex flex-col items-center justify-center text-center space-y-12 py-10"
+                                className="space-y-5"
                             >
-                                <motion.div variants={ITEM_VARIANTS} className="relative">
-                                    <motion.div
-                                        animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.3, 0.1] }}
-                                        transition={{ duration: 3, repeat: Infinity }}
-                                        className="absolute -inset-12 bg-blue-500 rounded-full blur-[60px]"
-                                    />
-                                    <div className="w-32 h-32 rounded-full bg-slate-900 flex items-center justify-center text-white shadow-[0_20px_60px_rgba(15,23,42,0.4)] relative z-10 border-8 border-white">
-                                        <Check size={64} strokeWidth={3} />
+                                {/* Success Status */}
+                                <motion.div
+                                    variants={ITEM_VARIANTS}
+                                    className="flex items-center gap-3 bg-success-50 border border-success-200 rounded-xl px-5 py-3.5"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-success-500 flex items-center justify-center shrink-0">
+                                        <Check size={16} className="text-white" strokeWidth={3} />
                                     </div>
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
-                                        className="absolute inset-[-12px] border-2 border-dashed border-slate-200 rounded-full"
-                                    />
+                                    <div>
+                                        <p className="text-sm font-bold text-success-800">Application Ready</p>
+                                        <p className="text-xs text-success-600">All required information has been provided</p>
+                                    </div>
                                 </motion.div>
 
-                                <motion.div variants={ITEM_VARIANTS} className="space-y-4">
-                                    <h3 className="text-4xl font-bold text-slate-900 tracking-tighter italic">Calibration Success</h3>
-                                    <p className="text-slate-500 mx-auto font-medium leading-relaxed text-center" style={{ maxWidth: '24rem' }}>
-                                        Data integrity verified. System ready to broadcast financing request for <span className="text-blue-600 font-bold">{selectedClient ? getClientDisplayName(selectedClient) : 'the client'}</span>.
-                                    </p>
-                                </motion.div>
-
-                                <motion.div variants={ITEM_VARIANTS} className="w-full p-8 bg-white/60 backdrop-blur-md border border-white rounded-[2.5rem] shadow-xl space-y-6 relative group overflow-hidden text-left" style={{ maxWidth: '28rem' }}>
-                                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:rotate-12 transition-transform">
-                                        <Sparkles size={80} className="text-blue-600" />
+                                {/* Application Summary Card */}
+                                <motion.div variants={ITEM_VARIANTS} className="bg-white border border-surface-100 rounded-xl overflow-hidden">
+                                    <div className="px-5 py-3.5 bg-surface-50 border-b border-surface-100">
+                                        <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Application Summary</p>
                                     </div>
-                                    <div className="flex justify-between items-center text-sm relative z-10">
-                                        <span className="text-slate-400 font-bold uppercase tracking-widest">Total Liquidation</span>
-                                        <span className="text-3xl font-black text-slate-900 italic tracking-tighter font-mono">{formatCurrency(selectedOption.total)}</span>
-                                    </div>
-                                    <div className="h-px bg-slate-100" />
-                                    <div className="flex justify-between items-center text-sm relative z-10">
-                                        <span className="text-slate-400 font-bold uppercase tracking-widest">Selected Plan</span>
-                                        <div className="flex items-center gap-3">
-                                            <span className="px-3 py-1 bg-blue-50 rounded-full text-[10px] font-bold text-blue-600 uppercase tracking-widest">{selectedOption.label}</span>
-                                            <Zap size={14} className="text-blue-500" />
+                                    <div className="divide-y divide-surface-50">
+                                        {/* Client */}
+                                        <div className="px-5 py-3.5 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <User size={14} className="text-surface-400" />
+                                                <span className="text-xs font-medium text-surface-500">Client</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-surface-900">
+                                                {selectedClient ? getClientDisplayName(selectedClient) : '—'}
+                                            </span>
+                                        </div>
+                                        {/* Policy */}
+                                        <div className="px-5 py-3.5 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <ShieldCheck size={14} className="text-surface-400" />
+                                                <span className="text-xs font-medium text-surface-500">Policy</span>
+                                            </div>
+                                            <span className="text-sm font-bold text-surface-900">
+                                                {selectedPolicy?.policyNumber ?? '—'}
+                                            </span>
+                                        </div>
+                                        {/* Insurance Type */}
+                                        <div className="px-5 py-3.5 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Building2 size={14} className="text-surface-400" />
+                                                <span className="text-xs font-medium text-surface-500">Insurance Type</span>
+                                            </div>
+                                            <span className="text-sm font-semibold text-surface-700">
+                                                {selectedPolicy?.insuranceType ?? '—'}
+                                            </span>
+                                        </div>
+                                        {/* Plan */}
+                                        <div className="px-5 py-3.5 flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <CreditCard size={14} className="text-surface-400" />
+                                                <span className="text-xs font-medium text-surface-500">Payment Plan</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="px-2 py-0.5 bg-primary-50 rounded text-[9px] font-bold text-primary-700 uppercase">{selectedOption.label}</span>
+                                                {selectedOption.interest > 0 && (
+                                                    <span className="text-xs text-surface-400">({selectedOption.interest}% int.)</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                        {/* Monthly */}
+                                        {selectedOption.id !== 'full' && (
+                                            <div className="px-5 py-3.5 flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <CalendarDays size={14} className="text-surface-400" />
+                                                    <span className="text-xs font-medium text-surface-500">Monthly Installment</span>
+                                                </div>
+                                                <span className="text-sm font-bold text-surface-900">
+                                                    {formatCurrency(selectedOption.monthly)}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {/* Total */}
+                                        <div className="px-5 py-4 flex items-center justify-between bg-surface-50">
+                                            <div className="flex items-center gap-3">
+                                                <DollarSign size={14} className="text-primary-600" />
+                                                <span className="text-xs font-bold text-surface-700 uppercase tracking-wider">Total Amount</span>
+                                            </div>
+                                            <span className="text-lg font-black text-primary-700">{formatCurrency(selectedOption.total)}</span>
                                         </div>
                                     </div>
-                                    <div className="pt-4 flex items-center justify-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-green-600">
-                                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                        <span>Security_Seal_Applied</span>
-                                    </div>
+                                </motion.div>
+
+                                {/* Verification Badge */}
+                                <motion.div
+                                    variants={ITEM_VARIANTS}
+                                    className="flex items-center justify-center gap-2 py-3"
+                                >
+                                    <BadgeCheck size={16} className="text-primary-500" />
+                                    <span className="text-xs font-semibold text-surface-500">Data verified and ready for submission</span>
                                 </motion.div>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
 
-                {/* Polished Footer Navigation */}
-                <div className="p-10 bg-white/60 backdrop-blur-md border-t border-white/20 flex items-center gap-6">
+                {/* ── Footer Navigation ── */}
+                <div className="px-8 py-5 bg-white border-t border-surface-100 flex items-center gap-4">
                     <Button
                         variant="ghost"
                         onClick={() => step > 1 ? setStep(step - 1) : handleClose()}
-                        className="h-16 px-10 rounded-2xl font-bold uppercase tracking-widest text-slate-400 hover:text-slate-900 hover:bg-slate-100/50 transition-all flex items-center gap-3 italic"
+                        className="h-11 px-6 rounded-xl font-semibold text-surface-500 hover:text-surface-800 hover:bg-surface-50 transition-all flex items-center gap-2"
                     >
-                        <ChevronLeft size={20} /> {step === 1 ? 'Cancel' : 'Prev_Phase'}
+                        <ChevronLeft size={16} /> {step === 1 ? 'Cancel' : 'Back'}
                     </Button>
+                    <div className="flex-1" />
                     <Button
                         className={cn(
-                            "flex-1 h-16 rounded-[1.25rem] text-white transition-all duration-700 font-bold uppercase tracking-[0.2em] shadow-2xl flex items-center justify-center gap-4 italic group",
+                            "h-11 px-8 rounded-xl font-bold transition-all duration-300 flex items-center justify-center gap-2.5 shadow-md",
                             step === 4
-                                ? "bg-green-600 hover:bg-green-500 shadow-green-600/20"
-                                : "bg-slate-900 hover:bg-slate-800 shadow-slate-900/20"
+                                ? "bg-success-600 hover:bg-success-500 text-white shadow-success-600/20"
+                                : "bg-primary-600 hover:bg-primary-700 text-white shadow-primary-600/20"
                         )}
-                        disabled={step === 1 && !selectedClient || (step === 2 && !selectedPolicy)}
+                        disabled={(step === 1 && !selectedClient) || (step === 2 && !selectedPolicy)}
                         onClick={() => step === 4 ? handleSubmit() : setStep(step + 1)}
                     >
                         {step === 4 ? (
-                            <>Confirm_Broadcast <Zap size={20} className="fill-current animate-pulse" /></>
+                            <>Submit Application <Check size={16} strokeWidth={3} /></>
                         ) : (
-                            <>Continue_Sequence <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" /></>
+                            <>Continue <ArrowRight size={16} /></>
                         )}
                     </Button>
                 </div>

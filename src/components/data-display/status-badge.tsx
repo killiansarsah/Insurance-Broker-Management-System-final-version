@@ -22,7 +22,8 @@ type StatusType =
     | 'earned' | 'paid' | 'clawback' | 'clawed_back'
     | 'outstanding' | 'overdue' | 'partial' | 'refunded'
     | 'approved' | 'pending'
-    | 'renewed';
+    | 'renewed'
+    | 'completed' | 'defaulted' | 'submitted' | 'disbursed';
 
 const STATUS_STYLES: Record<string, string> = {
     // Client
@@ -93,6 +94,12 @@ const STATUS_STYLES: Record<string, string> = {
 
     // Renewal workflow
     renewed: 'bg-success-100 text-success-700 ring-success-200',
+
+    // Premium Financing
+    completed: 'bg-success-100 text-success-800 ring-success-300',
+    defaulted: 'bg-danger-100 text-danger-800 ring-danger-300',
+    submitted: 'bg-blue-50 text-blue-700 ring-blue-200',
+    disbursed: 'bg-primary-50 text-primary-700 ring-primary-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {

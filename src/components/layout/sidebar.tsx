@@ -122,6 +122,11 @@ const navigation: NavSection[] = [
                 label: 'Premium Financing',
                 href: '/dashboard/premium-financing',
                 icon: <Wallet size={18} />,
+                children: [
+                    { label: 'Active', href: '/dashboard/premium-financing?tab=active' },
+                    { label: 'Pending', href: '/dashboard/premium-financing?tab=pending' },
+                    { label: 'Defaulted', href: '/dashboard/premium-financing?tab=defaulted' },
+                ],
             },
             {
                 label: 'Finance',
