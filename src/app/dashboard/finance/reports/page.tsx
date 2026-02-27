@@ -76,7 +76,7 @@ export default function FinanceReportsPage() {
                         const revPct = Math.round((m.premiumCollected / maxRevenue) * 100);
                         const comPct = Math.round((m.commissionsEarned / maxRevenue) * 100);
                         return (
-                            <div key={m.shortMonth} className="flex flex-col items-center gap-1 min-w-[36px] flex-1 group">
+                            <div key={m.month} className="flex flex-col items-center gap-1 min-w-[36px] flex-1 group">
                                 <div className="w-full flex items-end gap-0.5 h-40 relative">
                                     {/* Revenue bar */}
                                     <div

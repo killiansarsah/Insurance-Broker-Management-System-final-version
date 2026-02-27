@@ -103,9 +103,9 @@ const navigation: NavSection[] = [
                 href: '/dashboard/renewals',
                 icon: <FileBarChart size={18} />,
                 children: [
-                    { label: 'Upcoming (30 Days)', href: '/dashboard/renewals?status=upcoming' },
-                    { label: 'Overdue', href: '/dashboard/renewals?status=overdue' },
-                    { label: 'Processed', href: '/dashboard/renewals?status=processed' },
+                    { label: 'Upcoming (30 Days)', href: '/dashboard/renewals?tab=0-30' },
+                    { label: 'Overdue', href: '/dashboard/renewals?tab=overdue' },
+                    { label: 'Renewed', href: '/dashboard/renewals?tab=renewed' },
                 ],
             },
         ],
@@ -131,6 +131,7 @@ const navigation: NavSection[] = [
                     { label: 'Invoices', href: '/dashboard/finance/invoices' },
                     { label: 'Payments', href: '/dashboard/finance/payments' },
                     { label: 'Commissions', href: '/dashboard/finance/commissions' },
+                    { label: 'Expenses', href: '/dashboard/finance/expenses' },
                     { label: 'Reports', href: '/dashboard/finance/reports' },
                 ]
             },

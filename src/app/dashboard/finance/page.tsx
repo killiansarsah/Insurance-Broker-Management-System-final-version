@@ -15,6 +15,7 @@ import {
     ArrowRight,
     TrendingUp,
     Receipt,
+    Wallet,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -51,6 +52,15 @@ const MODULE_CARDS = [
         color: 'text-amber-600',
         bg: 'bg-amber-50',
         border: 'border-amber-100',
+    },
+    {
+        label: 'Expenses',
+        desc: 'Track operating expenses',
+        href: '/dashboard/finance/expenses',
+        icon: Wallet,
+        color: 'text-rose-600',
+        bg: 'bg-rose-50',
+        border: 'border-rose-100',
     },
     {
         label: 'Reports',
