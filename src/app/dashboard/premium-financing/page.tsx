@@ -542,13 +542,13 @@ export default function PremiumFinancingPage() {
             >
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-1">
-                        <Wallet size={14} className="text-white/70" />
-                        <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.25em]">Premium Financing</p>
+                        <Wallet size={14} className="text-white/90" />
+                        <p className="text-[11px] font-extrabold text-white/90 uppercase tracking-[0.25em]">Premium Financing</p>
                     </div>
                     <h1 className="text-2xl font-black text-white tracking-tight">
                         Financing Dashboard
                     </h1>
-                    <p className="text-white/60 text-sm font-medium mt-1">
+                    <p className="text-white/80 text-sm font-medium mt-1">
                         Manage and track all financing applications
                     </p>
                 </div>
@@ -582,7 +582,7 @@ export default function PremiumFinancingPage() {
                         {/* Circular Collection Gauge */}
                         <div className="relative flex-shrink-0">
                             <svg width="100" height="100" viewBox="0 0 100 100" className="-rotate-90">
-                                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="8" />
+                                <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="8" />
                                 <motion.circle
                                     cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="8"
                                     strokeLinecap="round"
@@ -598,11 +598,11 @@ export default function PremiumFinancingPage() {
                         </div>
                         {/* Hero Text */}
                         <div className="flex-1">
-                            <p className="text-[10px] font-bold text-white/70 uppercase tracking-[0.25em] mb-1">Total Financed</p>
+                            <p className="text-[11px] font-extrabold text-white/90 uppercase tracking-[0.25em] mb-1">Total Financed</p>
                             <p className="text-3xl font-black text-white tracking-tighter">{formatCurrency(pfSummary.totalFinanced)}</p>
                             <div className="flex items-center gap-4 mt-3">
-                                <span className="text-xs font-semibold text-white/70">{pfSummary.active + pfSummary.completed} agreements</span>
-                                <span className="text-[10px] font-bold text-success-400 bg-success-500/15 px-2 py-0.5 rounded-full">
+                                <span className="text-xs font-bold text-white/80">{pfSummary.active + pfSummary.completed} agreements</span>
+                                <span className="text-[11px] font-bold text-success-300 bg-success-500/20 px-2.5 py-0.5 rounded-full">
                                     {collectionPct.toFixed(1)}% collection
                                 </span>
                             </div>
@@ -620,15 +620,15 @@ export default function PremiumFinancingPage() {
                         className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
-                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
+                            <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600">
                                 <CreditCard size={18} />
                             </div>
-                            <span className="text-[10px] font-black text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full">{pfSummary.active}</span>
+                            <span className="text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{pfSummary.active}</span>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Active</p>
-                            <p className="text-sm font-black text-surface-800 tracking-tight mt-0.5">{formatCurrency(pfSummary.totalOutstanding)}</p>
-                            <p className="text-[10px] text-surface-400 mt-1">outstanding</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Active</p>
+                            <p className="text-sm font-black text-surface-900 tracking-tight mt-0.5">{formatCurrency(pfSummary.totalOutstanding)}</p>
+                            <p className="text-[11px] font-medium text-surface-500 mt-1">outstanding</p>
                         </div>
                     </motion.div>
 
@@ -640,17 +640,17 @@ export default function PremiumFinancingPage() {
                         className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
-                            <div className="p-2 rounded-lg bg-danger-500/10 text-danger-500">
+                            <div className="p-2 rounded-lg bg-danger-500/10 text-danger-600">
                                 <AlertTriangle size={18} />
                             </div>
                             {pfSummary.defaulted > 0 && (
-                                <span className="text-[10px] font-black text-danger-500 bg-danger-50 px-2 py-0.5 rounded-full animate-pulse">{pfSummary.defaulted}</span>
+                                <span className="text-[11px] font-black text-danger-600 bg-danger-50 px-2 py-0.5 rounded-full animate-pulse">{pfSummary.defaulted}</span>
                             )}
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Overdue</p>
-                            <p className="text-sm font-black text-danger-600 tracking-tight mt-0.5">{formatCurrency(pfSummary.overdueAmount)}</p>
-                            <p className="text-[10px] text-surface-400 mt-1">{pfSummary.defaulted} defaulted</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Overdue</p>
+                            <p className="text-sm font-black text-danger-700 tracking-tight mt-0.5">{formatCurrency(pfSummary.overdueAmount)}</p>
+                            <p className="text-[11px] font-medium text-surface-500 mt-1">{pfSummary.defaulted} defaulted</p>
                         </div>
                     </motion.div>
 
@@ -662,15 +662,15 @@ export default function PremiumFinancingPage() {
                         className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
-                            <div className="p-2 rounded-lg bg-success-500/10 text-success-500">
+                            <div className="p-2 rounded-lg bg-success-500/10 text-success-600">
                                 <CheckCircle2 size={18} />
                             </div>
-                            <span className="text-[10px] font-black text-success-600 bg-success-50 px-2 py-0.5 rounded-full">{pfSummary.completed}</span>
+                            <span className="text-[11px] font-black text-success-700 bg-success-50 px-2 py-0.5 rounded-full">{pfSummary.completed}</span>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Completed</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Completed</p>
                             <p className="text-sm font-black text-success-700 tracking-tight mt-0.5">{pfSummary.completed} settled</p>
-                            <p className="text-[10px] text-surface-400 mt-1">fully repaid</p>
+                            <p className="text-[11px] font-medium text-surface-500 mt-1">fully repaid</p>
                         </div>
                     </motion.div>
 
@@ -682,15 +682,15 @@ export default function PremiumFinancingPage() {
                         className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
-                            <div className="p-2 rounded-lg bg-warning-500/10 text-warning-500">
+                            <div className="p-2 rounded-lg bg-warning-500/10 text-warning-600">
                                 <Clock size={18} />
                             </div>
-                            <span className="text-[10px] font-black text-warning-600 bg-warning-50 px-2 py-0.5 rounded-full">{pfSummary.underReview}</span>
+                            <span className="text-[11px] font-black text-warning-700 bg-warning-50 px-2 py-0.5 rounded-full">{pfSummary.underReview}</span>
                         </div>
                         <div>
-                            <p className="text-[10px] font-bold text-surface-400 uppercase tracking-wider">Pending</p>
-                            <p className="text-sm font-black text-surface-800 tracking-tight mt-0.5">{pfSummary.underReview + pfSummary.submitted} in queue</p>
-                            <p className="text-[10px] text-surface-400 mt-1">{pfSummary.approved} approved</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Pending</p>
+                            <p className="text-sm font-black text-surface-900 tracking-tight mt-0.5">{pfSummary.underReview + pfSummary.submitted} in queue</p>
+                            <p className="text-[11px] font-medium text-surface-500 mt-1">{pfSummary.approved} approved</p>
                         </div>
                     </motion.div>
                 </div>
@@ -711,13 +711,13 @@ export default function PremiumFinancingPage() {
                             className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap border-b-2 -mb-px ${
                                 activeTab === tab.id
                                     ? `${tab.activeColor} text-surface-900`
-                                    : 'border-transparent text-surface-400 hover:text-surface-600 hover:border-surface-300'
+                                    : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
                             }`}
                         >
                             <span className={`w-2 h-2 rounded-full ${activeTab === tab.id ? tab.dotColor : 'bg-surface-300'} transition-colors`} />
                             <span>{tab.label}</span>
-                            <span className={`text-[10px] font-black ${
-                                activeTab === tab.id ? 'text-surface-900' : 'text-surface-400'
+                            <span className={`text-[11px] font-black ${
+                                activeTab === tab.id ? 'text-surface-900' : 'text-surface-500'
                             }`}>
                                 {tab.count}
                             </span>

@@ -707,6 +707,7 @@ body {
   background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
   position: relative;
   overflow: hidden;
+  isolation: isolate;
 }
 
 .pf-modal-header::before {
@@ -732,8 +733,8 @@ body {
 }
 
 .pf-section-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 1) 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
   border-radius: 1rem;
   transition: all var(--transition-base);
 }
@@ -744,8 +745,8 @@ body {
 }
 
 .pf-stat-cell {
-  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(241, 245, 249, 0.6) 100%);
-  border: 1px solid rgba(226, 232, 240, 0.5);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(241, 245, 249, 0.85) 100%);
+  border: 1px solid rgba(226, 232, 240, 0.6);
   border-radius: 0.75rem;
   padding: 0.75rem;
   text-align: center;
