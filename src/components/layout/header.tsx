@@ -1,4 +1,4 @@
-import { Bell, Search, Menu, CheckCircle2, Trash2, Calculator, Headset } from 'lucide-react';
+import { Bell, Search, Menu, CheckCircle2, LogOut, Calculator, Headset, ShieldAlert } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
@@ -7,6 +7,8 @@ import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { useRouter } from 'next/navigation';
 import { CalculatorModal } from '@/components/ui/calculator-modal';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { toast } from 'sonner';
 
 export function Header() {
     const router = useRouter();
@@ -16,6 +18,7 @@ export function Header() {
     const [profileOpen, setProfileOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+    const [isSignOutOpen, setIsSignOutOpen] = useState(false);
 
     // Click outside handlers
     const profileRef = useClickOutside<HTMLDivElement>(() => setProfileOpen(false));
@@ -113,7 +116,7 @@ export function Header() {
                     <Calculator size={20} />
                 </button>
                 <button
-                    onClick={() => alert("Contact Support")}
+                    onClick={() => toast.info('Contact Support', { description: 'Email support@ibms.africa or call +233-302-123-456 for assistance.' })}
                     className="p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
                     title="Contact Support"
                 >
@@ -253,11 +256,11 @@ export function Header() {
                             </div>
                             <div className="border-t border-surface-100 py-2 bg-surface-50/30">
                                 <button
-                                    onClick={logout}
+                                    onClick={() => { setProfileOpen(false); setIsSignOutOpen(true); }}
                                     className="w-full px-5 py-2.5 text-sm text-left text-danger-600 hover:bg-danger-50 cursor-pointer transition-colors font-bold flex items-center gap-3"
                                 >
                                     <div className="w-6 h-6 rounded-full bg-danger-100 flex items-center justify-center">
-                                        <Trash2 size={12} className="text-danger-600" />
+                                        <LogOut size={12} className="text-danger-600" />
                                     </div>
                                     Sign Out
                                 </button>
@@ -281,6 +284,18 @@ export function Header() {
             <CalculatorModal
                 isOpen={isCalculatorOpen}
                 onClose={() => setIsCalculatorOpen(false)}
+            />
+
+            <ConfirmationModal
+                isOpen={isSignOutOpen}
+                onClose={() => setIsSignOutOpen(false)}
+                onConfirm={logout}
+                title="Sign Out?"
+                description="You will be logged out of your current session. Any unsaved changes will be lost."
+                confirmLabel="Sign Out"
+                cancelLabel="Stay Logged In"
+                variant="danger"
+                icon={<LogOut size={28} />}
             />
         </header>
     );

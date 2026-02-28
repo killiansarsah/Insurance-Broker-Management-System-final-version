@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     FileText,
     CheckCircle2,
@@ -19,6 +19,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { invoices, financeSummary, Invoice } from '@/mock/finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { NewInvoiceModal } from '@/components/finance/new-invoice-modal';
 import Link from 'next/link';
 
 type InvoiceStatus = 'all' | 'paid' | 'outstanding' | 'overdue' | 'partial' | 'cancelled';
@@ -73,7 +74,17 @@ const METHOD_BADGE: Record<string, string> = {
 
 export default function InvoicesPage() {
     const router = useRouter();
-    const [statusFilter, setStatusFilter] = useState<string>('all');
+    const searchParams = useSearchParams();
+    const statusParam = searchParams.get('status') as InvoiceStatus | null;
+    const newParam = searchParams.get('new');
+    const [statusFilter, setStatusFilter] = useState<string>(statusParam || 'all');
+    const [showNewInvoice, setShowNewInvoice] = useState(newParam === '1');
+
+    useEffect(() => {
+        if (statusParam && statusParam !== statusFilter) {
+            setStatusFilter(statusParam);
+        }
+    }, [statusParam]);
 
     const filtered = statusFilter === 'all'
         ? invoices
@@ -93,8 +104,16 @@ export default function InvoicesPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />}>Export CSV</Button>
-                    <Button variant="primary" leftIcon={<Plus size={16} />}>New Invoice</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
+                        const csv = ['Invoice #,Client,Policy #,Description,Amount,Paid,Balance,Due Date,Status',
+                            ...filtered.map(i => `${i.invoiceNumber},"${i.clientName}",${i.policyNumber},"${i.description}",${i.amount},${i.amountPaid},${i.amount - i.amountPaid},${i.dateDue},${i.status}`)
+                        ].join('\n');
+                        const blob = new Blob([csv], { type: 'text/csv' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a'); a.href = url; a.download = 'invoices.csv'; a.click();
+                        URL.revokeObjectURL(url);
+                    }}>Export CSV</Button>
+                    <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setShowNewInvoice(true)}>New Invoice</Button>
                 </div>
             </div>
 
@@ -172,7 +191,7 @@ export default function InvoicesPage() {
                         render: (inv) => <span className="text-success-600 font-semibold text-sm tabular-nums">{formatCurrency(inv.amountPaid)}</span>,
                     },
                     {
-                        key: 'balance' as any,
+                        key: 'id',
                         label: 'Balance',
                         sortable: false,
                         render: (inv) => {
@@ -203,6 +222,9 @@ export default function InvoicesPage() {
                     />
                 }
             />
+
+            {/* New Invoice Modal */}
+            <NewInvoiceModal isOpen={showNewInvoice} onClose={() => setShowNewInvoice(false)} />
         </div>
     );
 }

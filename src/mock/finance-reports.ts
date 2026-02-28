@@ -69,7 +69,7 @@ export const monthlyRevenue: MonthlyRevenue[] = Object.keys(monthlyMap)
     });
 
 // --- Aging Buckets (derived from outstanding invoices) ---
-const now = new Date('2024-01-15'); // reference date after 2023 data
+const now = new Date('2026-01-15'); // reference date after 2025 data
 const outstanding = invoices.filter(i => i.status === 'outstanding' || i.status === 'partial' || i.status === 'overdue');
 const buckets = [
     { label: 'Current (0–30 days)', days: '0–30', max: 30, amount: 0, count: 0, color: 'bg-success-500' },

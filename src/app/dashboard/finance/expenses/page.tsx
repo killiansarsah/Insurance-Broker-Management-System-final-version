@@ -23,6 +23,8 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { toast } from 'sonner';
 import { BackButton } from '@/components/ui/back-button';
 import { CustomSelect } from '@/components/ui/select-custom';
 import {
@@ -226,6 +228,7 @@ export default function ExpensesPage() {
     const [editRow, setEditRow] = useState<Partial<Expense>>({});
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [showImportHint, setShowImportHint] = useState(false);
+    const [expDeleteTarget, setExpDeleteTarget] = useState<{ type: 'single' | 'bulk'; id?: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // ─── Filtering ───
@@ -289,8 +292,26 @@ export default function ExpensesPage() {
 
     // ─── Delete rows ───
     const deleteSelected = () => {
-        setExpenses(prev => prev.filter(e => !selectedIds.has(e.id)));
-        setSelectedIds(new Set());
+        setExpDeleteTarget({ type: 'bulk' });
+    };
+
+    const confirmExpDelete = () => {
+        if (!expDeleteTarget) return;
+        if (expDeleteTarget.type === 'single' && expDeleteTarget.id) {
+            setExpenses(prev => prev.filter(e => e.id !== expDeleteTarget.id));
+            setSelectedIds(prev => {
+                const next = new Set(prev);
+                next.delete(expDeleteTarget.id!);
+                return next;
+            });
+            toast.error('Expense Deleted');
+        } else if (expDeleteTarget.type === 'bulk') {
+            const count = selectedIds.size;
+            setExpenses(prev => prev.filter(e => !selectedIds.has(e.id)));
+            setSelectedIds(new Set());
+            toast.error(`Deleted ${count} expenses`);
+        }
+        setExpDeleteTarget(null);
     };
 
     // ─── Select all ───
@@ -689,10 +710,7 @@ export default function ExpensesPage() {
                                                         <Pencil size={14} />
                                                     </button>
                                                     <button
-                                                        onClick={() => {
-                                                            setExpenses(prev => prev.filter(e => e.id !== exp.id));
-                                                            selectedIds.delete(exp.id);
-                                                        }}
+                                                        onClick={() => setExpDeleteTarget({ type: 'single', id: exp.id })}
                                                         className="p-1.5 rounded-md hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors"
                                                         title="Delete"
                                                     >
@@ -784,6 +802,20 @@ export default function ExpensesPage() {
                     </div>
                 </Card>
             </div>
+
+            <ConfirmationModal
+                isOpen={expDeleteTarget !== null}
+                onClose={() => setExpDeleteTarget(null)}
+                onConfirm={confirmExpDelete}
+                title={expDeleteTarget?.type === 'bulk' ? `Delete ${selectedIds.size} Expenses?` : 'Delete Expense?'}
+                description={expDeleteTarget?.type === 'bulk'
+                    ? `You are about to permanently delete ${selectedIds.size} expense records. Financial data cannot be recovered.`
+                    : 'This expense record will be permanently deleted. This action cannot be undone.'
+                }
+                confirmLabel={expDeleteTarget?.type === 'bulk' ? `Delete ${selectedIds.size} Records` : 'Delete Expense'}
+                variant="danger"
+                icon={<Trash2 size={28} />}
+            />
         </div>
     );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import {
     BarChart3,
     TrendingUp,
@@ -8,6 +9,7 @@ import {
     CheckCircle2,
     ArrowUpRight,
     PieChart,
+    CalendarRange,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,12 +24,72 @@ import {
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';
 
+// Compute ranges for the date picker boundaries
+const allMonths = monthlyRevenue.map(m => m.month);
+const earliestMonth = allMonths.length > 0 ? allMonths[0] : '';
+const latestMonth = allMonths.length > 0 ? allMonths[allMonths.length - 1] : '';
+
+// Helper: parse 'January 2025' → Date
+function parseMonth(label: string): Date {
+    const parts = label.split(' ');
+    const year = parseInt(parts[1], 10);
+    const monthIdx = ['January','February','March','April','May','June','July','August','September','October','November','December'].indexOf(parts[0]);
+    return new Date(year, monthIdx, 1);
+}
+
+// Helper: format Date to 'YYYY-MM' for input[type=month]
+function toMonthInput(label: string): string {
+    const d = parseMonth(label);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function fromMonthInput(val: string): Date {
+    const [y, m] = val.split('-').map(Number);
+    return new Date(y, m - 1, 1);
+}
 const maxRevenue = Math.max(...monthlyRevenue.map(m => m.premiumCollected));
 const maxCommission = Math.max(...monthlyRevenue.map(m => m.commissionsEarned));
 const totalAging = agingBuckets.reduce((s, b) => s + b.amount, 0);
 const totalProductPremium = productBreakdown.reduce((s, p) => s + p.premium, 0);
 
 export default function FinanceReportsPage() {
+    const defaultFrom = allMonths.length >= 6 ? toMonthInput(allMonths[allMonths.length - 6]) : (earliestMonth ? toMonthInput(earliestMonth) : '');
+    const defaultTo = latestMonth ? toMonthInput(latestMonth) : '';
+
+    const [fromMonth, setFromMonth] = useState(defaultFrom);
+    const [toMonth, setToMonth] = useState(defaultTo);
+
+    // Filter monthly revenue by selected range
+    const filteredRevenue = useMemo(() => {
+        if (!fromMonth && !toMonth) return monthlyRevenue;
+        const from = fromMonth ? fromMonthInput(fromMonth) : new Date(0);
+        const to = toMonth ? fromMonthInput(toMonth) : new Date(9999, 11);
+        return monthlyRevenue.filter(m => {
+            const d = parseMonth(m.month);
+            return d >= from && d <= to;
+        });
+    }, [fromMonth, toMonth]);
+
+    const filteredMaxRevenue = Math.max(...filteredRevenue.map(m => m.premiumCollected), 1);
+    const filteredMaxCommission = Math.max(...filteredRevenue.map(m => m.commissionsEarned), 1);
+
+    // Recompute summary KPIs based on filtered range
+    const filteredSummary = useMemo(() => {
+        const totalPrem = filteredRevenue.reduce((s, m) => s + m.premiumCollected, 0);
+        const totalComm = filteredRevenue.reduce((s, m) => s + m.commissionsEarned, 0);
+        const peak = filteredRevenue.length > 0
+            ? filteredRevenue.reduce((best, m) => m.premiumCollected > best.premiumCollected ? m : best).month
+            : 'N/A';
+        return {
+            totalPremiumYTD: +totalPrem.toFixed(2),
+            totalCommissionYTD: +totalComm.toFixed(2),
+            collectionRate: reportSummary.collectionRate,
+            avgDaysToCollect: reportSummary.avgDaysToCollect,
+            totalOutstanding: reportSummary.totalOutstanding,
+            peakMonth: peak,
+        };
+    }, [filteredRevenue]);
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -39,18 +101,59 @@ export default function FinanceReportsPage() {
                         <p className="text-sm text-surface-500 mt-1">Revenue trends, collection rates, and portfolio analytics.</p>
                     </div>
                 </div>
-                <Button variant="outline" leftIcon={<Download size={16} />}>Export Report</Button>
+                <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
+                    const data = {
+                        summary: reportSummary,
+                        monthlyRevenue,
+                        agingBuckets,
+                        topClients,
+                        productBreakdown,
+                    };
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'finance-report.json'; a.click();
+                    URL.revokeObjectURL(url);
+                }}>Export Report</Button>
+            </div>
+
+            {/* Date Range Picker */}
+            <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-surface-500">
+                    <CalendarRange size={16} className="text-surface-400" />
+                    <span className="font-semibold">Period:</span>
+                </div>
+                <input
+                    type="month"
+                    value={fromMonth}
+                    onChange={(e) => setFromMonth(e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-surface-200 text-sm font-medium text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none bg-white"
+                />
+                <span className="text-surface-400 text-sm">to</span>
+                <input
+                    type="month"
+                    value={toMonth}
+                    onChange={(e) => setToMonth(e.target.value)}
+                    className="px-3 py-2 rounded-lg border border-surface-200 text-sm font-medium text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none bg-white"
+                />
+                {(fromMonth !== defaultFrom || toMonth !== defaultTo) && (
+                    <button
+                        onClick={() => { setFromMonth(defaultFrom); setToMonth(defaultTo); }}
+                        className="text-xs font-semibold text-primary-600 hover:text-primary-800 transition-colors cursor-pointer"
+                    >
+                        Reset
+                    </button>
+                )}
             </div>
 
             {/* Summary Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
                 {[
-                    { label: 'Premium YTD', value: formatCurrency(reportSummary.totalPremiumYTD), color: 'text-primary-600', bg: 'bg-primary-50' },
-                    { label: 'Commission YTD', value: formatCurrency(reportSummary.totalCommissionYTD), color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { label: 'Collection Rate', value: `${reportSummary.collectionRate}%`, color: 'text-success-600', bg: 'bg-success-50' },
-                    { label: 'Avg Days to Collect', value: `${reportSummary.avgDaysToCollect} days`, color: 'text-violet-600', bg: 'bg-violet-50' },
-                    { label: 'Outstanding', value: formatCurrency(reportSummary.totalOutstanding), color: 'text-warning-600', bg: 'bg-warning-50' },
-                    { label: 'Peak Month', value: 'Feb 2025', color: 'text-surface-600', bg: 'bg-surface-50' },
+                    { label: 'Premium YTD', value: formatCurrency(filteredSummary.totalPremiumYTD), color: 'text-primary-600', bg: 'bg-primary-50' },
+                    { label: 'Commission YTD', value: formatCurrency(filteredSummary.totalCommissionYTD), color: 'text-amber-600', bg: 'bg-amber-50' },
+                    { label: 'Collection Rate', value: `${filteredSummary.collectionRate}%`, color: 'text-success-600', bg: 'bg-success-50' },
+                    { label: 'Avg Days to Collect', value: `${filteredSummary.avgDaysToCollect} days`, color: 'text-violet-600', bg: 'bg-violet-50' },
+                    { label: 'Outstanding', value: formatCurrency(filteredSummary.totalOutstanding), color: 'text-warning-600', bg: 'bg-warning-50' },
+                    { label: 'Peak Month', value: filteredSummary.peakMonth, color: 'text-surface-600', bg: 'bg-surface-50' },
                 ].map((stat, i) => (
                     <Card key={i} padding="none" className={cn('p-4 hover:shadow-md transition-shadow', stat.bg)}>
                         <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">{stat.label}</p>
@@ -64,7 +167,7 @@ export default function FinanceReportsPage() {
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
                         <BarChart3 size={18} className="text-surface-400" />
-                        <CardHeader title="Monthly Revenue — Last 12 Months" />
+                        <CardHeader title={`Monthly Revenue — ${filteredRevenue.length} Months`} />
                     </div>
                     <div className="flex items-center gap-4 text-xs">
                         <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-sm bg-primary-500 inline-block" /> Premium</span>
@@ -72,9 +175,9 @@ export default function FinanceReportsPage() {
                     </div>
                 </div>
                 <div className="flex items-end gap-1.5 h-48 overflow-x-auto pb-2">
-                    {monthlyRevenue.map((m) => {
-                        const revPct = Math.round((m.premiumCollected / maxRevenue) * 100);
-                        const comPct = Math.round((m.commissionsEarned / maxRevenue) * 100);
+                    {filteredRevenue.map((m) => {
+                        const revPct = Math.round((m.premiumCollected / filteredMaxRevenue) * 100);
+                        const comPct = Math.round((m.commissionsEarned / filteredMaxRevenue) * 100);
                         return (
                             <div key={m.month} className="flex flex-col items-center gap-1 min-w-[36px] flex-1 group">
                                 <div className="w-full flex items-end gap-0.5 h-40 relative">

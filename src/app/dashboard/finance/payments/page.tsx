@@ -48,8 +48,12 @@ const METHOD_COLORS: Record<string, string> = {
 };
 
 const totalCollected = receipts.reduce((s, r) => s + r.amount, 0);
+const currentMonthStart = (() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+})();
 const thisMonth = receipts
-    .filter(r => new Date(r.dateReceived) >= new Date('2025-02-01'))
+    .filter(r => r.dateReceived >= currentMonthStart)
     .reduce((s, r) => s + r.amount, 0);
 const avgPayment = totalCollected / receipts.length;
 
@@ -85,7 +89,15 @@ export default function PaymentsPage() {
                         <p className="text-sm text-surface-500 mt-1">Complete record of all premium payments received.</p>
                     </div>
                 </div>
-                <Button variant="outline" leftIcon={<Download size={16} />}>Export Statement</Button>
+                <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
+                    const csv = ['Receipt #,Client,Policy #,Invoice #,Amount,Method,Reference,Date',
+                        ...filtered.map(r => `${r.receiptNumber},"${r.clientName}",${r.policyNumber || ''},${r.invoiceNumber || ''},${r.amount},${r.paymentMethod},${r.reference},${r.dateReceived}`)
+                    ].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'payment-statement.csv'; a.click();
+                    URL.revokeObjectURL(url);
+                }}>Export Statement</Button>
             </div>
 
             {/* KPI Strip */}

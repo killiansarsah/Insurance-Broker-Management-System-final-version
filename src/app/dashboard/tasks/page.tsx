@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { StickyNoteTask } from '@/components/features/tasks/sticky-note-task';
 import { RecycleBin } from '@/components/features/tasks/recycle-bin';
 import { ArchiveModal } from '@/components/features/tasks/archive-modal';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -140,6 +141,7 @@ export default function TasksPage() {
     const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
     const [showScrollIndicator, setShowScrollIndicator] = useState(false);
     const [justTrashed, setJustTrashed] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk' | 'empty-bin'; id?: string } | null>(null);
     const binRef = useRef<HTMLDivElement>(null);
     const deskScrollRef = useRef<HTMLDivElement>(null);
     // Filters State
@@ -213,22 +215,37 @@ export default function TasksPage() {
     };
 
     const handleDelete = (taskId: string) => {
-        const task = taskList.find(t => t.id === taskId);
-        if (task) {
-            setTaskList(prev => prev.filter(t => t.id !== taskId));
+        setDeleteTarget({ type: 'single', id: taskId });
+    };
 
-            // Remove from selection if it was selected
-            if (selectedTaskIds.has(taskId)) {
-                const newSelection = new Set(selectedTaskIds);
-                newSelection.delete(taskId);
-                setSelectedTaskIds(newSelection);
+    const confirmDelete = () => {
+        if (!deleteTarget) return;
+        if (deleteTarget.type === 'single') {
+            const task = taskList.find(t => t.id === deleteTarget.id);
+            if (task) {
+                setTaskList(prev => prev.filter(t => t.id !== deleteTarget.id));
+                if (selectedTaskIds.has(deleteTarget.id)) {
+                    const newSelection = new Set(selectedTaskIds);
+                    newSelection.delete(deleteTarget.id);
+                    setSelectedTaskIds(newSelection);
+                }
+                toast.error('Task Deleted', {
+                    description: task.title,
+                    icon: <Trash2 className="text-danger-500" />
+                });
             }
-
-            toast.error('Task Deleted', {
-                description: task.title,
-                icon: <Trash2 className="text-danger-500" />
+        } else if (deleteTarget.type === 'bulk') {
+            const count = selectedTaskIds.size;
+            setTaskList(prev => prev.filter(t => !selectedTaskIds.has(t.id)));
+            setSelectedTaskIds(new Set());
+            toast.error(`Deleted ${count} tasks`);
+        } else if (deleteTarget.type === 'empty-bin') {
+            setArchivedTasks([]);
+            toast.error('Bin Emptied', {
+                description: 'All archived records have been permanently removed.'
             });
         }
+        setDeleteTarget(null);
     };
 
     const toggleTaskSelection = (taskId: string) => {
@@ -261,10 +278,7 @@ export default function TasksPage() {
     };
 
     const handleBulkDelete = () => {
-        const count = selectedTaskIds.size;
-        setTaskList(prev => prev.filter(t => !selectedTaskIds.has(t.id)));
-        setSelectedTaskIds(new Set());
-        toast.error(`Deleted ${count} tasks`);
+        setDeleteTarget({ type: 'bulk' });
     };
 
     const handleRestore = (taskId: string) => {
@@ -282,10 +296,7 @@ export default function TasksPage() {
     };
 
     const handleEmptyBin = () => {
-        setArchivedTasks([]);
-        toast.error('Bin Emptied', {
-            description: 'All archived records have been permanently removed.'
-        });
+        setDeleteTarget({ type: 'empty-bin' });
     };
 
     const handleDrag = (point: { x: number; y: number }, taskId: string) => {
@@ -918,6 +929,31 @@ export default function TasksPage() {
                 archivedTasks={archivedTasks}
                 onRestore={handleRestore}
                 onClearAll={handleEmptyBin}
+            />
+
+            <ConfirmationModal
+                isOpen={deleteTarget !== null}
+                onClose={() => setDeleteTarget(null)}
+                onConfirm={confirmDelete}
+                title={
+                    deleteTarget?.type === 'empty-bin' ? 'Empty Bin?'
+                        : deleteTarget?.type === 'bulk' ? `Delete ${selectedTaskIds.size} Tasks?`
+                        : 'Delete Task?'
+                }
+                description={
+                    deleteTarget?.type === 'empty-bin'
+                        ? 'All archived tasks will be permanently removed. This action cannot be undone.'
+                        : deleteTarget?.type === 'bulk'
+                        ? `You are about to permanently delete ${selectedTaskIds.size} selected tasks. This cannot be undone.`
+                        : `This task will be permanently deleted. This action cannot be undone.`
+                }
+                confirmLabel={
+                    deleteTarget?.type === 'empty-bin' ? 'Empty Bin'
+                        : deleteTarget?.type === 'bulk' ? `Delete ${selectedTaskIds.size} Tasks`
+                        : 'Delete Task'
+                }
+                variant="danger"
+                icon={<Trash2 size={28} />}
             />
         </div >
     );

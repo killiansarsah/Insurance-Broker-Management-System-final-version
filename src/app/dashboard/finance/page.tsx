@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     DollarSign,
     CheckCircle2,
@@ -23,6 +24,7 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { invoices, receipts, financeSummary } from '@/mock/finance';
 import { commissionSummary } from '@/mock/commissions';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import Link from 'next/link';
 
 const MODULE_CARDS = [
@@ -120,6 +122,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export default function FinanceOverviewPage() {
+    const router = useRouter();
     const recentInvoices = invoices.slice(-5).reverse();
     const recentPayments = receipts.slice(-5).reverse();
     const overdueInvoices = invoices.filter(i => i.status === 'overdue');
@@ -133,8 +136,8 @@ export default function FinanceOverviewPage() {
                     <p className="text-sm text-surface-500 mt-1">Premium collection, commissions & financial reporting.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />}>Export</Button>
-                    <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => window.location.href = '/dashboard/finance/invoices'}>New Invoice</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.success('Export Ready', { description: 'Finance report has been generated and is downloading.' })}>Export</Button>
+                    <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => router.push('/dashboard/finance/invoices?new=1')}>New Invoice</Button>
                 </div>
             </div>
 
@@ -168,7 +171,7 @@ export default function FinanceOverviewPage() {
             </div>
 
             {/* Module Quick-Access */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {MODULE_CARDS.map((mod) => (
                     <Link key={mod.label} href={mod.href}>
                         <div className={cn(

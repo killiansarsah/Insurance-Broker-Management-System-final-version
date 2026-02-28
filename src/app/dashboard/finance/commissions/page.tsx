@@ -53,7 +53,15 @@ export default function CommissionsPage() {
                         <p className="text-sm text-surface-500 mt-1">Broker earnings, payouts, and clawbacks.</p>
                     </div>
                 </div>
-                <Button variant="outline" leftIcon={<Download size={16} />}>Export Statement</Button>
+                <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
+                    const csv = ['Policy #,Client,Product,Broker,Rate %,Premium,Commission,NIC Levy,Net Commission,Status,Date Issued',
+                        ...filtered.map(c => `${c.policyNumber},"${c.clientName}",${c.productType},${c.brokerName},${c.commissionRate},${c.premiumAmount},${c.commissionAmount},${c.nicLevy},${c.netCommission},${c.status},${c.datePolicyIssued}`)
+                    ].join('\n');
+                    const blob = new Blob([csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = 'commission-statement.csv'; a.click();
+                    URL.revokeObjectURL(url);
+                }}>Export Statement</Button>
             </div>
 
             {/* KPI Strip */}
@@ -154,6 +162,18 @@ export default function CommissionsPage() {
                         label: 'Commission',
                         sortable: true,
                         render: (c) => <span className="font-bold text-sm tabular-nums text-surface-900">{formatCurrency(c.commissionAmount)}</span>,
+                    },
+                    {
+                        key: 'nicLevy',
+                        label: 'NIC Levy',
+                        sortable: true,
+                        render: (c) => <span className="text-sm tabular-nums text-danger-600">{formatCurrency(c.nicLevy)}</span>,
+                    },
+                    {
+                        key: 'netCommission',
+                        label: 'Net Comm.',
+                        sortable: true,
+                        render: (c) => <span className="font-bold text-sm tabular-nums text-success-700">{formatCurrency(c.netCommission)}</span>,
                     },
                     {
                         key: 'status',

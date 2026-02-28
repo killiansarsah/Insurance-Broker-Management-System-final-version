@@ -16,6 +16,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
+import { toast } from 'sonner';
 import { cn, formatCurrency } from '@/lib/utils';
 import { policies } from '@/mock/policies';
 import { Policy } from '@/types';
@@ -57,7 +58,7 @@ export default function NewClaimPage() {
     }
 
     function handleSubmit() {
-        alert('Claim submitted successfully (mock).');
+        toast.success('Claim Submitted', { description: 'Your FNOL claim has been submitted and is now pending review.' });
         router.push('/dashboard/claims');
     }
 

@@ -16,6 +16,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
 
@@ -263,7 +264,7 @@ export default function NewClientPage() {
     }
 
     function handleSubmit() {
-        alert('Client registration submitted (mock). In production this would call the API.');
+        toast.success('Client Registered', { description: 'New client profile has been created successfully.' });
         router.push('/dashboard/clients');
     }
 

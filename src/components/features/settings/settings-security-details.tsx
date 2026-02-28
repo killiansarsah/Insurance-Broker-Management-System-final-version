@@ -3,12 +3,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+import { toast } from 'sonner';
 
 export function SettingsSecurityDetails() {
     const [isSavingPw, setIsSavingPw] = useState(false);
     const [showPwToast, setShowPwToast] = useState(false);
     const [password, setPassword] = useState('');
     const [is2faEnabled, setIs2faEnabled] = useState(false);
+    const [isSignOutAllOpen, setIsSignOutAllOpen] = useState(false);
 
     const handleSavePassword = () => {
         setIsSavingPw(true);
@@ -195,7 +198,7 @@ export function SettingsSecurityDetails() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Recent Session Activity</h3>
-                    <button className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors">Sign out all devices</button>
+                    <button onClick={() => setIsSignOutAllOpen(true)} className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors">Sign out all devices</button>
                 </div>
                 <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left border-collapse">
@@ -248,6 +251,19 @@ export function SettingsSecurityDetails() {
                     </div>
                 </div>
             )}
+
+            <ConfirmationModal
+                isOpen={isSignOutAllOpen}
+                onClose={() => setIsSignOutAllOpen(false)}
+                onConfirm={() => {
+                    toast.success('All Other Sessions Terminated', { description: 'You have been signed out of all other devices.' });
+                }}
+                variant="danger"
+                icon="logout"
+                title="Sign Out All Devices?"
+                description="This will immediately terminate all active sessions except your current one. Anyone using your account on other devices will be logged out."
+                confirmLabel="Sign Out All"
+            />
         </div>
     );
 }
