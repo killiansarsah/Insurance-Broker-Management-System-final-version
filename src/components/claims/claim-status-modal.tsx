@@ -90,7 +90,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                             className={cn(
                                 "flex flex-col items-center justify-center p-4 rounded-xl border-2 transition-all active:scale-95 text-center gap-2",
                                 selectedStatus === option.value
-                                    ? "bg-white border-primary-500 shadow-lg shadow-primary-500/10"
+                                    ? "bg-background border-primary-500 shadow-lg shadow-primary-500/10"
                                     : "bg-surface-50 border-transparent hover:border-surface-200"
                             )}
                         >
@@ -118,7 +118,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="Enter amount"
-                            className="bg-white border-surface-200"
+                            className="bg-surface-50 border-surface-200"
                             required
                         />
                     </div>
@@ -133,7 +133,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="Explain why the claim was rejected..."
-                            className="bg-white border-surface-200 min-h-[100px]"
+                            className="bg-surface-50 border-surface-200 min-h-[100px]"
                             required
                         />
                     </div>
@@ -148,7 +148,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                             value={note}
                             onChange={(e) => setNote(e.target.value)}
                             placeholder="Add any internal details about this update..."
-                            className="bg-white border-surface-200 min-h-[80px]"
+                            className="bg-surface-50 border-surface-200 min-h-[80px]"
                         />
                     </div>
                 )}

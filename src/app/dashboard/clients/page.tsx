@@ -339,8 +339,6 @@ export default function ClientsPage() {
         },
     ];
 
-    const selectClasses = 'w-full px-3 py-2.5 text-sm bg-white border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all cursor-pointer hover:border-surface-300 appearance-none';
-
     return (
         <div className="space-y-8 animate-fade-in">
             {/* Header */}
@@ -375,7 +373,7 @@ export default function ClientsPage() {
                 {kpis.map((kpi, idx) => (
                     <div
                         key={kpi.label}
-                        className="relative bg-white rounded-2xl border border-surface-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden group transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.1)] hover:-translate-y-1.5"
+                        className="relative bg-background rounded-2xl border border-surface-200/60 shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-hidden group transition-all duration-300 hover:shadow-[0_12px_32px_rgba(0,0,0,0.1)] hover:-translate-y-1.5"
                         style={{ animationDelay: `${idx * 80}ms` }}
                     >
                         {/* Gradient accent bar */}
@@ -453,7 +451,7 @@ export default function ClientsPage() {
                                     'inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all duration-200 cursor-pointer',
                                     filterStatus === item.value
                                         ? 'bg-primary-500 text-white border-primary-500 shadow-md shadow-primary-500/20'
-                                        : 'bg-white text-surface-600 border-surface-200 hover:border-primary-200 hover:bg-primary-50/50 hover:text-primary-600'
+                                        : 'bg-background text-surface-600 border-surface-200 hover:border-primary-200 hover:bg-primary-50/50 hover:text-primary-600'
                                 )}
                             >
                                 <span className={cn(
@@ -485,7 +483,7 @@ export default function ClientsPage() {
             </div>
 
             {showFilters && (
-                <div className="bg-white rounded-2xl border border-surface-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6 animate-fade-in">
+                <div className="bg-background rounded-2xl border border-surface-200/60 shadow-[0_4px_16px_rgba(0,0,0,0.06)] p-6 animate-fade-in">
                     <div className="flex items-center justify-between mb-5">
                         <p className="text-xs font-bold text-surface-900 uppercase tracking-widest">Advanced Filters</p>
                         {activeFilterCount > 0 && (
@@ -567,7 +565,7 @@ export default function ClientsPage() {
                                 type="date"
                                 value={filterDateFrom}
                                 onChange={(e) => setFilterDateFrom(e.target.value)}
-                                className="px-3 py-2 text-sm bg-white border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                className="px-3 py-2 text-sm bg-surface-50 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                             />
                         </div>
                         <div>
@@ -576,7 +574,7 @@ export default function ClientsPage() {
                                 type="date"
                                 value={filterDateTo}
                                 onChange={(e) => setFilterDateTo(e.target.value)}
-                                className="px-3 py-2 text-sm bg-white border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                className="px-3 py-2 text-sm bg-surface-50 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                             />
                         </div>
                     </div>

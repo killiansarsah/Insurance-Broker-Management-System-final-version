@@ -452,7 +452,7 @@ export default function ExpensesPage() {
                             onChange={e => setSearch(e.target.value)}
                             className="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 rounded-lg
                                 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400
-                                transition-all bg-white placeholder-surface-400"
+                                transition-all bg-surface-50 placeholder-surface-400"
                         />
                     </div>
 

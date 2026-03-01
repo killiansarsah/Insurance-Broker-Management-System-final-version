@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { Mail, Phone, Building2, Briefcase } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AddStaffModalProps {
     isOpen: boolean;
@@ -40,12 +41,17 @@ export function AddStaffModal({ isOpen, onClose, onAdd }: AddStaffModalProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!formData.firstName.trim() || !formData.lastName.trim() || !formData.email.trim() || !formData.phone.trim()) {
+            toast.error('Missing Fields', { description: 'Please fill in all required fields before submitting.' });
+            return;
+        }
         onAdd({
             ...formData,
             id: `usr-${Math.floor(Math.random() * 1000)}`,
             isActive: true,
             createdAt: new Date().toISOString(),
         });
+        toast.success('Staff Member Onboarded', { description: `${formData.firstName} ${formData.lastName} has been added to the team.` });
         onClose();
         setFormData({
             firstName: '',

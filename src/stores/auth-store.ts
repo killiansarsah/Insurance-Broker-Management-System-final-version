@@ -136,7 +136,7 @@ export const useAuthStore = create<AuthState>()(
             login: async (email, password) => {
                 set({ isLoading: true });
                 // Simulate API call
-                console.log(`Logging in ${email}`); // Use vars to avoid lint error
+                void email; void password;
                 await new Promise((resolve) => setTimeout(resolve, 800));
                 set({ user: MOCK_USER, isAuthenticated: true, isLoading: false });
             },

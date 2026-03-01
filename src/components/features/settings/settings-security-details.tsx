@@ -12,6 +12,7 @@ export function SettingsSecurityDetails() {
     const [password, setPassword] = useState('');
     const [is2faEnabled, setIs2faEnabled] = useState(false);
     const [isSignOutAllOpen, setIsSignOutAllOpen] = useState(false);
+    const [twoFaCode, setTwoFaCode] = useState('');
 
     const handleSavePassword = () => {
         setIsSavingPw(true);
@@ -141,8 +142,8 @@ export function SettingsSecurityDetails() {
                             <button
                                 onClick={() => setIs2faEnabled(!is2faEnabled)}
                                 className={cn(
-                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none",
-                                    is2faEnabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
+                                    is2faEnabled ? "bg-primary border-primary ring-4 ring-primary/20 shadow-lg shadow-primary/30" : "bg-slate-200 dark:bg-slate-700 border-transparent"
                                 )}
                             >
                                 <span className={cn(
@@ -169,8 +170,19 @@ export function SettingsSecurityDetails() {
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Verification Code</label>
                                     <div className="flex gap-3">
-                                        <input className="flex-1 h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-black text-2xl tracking-[0.5em] text-center focus:ring-4 focus:ring-primary/10 transition-all outline-none dark:text-white" placeholder="000000" />
-                                        <button className="h-14 px-8 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20">Verify</button>
+                                        <input
+                                            value={twoFaCode}
+                                            onChange={(e) => setTwoFaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                            className="flex-1 h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-black text-2xl tracking-[0.5em] text-center focus:ring-4 focus:ring-primary/10 transition-all outline-none dark:text-white" placeholder="000000"
+                                        />
+                                        <button
+                                            onClick={() => {
+                                                if (twoFaCode.length !== 6) { toast.error('Invalid Code', { description: 'Please enter a valid 6-digit verification code.' }); return; }
+                                                toast.success('2FA Enabled', { description: 'Two-factor authentication has been activated on your account.' });
+                                                setTwoFaCode('');
+                                            }}
+                                            className="h-14 px-8 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20"
+                                        >Verify</button>
                                     </div>
                                 </div>
                             </div>
@@ -187,7 +199,9 @@ export function SettingsSecurityDetails() {
                         <p className="text-xs font-bold text-slate-500 uppercase leading-relaxed tracking-tight">
                             Print or securely store your backup codes. These allow you to regain access if you lose your authentication device.
                         </p>
-                        <button className="h-11 w-full rounded-xl border-2 border-primary text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 transition-all">
+                        <button className="h-11 w-full rounded-xl border-2 border-primary text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 transition-all"
+                            onClick={() => toast.success('Recovery Codes Downloaded', { description: 'Your backup codes have been saved to your downloads folder. Store them securely.' })}
+                        >
                             Download Recovery Codes
                         </button>
                     </div>

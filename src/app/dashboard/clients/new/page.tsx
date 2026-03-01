@@ -488,26 +488,18 @@ export default function NewClientPage() {
                                 Identification Documents (Mandatory for Compliance)
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
-                                    <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />
-                                    <p className="text-xs font-medium text-surface-600">Ghana Card (Front)</p>
-                                    <p className="text-[10px] text-surface-400 mt-1">Click to upload</p>
-                                </div>
-                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
-                                    <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />
-                                    <p className="text-xs font-medium text-surface-600">Ghana Card (Back)</p>
-                                    <p className="text-[10px] text-surface-400 mt-1">Click to upload</p>
-                                </div>
-                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
-                                    <User size={24} className="mx-auto text-surface-300 mb-2" />
-                                    <p className="text-xs font-medium text-surface-600">Passport Photo</p>
-                                    <p className="text-[10px] text-surface-400 mt-1">Click to upload</p>
-                                </div>
-                                <div className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
-                                    <MapPin size={24} className="mx-auto text-surface-300 mb-2" />
-                                    <p className="text-xs font-medium text-surface-600">Proof of Address</p>
-                                    <p className="text-[10px] text-surface-400 mt-1">Utility Bill/Bank Statement</p>
-                                </div>
+                                {[
+                                    { label: 'Ghana Card (Front)', icon: <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to upload' },
+                                    { label: 'Ghana Card (Back)', icon: <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to upload' },
+                                    { label: 'Passport Photo', icon: <User size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to upload' },
+                                    { label: 'Proof of Address', icon: <MapPin size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Utility Bill/Bank Statement' },
+                                ].map((doc) => (
+                                    <div key={doc.label} onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.pdf,.jpg,.jpeg,.png'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`${doc.label} uploaded`, { description: inp.files[0].name }); }; inp.click(); }} className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                        {doc.icon}
+                                        <p className="text-xs font-medium text-surface-600">{doc.label}</p>
+                                        <p className="text-[10px] text-surface-400 mt-1">{doc.sub}</p>
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>

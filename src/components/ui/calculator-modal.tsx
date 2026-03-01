@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Input } from './input';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { CustomSelect } from './select-custom';
 import { LiquidFilters } from './liquid-filters';
 
@@ -337,7 +338,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                 {/* Footer Action */}
                 <div className="mt-12 flex justify-end border-t border-slate-100/50 pt-8 animate-in fade-in zoom-in duration-1000">
                     <button
-                        onClick={() => alert(`Calculating ${section} quote...`)}
+                        onClick={() => toast.success('Quote Calculated', { description: `Your ${section} quote has been generated. Review the summary below.` })}
                         className={cn(
                             "flex items-center gap-2 px-7 py-3 rounded-2xl font-black uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-lg relative overflow-hidden group border-none outline-none",
                             "bg-gradient-to-r from-warning-400 to-warning-500 text-slate-900"

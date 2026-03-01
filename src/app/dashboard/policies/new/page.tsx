@@ -444,27 +444,27 @@ export default function NewPolicyPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Registration No.</label>
-                                        <input type="text" placeholder="e.g. GR-1234-21" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleRegNumber} onChange={(e) => update('vehicleRegNumber', e.target.value)} />
+                                        <input type="text" placeholder="e.g. GR-1234-21" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleRegNumber} onChange={(e) => update('vehicleRegNumber', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Make</label>
-                                        <input type="text" placeholder="e.g. Toyota" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleMake} onChange={(e) => update('vehicleMake', e.target.value)} />
+                                        <input type="text" placeholder="e.g. Toyota" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleMake} onChange={(e) => update('vehicleMake', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Model</label>
-                                        <input type="text" placeholder="e.g. Hilux" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleModel} onChange={(e) => update('vehicleModel', e.target.value)} />
+                                        <input type="text" placeholder="e.g. Hilux" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleModel} onChange={(e) => update('vehicleModel', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Year</label>
-                                        <input type="number" placeholder="2024" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleYear} onChange={(e) => update('vehicleYear', e.target.value)} />
+                                        <input type="number" placeholder="2024" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleYear} onChange={(e) => update('vehicleYear', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Chassis No.</label>
-                                        <input type="text" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleChassisNumber} onChange={(e) => update('vehicleChassisNumber', e.target.value)} />
+                                        <input type="text" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleChassisNumber} onChange={(e) => update('vehicleChassisNumber', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Engine No.</label>
-                                        <input type="text" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleEngineNumber} onChange={(e) => update('vehicleEngineNumber', e.target.value)} />
+                                        <input type="text" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleEngineNumber} onChange={(e) => update('vehicleEngineNumber', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Usage Type</label>
@@ -480,7 +480,7 @@ export default function NewPolicyPage() {
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Estimated Value (GHS)</label>
-                                        <input type="number" placeholder="0" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleEstimatedValue || ''} onChange={(e) => update('vehicleEstimatedValue', parseFloat(e.target.value) || 0)} />
+                                        <input type="number" placeholder="0" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vehicleEstimatedValue || ''} onChange={(e) => update('vehicleEstimatedValue', parseFloat(e.target.value) || 0)} />
                                     </div>
                                 </div>
                             </div>
@@ -495,7 +495,7 @@ export default function NewPolicyPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div className="col-span-2">
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Property Address</label>
-                                        <input type="text" placeholder="e.g. 15 Independence Ave, Accra" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.propertyAddress} onChange={(e) => update('propertyAddress', e.target.value)} />
+                                        <input type="text" placeholder="e.g. 15 Independence Ave, Accra" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.propertyAddress} onChange={(e) => update('propertyAddress', e.target.value)} />
                                     </div>
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Property Type</label>
@@ -523,21 +523,21 @@ export default function NewPolicyPage() {
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Vessel Name</label>
-                                        <input type="text" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vesselName} onChange={(e) => update('vesselName', e.target.value)} />
+                                        <input type="text" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.vesselName} onChange={(e) => update('vesselName', e.target.value)} />
                                     </div>
                                     <div className="col-span-2 grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-medium text-surface-600 mb-1">Voyage From</label>
-                                            <input type="text" placeholder="e.g. Tema Port" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.voyageFrom} onChange={(e) => update('voyageFrom', e.target.value)} />
+                                            <input type="text" placeholder="e.g. Tema Port" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.voyageFrom} onChange={(e) => update('voyageFrom', e.target.value)} />
                                         </div>
                                         <div>
                                             <label className="block text-xs font-medium text-surface-600 mb-1">Voyage To</label>
-                                            <input type="text" placeholder="e.g. Rotterdam" className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.voyageTo} onChange={(e) => update('voyageTo', e.target.value)} />
+                                            <input type="text" placeholder="e.g. Rotterdam" className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm" value={form.voyageTo} onChange={(e) => update('voyageTo', e.target.value)} />
                                         </div>
                                     </div>
                                     <div className="col-span-2">
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Cargo Description</label>
-                                        <textarea rows={2} className="w-full p-2.5 bg-white border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm resize-none" value={form.cargoDescription} onChange={(e) => update('cargoDescription', e.target.value)} />
+                                        <textarea rows={2} className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 text-sm resize-none" value={form.cargoDescription} onChange={(e) => update('cargoDescription', e.target.value)} />
                                     </div>
                                 </div>
                             </div>

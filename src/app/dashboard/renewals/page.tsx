@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import {
     Clock,
     AlertTriangle,
@@ -92,11 +93,11 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
 
             {/* Centered modal panel */}
             <div
-                className="relative w-full max-w-3xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-y-auto"
+                className="relative w-full max-w-3xl max-h-[90vh] bg-background rounded-2xl shadow-2xl overflow-y-auto"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="sticky top-0 z-10 bg-white border-b border-surface-200 px-6 py-4 rounded-t-2xl">
+                <div className="sticky top-0 z-10 bg-background border-b border-surface-200 px-6 py-4 rounded-t-2xl">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className="p-2 rounded-lg bg-warning-50">
@@ -292,21 +293,21 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                             <Button
                                 variant="primary"
                                 leftIcon={<Phone size={16} />}
-                                onClick={() => alert(`Calling ${renewal.clientName} at ${renewal.clientPhone}`)}
+                                onClick={() => toast.info('Calling Client', { description: `Initiating call to ${renewal.clientName} at ${renewal.clientPhone}` })}
                             >
                                 Contact Client
                             </Button>
                             <Button
                                 variant="outline"
                                 leftIcon={<Send size={16} />}
-                                onClick={() => alert(`Sending renewal reminder to ${renewal.clientEmail}`)}
+                                onClick={() => toast.success('Reminder Sent', { description: `Renewal reminder sent to ${renewal.clientEmail}` })}
                             >
                                 Send Reminder
                             </Button>
                             <Button
                                 variant="outline"
                                 leftIcon={<Mail size={16} />}
-                                onClick={() => alert(`Opening email for ${renewal.clientEmail}`)}
+                                onClick={() => toast.info('Email Client', { description: `Opening email draft for ${renewal.clientEmail}` })}
                             >
                                 Email Quote
                             </Button>
@@ -314,7 +315,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                 variant="primary"
                                 className="bg-success-600 hover:bg-success-700 ml-auto"
                                 leftIcon={<CheckCircle2 size={16} />}
-                                onClick={() => alert(`Processing renewal for ${renewal.policyNumber}`)}
+                                onClick={() => toast.success('Renewal Processed', { description: `Renewal for ${renewal.policyNumber} has been initiated.` })}
                             >
                                 Process Renewal
                             </Button>
@@ -437,7 +438,7 @@ export default function RenewalsPage() {
                     <Button
                         variant="primary"
                         leftIcon={<Send size={16} />}
-                        onClick={() => alert('Sending bulk renewal notifications (Email/SMS)...')}
+                        onClick={() => toast.success('Notifications Sent', { description: 'Bulk renewal reminders dispatched via Email & SMS.' })}
                     >
                         Notify All
                     </Button>

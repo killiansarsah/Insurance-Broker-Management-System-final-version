@@ -23,6 +23,7 @@ import { claims as initialClaims } from '@/mock/claims';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Claim } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
+import { toast } from 'sonner';
 import { ClaimStatusModal } from '@/components/claims/claim-status-modal';
 
 function InfoItem({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: React.ReactNode; className?: string }) {
@@ -72,7 +73,7 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
     return (
         <div className="space-y-6 animate-fade-in w-full pb-12" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-background p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">
                     <BackButton href="/dashboard/claims" />
                     <div>
@@ -84,7 +85,7 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />}>Export PDF</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.success('PDF Export', { description: `Claim report for ${claim.claimNumber} is being generated.` })}>Export PDF</Button>
                     <Button
                         variant="primary"
                         onClick={() => setIsStatusModalOpen(true)}
@@ -193,10 +194,10 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
                         >
                             Discuss with Team
                         </Button>
-                        <Button variant="outline" className="w-full" leftIcon={<MessageSquare size={16} />}>
-                            Message Complainant
+                        <Button variant="outline" className="w-full" leftIcon={<MessageSquare size={16} />} onClick={() => toast.info('Claimant notification', { description: `Email reminder would be sent to ${claim.clientName}` })}>
+                            Message Claimant
                         </Button>
-                        <Button variant="outline" className="w-full" leftIcon={<Search size={16} />}>
+                        <Button variant="outline" className="w-full" leftIcon={<Search size={16} />} onClick={() => toast.info('Internal notes feature coming soon')}>
                             Add Internal Note
                         </Button>
                     </div>

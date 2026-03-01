@@ -47,9 +47,10 @@ export default function NewClaimPage() {
     );
 
     function next() {
-        if (step === 1 && !selectedPolicy) return;
-        if (step === 2 && (!incidentDate || !description)) return;
-        if (step === 3 && !estimatedAmount) return;
+        if (step === 1 && !selectedPolicy) { toast.error('Please select a policy to continue'); return; }
+        if (step === 2 && !incidentDate) { toast.error('Please enter the incident date'); return; }
+        if (step === 2 && !description) { toast.error('Please describe the incident'); return; }
+        if (step === 3 && !estimatedAmount) { toast.error('Please enter the estimated loss amount'); return; }
         setStep(s => Math.min(4, s + 1));
     }
 
@@ -121,7 +122,7 @@ export default function NewClaimPage() {
                                     onClick={() => setSelectedPolicy(policy)}
                                     className={cn(
                                         "p-4 rounded-[var(--radius-md)] border cursor-pointer transition-all hover:border-primary-300",
-                                        selectedPolicy?.id === policy.id ? "border-primary-500 bg-primary-50 ring-1 ring-primary-500" : "border-surface-200 bg-white"
+                                        selectedPolicy?.id === policy.id ? "border-primary-500 bg-primary-50 ring-1 ring-primary-500" : "border-surface-200 bg-surface-50"
                                     )}
                                 >
                                     <div className="flex justify-between items-start">
@@ -196,7 +197,7 @@ export default function NewClaimPage() {
                         <div className="p-6 border-2 border-dashed border-surface-200 rounded-[var(--radius-md)] text-center">
                             <Upload size={32} className="mx-auto text-surface-300 mb-2" />
                             <p className="text-sm text-surface-500">Upload evidence (Photos, Police Report)</p>
-                            <Button variant="outline" size="sm" className="mt-4">Choose Files</Button>
+                            <Button variant="outline" size="sm" className="mt-4" onClick={() => toast.info('File upload will be available when backend is connected')}>Choose Files</Button>
                         </div>
                     </div>
                 )}

@@ -15,6 +15,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { mockClients } from '@/mock/clients';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 export default function CompliancePage() {
     const [pepSearch, setPepSearch] = useState('');
@@ -43,8 +44,8 @@ export default function CompliancePage() {
                     <p className="text-sm text-surface-500 mt-1">Review KYC, AML screening, and risk assessments.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />}>Export Report</Button>
-                    <Button variant="primary" leftIcon={<Shield size={16} />}>Run Batch Screening</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.success('Export Started', { description: 'Compliance report is being generated.' })}>Export Report</Button>
+                    <Button variant="primary" leftIcon={<Shield size={16} />} onClick={() => toast.info('Batch Screening', { description: 'Running AML/PEP screening against all active clients...' })}>Run Batch Screening</Button>
                 </div>
             </div>
 
@@ -85,7 +86,7 @@ export default function CompliancePage() {
                 <Card padding="none" className="lg:col-span-2 min-h-[400px]">
                     <CardHeader
                         title="Pending KYC Reviews"
-                        action={<Button variant="outline" size="sm">View All</Button>}
+                        action={<Button variant="outline" size="sm" onClick={() => toast.info('All pending KYC reviews', { description: 'Navigate to Clients to see full KYC status.' })}>View All</Button>}
                     />
                     <div className="divide-y divide-surface-100">
                         {pendingKyc.slice(0, 5).map(client => (
@@ -103,7 +104,7 @@ export default function CompliancePage() {
                                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-warning-50 text-warning-700 border border-warning-200">
                                         Submit: {new Date(client.createdAt).toLocaleDateString()}
                                     </span>
-                                    <Button size="sm" variant="outline">Review</Button>
+                                    <Button size="sm" variant="outline" onClick={() => toast.info('KYC Review', { description: `Opening review for ${client.firstName ? client.firstName + ' ' + client.lastName : client.companyName}.` })}>Review</Button>
                                 </div>
                             </div>
                         ))}

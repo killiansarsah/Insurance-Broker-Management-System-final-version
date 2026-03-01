@@ -26,6 +26,7 @@ import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
+import { toast } from 'sonner';
 
 function InfoItem({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: React.ReactNode; className?: string }) {
     return (
@@ -46,7 +47,7 @@ function TimelineStep({ date, title, desc, icon, active, warning, isLast }: { da
                 <div className="absolute left-[11px] top-8 bottom-0 w-0.5 bg-surface-200" />
             )}
             <div className={cn(
-                "absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-white z-10",
+                "absolute left-0 top-0 w-6 h-6 rounded-full flex items-center justify-center ring-4 ring-background z-10",
                 active
                     ? (warning ? "bg-warning-500 text-white" : "bg-primary-500 text-white")
                     : "bg-surface-100 text-surface-400"
@@ -84,7 +85,7 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
     return (
         <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-background p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">
                     <BackButton href="/dashboard/complaints" />
                     <div>
@@ -96,8 +97,8 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />}>Export Report</Button>
-                    <Button variant="primary">Investigate Case</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.success('Generating report', { description: `Exporting ${complaint.complaintNumber} details...` })}>Export Report</Button>
+                    <Button variant="primary" onClick={() => toast.info('Investigation started', { description: `Case ${complaint.complaintNumber} marked for investigation.` })}>Investigate Case</Button>
                 </div>
             </div>
 
@@ -138,7 +139,7 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
                                     <CheckCircle2 size={18} />
                                     <span className="text-sm font-bold">Case Resolved on {complaint.resolvedAt ? formatDate(complaint.resolvedAt) : 'N/A'}</span>
                                 </div>
-                                <div className="p-4 bg-white/60 border border-success-200 rounded-[var(--radius-md)] text-sm text-surface-700 leading-relaxed shadow-sm">
+                                <div className="p-4 bg-background/60 border border-success-200 rounded-[var(--radius-md)] text-sm text-surface-700 leading-relaxed shadow-sm">
                                     {complaint.resolution}
                                 </div>
                             </div>
@@ -192,10 +193,10 @@ export default function ComplaintDetailPage({ params }: { params: Promise<{ id: 
 
                     {/* Actions */}
                     <div className="space-y-2">
-                        <Button variant="outline" className="w-full" leftIcon={<MessageSquare size={16} />}>
+                        <Button variant="outline" className="w-full" leftIcon={<MessageSquare size={16} />} onClick={() => toast.info('Opening message thread', { description: `Contacting ${complaint.complainantName}...` })}>
                             Message Complainant
                         </Button>
-                        <Button variant="outline" className="w-full" leftIcon={<Search size={16} />}>
+                        <Button variant="outline" className="w-full" leftIcon={<Search size={16} />} onClick={() => toast.info('Internal note', { description: 'Note editor coming soon.' })}>
                             Add Internal Note
                         </Button>
                     </div>

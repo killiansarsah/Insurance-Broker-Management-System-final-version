@@ -399,7 +399,7 @@ export default function TasksPage() {
     return (
         <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '72rem', margin: '0 auto' }}>
             {/* Header Section */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-background p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">
                     <div className="p-3 bg-primary-50 text-primary-600 rounded-xl shadow-inner">
                         <Briefcase size={24} />
@@ -417,7 +417,7 @@ export default function TasksPage() {
                             onClick={() => setViewMode('desk')}
                             className={cn(
                                 "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300",
-                                viewMode === 'desk' ? "bg-white text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
+                                viewMode === 'desk' ? "bg-background text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
                             )}
                         >
                             Desk
@@ -426,7 +426,7 @@ export default function TasksPage() {
                             onClick={() => setViewMode('list')}
                             className={cn(
                                 "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300",
-                                viewMode === 'list' ? "bg-white text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
+                                viewMode === 'list' ? "bg-background text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
                             )}
                         >
                             List
@@ -570,7 +570,7 @@ export default function TasksPage() {
                                 onClick={() => {
                                     deskScrollRef.current?.scrollBy({ top: 300, behavior: 'smooth' });
                                 }}
-                                className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-white/80 backdrop-blur-md border border-surface-200 shadow-lg px-4 py-2 rounded-full flex items-center gap-2 text-primary-600 hover:bg-primary-50 transition-all group"
+                                className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-background/80 backdrop-blur-md border border-surface-200 shadow-lg px-4 py-2 rounded-full flex items-center gap-2 text-primary-600 hover:bg-primary-50 transition-all group"
                             >
                                 <span className="text-[10px] font-black uppercase tracking-widest">More Tasks Below</span>
                                 <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
@@ -578,7 +578,7 @@ export default function TasksPage() {
                         )}
                     </AnimatePresence>
 
-                    <div className="p-4 border-t border-surface-100 bg-white/40 backdrop-blur-sm text-center relative z-10">
+                    <div className="p-4 border-t border-surface-100 bg-background/40 backdrop-blur-sm text-center relative z-10">
                         <div className="flex items-center justify-center gap-2">
                             <span className="w-2 h-2 rounded-full bg-success-500 animate-pulse" />
                             <span className="text-[10px] font-black text-surface-500 uppercase tracking-widest">
@@ -630,7 +630,7 @@ export default function TasksPage() {
                         </div>
                     </div >
 
-                    <div className="bg-white rounded-2xl border border-surface-200 shadow-sm overflow-hidden">
+                    <div className="bg-background rounded-2xl border border-surface-200 shadow-sm overflow-hidden">
                         <div className="p-4 bg-surface-50/50 border-b border-surface-200 grid grid-cols-12 gap-4 text-[10px] font-black text-surface-400 uppercase tracking-widest items-center">
                             <div className="col-span-1 flex justify-center">
                                 <button

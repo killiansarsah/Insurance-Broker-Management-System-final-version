@@ -22,6 +22,7 @@ import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 
 import { NewComplaintModal } from '@/components/complaints/new-complaint-modal';
+import { toast } from 'sonner';
 
 export default function ComplaintsPage() {
     const router = useRouter();
@@ -41,7 +42,7 @@ export default function ComplaintsPage() {
                     <p className="text-sm text-surface-500 mt-1">Track regulatory disputes and resolve client issues.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Filter size={16} />}>Filter Log</Button>
+                    <Button variant="outline" leftIcon={<Filter size={16} />} onClick={() => toast.info('Complaint filters', { description: 'Advanced filtering coming soon.' })}>Filter Log</Button>
                     <Button
                         variant="primary"
                         leftIcon={<Plus size={16} />}

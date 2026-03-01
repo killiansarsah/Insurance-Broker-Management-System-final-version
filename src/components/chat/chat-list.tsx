@@ -17,7 +17,7 @@ export function ChatList({ activeId, onSelect }: ChatListProps) {
     return (
         <Card padding="none" className="flex flex-col h-full bg-surface-50/30 border-surface-200 overflow-hidden">
             {/* Search Area */}
-            <div className="p-4 border-b border-surface-200 bg-white">
+            <div className="p-4 border-b border-surface-200 bg-background">
                 <div className="relative">
                     <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
                     <input
@@ -52,7 +52,7 @@ export function ChatList({ activeId, onSelect }: ChatListProps) {
                                 icon={chat.type === 'ai' ? <Bot size={20} /> : <User size={20} />}
                             />
                             {chat.isOnline && (
-                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success-500 border-2 border-white rounded-full" />
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-success-500 border-2 border-background rounded-full" />
                             )}
                         </div>
 
@@ -85,7 +85,7 @@ export function ChatList({ activeId, onSelect }: ChatListProps) {
             </div>
 
             {/* User Profile Mini Tab */}
-            <div className="p-4 border-t border-surface-200 bg-white">
+            <div className="p-4 border-t border-surface-200 bg-background">
                 <div className="flex items-center gap-3">
                     <Avatar name="Kwame Asante" size="sm" />
                     <div className="flex-1 min-w-0">

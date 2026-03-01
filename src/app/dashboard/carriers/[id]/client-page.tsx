@@ -1,7 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink, MapPin, Calendar, Users, FileText, ChevronDown } from 'lucide-react';
+import { ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink, MapPin, Calendar, Users, FileText, ChevronDown, Star, Hash, User, TrendingUp, Landmark } from 'lucide-react';
+import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { type Carrier } from '@/mock/carriers';
@@ -147,7 +148,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Calendar size={16} className="text-primary-500" />
-                                    Est. {new Date().getFullYear() - 25}
+                                    Est. {carrier.established}
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <Users size={16} className="text-primary-500" />
@@ -156,11 +157,9 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             </div>
                         </div>
 
-                        {/* Description / Bio (Mock) */}
+                        {/* Description */}
                         <p className="text-surface-600 leading-relaxed md:mx-0" style={{ maxWidth: '48rem' }}>
-                            {carrier.name} is a leading provider of {carrier.type} insurance solutions in Ghana.
-                            Headquartered in {carrier.hq}, they are known for their strong financial stability and
-                            commitment to customer service. Partnered with us since 2020.
+                            {carrier.description}
                         </p>
 
                         {/* Action Buttons */}
@@ -269,9 +268,10 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             <div className="p-2">
                                 {[
                                     { icon: MapPin, label: 'Address', value: 'Headquarters', sub: carrier.hq },
-                                    { icon: Phone, label: 'Phone', value: '+233 (0) 30 200 0000' },
-                                    { icon: Mail, label: 'Email', value: `info@${carrier.slug.replace(/-/g, '')}.com.gh` },
-                                    { icon: Globe, label: 'Website', value: `www.${carrier.slug.replace(/-/g, '')}.com.gh` },
+                                    { icon: Phone, label: 'Phone', value: carrier.phone },
+                                    { icon: Mail, label: 'Email', value: carrier.email },
+                                    { icon: Globe, label: 'Website', value: carrier.website.replace(/^https?:\/\//, '') },
+                                    { icon: User, label: 'Contact Person', value: carrier.contactPerson },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 rounded-xl transition-colors group">
                                         <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
@@ -282,14 +282,49 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                             <p className="text-sm font-bold text-surface-900 truncate">{item.value}</p>
                                             {item.sub && <p className="text-xs text-surface-500 truncate">{item.sub}</p>}
                                         </div>
-                                        {i > 0 && <ExternalLink size={14} className="text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                                        {i > 0 && i < 4 && <ExternalLink size={14} className="text-surface-300 opacity-0 group-hover:opacity-100 transition-opacity" />}
                                     </div>
                                 ))}
                             </div>
                         </Card>
                     </motion.div>
 
-                    {/* Quick Stats or compliance */}
+                    {/* Quick Facts */}
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.35 }}
+                    >
+                        <Card padding="none" className="overflow-hidden border-surface-200 bg-white/60 backdrop-blur-xl shadow-lg">
+                            <div className="p-5 border-b border-surface-100 bg-surface-50/50">
+                                <h3 className="font-bold text-surface-900 flex items-center gap-2">
+                                    <Hash size={16} className="text-primary-500" />
+                                    Quick Facts
+                                </h3>
+                            </div>
+                            <div className="p-2">
+                                {[
+                                    { icon: Hash, label: 'NIC License', value: carrier.licenseNumber },
+                                    ...(carrier.rating ? [{ icon: Star, label: 'Rating', value: carrier.rating }] : []),
+                                    ...(carrier.parentGroup ? [{ icon: Landmark, label: 'Parent Group', value: carrier.parentGroup }] : []),
+                                    ...(carrier.revenue2024 ? [{ icon: TrendingUp, label: 'Revenue (2024)', value: `GHS ${(carrier.revenue2024 / 1_000_000).toFixed(1)}M` }] : []),
+                                    { icon: Shield, label: 'Product Lines', value: carrier.productCategories.join(', ') },
+                                ].map((item, i) => (
+                                    <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 rounded-xl transition-colors group">
+                                        <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
+                                            <item.icon size={18} className="text-surface-500 group-hover:text-primary-600" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-medium text-surface-400 uppercase tracking-wider">{item.label}</p>
+                                            <p className="text-sm font-bold text-surface-900 truncate">{item.value}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </Card>
+                    </motion.div>
+
+                    {/* Compliance Badge */}
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -301,7 +336,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-emerald-900">Compliance Verified</p>
-                                <p className="text-xs text-emerald-700">License active for {new Date().getFullYear()}</p>
+                                <p className="text-xs text-emerald-700">NIC License {carrier.licenseNumber} · Active for {new Date().getFullYear()}</p>
                             </div>
                         </div>
                     </motion.div>
@@ -332,7 +367,7 @@ function ProductCard({ product }: { product: CarrierProduct }) {
                 <p className="text-sm text-surface-500 line-clamp-2">{product.description}</p>
             </div>
             <div className="shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast.info(product.name, { description: product.coverageSummary.length > 0 ? `Coverage: ${product.coverageSummary.join(' · ')}` : product.description })}>
                     <ArrowRight size={18} />
                 </Button>
             </div>

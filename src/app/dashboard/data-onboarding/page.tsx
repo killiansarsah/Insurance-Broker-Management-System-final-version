@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import { SettingsDataImport } from '@/components/features/settings/settings-data-import';
+import { toast } from 'sonner';
 
 export default function ImportPage() {
     const [isWizardOpen, setIsWizardOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function ImportPage() {
                 </div>
 
                 {/* Main Action Card */}
-                <Card padding="none" className="overflow-hidden border-surface-200 shadow-sm bg-white rounded-[32px]">
+                <Card padding="none" className="overflow-hidden border-surface-200 shadow-sm bg-background rounded-[32px]">
                     <div className="p-10 border-b border-surface-100 bg-surface-50/30">
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
                             <div className="w-20 h-20 rounded-2xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
@@ -79,7 +80,7 @@ export default function ImportPage() {
                     <Info size={18} className="text-primary-600 mt-0.5" />
                     <p className="text-sm text-primary-900/80 leading-relaxed">
                         <strong>Need help getting started?</strong> Download our
-                        <button className="text-primary-700 font-bold underline px-1 hover:text-primary-800">standard import template</button>
+                        <button onClick={() => toast.success('Template Downloaded', { description: 'The standard import template (XLSX) is being downloaded.' })} className="text-primary-700 font-bold underline px-1 hover:text-primary-800">standard import template</button>
                         to ensure your data structure matches the system requirements for a seamless migration.
                     </p>
                 </div>
@@ -92,7 +93,7 @@ export default function ImportPage() {
                 size="full"
                 className="h-[95vh] p-0"
             >
-                <div className="bg-white h-full rounded-[32px] overflow-hidden">
+                <div className="bg-background h-full rounded-[32px] overflow-hidden">
                     <SettingsDataImport />
                 </div>
             </Modal>

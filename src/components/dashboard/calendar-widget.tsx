@@ -73,9 +73,9 @@ export function CalendarWidget() {
             </div>
 
             <div className="p-4 bg-surface-50 border-t border-surface-100">
-                <button className="w-full py-2 text-xs font-bold text-surface-600 bg-[var(--bg-card)] border border-[var(--glass-border)] rounded-[var(--radius-md)] hover:bg-[var(--sidebar-hover)] transition-colors shadow-none">
+                <Link href="/dashboard/calendar" className="block w-full py-2 text-xs font-bold text-surface-600 bg-[var(--bg-card)] border border-[var(--glass-border)] rounded-[var(--radius-md)] hover:bg-[var(--sidebar-hover)] transition-colors shadow-none text-center">
                     Quick Add Event
-                </button>
+                </Link>
             </div>
         </div>
     );

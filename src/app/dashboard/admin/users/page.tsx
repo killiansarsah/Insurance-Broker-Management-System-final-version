@@ -145,7 +145,7 @@ export default function UsersPage() {
                                 </button>
 
                                 {openMenuId === row.id && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] border border-surface-200 z-20 animate-scale-in origin-top-right overflow-hidden">
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-background rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] border border-surface-200 z-20 animate-scale-in origin-top-right overflow-hidden">
                                         <button
                                             className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
                                             onClick={(e) => { e.stopPropagation(); handleAction('edit', row.firstName); }}

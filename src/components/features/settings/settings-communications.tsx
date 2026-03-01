@@ -222,8 +222,8 @@ export function SettingsCommunications() {
                             <button
                                 onClick={() => handlePushToggle(t.id)}
                                 className={cn(
-                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none",
-                                    t.enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
+                                    t.enabled ? "bg-primary border-primary ring-4 ring-primary/20 shadow-lg shadow-primary/30" : "bg-slate-200 dark:bg-slate-700 border-transparent"
                                 )}
                             >
                                 <span className={cn(

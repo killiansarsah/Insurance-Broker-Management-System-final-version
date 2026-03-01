@@ -20,6 +20,7 @@ import { MOCK_DOCUMENTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
 import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { toast } from 'sonner';
 
 export default function DocumentsPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -97,7 +98,10 @@ export default function DocumentsPage() {
                             <div className="w-10 h-10 rounded-lg bg-surface-50 flex items-center justify-center p-2 mb-3">
                                 {getIcon(doc.mimeType)}
                             </div>
-                            <button className="text-surface-400 hover:text-surface-900">
+                            <button
+                                className="text-surface-400 hover:text-surface-900"
+                                onClick={() => toast.info('Document options', { description: `Actions for ${doc.name}` })}
+                            >
                                 <MoreVertical size={16} />
                             </button>
                         </div>
@@ -111,7 +115,10 @@ export default function DocumentsPage() {
 
                         <div className="mt-auto pt-3 border-t border-surface-100 flex items-center justify-between">
                             <span className="text-[10px] text-surface-400">{formatDate(doc.createdAt)}</span>
-                            <button className="p-1.5 rounded-full hover:bg-surface-50 text-primary-600 transition-colors">
+                            <button
+                                className="p-1.5 rounded-full hover:bg-surface-50 text-primary-600 transition-colors"
+                                onClick={() => toast.success('Download started', { description: doc.name })}
+                            >
                                 <Download size={16} />
                             </button>
                         </div>

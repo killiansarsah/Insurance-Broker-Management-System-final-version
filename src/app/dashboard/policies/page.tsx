@@ -101,7 +101,11 @@ export default function PoliciesPage() {
     const expiringSoon = baseData.filter((p) => (p.daysToExpiry ?? 999) <= 30 && p.status === 'active');
     const pendingDraft = baseData.filter((p) => p.status === 'pending' || p.status === 'draft');
     const lapsedPolicies = baseData.filter((p) => p.status === 'lapsed');
-    const newThisMonth = baseData.filter((p) => p.inceptionDate >= '2026-02-01' && p.inceptionDate <= '2026-02-28');
+    const now = new Date();
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const monthEnd = new Date(nextMonth.getTime() - 86_400_000).toISOString().split('T')[0];
+    const newThisMonth = baseData.filter((p) => p.inceptionDate >= monthStart && p.inceptionDate <= monthEnd);
 
     const kpis = [
         {
@@ -373,7 +377,7 @@ export default function PoliciesPage() {
                         type="date"
                         value={filterDateFrom}
                         onChange={(e) => setFilterDateFrom(e.target.value)}
-                        className="text-xs border border-surface-200 rounded-lg px-2 py-1.5 bg-white text-surface-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                        className="text-xs border border-surface-200 rounded-lg px-2 py-1.5 bg-surface-50 text-surface-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
                         title="Inception from"
                     />
                     <span className="text-surface-400 text-xs">to</span>
@@ -381,7 +385,7 @@ export default function PoliciesPage() {
                         type="date"
                         value={filterDateTo}
                         onChange={(e) => setFilterDateTo(e.target.value)}
-                        className="text-xs border border-surface-200 rounded-lg px-2 py-1.5 bg-white text-surface-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                        className="text-xs border border-surface-200 rounded-lg px-2 py-1.5 bg-surface-50 text-surface-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
                         title="Inception to"
                     />
                 </div>

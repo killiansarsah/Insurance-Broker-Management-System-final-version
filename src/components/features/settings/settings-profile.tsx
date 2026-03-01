@@ -3,6 +3,7 @@
 import { useRef, useCallback, useState } from 'react';
 import { useProfileStore } from '@/stores/profile-store';
 import Image from 'next/image';
+import { toast } from 'sonner';
 
 export function SettingsProfile() {
     const {
@@ -31,8 +32,8 @@ export function SettingsProfile() {
     const handlePhotoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { alert('File size must be less than 5MB'); return; }
-        if (!file.type.startsWith('image/')) { alert('Please select an image file'); return; }
+        if (file.size > 5 * 1024 * 1024) { toast.error('File Too Large', { description: 'Please select an image under 5MB.' }); return; }
+        if (!file.type.startsWith('image/')) { toast.error('Invalid File Type', { description: 'Please select an image file (PNG, JPG, etc.).' }); return; }
         const url = URL.createObjectURL(file);
         updateProfile({ avatarUrl: url });
     }, [updateProfile]);

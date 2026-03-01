@@ -35,10 +35,27 @@ export default function ClaimsPage() {
     }, [baseData, statusFilter]);
 
     // 3. Dynamic Stats based on Base Data (Context)
+    // Settled this month — filter by settlementDate in current month
+    const now = new Date();
+    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const monthEnd = new Date(nextMonth.getTime() - 86_400_000).toISOString().split('T')[0];
+    const settledThisMonth = baseData.filter(c => c.status === 'settled' && c.settlementDate && c.settlementDate.slice(0, 10) >= monthStart && c.settlementDate.slice(0, 10) <= monthEnd);
+
+    // Avg settlement time — compute from intimation→settlement for settled claims
+    const settledClaims = baseData.filter(c => c.settlementDate && c.intimationDate);
+    const avgDays = settledClaims.length > 0
+        ? Math.round(settledClaims.reduce((sum, c) => {
+            const start = new Date(c.intimationDate).getTime();
+            const end = new Date(c.settlementDate!).getTime();
+            return sum + (end - start) / 86_400_000;
+        }, 0) / settledClaims.length)
+        : 0;
+
     const stats = [
         { label: 'Open Claims', value: baseData.filter(c => ['intimated', 'registered', 'under_review', 'assessed'].includes(c.status)).length, icon: AlertCircle, color: 'text-warning-600', bg: 'bg-warning-50' },
-        { label: 'Settled This Month', value: baseData.filter(c => c.status === 'settled').length, icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
-        { label: 'Avg. Settlement Time', value: '12 Days', icon: Clock, color: 'text-primary-600', bg: 'bg-primary-50' },
+        { label: 'Settled This Month', value: settledThisMonth.length, icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Avg. Settlement Time', value: `${avgDays} Days`, icon: Clock, color: 'text-primary-600', bg: 'bg-primary-50' },
         { label: 'Total Incurred', value: formatCurrency(baseData.reduce((sum, c) => sum + (c.settledAmount || c.claimAmount || 0), 0)), icon: FileText, color: 'text-surface-600', bg: 'bg-surface-50' },
     ];
 
@@ -116,8 +133,10 @@ export default function ClaimsPage() {
                                 { label: 'Registered', value: 'registered' },
                                 { label: 'Under Review', value: 'under_review' },
                                 { label: 'Approved', value: 'approved' },
+                                { label: 'Assessed', value: 'assessed' },
                                 { label: 'Settled', value: 'settled' },
                                 { label: 'Rejected', value: 'rejected' },
+                                { label: 'Closed', value: 'closed' },
                             ]}
                             value={statusFilter}
                             onChange={(v) => setStatusFilter(v as string)}

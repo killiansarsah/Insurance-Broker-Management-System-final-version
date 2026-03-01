@@ -36,6 +36,7 @@ import { mockLeads } from '@/mock/leads';
 import { PremiumTrend } from '@/components/charts/premium-trend';
 import { PolicyMix } from '@/components/charts/policy-mix';
 import { TopInsurers } from '@/components/charts/top-insurers';
+import { toast } from 'sonner';
 
 // =====================================================================
 // TYPES
@@ -333,7 +334,7 @@ export default function DashboardPage() {
                 <div className="relative flex flex-col md:flex-row md:items-end md:justify-between gap-4">
                     {/* Centered Greeting (Visible on Desktop as absolute, Mobile as stacked) */}
                     <div className="md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 w-full md:w-auto text-center mb-2 md:mb-0 pointer-events-none z-10">
-                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white border border-surface-200 shadow-sm text-sm text-surface-600 backdrop-blur-sm bg-opacity-80">
+                        <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-background border border-surface-200 shadow-sm text-sm text-surface-600 backdrop-blur-sm bg-opacity-80">
                             {greeting}, <span className="font-bold text-surface-900">Kwame</span> <span className="animate-wave">👋</span>
                         </span>
                     </div>
@@ -358,7 +359,8 @@ export default function DashboardPage() {
                             </button>
                         )}
                         <button
-                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-white/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-white hover:text-primary-600 hover:border-primary-300 transition-all cursor-pointer shadow-sm group active:scale-95"
+                            onClick={() => toast.info('Dashboard refreshed', { description: 'All metrics recalculated with latest data.' })}
+                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-background/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-background hover:text-primary-600 hover:border-primary-300 transition-all cursor-pointer shadow-sm group active:scale-95"
                         >
                             <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out" />
                             <span>Refresh</span>
@@ -392,7 +394,7 @@ export default function DashboardPage() {
                                 {period === p && (
                                     <motion.div
                                         layoutId="activePeriod"
-                                        className="absolute inset-0 bg-white shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-full z-[-1] border border-surface-100"
+                                        className="absolute inset-0 bg-background shadow-[0_2px_8px_rgba(0,0,0,0.05)] rounded-full z-[-1] border border-surface-100"
                                         transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
                                     />
                                 )}
@@ -795,7 +797,7 @@ export default function DashboardPage() {
                     ))}
                 </div>
                 <div className="px-6 py-4 bg-surface-50/50 border-t border-surface-100">
-                    <button className="text-sm text-primary-600 font-semibold hover:text-primary-700 cursor-pointer transition-colors flex items-center gap-1.5">
+                    <button onClick={() => toast.info('Activity Log', { description: 'Full audit trail available in Reports section.' })} className="text-sm text-primary-600 font-semibold hover:text-primary-700 cursor-pointer transition-colors flex items-center gap-1.5">
                         Access Full Activity Log <ArrowUpRight size={14} />
                     </button>
                 </div>

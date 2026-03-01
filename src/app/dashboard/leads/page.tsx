@@ -103,7 +103,7 @@ export default function LeadsPage() {
                             onClick={() => setViewMode('kanban')}
                             className={cn(
                                 'p-2 rounded-lg transition-all',
-                                viewMode === 'kanban' ? 'bg-white shadow-sm text-primary-600' : 'text-surface-500 hover:text-surface-700'
+                                viewMode === 'kanban' ? 'bg-background shadow-sm text-primary-600' : 'text-surface-500 hover:text-surface-700'
                             )}
                         >
                             <LayoutGrid size={18} />
@@ -112,7 +112,7 @@ export default function LeadsPage() {
                             onClick={() => setViewMode('list')}
                             className={cn(
                                 'p-2 rounded-lg transition-all',
-                                viewMode === 'list' ? 'bg-white shadow-sm text-primary-600' : 'text-surface-500 hover:text-surface-700'
+                                viewMode === 'list' ? 'bg-background shadow-sm text-primary-600' : 'text-surface-500 hover:text-surface-700'
                             )}
                         >
                             <List size={18} />
@@ -155,7 +155,7 @@ export default function LeadsPage() {
                         placeholder="Search leads..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full h-10 pl-10 pr-4 bg-white border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500 transition-all shadow-sm"
+                        className="w-full h-10 pl-10 pr-4 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/10 focus:border-primary-500 transition-all shadow-sm"
                     />
                 </div>
 
@@ -198,7 +198,7 @@ export default function LeadsPage() {
                         </div>
                     </DragDropContext>
                 ) : (
-                    <div className="bg-white rounded-2xl border border-surface-200 shadow-sm overflow-hidden h-full">
+                    <div className="bg-background rounded-2xl border border-surface-200 shadow-sm overflow-hidden h-full">
                         <DataTable<Lead>
                             data={filteredLeads}
                             columns={[
@@ -307,7 +307,7 @@ function DraggableLeadCard({ lead, index }: { lead: Lead; index: number }) {
                     {...provided.dragHandleProps}
                     onClick={() => router.push(`/dashboard/leads/${lead.id}`)}
                     className={cn(
-                        "group relative bg-white border rounded-xl p-3.5 transition-all duration-200 cursor-pointer overflow-hidden",
+                        "group relative bg-background border rounded-xl p-3.5 transition-all duration-200 cursor-pointer overflow-hidden",
                         snapshot.isDragging ?
                             "shadow-2xl border-primary-400 scale-[1.02] z-50 ring-2 ring-primary-500/20" :
                             "border-surface-200 shadow-sm hover:shadow-md hover:border-surface-300"
@@ -384,7 +384,4 @@ function DraggableLeadCard({ lead, index }: { lead: Lead; index: number }) {
     );
 }
 
-function PriorityBadge({ priority }: { priority: LeadPriority }) {
-    // This component is no longer used but kept for type compatibility if needed elsewhere
-    return <StatusBadge status={priority} showDot={false} />;
-}
+

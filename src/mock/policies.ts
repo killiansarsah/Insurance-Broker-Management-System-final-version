@@ -21288,6 +21288,15 @@ export const mockPolicies: Policy[] = [
     },
 ];
 
+// ─── Compute daysToExpiry dynamically from expiryDate ─────────────────────────
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
+for (const p of mockPolicies) {
+    const expiry = new Date(p.expiryDate);
+    expiry.setHours(0, 0, 0, 0);
+    p.daysToExpiry = Math.max(0, Math.round((expiry.getTime() - TODAY.getTime()) / 86_400_000));
+}
+
 export function getPolicyById(id: string): Policy | undefined {
     return mockPolicies.find((p) => p.id === id);
 }

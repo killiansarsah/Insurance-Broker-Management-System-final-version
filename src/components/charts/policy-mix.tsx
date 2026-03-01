@@ -40,7 +40,7 @@ export function PolicyMix() {
                         content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                                 return (
-                                    <div className="bg-white p-2 px-3 rounded-lg shadow-lg border border-surface-200">
+                                    <div className="bg-background p-2 px-3 rounded-lg shadow-lg border border-surface-200">
                                         <p className="text-sm font-bold" style={{ color: payload[0].payload.color }}>
                                             {payload[0].name}: {payload[0].value}%
                                         </p>

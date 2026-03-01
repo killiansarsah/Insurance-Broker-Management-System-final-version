@@ -1,4 +1,5 @@
 import { Client } from '@/types';
+import { mockPolicies } from '@/mock/policies';
 
 export const mockClients: Client[] = [
     {
@@ -1634,6 +1635,29 @@ Object.assign(mockClients.find(c => c.id === 'cli-008')!, {
     bankDetails: { bankName: 'Zenith Bank Ghana', accountName: 'Edmund Nii Lante', accountNumber: '6010023456789', branch: 'Accra New Town' },
     nextOfKin: { fullName: 'Vida Nii Lante', relationship: 'Spouse', phone: '+233261234567' },
 });
+
+// --- Dynamically compute activePolicies & totalPolicies from actual policies data ---
+// --- Also spread createdAt/updatedAt dates across 2024-2025 for realism ---
+const CLIENT_START_DATES = [
+    '2024-01-15', '2024-02-08', '2024-03-22', '2024-04-10', '2024-05-05',
+    '2024-06-18', '2024-07-03', '2024-08-14', '2024-09-27', '2024-10-09',
+    '2024-11-20', '2024-12-02', '2025-01-11', '2025-02-19', '2025-03-01',
+    '2025-03-28', '2025-04-15', '2025-05-07', '2025-06-12', '2025-07-23',
+    '2025-08-01', '2025-08-30', '2025-09-14', '2025-10-05', '2025-10-25',
+    '2025-11-08', '2025-11-22', '2025-12-04', '2026-01-10', '2026-01-28',
+    '2026-02-05', '2026-02-15',
+];
+for (let i = 0; i < mockClients.length; i++) {
+    const client = mockClients[i];
+    // Compute policies dynamically
+    const clientPolicies = mockPolicies.filter(p => p.clientId === client.id);
+    client.totalPolicies = clientPolicies.length;
+    client.activePolicies = clientPolicies.filter(p => p.status === 'active').length;
+    // Spread registration dates across 2024-2026
+    const dateStr = CLIENT_START_DATES[i % CLIENT_START_DATES.length];
+    client.createdAt = `${dateStr}T08:00:00Z`;
+    client.updatedAt = `${dateStr}T17:00:00Z`;
+}
 
 export function getClientById(id: string): Client | undefined {
     return mockClients.find((c) => c.id === id);

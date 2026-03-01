@@ -59,7 +59,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
     };
 
     return (
-        <Card padding="none" className="flex flex-col h-full overflow-hidden bg-white border-surface-200">
+        <Card padding="none" className="flex flex-col h-full overflow-hidden bg-background border-surface-200">
             {/* Window Header */}
             <div className="border-b border-surface-100 bg-surface-50/50">
                 <div className="px-6 py-4 flex items-center justify-between">
@@ -142,7 +142,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
             </div>
 
             {/* Input Area */}
-            <form onSubmit={handleSendMessage} className="p-4 border-t border-surface-100 bg-white shadow-2xl shadow-surface-900/10">
+            <form onSubmit={handleSendMessage} className="p-4 border-t border-surface-100 bg-background shadow-2xl shadow-surface-900/10">
                 <div className="flex items-center gap-3">
                     <button type="button" className="p-2 text-surface-400 hover:text-primary-600 transition-colors">
                         <Paperclip size={20} />

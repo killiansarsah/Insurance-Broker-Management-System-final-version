@@ -29,6 +29,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { monthlyData, portfolioMix, kpistats } from '@/mock/reports';
 import { formatCurrency, cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 const COLORS = ['#3b82f6', '#ef4444', '#f59e0b', '#10b981', '#6b7280'];
 
@@ -75,8 +76,8 @@ export default function ReportsPage() {
                     <p className="text-sm text-surface-500 mt-1">Operational insights and performance metrics.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button variant="outline" leftIcon={<Calendar size={16} />}>This Year</Button>
-                    <Button variant="primary" leftIcon={<Download size={16} />}>Export Report</Button>
+                    <Button variant="outline" leftIcon={<Calendar size={16} />} onClick={() => toast.info('Date Filter', { description: 'Showing reports for the current fiscal year.' })}>This Year</Button>
+                    <Button variant="primary" leftIcon={<Download size={16} />} onClick={() => toast.success('Export Started', { description: 'Your analytics report is being generated and will download shortly.' })}>Export Report</Button>
                 </div>
             </div>
 

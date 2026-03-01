@@ -207,7 +207,7 @@ export default function ClientProfilePage() {
                                     <ChevronDown size={12} className="text-surface-400" />
                                 </button>
                                 {showKycMenu && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
                                         <p className="px-3 py-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">Change KYC Status</p>
                                         {(['pending', 'verified', 'rejected', 'expired'] as const).map(s => (
                                             <button
@@ -254,7 +254,7 @@ export default function ClientProfilePage() {
                                 <ChevronDown size={12} />
                             </button>
                             {showStatusMenu && (
-                                <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                                <div className="absolute right-0 top-full mt-1 w-52 bg-background border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
                                     <p className="px-3 py-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">Change Client Status</p>
                                     {([
                                         { value: 'active', label: 'Active', desc: 'Client is operational', color: 'bg-emerald-500' },
@@ -751,7 +751,7 @@ function DocumentsTab({ documents }: { documents: any[] }) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <p className="text-sm text-surface-500">{docs.length} document(s) on file</p>
-                <Button variant="outline" size="sm" leftIcon={<Upload size={14} />}>Upload Document</Button>
+                <Button variant="outline" size="sm" leftIcon={<Upload size={14} />} onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`"${inp.files[0].name}" uploaded (mock)`, { description: 'Document will be attached to client profile.' }); }; inp.click(); }}>Upload Document</Button>
             </div>
 
             <GlassCard title="Documents Repository" icon={<FileText size={16} />}>
@@ -1018,7 +1018,7 @@ function ChecklistItem({ label, required, status }: { label: string; required: b
             <div className="flex items-center gap-3">
                 <div className={cn(
                     'w-6 h-6 rounded-full flex items-center justify-center border-2',
-                    status === 'complete' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-surface-300 bg-white'
+                    status === 'complete' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-surface-300 bg-background'
                 )}>
                     {status === 'complete' ? <Check size={12} strokeWidth={3} /> : <div className="w-2 h-2 rounded-full bg-surface-300" />}
                 </div>

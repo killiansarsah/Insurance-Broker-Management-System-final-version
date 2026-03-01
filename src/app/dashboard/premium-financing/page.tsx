@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { toast } from 'sonner';
 import {
     FileText,
     CheckCircle2,
@@ -378,7 +379,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                 variant="primary"
                                 leftIcon={<Phone size={16} />}
                                 className="rounded-xl"
-                                onClick={() => alert(`Calling ${app.clientName} at ${app.clientPhone}`)}
+                                onClick={() => toast.info('Calling Client', { description: `Initiating call to ${app.clientName} at ${app.clientPhone}` })}
                             >
                                 Contact Client
                             </Button>
@@ -386,7 +387,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                 variant="outline"
                                 leftIcon={<Send size={16} />}
                                 className="rounded-xl"
-                                onClick={() => alert(`Sending payment reminder to ${app.clientEmail}`)}
+                                onClick={() => toast.success('Reminder Sent', { description: `Payment reminder sent to ${app.clientEmail}` })}
                             >
                                 Send Reminder
                             </Button>
@@ -394,7 +395,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                 variant="outline"
                                 leftIcon={<Mail size={16} />}
                                 className="rounded-xl"
-                                onClick={() => alert(`Opening email for ${app.clientEmail}`)}
+                                onClick={() => toast.info('Email Client', { description: `Opening email draft for ${app.clientEmail}` })}
                             >
                                 Email Statement
                             </Button>
@@ -403,7 +404,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                     variant="primary"
                                     className="bg-success-600 hover:bg-success-700 ml-auto rounded-xl shadow-lg shadow-success-600/20"
                                     leftIcon={<CreditCard size={16} />}
-                                    onClick={() => alert(`Recording payment for ${app.applicationNumber}`)}
+                                    onClick={() => toast.success('Payment Recorded', { description: `Payment logged for ${app.applicationNumber}` })}
                                 >
                                     Record Payment
                                 </Button>
@@ -521,9 +522,9 @@ export default function PremiumFinancingPage() {
         router.push(`/dashboard/premium-financing?tab=${tab}`, { scroll: false });
     };
 
-    const handleNewApplication = (data: any) => {
+    const handleNewApplication = (_data: any) => {
         // Integration with NewPFAModal
-        console.log('New application submitted:', data);
+        toast.success('Application Submitted', { description: 'New premium financing application has been created.' });
     };
 
     // ─── KPI data (no longer a uniform grid — hero + compact blocks) ───

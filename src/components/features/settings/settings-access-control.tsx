@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface User {
     id: string;
@@ -270,7 +271,7 @@ export function SettingsAccessControl() {
                                     </div>
                                     <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{selectedRole?.name} Permissions</h4>
                                 </div>
-                                <button className="h-10 px-6 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all">Reset</button>
+                                <button onClick={() => toast.info('Permissions Reset', { description: `${selectedRole?.name} permissions have been restored to defaults.` })} className="h-10 px-6 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all">Reset</button>
                             </div>
                             <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {permissions.map(permission => {
@@ -285,9 +286,11 @@ export function SettingsAccessControl() {
                                                     </div>
                                                     <p className="text-sm font-medium text-slate-500 leading-relaxed">{permission.description}</p>
                                                 </div>
-                                                <button className={cn(
-                                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none",
-                                                    isEnabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+                                                <button
+                                                    onClick={() => toast.info('Permission Toggled', { description: `${permission.name} ${isEnabled ? 'disabled' : 'enabled'} for ${selectedRole?.name}.` })}
+                                                    className={cn(
+                                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
+                                                    isEnabled ? "bg-primary border-primary ring-4 ring-primary/20 shadow-lg shadow-primary/30" : "bg-slate-200 dark:bg-slate-700 border-transparent"
                                                 )}>
                                                     <span className={cn(
                                                         "pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-lg ring-0 transition duration-300 ease-in-out",
@@ -300,7 +303,7 @@ export function SettingsAccessControl() {
                                 })}
                             </div>
                             <div className="p-10 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                                <button className="h-14 px-10 rounded-2xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all">
+                                <button onClick={() => toast.success('Role Updated', { description: `Permissions for ${selectedRole?.name} have been saved.` })} className="h-14 px-10 rounded-2xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:scale-[1.02] active:scale-95 transition-all">
                                     Commit Role Changes
                                 </button>
                             </div>

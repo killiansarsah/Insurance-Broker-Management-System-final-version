@@ -17,6 +17,7 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { getLeadById, LEAD_STAGES } from '@/mock/leads';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
+import { toast } from 'sonner';
 
 
 
@@ -53,7 +54,7 @@ export default function LeadDetailPage() {
                     <p className="text-sm text-surface-500 mt-1">Lead #{lead.leadNumber} • Created {formatDate(lead.createdAt)}</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline">Log Activity</Button>
+                    <Button variant="outline" onClick={() => toast.success('Activity Logged', { description: 'A new interaction has been recorded for this lead.' })}>Log Activity</Button>
                     <Button
                         variant="primary"
                         onClick={() => {
@@ -75,17 +76,17 @@ export default function LeadDetailPage() {
             </div>
 
             {/* Pipeline Progress */}
-            <div className="bg-white border border-surface-200 rounded-[var(--radius-lg)] p-4 overflow-x-auto">
+            <div className="bg-background border border-surface-200 rounded-[var(--radius-lg)] p-4 overflow-x-auto">
                 <div className="flex items-center justify-between min-w-[700px] relative">
                     <div className="absolute top-1/2 left-0 w-full h-0.5 bg-surface-100 -z-10" />
                     {LEAD_STAGES.map((s, idx) => {
                         const isCompleted = idx <= currentStageIdx;
                         const isCurrent = idx === currentStageIdx;
                         return (
-                            <div key={s.key} className="flex flex-col items-center gap-2 bg-white px-2">
+                            <div key={s.key} className="flex flex-col items-center gap-2 bg-background px-2">
                                 <div className={cn(
                                     'w-3 h-3 rounded-full border-2 transition-all',
-                                    isCompleted ? 'bg-primary-500 border-primary-500' : 'bg-white border-surface-300',
+                                    isCompleted ? 'bg-primary-500 border-primary-500' : 'bg-background border-surface-300',
                                     isCurrent && 'ring-4 ring-primary-100'
                                 )} />
                                 <span className={cn(
@@ -172,8 +173,8 @@ export default function LeadDetailPage() {
                                     <CheckCircle2 size={16} /> No pending tasks
                                 </div>
                             )}
-                            <Button className="w-full" variant="outline" size="sm">Schedule Meeting</Button>
-                            <Button className="w-full" variant="outline" size="sm">Send Email</Button>
+                            <Button className="w-full" variant="outline" size="sm" onClick={() => toast.success('Meeting invite sent to ' + lead.contactName)}>Schedule Meeting</Button>
+                            <Button className="w-full" variant="outline" size="sm" onClick={() => toast.success('Email draft opened for ' + (lead.email || lead.contactName))}>Send Email</Button>
                         </div>
                     </Card>
                 </div>

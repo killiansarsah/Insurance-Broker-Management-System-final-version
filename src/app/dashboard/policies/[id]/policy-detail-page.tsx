@@ -686,7 +686,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                                 <tr
                                     key={claim.id}
                                     className="border-b border-surface-50 last:border-0 hover:bg-surface-50 cursor-pointer"
-                                    onClick={() => router.push(`/dashboard/claims`)}
+                                    onClick={() => router.push(`/dashboard/claims/${claim.id}`)}
                                 >
                                     <td className="px-6 py-3 font-mono text-xs text-primary-600">{claim.claimNumber}</td>
                                     <td className="px-6 py-3 text-surface-700">{formatDate(claim.incidentDate)}</td>
@@ -811,7 +811,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         if (!showEndorsementModal) return null;
         return (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-                <div className="bg-white rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
+                <div className="bg-background rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
                     <h2 className="text-lg font-bold text-surface-900 mb-4">Add Endorsement</h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();
@@ -861,7 +861,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         })();
         return (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-                <div className="bg-white rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
+                <div className="bg-background rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
                     <h2 className="text-lg font-bold text-surface-900 mb-4">Renew Policy</h2>
                     <div className="space-y-4">
                         <div className="p-4 bg-surface-50 rounded-lg space-y-2">
@@ -910,7 +910,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         if (!showCancelModal) return null;
         return (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-                <div className="bg-white rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
+                <div className="bg-background rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
                     <h2 className="text-lg font-bold text-danger-600 mb-4 flex items-center gap-2">
                         <Ban size={20} /> Cancel Policy
                     </h2>
@@ -1009,7 +1009,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
             </div>
 
             {/* Action Bar */}
-            <div className="sticky top-[64px] z-30 bg-white/80 backdrop-blur-md border border-surface-200 shadow-sm rounded-xl p-2 flex flex-wrap items-center gap-2 overflow-x-auto">
+            <div className="sticky top-[64px] z-30 bg-background/80 backdrop-blur-md border border-surface-200 shadow-sm rounded-xl p-2 flex flex-wrap items-center gap-2 overflow-x-auto">
                 <Button
                     variant="primary"
                     size="sm"

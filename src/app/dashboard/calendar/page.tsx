@@ -66,7 +66,7 @@ export default function CalendarPage() {
                 </div>
 
                 {/* Satellite Control Pill */}
-                <div className="flex items-center gap-1 p-1 bg-white/60 backdrop-blur-xl border border-surface-200/50 rounded-full shadow-xl shadow-surface-900/5">
+                <div className="flex items-center gap-1 p-1 bg-background/60 backdrop-blur-xl border border-surface-200/50 rounded-full shadow-xl shadow-surface-900/5">
                     <div className="flex items-center gap-1 pr-2 border-r border-surface-100/80 mr-1 ml-1">
                         <button
                             onClick={handleConnect}

@@ -96,8 +96,8 @@ export function SettingsAppearance() {
                             <button
                                 onClick={() => toggleWidget(w.id)}
                                 className={cn(
-                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-in-out focus:outline-none",
-                                    w.enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
+                                    w.enabled ? "bg-blue-500 border-blue-500 ring-4 ring-blue-500/25 shadow-lg shadow-blue-500/40" : "bg-slate-200 dark:bg-slate-700 border-transparent"
                                 )}
                             >
                                 <span className={cn(

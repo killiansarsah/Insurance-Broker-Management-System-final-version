@@ -53,7 +53,7 @@ export function PremiumTrend() {
                         content={({ active, payload }) => {
                             if (active && payload && payload.length) {
                                 return (
-                                    <div className="bg-white p-3 rounded-lg shadow-lg border border-surface-200">
+                                    <div className="bg-background p-3 rounded-lg shadow-lg border border-surface-200">
                                         <p className="text-xs font-medium text-surface-500 mb-1">
                                             {payload[0].payload.month} 2026
                                         </p>
