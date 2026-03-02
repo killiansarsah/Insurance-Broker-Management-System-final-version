@@ -12,18 +12,42 @@ import { toast } from 'sonner';
 export default function NewLeadPage() {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
+    const [contactName, setContactName] = useState('');
+    const [company, setCompany] = useState('');
+    const [phone, setPhone] = useState('');
+    const [email, setEmail] = useState('');
     const [productInterest, setProductInterest] = useState<string | null>(null);
     const [priority, setPriority] = useState<string | null>('warm');
+    const [notes, setNotes] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const validate = () => {
+        const errs: Record<string, string> = {};
+        if (!contactName.trim()) errs.contactName = 'Contact name is required.';
+        if (!phone.trim()) errs.phone = 'Phone number is required.';
+        else if (!/^\+?[0-9\s\-]{9,15}$/.test(phone.replace(/\s/g, '')))
+            errs.phone = 'Please enter a valid phone number.';
+        if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+            errs.email = 'Please enter a valid email address.';
+        return errs;
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const validationErrors = validate();
+        setErrors(validationErrors);
+        if (Object.keys(validationErrors).length > 0) {
+            toast.error('Please fix the errors before submitting.');
+            return;
+        }
+
         setIsLoading(true);
 
         // Simulate API call
         await new Promise(resolve => setTimeout(resolve, 1000));
 
         toast.success('Lead Created', {
-            description: 'The lead has been successfully added to the pipeline.'
+            description: `${contactName} has been added to the pipeline.`
         });
 
         router.push('/dashboard/leads');
@@ -53,9 +77,12 @@ export default function NewLeadPage() {
                             <input
                                 required
                                 type="text"
+                                value={contactName}
+                                onChange={(e) => { setContactName(e.target.value); setErrors(prev => { const { contactName: _, ...rest } = prev; return rest; }); }}
                                 placeholder="e.g. John Doe"
                                 className="w-full px-4 py-3 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium"
                             />
+                            {errors.contactName && <p className="text-xs text-danger-600 font-medium mt-1">{errors.contactName}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -64,6 +91,8 @@ export default function NewLeadPage() {
                             </label>
                             <input
                                 type="text"
+                                value={company}
+                                onChange={(e) => setCompany(e.target.value)}
                                 placeholder="e.g. Acme Corp"
                                 className="w-full px-4 py-3 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium"
                             />
@@ -76,9 +105,12 @@ export default function NewLeadPage() {
                             <input
                                 required
                                 type="tel"
+                                value={phone}
+                                onChange={(e) => { setPhone(e.target.value); setErrors(prev => { const { phone: _, ...rest } = prev; return rest; }); }}
                                 placeholder="+233 XX XXX XXXX"
                                 className="w-full px-4 py-3 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium"
                             />
+                            {errors.phone && <p className="text-xs text-danger-600 font-medium mt-1">{errors.phone}</p>}
                         </div>
 
                         <div className="space-y-2">
@@ -87,9 +119,12 @@ export default function NewLeadPage() {
                             </label>
                             <input
                                 type="email"
+                                value={email}
+                                onChange={(e) => { setEmail(e.target.value); setErrors(prev => { const { email: _, ...rest } = prev; return rest; }); }}
                                 placeholder="john@example.com"
                                 className="w-full px-4 py-3 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium"
                             />
+                            {errors.email && <p className="text-xs text-danger-600 font-medium mt-1">{errors.email}</p>}
                         </div>
 
                     </CardContent>
@@ -141,6 +176,8 @@ export default function NewLeadPage() {
                             </label>
                             <textarea
                                 rows={4}
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Enter any initial notes or specific requirements from the lead..."
                                 className="w-full px-4 py-3 rounded-[var(--radius-md)] border border-surface-200 focus:border-primary-500 outline-none transition-all font-medium resize-none"
                             />

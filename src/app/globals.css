@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tell Tailwind 4 that .theme-dark triggers the dark: variant */
+@custom-variant dark (&:where(.theme-dark, .theme-dark *));
+
 /* ============================================================
    IBMS Design System — Tokens & Custom Properties
    SRS §10.2.2 Color Scheme + Elevated Premium Design
@@ -124,6 +127,11 @@ html {
 body {
   background: var(--bg-page);
   color: var(--color-surface-900);
+}
+
+.theme-dark body,
+.theme-dark {
+  color: #e2e8f0;
 }
 
 /* --- Scrollbar --- */
@@ -473,6 +481,85 @@ body {
   --glass-26-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.1);
 }
 
+/* ── Premium Dark Theme ───────────────────────────────────── */
+.theme-dark {
+  --primary-50: #0c1929;
+  --primary-100: #0d2137;
+  --primary-200: #153d6b;
+  --primary-300: #1d5ca0;
+  --primary-400: #2c7be5;
+  --primary-500: #4da3ff;
+  --primary-600: #66b3ff;
+  --primary-700: #99ccff;
+  --primary-800: #cce5ff;
+  --primary-900: #e6f2ff;
+
+  --success-50: #052e16;
+  --success-100: #064e3b;
+  --success-200: #065f46;
+  --success-300: #059669;
+  --success-400: #10b981;
+  --success-500: #34d399;
+  --success-600: #6ee7b7;
+  --success-700: #a7f3d0;
+
+  --accent-50: #431407;
+  --accent-100: #7c2d12;
+  --accent-200: #9a3412;
+  --accent-300: #c2410c;
+  --accent-400: #ea580c;
+  --accent-500: #fb923c;
+  --accent-600: #fdba74;
+  --accent-700: #fed7aa;
+
+  --danger-50: #450a0a;
+  --danger-100: #7f1d1d;
+  --danger-200: #991b1b;
+  --danger-300: #dc2626;
+  --danger-400: #f87171;
+  --danger-500: #fca5a5;
+  --danger-600: #fecaca;
+  --danger-700: #fee2e2;
+
+  color-scheme: dark;
+
+  /* --- Inverted Surface Scale (auto-fix all text-surface-*, border-surface-*, bg-surface-*) --- */
+  --color-surface-0: #0f172a;
+  --color-surface-50: #1e293b;
+  --color-surface-100: #334155;
+  --color-surface-200: #475569;
+  --color-surface-300: #64748b;
+  --color-surface-400: #94a3b8;
+  --color-surface-500: #94a3b8;
+  --color-surface-600: #cbd5e1;
+  --color-surface-700: #e2e8f0;
+  --color-surface-800: #f1f5f9;
+  --color-surface-900: #f8fafc;
+  --color-surface-950: #ffffff;
+
+  --bg-page: #0b1120;
+  --bg-sidebar: #0f172a;
+  --bg-header: rgba(15, 23, 42, 0.92);
+  --bg-card: #1e293b;
+  --bg-modal: #1e293b;
+  --bg-input: #334155;
+
+  --sidebar-text: #94a3b8;
+  --sidebar-hover: rgba(255, 255, 255, 0.06);
+  --sidebar-active: #4da3ff;
+  --sidebar-text-active: #ffffff;
+
+  --glass-blur: 0px;
+  --glass-border: 1px solid rgba(51, 65, 85, 0.5);
+  --glass-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.3);
+
+  --glass-26-bg: rgba(15, 23, 42, 0.65);
+  --glass-26-blur: 20px;
+  --glass-26-border: rgba(51, 65, 85, 0.6);
+  --glass-26-highlight: rgba(51, 65, 85, 0.3);
+  --glass-26-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
 .theme-glass {
   /* Liquid Glass (VisionOS / macOS Sonoma Style) */
   /* Text Colors - Darker for contrast on light glass */
@@ -576,6 +663,14 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-md);
+}
+
+.theme-dark .skeleton {
+  background: linear-gradient(90deg,
+      #1e293b 25%,
+      #334155 50%,
+      #1e293b 75%);
+  background-size: 200% 100%;
 }
 
 /* ============================================================

@@ -76,7 +76,7 @@ export default function ProductsPage() {
             </div>
 
             {/* Filters */}
-            <div className="bg-white/60 backdrop-blur-xl rounded-[var(--radius-xl)] border border-surface-200/50 p-4 shadow-sm space-y-3">
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[var(--radius-xl)] border border-surface-200/50 p-4 shadow-sm space-y-3">
                 <div className="flex items-center gap-2 text-xs font-black text-surface-500 uppercase tracking-widest">
                     <Filter size={12} />
                     Filters

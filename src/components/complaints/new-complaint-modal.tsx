@@ -29,8 +29,23 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
     const [priority, setPriority] = useState('medium');
     const [description, setDescription] = useState('');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
+
+        // Validate required fields
+        if (!complainant.trim()) {
+            toast.error('Complainant name is required.');
+            return;
+        }
+        if (!subject.trim()) {
+            toast.error('Subject is required.');
+            return;
+        }
+        if (!description.trim()) {
+            toast.error('Please provide a description of the complaint.');
+            return;
+        }
+
         setIsLoading(true);
 
         // Simulate API call

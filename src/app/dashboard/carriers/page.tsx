@@ -42,7 +42,7 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
             />
 
             {/* Logo Container - Pedestal */}
-            <div className="relative w-24 h-24 rounded-2xl flex items-center justify-center bg-white shadow-lg border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
+            <div className="relative w-24 h-24 rounded-2xl flex items-center justify-center bg-white dark:bg-slate-900 shadow-lg border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
                 {carrier.logoUrl && !imgError ? (
                     <Image
                         src={carrier.logoUrl}
@@ -116,7 +116,7 @@ export default function CarriersPage() {
                             <Link href="https://nicgh.org" target="_blank" rel="noopener noreferrer">
                                 <Button
                                     variant="outline"
-                                    className="h-11 px-6 rounded-xl border-surface-200 bg-white/60 hover:bg-white text-surface-700"
+                                    className="h-11 px-6 rounded-xl border-surface-200 bg-white/60 hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800 text-surface-700"
                                     leftIcon={<ExternalLink size={18} />}
                                 >
                                     NIC Portal
@@ -133,7 +133,7 @@ export default function CarriersPage() {
                                     key={i}
                                     className={cn(
                                         "group/kpi relative overflow-hidden rounded-xl p-4 transition-all duration-300 hover:shadow-md border border-white/60",
-                                        "bg-white/50 backdrop-blur-md hover:bg-white/80"
+                                        "bg-white/50 dark:bg-slate-800/50 backdrop-blur-md hover:bg-white/80 dark:hover:bg-slate-800/80"
                                     )}
                                 >
                                     <div className="relative z-10 flex items-center gap-4">
@@ -166,8 +166,8 @@ export default function CarriersPage() {
                             className={cn(
                                 'flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap',
                                 tab === t.key
-                                    ? 'bg-white text-primary-700 shadow-sm ring-1 ring-black/5'
-                                    : 'text-surface-500 hover:text-surface-800 hover:bg-white/50'
+                                    ? 'bg-white dark:bg-slate-800 text-primary-700 shadow-sm ring-1 ring-black/5'
+                                    : 'text-surface-500 hover:text-surface-800 hover:bg-white/50 dark:hover:bg-slate-800/50'
                             )}
                         >
                             <t.icon size={14} className={tab === t.key ? "text-primary-500" : "opacity-70"} />
@@ -183,7 +183,7 @@ export default function CarriersPage() {
                         placeholder="Search by name, location..."
                         value={search}
                         onChange={e => setSearch(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface-50/50 hover:bg-surface-100/50 focus:bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all placeholder:text-surface-400 font-medium"
+                        className="w-full pl-10 pr-4 py-2.5 text-sm bg-surface-50/50 hover:bg-surface-100/50 focus:bg-white dark:focus:bg-slate-800 border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all placeholder:text-surface-400 font-medium"
                     />
                 </div>
             </div>
@@ -247,7 +247,7 @@ export default function CarriersPage() {
 
                                             {/* Rank Badge */}
                                             {carrier.revenueRank > 0 && carrier.revenueRank <= 10 && (
-                                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-1 bg-white shadow-md border border-amber-100 rounded-full">
+                                                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-slate-800 shadow-md border border-amber-100 rounded-full">
                                                     <Trophy size={10} className="text-amber-500" />
                                                     <span className="text-[10px] font-black text-amber-700 whitespace-nowrap">#{carrier.revenueRank}</span>
                                                 </div>

@@ -144,7 +144,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
             {/* Input Area */}
             <form onSubmit={handleSendMessage} className="p-4 border-t border-surface-100 bg-background shadow-2xl shadow-surface-900/10">
                 <div className="flex items-center gap-3">
-                    <button type="button" className="p-2 text-surface-400 hover:text-primary-600 transition-colors">
+                    <button type="button" className="p-2 text-surface-400 hover:text-primary-600 transition-colors" aria-label="Attach file">
                         <Paperclip size={20} />
                     </button>
                     <div className="flex-1 relative">
@@ -154,8 +154,9 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder={conversation.type === 'ai' ? "Ask Kojo about policies..." : "Type a message..."}
                             className="w-full h-11 pl-4 pr-12 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                            aria-label="Message input"
                         />
-                        <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-primary-600">
+                        <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-400 hover:text-primary-600" aria-label="Insert emoji">
                             <Smile size={18} />
                         </button>
                     </div>
@@ -164,6 +165,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                         size="sm"
                         className="h-11 w-11 rounded-xl shadow-lg shadow-primary-500/20 p-0 flex items-center justify-center transition-transform active:scale-95"
                         disabled={!inputValue.trim()}
+                        aria-label="Send message"
                     >
                         <Send size={18} className="translate-x-0.5 -translate-y-0.5" />
                     </Button>

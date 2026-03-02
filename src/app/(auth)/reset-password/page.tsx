@@ -13,10 +13,30 @@ export default function ResetPasswordPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError(null);
+
+        if (password.length < 8) {
+            setError('Password must be at least 8 characters long.');
+            return;
+        }
+        if (!/[A-Z]/.test(password)) {
+            setError('Password must contain at least one uppercase letter.');
+            return;
+        }
+        if (!/[0-9]/.test(password)) {
+            setError('Password must contain at least one number.');
+            return;
+        }
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+
         setIsLoading(true);
         // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -30,7 +50,7 @@ export default function ResetPasswordPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-[440px] bg-white rounded-[32px] shadow-2xl shadow-surface-900/5 border border-surface-200 p-8 lg:p-10"
+                className="w-full max-w-[440px] bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl shadow-surface-900/5 border border-surface-200 p-8 lg:p-10"
             >
                 {!isSubmitted ? (
                     <div className="flex flex-col">
@@ -49,6 +69,12 @@ export default function ResetPasswordPage() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="flex flex-col gap-6 w-full">
+                            {error && (
+                                <div className="flex items-center gap-3 p-4 bg-danger-50 text-danger-700 border border-danger-200 rounded-xl text-sm font-medium">
+                                    <Lock size={16} className="shrink-0" />
+                                    {error}
+                                </div>
+                            )}
                             <Input
                                 label="New Password"
                                 placeholder="••••••••"
@@ -57,7 +83,7 @@ export default function ResetPasswordPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 leftIcon={<Lock size={20} />}
-                                className="bg-white"
+                                className="bg-white dark:bg-slate-800"
                                 rightIcon={
                                     <button
                                         type="button"
@@ -77,7 +103,7 @@ export default function ResetPasswordPage() {
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                 leftIcon={<Lock size={20} />}
-                                className="bg-white"
+                                className="bg-white dark:bg-slate-800"
                             />
 
                             <Button

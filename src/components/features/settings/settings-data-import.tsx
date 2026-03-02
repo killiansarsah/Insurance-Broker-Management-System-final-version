@@ -231,7 +231,7 @@ export function SettingsDataImport() {
                 />
             </div>
 
-            <div className="shrink-0 border-b border-surface-100/50 p-4 md:px-8 flex items-center justify-between bg-white/40 backdrop-blur-xl z-20">
+            <div className="shrink-0 border-b border-surface-100/50 p-4 md:px-8 flex items-center justify-between bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl z-20">
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-2xl bg-primary-600 flex items-center justify-center text-white shadow-lg shadow-primary-500/20">
                         <Upload size={20} />
@@ -253,7 +253,7 @@ export function SettingsDataImport() {
                 )}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar-subtle relative z-10 bg-white/10 backdrop-blur-sm">
+            <div className="flex-1 overflow-y-auto p-6 md:p-10 custom-scrollbar-subtle relative z-10 bg-white/10 dark:bg-slate-900/10 backdrop-blur-sm">
                 {!importComplete && <StepIndicator step={step} />}
 
                 <AnimatePresence mode="wait">
@@ -262,7 +262,7 @@ export function SettingsDataImport() {
                             key="success"
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="max-w-3xl mx-auto text-center py-16 px-8 bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/50 shadow-2xl relative overflow-hidden"
+                            className="max-w-3xl mx-auto text-center py-16 px-8 bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[3rem] border border-white/50 shadow-2xl relative overflow-hidden"
                         >
                             {/* Celebration Burst Background */}
                             <motion.div
@@ -320,15 +320,15 @@ export function SettingsDataImport() {
                                         className={cn(
                                             "relative p-5 rounded-2xl border-2 text-left transition-all duration-300 flex items-center gap-5 overflow-hidden group",
                                             entityType === item.id
-                                                ? "border-primary-600 bg-white shadow-xl shadow-primary-500/10 ring-4 ring-primary-500/5 scale-[1.02]"
-                                                : "border-white/50 bg-white/40 backdrop-blur-md hover:border-primary-300 hover:shadow-lg hover:shadow-primary-500/5"
+                                                ? "border-primary-600 bg-white dark:bg-slate-800 shadow-xl shadow-primary-500/10 ring-4 ring-primary-500/5 scale-[1.02]"
+                                                : "border-white/50 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md hover:border-primary-300 hover:shadow-lg hover:shadow-primary-500/5"
                                         )}
                                     >
                                         <div className={cn(
                                             "w-14 h-14 rounded-xl flex items-center justify-center shrink-0 transition-all duration-500",
                                             entityType === item.id
                                                 ? "bg-primary-600 text-white rotate-[360deg] shadow-lg shadow-primary-500/30"
-                                                : "bg-white border border-slate-100 text-slate-400 group-hover:scale-110 group-hover:text-primary-500"
+                                                : "bg-white dark:bg-slate-800 border border-slate-100 text-slate-400 group-hover:scale-110 group-hover:text-primary-500"
                                         )}>
                                             <item.icon size={28} />
                                         </div>
@@ -364,7 +364,7 @@ export function SettingsDataImport() {
                                 whileHover={{ scale: 1.01 }}
                                 whileTap={{ scale: 0.99 }}
                                 onClick={handleDropzoneClick}
-                                className="relative group p-10 md:p-14 border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white/40 backdrop-blur-md hover:bg-white hover:border-primary-400 transition-all duration-500 flex flex-col items-center justify-center gap-6 cursor-pointer overflow-hidden shadow-inner"
+                                className="relative group p-10 md:p-14 border-2 border-dashed border-slate-200 rounded-[2.5rem] bg-white/40 dark:bg-slate-800/40 backdrop-blur-md hover:bg-white dark:hover:bg-slate-800 hover:border-primary-400 transition-all duration-500 flex flex-col items-center justify-center gap-6 cursor-pointer overflow-hidden shadow-inner"
                             >
                                 <input
                                     ref={fileInputRef}
@@ -373,7 +373,7 @@ export function SettingsDataImport() {
                                     onChange={handleFileUpload}
                                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                 />
-                                <div className="w-20 h-20 rounded-3xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 shadow-xl shadow-slate-200/50 group-hover:rotate-12 transition-all duration-500">
+                                <div className="w-20 h-20 rounded-3xl bg-white dark:bg-slate-800 border border-slate-100 flex items-center justify-center text-slate-400 shadow-xl shadow-slate-200/50 group-hover:rotate-12 transition-all duration-500">
                                     <Upload size={36} className="group-hover:text-primary-600 transition-colors" />
                                 </div>
                                 <div className="text-center relative z-10">
@@ -384,7 +384,7 @@ export function SettingsDataImport() {
                                 </div>
                             </motion.div>
 
-                            <div className="flex items-center gap-6 p-5 bg-white shadow-xl shadow-slate-200/50 border border-slate-100 rounded-3xl group">
+                            <div className="flex items-center gap-6 p-5 bg-white dark:bg-slate-800 shadow-xl shadow-slate-200/50 border border-slate-100 rounded-3xl group">
                                 <div className="w-12 h-12 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600 group-hover:scale-110 transition-transform">
                                     <Info size={24} />
                                 </div>
@@ -392,7 +392,7 @@ export function SettingsDataImport() {
                                     <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1.5">Migration Intelligence</p>
                                     <p className="text-[11px] text-slate-500 font-medium leading-relaxed">Auto-mapping works best with header-row formatted spreadsheets.</p>
                                 </div>
-                                <Button variant="ghost" size="sm" className="h-10 text-[10px] font-black uppercase tracking-widest text-primary-700 bg-white border border-primary-100 hover:bg-primary-50 rounded-xl px-5" leftIcon={<Download size={14} />} onClick={() => toast.success('Template Downloaded', { description: 'Import template (XLSX) is being downloaded.' })}>Template</Button>
+                                <Button variant="ghost" size="sm" className="h-10 text-[10px] font-black uppercase tracking-widest text-primary-700 bg-white dark:bg-slate-800 border border-primary-100 hover:bg-primary-50 rounded-xl px-5" leftIcon={<Download size={14} />} onClick={() => toast.success('Template Downloaded', { description: 'Import template (XLSX) is being downloaded.' })}>Template</Button>
                             </div>
 
                             <div className="flex justify-between pt-4">
@@ -414,7 +414,7 @@ export function SettingsDataImport() {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
                                                 key={idx}
-                                                className="p-5 bg-white/60 backdrop-blur-md border border-white/50 rounded-2xl flex items-center gap-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all border-l-4 border-l-slate-200 hover:border-l-primary-500"
+                                                className="p-5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-white/50 rounded-2xl flex items-center gap-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all border-l-4 border-l-slate-200 hover:border-l-primary-500"
                                             >
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Source Column</p>
@@ -479,7 +479,7 @@ export function SettingsDataImport() {
                                             </div>
                                         </div>
 
-                                        <div className="p-6 bg-white/40 backdrop-blur-md rounded-[2rem] border border-white/50 space-y-4">
+                                        <div className="p-6 bg-white/40 dark:bg-slate-800/40 backdrop-blur-md rounded-[2rem] border border-white/50 space-y-4">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center">
                                                     <Info size={20} />
@@ -502,7 +502,7 @@ export function SettingsDataImport() {
 
                                     <div className="space-y-4">
                                         <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-900 ml-1">Data Preview</h3>
-                                        <div className="border border-white/50 rounded-[2rem] overflow-hidden bg-white/40 backdrop-blur-md">
+                                        <div className="border border-white/50 rounded-[2rem] overflow-hidden bg-white/40 dark:bg-slate-800/40 backdrop-blur-md">
                                             <div className="overflow-x-auto max-h-[250px] custom-scrollbar-subtle">
                                                 <table className="w-full text-[10px]">
                                                     <thead>
@@ -514,7 +514,7 @@ export function SettingsDataImport() {
                                                     </thead>
                                                     <tbody className="divide-y divide-white/30">
                                                         {parsedData.slice(1, 6).map((row, i) => (
-                                                            <tr key={i} className="hover:bg-white/40 transition-colors">
+                                                            <tr key={i} className="hover:bg-white/40 dark:hover:bg-slate-800/40 transition-colors">
                                                                 {row.slice(0, 3).map((cell, j) => (
                                                                     <td key={j} className="px-4 py-3 text-slate-600 font-bold truncate max-w-[100px]">{cell}</td>
                                                                 ))}
@@ -534,7 +534,7 @@ export function SettingsDataImport() {
                                             </div>
                                             <div className="space-y-2 max-h-[120px] overflow-y-auto pr-3 custom-scrollbar-subtle">
                                                 {validationErrors.map((err, idx) => (
-                                                    <div key={idx} className="p-3 bg-white/40 rounded-xl text-[10px] leading-tight flex gap-3 border border-danger-500/10">
+                                                    <div key={idx} className="p-3 bg-white/40 dark:bg-slate-800/40 rounded-xl text-[10px] leading-tight flex gap-3 border border-danger-500/10">
                                                         <span className="font-black text-danger-700 shrink-0">L{err.row}:</span>
                                                         <span className="text-danger-900/80 font-bold">{err.message}</span>
                                                     </div>
@@ -555,7 +555,7 @@ export function SettingsDataImport() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <motion.div
                                     whileHover={{ y: -5 }}
-                                    className="p-8 bg-white/60 backdrop-blur-md rounded-[2.5rem] border border-white/50 text-center relative overflow-hidden group"
+                                    className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-[2.5rem] border border-white/50 text-center relative overflow-hidden group"
                                 >
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
                                     <p className="text-5xl font-black text-slate-900 tracking-tighter mb-2">{validRowCount}</p>
@@ -567,7 +567,7 @@ export function SettingsDataImport() {
 
                                 <motion.div
                                     whileHover={{ y: -5 }}
-                                    className="p-8 bg-white/60 backdrop-blur-md rounded-[2.5rem] border border-white/50 text-center relative overflow-hidden"
+                                    className="p-8 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-[2.5rem] border border-white/50 text-center relative overflow-hidden"
                                 >
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-3xl -mr-16 -mt-16" />
                                     <p className="text-5xl font-black text-amber-600 tracking-tighter mb-2">{duplicateCount}</p>

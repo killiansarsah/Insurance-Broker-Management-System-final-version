@@ -11,7 +11,7 @@ export function Skeleton({ className }: SkeletonProps) {
 
 export function SkeletonCard() {
     return (
-        <div className="bg-white rounded-[var(--radius-lg)] border border-surface-200 p-6 space-y-4">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--radius-lg)] border border-surface-200 dark:border-slate-700 p-6 space-y-4">
             <div className="flex items-center gap-3">
                 <Skeleton className="w-10 h-10 rounded-full" />
                 <div className="space-y-2 flex-1">
@@ -28,9 +28,9 @@ export function SkeletonCard() {
 
 export function SkeletonTable({ rows = 5 }: { rows?: number }) {
     return (
-        <div className="bg-white rounded-[var(--radius-lg)] border border-surface-200 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-[var(--radius-lg)] border border-surface-200 dark:border-slate-700 overflow-hidden">
             {/* Header */}
-            <div className="flex items-center gap-4 p-4 border-b border-surface-200 bg-surface-50">
+            <div className="flex items-center gap-4 p-4 border-b border-surface-200 dark:border-slate-700 bg-surface-50 dark:bg-slate-800">
                 <Skeleton className="h-4 w-1/6" />
                 <Skeleton className="h-4 w-1/5" />
                 <Skeleton className="h-4 w-1/4" />

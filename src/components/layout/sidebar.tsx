@@ -192,12 +192,12 @@ function GlobalRail() {
     const { firstName, lastName, avatarUrl } = useProfileStore();
 
     return (
-        <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white border-r border-surface-200 shrink-0 z-20">
+        <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white dark:bg-slate-900 border-r border-surface-200 dark:border-slate-700/60 shrink-0 z-20">
             {/* Global Search Dialog */}
             <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
             {/* Logo Icon */}
-            <div className="relative w-8 h-8 mb-6 cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setSearchOpen(true)}>
+            <button className="relative w-8 h-8 mb-6 cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none p-0" onClick={() => setSearchOpen(true)} aria-label="Open search">
                 <Image
                     src="/logo.png"
                     alt="IBMS Logo"
@@ -205,7 +205,7 @@ function GlobalRail() {
                     className="object-contain"
                     sizes="32px"
                 />
-            </div>
+            </button>
 
             {/* Quick Actions (High Frequency) */}
             <div className="flex flex-col gap-3 w-full items-center">
@@ -291,7 +291,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                     'hover:scale-105 active:scale-95', // Micro-interaction
                     isActive
                         ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/20'
-                        : 'text-surface-500 hover:bg-surface-50 hover:text-surface-900 mx-2'
+                        : 'text-surface-500 hover:bg-surface-50 dark:hover:bg-slate-800 hover:text-surface-900 dark:hover:text-slate-200 mx-2'
                 )}
                 title={item.label}
             >
@@ -312,8 +312,8 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                         'text-sm font-medium cursor-pointer group',
                         'hover:translate-x-1', // Lateral movement
                         isActive
-                            ? 'bg-gradient-to-r from-primary-100/80 to-primary-50/40 text-surface-900 font-bold shadow-sm border border-primary-200/60'
-                            : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900'
+                            ? 'bg-gradient-to-r from-primary-100/80 to-primary-50/40 dark:from-primary-900/40 dark:to-primary-800/20 text-surface-900 dark:text-white font-bold shadow-sm border border-primary-200/60 dark:border-primary-700/40'
+                            : 'text-surface-600 dark:text-slate-400 hover:bg-surface-50 dark:hover:bg-slate-800 hover:text-surface-900 dark:hover:text-slate-200'
                     )}
                 >
                     <span className={cn("transition-colors duration-200", isActive ? "text-primary-700" : "text-surface-400 group-hover:text-primary-500")}>
@@ -342,8 +342,8 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                         'text-sm font-medium cursor-pointer group',
                         'hover:translate-x-1', // Lateral movement
                         isActive
-                            ? 'bg-gradient-to-r from-primary-100/80 to-primary-50/40 border-l-[4px] border-primary-600 text-surface-900 font-bold pl-3.5 shadow-sm'
-                            : 'text-surface-600 hover:bg-surface-50 hover:text-surface-900 border-l-[4px] border-transparent'
+                            ? 'bg-gradient-to-r from-primary-100/80 to-primary-50/40 dark:from-primary-900/40 dark:to-primary-800/20 border-l-[4px] border-primary-600 text-surface-900 dark:text-white font-bold pl-3.5 shadow-sm'
+                            : 'text-surface-600 dark:text-slate-400 hover:bg-surface-50 dark:hover:bg-slate-800 hover:text-surface-900 dark:hover:text-slate-200 border-l-[4px] border-transparent'
                     )}
                 >
                     <span className={cn("transition-colors duration-200", isActive ? "text-primary-700" : "text-surface-400 group-hover:text-primary-500")}>
@@ -360,7 +360,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
 
             {/* Submenu (Tree Line Style) */}
             {hasChildren && expanded && (
-                <div className="ml-4 pl-4 border-l border-surface-200 space-y-1 mt-1 mb-2">
+                <div className="ml-4 pl-4 border-l border-surface-200 dark:border-slate-700 space-y-1 mt-1 mb-2">
                     {item.children!.map((child) => {
                         const childActive = isChildActive(child.href);
                         return (
@@ -371,8 +371,8 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                                     'flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-all duration-200',
                                     'hover:translate-x-1',
                                     childActive
-                                        ? 'text-primary-700 font-bold bg-primary-50 border-l-[3px] border-primary-500 pl-2.5'
-                                        : 'text-surface-500 hover:text-surface-900 hover:bg-surface-50 border-l-[3px] border-transparent'
+                                        ? 'text-primary-700 font-bold bg-primary-50 dark:bg-primary-900/30 border-l-[3px] border-primary-500 pl-2.5'
+                                        : 'text-surface-500 dark:text-slate-400 hover:text-surface-900 dark:hover:text-slate-200 hover:bg-surface-50 dark:hover:bg-slate-800 border-l-[3px] border-transparent'
                                 )}
                             >
                                 {childActive && (
@@ -403,10 +403,11 @@ export function Sidebar() {
             )}
 
             <aside
+                aria-label="Main navigation"
                 className={cn(
-                    'fixed top-0 left-0 h-full bg-white z-[200]',
+                    'fixed top-0 left-0 h-full bg-white dark:bg-slate-900 z-[200]',
                     // Using flex-row to accommodate the Double Rail
-                    'flex flex-row transition-all duration-300 shadow-xl lg:shadow-none border-r border-surface-200',
+                    'flex flex-row transition-all duration-300 shadow-xl lg:shadow-none border-r border-surface-200 dark:border-slate-700/60',
                     // Desktop
                     'hidden lg:flex',
                     sidebarCollapsed

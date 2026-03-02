@@ -120,6 +120,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                         <button
                             onClick={onClose}
                             className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all"
+                            aria-label="Close financing details"
                         >
                             <X size={20} />
                         </button>
@@ -428,7 +429,7 @@ function InfoCard({ label, value, icon, accent = 'primary' }: { label: string; v
         amber: 'bg-amber-50 text-amber-600',
     };
     return (
-        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/70 border border-surface-100/80 hover:border-surface-200 hover:shadow-sm transition-all group">
+        <div className="flex items-start gap-3 p-3.5 rounded-xl bg-white/70 dark:bg-slate-800/70 border border-surface-100/80 hover:border-surface-200 hover:shadow-sm transition-all group">
             <div className={`p-1.5 rounded-lg ${accentColors[accent] || accentColors.primary} group-hover:scale-110 transition-transform`}>{icon}</div>
             <div>
                 <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider">{label}</p>
@@ -561,7 +562,7 @@ export default function PremiumFinancingPage() {
                 >
                     <Button
                         variant="outline"
-                        className="bg-white text-surface-900 hover:bg-surface-50 border-none rounded-xl px-7 h-11 font-black shadow-lg"
+                        className="bg-white dark:bg-slate-800 text-surface-900 hover:bg-surface-50 border-none rounded-xl px-7 h-11 font-black shadow-lg"
                         leftIcon={<HandCoins size={18} />}
                         onClick={() => setIsModalOpen(true)}
                     >

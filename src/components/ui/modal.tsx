@@ -94,12 +94,12 @@ export function Modal({
                 <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--glass-26-border)] bg-transparent shrink-0">
                     <div>
                         {title && (
-                            <h2 className="text-xl font-bold text-surface-900 tracking-tight">
+                            <h2 className="text-xl font-bold text-surface-900 dark:text-white tracking-tight">
                                 {title}
                             </h2>
                         )}
                         {description && (
-                            <p className="text-sm text-surface-500 mt-1">{description}</p>
+                            <p className="text-sm text-surface-500 dark:text-slate-400 mt-1">{description}</p>
                         )}
                     </div>
                     <button
@@ -108,7 +108,7 @@ export function Modal({
                             onClose();
                         }}
                         type="button"
-                        className="p-2 text-surface-400 hover:text-surface-600 hover:bg-surface-100 rounded-full transition-all active:scale-90 outline-none focus:ring-2 focus:ring-surface-200 cursor-pointer"
+                        className="p-2 text-surface-400 hover:text-surface-600 dark:hover:text-slate-200 hover:bg-surface-100 dark:hover:bg-slate-700 rounded-full transition-all active:scale-90 outline-none focus:ring-2 focus:ring-surface-200 dark:focus:ring-slate-600 cursor-pointer"
                         aria-label="Close dialog"
                     >
                         <X size={20} />

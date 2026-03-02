@@ -340,7 +340,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     <button
                         onClick={() => toast.success('Quote Calculated', { description: `Your ${section} quote has been generated. Review the summary below.` })}
                         className={cn(
-                            "flex items-center gap-2 px-7 py-3 rounded-2xl font-black uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-lg relative overflow-hidden group border-none outline-none",
+                            "flex items-center gap-2 px-7 py-3 rounded-2xl font-black uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-lg relative overflow-hidden group border-none outline-none focus:ring-2 focus:ring-primary-500/40",
                             "bg-gradient-to-r from-warning-400 to-warning-500 text-slate-900"
                         )}
                         style={{ filter: 'url(#liquid-glass-refraction)' }}

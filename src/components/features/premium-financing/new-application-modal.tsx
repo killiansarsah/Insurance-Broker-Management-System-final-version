@@ -222,7 +222,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                         placeholder="Search by client name or number..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-12 pr-5 py-3.5 bg-white border border-surface-200 rounded-xl text-sm font-medium text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
+                                        className="w-full pl-12 pr-5 py-3.5 bg-white dark:bg-slate-800 border border-surface-200 rounded-xl text-sm font-medium text-surface-900 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all shadow-sm"
                                     />
                                     {searchTerm && (
                                         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-surface-400 font-medium">
@@ -245,7 +245,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                                     setSelectedClient(client);
                                                     setStep(2);
                                                 }}
-                                                className="w-full px-4 py-3.5 flex items-center gap-4 bg-white border border-surface-100 rounded-xl hover:border-primary-300 hover:shadow-md transition-all text-left group"
+                                                className="w-full px-4 py-3.5 flex items-center gap-4 bg-white dark:bg-slate-800 border border-surface-100 rounded-xl hover:border-primary-300 hover:shadow-md transition-all text-left group"
                                             >
                                                 {/* Initials Avatar */}
                                                 <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white text-xs font-bold shrink-0 group-hover:shadow-lg group-hover:shadow-primary-500/20 transition-shadow">
@@ -324,7 +324,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                                 setSelectedPolicy(policy);
                                                 setStep(3);
                                             }}
-                                            className="w-full p-5 flex items-center gap-4 bg-white border border-surface-100 rounded-xl hover:border-primary-300 hover:shadow-lg transition-all text-left group"
+                                            className="w-full p-5 flex items-center gap-4 bg-white dark:bg-slate-800 border border-surface-100 rounded-xl hover:border-primary-300 hover:shadow-lg transition-all text-left group"
                                         >
                                             <div className="w-11 h-11 rounded-lg bg-primary-50 flex items-center justify-center text-primary-500 group-hover:bg-primary-500 group-hover:text-white transition-all duration-300 shrink-0">
                                                 <ShieldCheck size={22} />
@@ -391,7 +391,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                                     "relative p-4 border rounded-xl flex items-center gap-4 cursor-pointer transition-all duration-300",
                                                     isSelected
                                                         ? "bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-600/20 ring-2 ring-primary-300"
-                                                        : "bg-white border-surface-150 hover:border-primary-200 hover:shadow-sm"
+                                                        : "bg-white dark:bg-slate-800 border-surface-150 hover:border-primary-200 hover:shadow-sm"
                                                 )}
                                             >
                                                 <input
@@ -507,7 +507,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                 </motion.div>
 
                                 {/* Application Summary Card */}
-                                <motion.div variants={ITEM_VARIANTS} className="bg-white border border-surface-100 rounded-xl overflow-hidden">
+                                <motion.div variants={ITEM_VARIANTS} className="bg-white dark:bg-slate-800 border border-surface-100 rounded-xl overflow-hidden">
                                     <div className="px-5 py-3.5 bg-surface-50 border-b border-surface-100">
                                         <p className="text-xs font-bold text-surface-500 uppercase tracking-wider">Application Summary</p>
                                     </div>
@@ -592,7 +592,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                 </div>
 
                 {/* ── Footer Navigation ── */}
-                <div className="px-8 py-5 bg-white border-t border-surface-100 flex items-center gap-4">
+                <div className="px-8 py-5 bg-white dark:bg-slate-900 border-t border-surface-100 flex items-center gap-4">
                     <Button
                         variant="ghost"
                         onClick={() => step > 1 ? setStep(step - 1) : handleClose()}

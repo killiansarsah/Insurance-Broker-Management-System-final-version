@@ -67,13 +67,13 @@ export function SettingsTerms() {
             </div>
 
             {/* Privacy Policy */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="px-10 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="size-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">policy</span>
                         </div>
-                        <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Privacy Policy</h3>
+                        <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-sm">Privacy Policy</h3>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <span className="material-symbols-outlined text-base">schedule</span>
@@ -107,13 +107,13 @@ export function SettingsTerms() {
             </div>
 
             {/* Data Processing Agreement */}
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="px-10 py-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
+                <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <div className="size-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shrink-0">
                             <span className="material-symbols-outlined text-xl">gavel</span>
                         </div>
-                        <h3 className="font-black text-slate-900 uppercase tracking-widest text-sm">Data Processing Agreement (DPA)</h3>
+                        <h3 className="font-black text-slate-900 dark:text-white uppercase tracking-widest text-sm">Data Processing Agreement (DPA)</h3>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
                         <span className="material-symbols-outlined text-base">schedule</span>
@@ -148,8 +148,8 @@ export function SettingsTerms() {
 
 function DpaSummaryCard({ icon, title, value, desc }: { icon: string; title: string; value: string; desc: string }) {
     return (
-        <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-4 group hover:bg-white hover:shadow-md transition-all">
-            <div className="size-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+        <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 flex flex-col gap-4 group hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all">
+            <div className="size-10 rounded-xl bg-white dark:bg-slate-800 shadow-sm flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                 <span className="material-symbols-outlined text-xl">{icon}</span>
             </div>
             <div>

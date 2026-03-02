@@ -140,6 +140,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         <button
                             onClick={prev}
                             className="group flex items-center justify-center w-10 h-10 rounded-full border border-surface-200 bg-background/80 backdrop-blur-sm hover:border-primary-500/50 transition-all active:scale-90 shadow-sm"
+                            aria-label="Previous month"
                         >
                             <ChevronLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
                         </button>
@@ -152,6 +153,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         <button
                             onClick={next}
                             className="group flex items-center justify-center w-10 h-10 rounded-full border border-surface-200 bg-background/80 backdrop-blur-sm hover:border-primary-500/50 transition-all active:scale-90 shadow-sm"
+                            aria-label="Next month"
                         >
                             <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
                         </button>

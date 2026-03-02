@@ -23,6 +23,7 @@ export function ChatList({ activeId, onSelect }: ChatListProps) {
                     <input
                         type="text"
                         placeholder="Search team members..."
+                        aria-label="Search team members"
                         className="w-full h-10 pl-9 pr-4 text-sm bg-surface-50 border border-surface-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                     />
                 </div>

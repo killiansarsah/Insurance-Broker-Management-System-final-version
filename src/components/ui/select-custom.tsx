@@ -64,7 +64,7 @@ export function CustomSelect({
                     'inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border rounded-full transition-all cursor-pointer shadow-sm backdrop-blur-md',
                     value !== null && value !== undefined && value !== ''
                         ? 'text-primary-600 bg-primary-50/50 border-primary-200/50'
-                        : 'text-surface-400 bg-white/60 border-surface-200/50 hover:bg-white hover:text-surface-600 hover:border-surface-300'
+                        : 'text-surface-400 bg-white/60 dark:bg-slate-800/60 border-surface-200/50 dark:border-slate-600/50 hover:bg-white dark:hover:bg-slate-700 hover:text-surface-600 dark:hover:text-slate-200 hover:border-surface-300'
                 )}
             >
                 {icon && <span className="shrink-0 opacity-60">{icon}</span>}
@@ -102,7 +102,7 @@ export function CustomSelect({
                         exit={{ opacity: 0, y: position === 'top' ? -10 : 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         className={cn(
-                            'absolute min-w-[140px] bg-white/95 backdrop-blur-xl border border-surface-200/50 rounded-2xl shadow-2xl z-[100] overflow-hidden',
+                            'absolute min-w-[140px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-surface-200/50 dark:border-slate-600/50 rounded-2xl shadow-2xl z-[100] overflow-hidden',
                             position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
                             align === 'right' ? 'right-0' : 'left-0'
                         )}

@@ -460,7 +460,7 @@ export default function DashboardPage() {
                     />
 
                     {/* Period Toggle - Liquid Glass Switcher */}
-                    <div className="inline-flex items-center bg-white/40 backdrop-blur-2xl p-1 rounded-full border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
+                    <div className="inline-flex items-center bg-white/40 dark:bg-slate-900/40 backdrop-blur-2xl p-1 rounded-full border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
                         {(['today', 'mtd', 'ytd'] as Period[]).map((p) => (
                             <button
                                 key={p}

@@ -9,17 +9,42 @@ import { toast } from 'sonner';
 export function SettingsSecurityDetails() {
     const [isSavingPw, setIsSavingPw] = useState(false);
     const [showPwToast, setShowPwToast] = useState(false);
+    const [currentPassword, setCurrentPassword] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [is2faEnabled, setIs2faEnabled] = useState(false);
     const [isSignOutAllOpen, setIsSignOutAllOpen] = useState(false);
     const [twoFaCode, setTwoFaCode] = useState('');
 
     const handleSavePassword = () => {
+        if (!currentPassword.trim()) {
+            toast.error('Please enter your current password.');
+            return;
+        }
+        if (password.length < 8) {
+            toast.error('New password must be at least 8 characters.');
+            return;
+        }
+        if (!/[A-Z]/.test(password)) {
+            toast.error('New password must contain at least one uppercase letter.');
+            return;
+        }
+        if (!/[0-9]/.test(password)) {
+            toast.error('New password must contain at least one number.');
+            return;
+        }
+        if (password !== confirmPassword) {
+            toast.error('New password and confirmation do not match.');
+            return;
+        }
+
         setIsSavingPw(true);
         setTimeout(() => {
             setIsSavingPw(false);
-            setShowPwToast(true);
-            setTimeout(() => setShowPwToast(false), 3000);
+            setCurrentPassword('');
+            setPassword('');
+            setConfirmPassword('');
+            toast.success('Password Updated', { description: 'Your password has been changed successfully.' });
         }, 1500);
     };
 
@@ -50,8 +75,10 @@ export function SettingsSecurityDetails() {
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Current Password</label>
                             <input
                                 type="password"
-                                className="h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-bold focus:bg-white transition-all text-sm outline-none dark:text-white"
+                                className="h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-bold focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 transition-all text-sm outline-none dark:text-white"
                                 placeholder="••••••••"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
                             />
                         </div>
                         <div className="flex flex-col gap-4">
@@ -59,7 +86,7 @@ export function SettingsSecurityDetails() {
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">New Password</label>
                                 <input
                                     type="password"
-                                    className="h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-bold focus:bg-white transition-all text-sm outline-none dark:text-white"
+                                    className="h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-bold focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 transition-all text-sm outline-none dark:text-white"
                                     placeholder="Minimum 12 characters"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
@@ -90,8 +117,10 @@ export function SettingsSecurityDetails() {
                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Confirm New Password</label>
                             <input
                                 type="password"
-                                className="h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-bold focus:bg-white transition-all text-sm outline-none dark:text-white"
+                                className="h-14 px-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 font-bold focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 transition-all text-sm outline-none dark:text-white"
                                 placeholder="Re-type new password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                             />
                         </div>
                         <button
@@ -156,7 +185,7 @@ export function SettingsSecurityDetails() {
                         {is2faEnabled && (
                             <div className="flex flex-col gap-8 p-8 rounded-3xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 animate-fade-in">
                                 <div className="flex items-center gap-6">
-                                    <div className="size-24 bg-white p-2 rounded-xl shadow-sm border border-slate-200 flex items-center justify-center">
+                                    <div className="size-24 bg-white dark:bg-slate-800 p-2 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex items-center justify-center">
                                         <div className="size-full bg-slate-50 flex items-center justify-center">
                                             <span className="material-symbols-outlined text-4xl text-slate-300">qr_code_2</span>
                                         </div>

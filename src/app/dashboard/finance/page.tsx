@@ -174,7 +174,7 @@ export default function FinanceOverviewPage() {
                 {MODULE_CARDS.map((mod) => (
                     <Link key={mod.label} href={mod.href}>
                         <div className={cn(
-                            'p-5 rounded-[var(--radius-lg)] border bg-white hover:shadow-md transition-all group cursor-pointer',
+                            'p-5 rounded-[var(--radius-lg)] border bg-white dark:bg-slate-900 hover:shadow-md transition-all group cursor-pointer',
                             mod.border
                         )}>
                             <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center mb-3', mod.bg, mod.color)}>

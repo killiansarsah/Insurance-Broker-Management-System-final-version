@@ -153,13 +153,13 @@ export function DataTable<T>({
 
     return (
         <div className={cn(
-            'bg-white rounded-xl border border-surface-200/60',
-            'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]',
+            'bg-white dark:bg-slate-900 rounded-xl border border-surface-200/60 dark:border-slate-700/60',
+            'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
             'overflow-hidden',
             className
         )}>
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 border-b border-surface-100 bg-surface-50/30">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 border-b border-surface-100 dark:border-slate-700/60 bg-surface-50/30 dark:bg-slate-800/30">
                 {searchable && (
                     <div
                         className="relative group z-10 transition-all duration-300 ease-out"
@@ -176,8 +176,9 @@ export function DataTable<T>({
                             onFocus={() => setSearchFocused(true)}
                             onBlur={() => setSearchFocused(false)}
                             placeholder={searchPlaceholder}
-                            style={{ color: '#0f172a', fontSize: '14px' }}
-                            className="w-full pl-11 pr-10 py-2.5 bg-white border border-surface-200 rounded-lg caret-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 focus:shadow-[0_0_0_3px_rgba(25,118,210,0.1)] transition-[border,box-shadow] placeholder:text-surface-400"
+                            aria-label={searchPlaceholder}
+                            style={{ fontSize: '14px' }}
+                            className="w-full pl-11 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 rounded-lg text-surface-900 dark:text-slate-200 caret-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/25 focus:border-primary-400 focus:shadow-[0_0_0_3px_rgba(25,118,210,0.1)] transition-[border,box-shadow] placeholder:text-surface-400 dark:placeholder:text-slate-500"
                         />
                         {search && (
                             <button
@@ -185,7 +186,7 @@ export function DataTable<T>({
                                     setSearch('');
                                     setPage(1);
                                 }}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-surface-400 hover:text-surface-700 hover:bg-surface-100 cursor-pointer transition-all"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-surface-400 hover:text-surface-700 dark:hover:text-slate-200 hover:bg-surface-100 dark:hover:bg-slate-700 cursor-pointer transition-all"
                             >
                                 <X size={14} />
                             </button>
@@ -204,7 +205,7 @@ export function DataTable<T>({
                 <div className="flex items-center gap-2 shrink-0 ml-auto">
                     <button
                         onClick={handleExportCSV}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-surface-600 bg-white border border-surface-200 rounded-lg hover:bg-surface-50 hover:border-surface-300 cursor-pointer transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-surface-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 rounded-lg hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 cursor-pointer transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
                     >
                         <FileSpreadsheet size={14} />
                         Export CSV
@@ -214,7 +215,7 @@ export function DataTable<T>({
             </div>
 
             {/* Record count bar */}
-            <div className="px-5 py-2 bg-surface-50/50 border-b border-surface-100 flex items-center justify-between">
+            <div className="px-5 py-2 bg-surface-50/50 dark:bg-slate-800/50 border-b border-surface-100 dark:border-slate-700/60 flex items-center justify-between">
                 <p className="text-[11px] font-semibold text-surface-400 uppercase tracking-widest">
                     {sortedData.length} record{sortedData.length !== 1 ? 's' : ''}
                     {search && <span className="text-primary-500 ml-1">matching &ldquo;{search}&rdquo;</span>}
@@ -238,7 +239,7 @@ export function DataTable<T>({
                                 <th
                                     key={col.key}
                                     className={cn(
-                                        'px-5 py-3.5 text-left text-[11px] font-bold text-surface-400 uppercase tracking-widest whitespace-nowrap bg-white',
+                                        'px-5 py-3.5 text-left text-[11px] font-bold text-surface-400 dark:text-slate-500 uppercase tracking-widest whitespace-nowrap bg-white dark:bg-slate-900',
                                         col.sortable && 'cursor-pointer select-none group/th transition-colors hover:text-surface-700',
                                         sortKey === col.key && 'text-primary-600 bg-primary-50/40',
                                         col.className
@@ -274,12 +275,12 @@ export function DataTable<T>({
                                 >
                                     {typeof emptyMessage === 'string' ? (
                                         <div className="flex flex-col items-center gap-4">
-                                            <div className="w-16 h-16 rounded-2xl bg-surface-100 flex items-center justify-center">
+                                            <div className="w-16 h-16 rounded-2xl bg-surface-100 dark:bg-slate-800 flex items-center justify-center">
                                                 <Inbox size={32} className="text-surface-300" />
                                             </div>
                                             <div>
-                                                <p className="text-base font-semibold text-surface-600">{emptyMessage}</p>
-                                                <p className="text-sm text-surface-400 mt-1">Try adjusting your search or filters to find what you&apos;re looking for.</p>
+                                                <p className="text-base font-semibold text-surface-600 dark:text-slate-300">{emptyMessage}</p>
+                                                <p className="text-sm text-surface-400 dark:text-slate-500 mt-1">Try adjusting your search or filters to find what you&apos;re looking for.</p>
                                             </div>
                                         </div>
                                     ) : (
@@ -293,10 +294,10 @@ export function DataTable<T>({
                                     key={i}
                                     onClick={() => onRowClick?.(row)}
                                     className={cn(
-                                        'border-b border-surface-100/80 transition-all duration-150',
-                                        'hover:bg-primary-50/30 hover:shadow-[inset_3px_0_0_0_var(--color-primary-500)]',
+                                        'border-b border-surface-100/80 dark:border-slate-700/40 transition-all duration-150',
+                                        'hover:bg-primary-50/30 dark:hover:bg-primary-900/20 hover:shadow-[inset_3px_0_0_0_var(--color-primary-500)]',
                                         onRowClick && 'cursor-pointer',
-                                        i % 2 === 1 && 'bg-surface-50/40',
+                                        i % 2 === 1 && 'bg-surface-50/40 dark:bg-slate-800/40',
                                         'table-row-enter'
                                     )}
                                     style={{ animationDelay: `${i * 25}ms` }}
@@ -305,7 +306,7 @@ export function DataTable<T>({
                                         <td
                                             key={col.key}
                                             className={cn(
-                                                'px-5 py-4 text-surface-700 whitespace-nowrap',
+                                                'px-5 py-4 text-surface-700 dark:text-slate-300 whitespace-nowrap',
                                                 col.className
                                             )}
                                         >
@@ -322,20 +323,20 @@ export function DataTable<T>({
             </div>
 
             {/* Pagination */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-surface-100 bg-surface-50/30">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-4 border-t border-surface-100 dark:border-slate-700/60 bg-surface-50/30 dark:bg-slate-800/30">
                 <div className="flex items-center gap-4">
                     <p className="text-xs text-surface-500">
                         Showing{' '}
-                        <span className="font-bold text-surface-800">
+                        <span className="font-bold text-surface-800 dark:text-slate-200">
                             {sortedData.length === 0 ? 0 : (safePage - 1) * currentPageSize + 1}
                             –
                             {Math.min(safePage * currentPageSize, sortedData.length)}
                         </span>
                         {' '}of{' '}
-                        <span className="font-bold text-surface-800">{sortedData.length}</span>
+                        <span className="font-bold text-surface-800 dark:text-slate-200">{sortedData.length}</span>
                     </p>
-                    <div className="flex items-center gap-2 border-l border-surface-200 pl-4">
-                        <label htmlFor="page-size" className="text-xs text-surface-400 font-medium">Rows per page</label>
+                    <div className="flex items-center gap-2 border-l border-surface-200 dark:border-slate-700 pl-4">
+                        <label htmlFor="page-size" className="text-xs text-surface-400 dark:text-slate-500 font-medium">Rows per page</label>
                         <CustomSelect
                             options={PAGE_SIZE_OPTIONS}
                             value={currentPageSize}
@@ -350,7 +351,7 @@ export function DataTable<T>({
                     <button
                         disabled={safePage <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-surface-500 bg-white border border-surface-200 hover:bg-surface-50 hover:border-surface-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-surface-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
                     >
                         <ChevronLeft size={16} />
                     </button>
@@ -373,7 +374,7 @@ export function DataTable<T>({
                                     'w-9 h-9 rounded-lg text-xs font-bold cursor-pointer transition-all duration-200',
                                     pageNum === safePage
                                         ? 'bg-primary-500 text-white shadow-md shadow-primary-500/30 scale-105'
-                                        : 'text-surface-600 bg-white border border-surface-200 hover:bg-surface-50 hover:border-surface-300 shadow-sm'
+                                        : 'text-surface-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 shadow-sm'
                                 )}
                             >
                                 {pageNum}
@@ -383,7 +384,7 @@ export function DataTable<T>({
                     <button
                         disabled={safePage >= totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-surface-500 bg-white border border-surface-200 hover:bg-surface-50 hover:border-surface-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-surface-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
                     >
                         <ChevronRight size={16} />
                     </button>

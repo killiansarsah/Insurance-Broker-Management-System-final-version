@@ -62,7 +62,7 @@ export function Header() {
         <header
             className={cn(
                 'fixed top-0 right-0 h-[var(--header-height)] z-[200]',
-                'bg-[var(--bg-header)] backdrop-blur-[var(--glass-blur)] border-b border-surface-200',
+                'bg-[var(--bg-header)] backdrop-blur-[var(--glass-blur)] border-b border-surface-200 dark:border-slate-700/60',
                 'flex items-center justify-between px-4 lg:px-6',
                 'transition-all duration-[var(--transition-slow)]',
                 sidebarCollapsed
@@ -74,7 +74,7 @@ export function Header() {
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => setSidebarMobileOpen(true)}
-                    className="lg:hidden p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer"
+                    className="lg:hidden p-2 text-surface-600 dark:text-slate-400 hover:bg-surface-100 dark:hover:bg-slate-800 rounded-[var(--radius-md)] cursor-pointer"
                     aria-label="Open menu"
                 >
                     <Menu size={20} />
@@ -88,8 +88,9 @@ export function Header() {
                     <input
                         type="text"
                         placeholder="Search clients, policies, claims..."
+                        aria-label="Search clients, policies, claims"
                         className={cn(
-                            'h-9 pl-9 pr-4 w-72 text-sm bg-surface-50 border border-surface-200',
+                            'h-9 pl-9 pr-4 w-72 text-sm bg-surface-50 dark:bg-slate-800 border border-surface-200 dark:border-slate-600 dark:text-slate-200',
                             'rounded-[var(--radius-full)]',
                             'placeholder:text-surface-400',
                             'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
@@ -142,9 +143,9 @@ export function Header() {
                     </button>
 
                     {notificationsOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border border-surface-200 animate-scale-in overflow-hidden">
-                            <div className="px-4 py-3 border-b border-surface-100 flex items-center justify-between">
-                                <h3 className="text-sm font-bold text-surface-900">
+                        <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border border-surface-200 dark:border-slate-700 animate-scale-in overflow-hidden">
+                            <div className="px-4 py-3 border-b border-surface-100 dark:border-slate-700 flex items-center justify-between">
+                                <h3 className="text-sm font-bold text-surface-900 dark:text-white">
                                     Notifications
                                 </h3>
                                 {unreadCount > 0 && (
@@ -163,9 +164,12 @@ export function Header() {
                                         <div
                                             key={n.id}
                                             onClick={() => handleNotificationClick(n.id, n.link)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotificationClick(n.id, n.link); } }}
+                                            role="button"
+                                            tabIndex={0}
                                             className={cn(
-                                                'px-4 py-3 border-b border-surface-50 hover:bg-surface-50 cursor-pointer transition-colors',
-                                                !n.read && 'bg-primary-50/30'
+                                                'px-4 py-3 border-b border-surface-50 dark:border-slate-700/50 hover:bg-surface-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors',
+                                                !n.read && 'bg-primary-50/30 dark:bg-primary-900/20'
                                             )}
                                         >
                                             <div className="flex items-start gap-2">
@@ -173,7 +177,7 @@ export function Header() {
                                                     <span className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', notifDot[n.type] || 'bg-primary-500')} />
                                                 )}
                                                 <div className={cn(!n.read ? '' : 'ml-4')}>
-                                                    <p className="text-sm font-bold text-surface-900">
+                                                    <p className="text-sm font-bold text-surface-900 dark:text-white">
                                                         {n.title}
                                                     </p>
                                                     <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">
@@ -190,7 +194,7 @@ export function Header() {
                                     </div>
                                 )}
                             </div>
-                            <div className="px-4 py-2 bg-surface-50 border-t border-surface-100">
+                            <div className="px-4 py-2 bg-surface-50 dark:bg-slate-900/50 border-t border-surface-100 dark:border-slate-700">
                                 <button className="w-full text-xs text-center text-primary-600 font-bold hover:text-primary-700 cursor-pointer uppercase tracking-widest py-1">
                                     View All Activity
                                 </button>
@@ -213,19 +217,19 @@ export function Header() {
                             size="sm"
                         />
                         <div className="hidden md:block text-left">
-                            <p className="text-sm font-bold text-surface-900 leading-tight">
+                            <p className="text-sm font-bold text-surface-900 dark:text-white leading-tight">
                                 {user ? `${user.firstName} ${user.lastName}` : 'User'}
                             </p>
-                            <p className="text-[10px] text-surface-500 font-semibold uppercase leading-tight tracking-wider opacity-60">
+                            <p className="text-[10px] text-surface-500 font-semibold uppercase leading-tight tracking-wider">
                                 {user?.role.replace('_', ' ')}
                             </p>
                         </div>
                     </button>
 
                     {profileOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border border-surface-200 animate-scale-in overflow-hidden">
-                            <div className="px-5 py-4 bg-surface-50 border-b border-surface-100">
-                                <p className="text-sm font-bold text-surface-900 leading-none">
+                        <div className="absolute right-0 top-full mt-2 w-64 bg-white dark:bg-slate-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border border-surface-200 dark:border-slate-700 animate-scale-in overflow-hidden">
+                            <div className="px-5 py-4 bg-surface-50 dark:bg-slate-900/50 border-b border-surface-100 dark:border-slate-700">
+                                <p className="text-sm font-bold text-surface-900 dark:text-white leading-none">
                                     {user ? `${user.firstName} ${user.lastName}` : 'User'}
                                 </p>
                                 <p className="text-xs text-surface-500 mt-1.5 opacity-80">{user?.email}</p>
@@ -236,7 +240,7 @@ export function Header() {
                                         router.push('/dashboard/settings');
                                         setProfileOpen(false);
                                     }}
-                                    className="w-full px-5 py-2.5 text-sm text-left text-surface-700 hover:bg-surface-50 cursor-pointer transition-colors font-medium flex items-center gap-3"
+                                    className="w-full px-5 py-2.5 text-sm text-left text-surface-700 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-700 cursor-pointer transition-colors font-medium flex items-center gap-3"
                                 >
                                     <Avatar name={user?.firstName || 'U'} size="sm" className="w-6 h-6 text-[10px]" />
                                     My Profile
@@ -246,7 +250,7 @@ export function Header() {
                                         router.push('/dashboard/settings');
                                         setProfileOpen(false);
                                     }}
-                                    className="w-full px-5 py-2.5 text-sm text-left text-surface-700 hover:bg-surface-50 cursor-pointer transition-colors font-medium flex items-center gap-3"
+                                    className="w-full px-5 py-2.5 text-sm text-left text-surface-700 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-700 cursor-pointer transition-colors font-medium flex items-center gap-3"
                                 >
                                     <div className="w-6 h-6 rounded-full bg-surface-100 flex items-center justify-center">
                                         <Bell size={12} className="text-surface-500" />
@@ -254,7 +258,7 @@ export function Header() {
                                     Preferences
                                 </button>
                             </div>
-                            <div className="border-t border-surface-100 py-2 bg-surface-50/30">
+                            <div className="border-t border-surface-100 dark:border-slate-700 py-2 bg-surface-50/30 dark:bg-slate-900/30">
                                 <button
                                     onClick={() => { setProfileOpen(false); setIsSignOutOpen(true); }}
                                     className="w-full px-5 py-2.5 text-sm text-left text-danger-600 hover:bg-danger-50 cursor-pointer transition-colors font-bold flex items-center gap-3"
@@ -271,11 +275,12 @@ export function Header() {
             </div>
 
             {searchOpen && (
-                <div className="absolute left-0 right-0 top-full bg-white border-b border-surface-200 p-3 md:hidden animate-fade-in shadow-lg">
+                <div className="absolute left-0 right-0 top-full bg-white dark:bg-slate-800 border-b border-surface-200 dark:border-slate-700 p-3 md:hidden animate-fade-in shadow-lg">
                     <input
                         type="text"
                         placeholder="Search..."
-                        className="w-full h-10 px-4 text-sm border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+                        aria-label="Search"
+                        className="w-full h-10 px-4 text-sm border border-surface-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20"
                         autoFocus
                     />
                 </div>

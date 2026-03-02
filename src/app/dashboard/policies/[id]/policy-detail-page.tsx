@@ -631,7 +631,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     {policy.documents.map((doc) => (
                         <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-surface-50 rounded-lg group transition-colors">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 group-hover:bg-white group-hover:shadow-sm transition-all">
+                                <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 group-hover:bg-white dark:group-hover:bg-slate-800 group-hover:shadow-sm transition-all">
                                     <FileText size={20} />
                                 </div>
                                 <div>

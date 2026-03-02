@@ -22,7 +22,7 @@ const permissions = [
 
 export function PermissionsMatrix() {
     return (
-        <div className="bg-white/40 backdrop-blur-xl rounded-[32px] border border-surface-200/50 overflow-hidden shadow-xl ring-1 ring-white/20">
+        <div className="bg-white/40 dark:bg-slate-900/40 backdrop-blur-xl rounded-[32px] border border-surface-200/50 overflow-hidden shadow-xl ring-1 ring-white/20">
             <div className="p-6 border-b border-surface-200/50 bg-surface-50/50 flex items-center justify-between">
                 <div>
                     <h3 className="text-sm font-black text-surface-900 uppercase tracking-widest flex items-center gap-2">

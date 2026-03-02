@@ -25,7 +25,7 @@ export function BackButton({ href, className, onClick }: BackButtonProps) {
 
     // Common styles
     const buttonClasses = cn(
-        "back-button-root w-12 h-12 flex items-center justify-center rounded-full bg-white text-surface-400 hover:text-primary-600 hover:shadow-lg hover:scale-105 transition-all active:scale-90 shadow-sm border border-surface-100 shrink-0",
+        "back-button-root w-12 h-12 flex items-center justify-center rounded-full bg-white dark:bg-slate-800 text-surface-400 dark:text-slate-300 hover:text-primary-600 hover:shadow-lg hover:scale-105 transition-all active:scale-90 shadow-sm border border-surface-100 dark:border-slate-700 shrink-0",
         className
     );
 

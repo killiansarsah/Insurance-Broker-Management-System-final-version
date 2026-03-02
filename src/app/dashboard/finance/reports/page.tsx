@@ -126,14 +126,14 @@ export default function FinanceReportsPage() {
                     type="month"
                     value={fromMonth}
                     onChange={(e) => setFromMonth(e.target.value)}
-                    className="px-3 py-2 rounded-lg border border-surface-200 text-sm font-medium text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none bg-white"
+                    className="px-3 py-2 rounded-lg border border-surface-200 text-sm font-medium text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none bg-white dark:bg-slate-800"
                 />
                 <span className="text-surface-400 text-sm">to</span>
                 <input
                     type="month"
                     value={toMonth}
                     onChange={(e) => setToMonth(e.target.value)}
-                    className="px-3 py-2 rounded-lg border border-surface-200 text-sm font-medium text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none bg-white"
+                    className="px-3 py-2 rounded-lg border border-surface-200 text-sm font-medium text-surface-700 focus:border-primary-500 focus:ring-2 focus:ring-primary-500/10 outline-none bg-white dark:bg-slate-800"
                 />
                 {(fromMonth !== defaultFrom || toMonth !== defaultTo) && (
                     <button

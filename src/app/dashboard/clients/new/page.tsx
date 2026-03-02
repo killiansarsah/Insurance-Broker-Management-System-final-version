@@ -206,6 +206,7 @@ export default function NewClientPage() {
         return INITIAL_FORM;
     });
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     function update(field: keyof FormData, value: string) {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -220,6 +221,7 @@ export default function NewClientPage() {
                 if (!form.firstName.trim()) newErrors.firstName = 'Required';
                 if (!form.lastName.trim()) newErrors.lastName = 'Required';
                 if (!form.dateOfBirth) newErrors.dateOfBirth = 'Required';
+                else if (new Date(form.dateOfBirth) > new Date()) newErrors.dateOfBirth = 'Date of birth cannot be in the future';
                 if (!form.gender) newErrors.gender = 'Required';
                 if (!form.occupation.trim()) newErrors.occupation = 'Required';
             } else {
@@ -233,10 +235,14 @@ export default function NewClientPage() {
             if (!form.phone.trim()) newErrors.phone = 'Required';
             else if (!/^\+233\d{9}$/.test(form.phone.replace(/\s/g, '')))
                 newErrors.phone = 'Use format +233XXXXXXXXX';
+            if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
+                newErrors.email = 'Invalid email format';
             if (!form.region) newErrors.region = 'Required';
             if (!form.city.trim()) newErrors.city = 'Required';
             if (!form.nextOfKinName.trim()) newErrors.nextOfKinName = 'Required';
             if (!form.nextOfKinPhone.trim()) newErrors.nextOfKinPhone = 'Required';
+            else if (!/^\+?[0-9\s\-]{9,15}$/.test(form.nextOfKinPhone.replace(/\s/g, '')))
+                newErrors.nextOfKinPhone = 'Invalid phone number';
         }
 
         if (s === 3) {
@@ -249,6 +255,8 @@ export default function NewClientPage() {
         if (s === 4) {
             if (form.type === 'individual' && !form.ghanaCardNumber.trim())
                 newErrors.ghanaCardNumber = 'Required';
+            else if (form.type === 'individual' && form.ghanaCardNumber.trim() && !/^GHA-\d{9}-\d$/.test(form.ghanaCardNumber.trim()))
+                newErrors.ghanaCardNumber = 'Use format GHA-XXXXXXXXX-X';
         }
 
         setErrors(newErrors);
@@ -263,7 +271,10 @@ export default function NewClientPage() {
         setStep((s) => Math.max(1, s - 1));
     }
 
-    function handleSubmit() {
+    async function handleSubmit() {
+        setIsSubmitting(true);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        setIsSubmitting(false);
         toast.success('Client Registered', { description: 'New client profile has been created successfully.' });
         router.push('/dashboard/clients');
     }
@@ -552,7 +563,7 @@ export default function NewClientPage() {
                         Continue
                     </Button>
                 ) : (
-                    <Button variant="primary" onClick={handleSubmit} leftIcon={<Check size={16} />}>
+                    <Button variant="primary" onClick={handleSubmit} leftIcon={<Check size={16} />} isLoading={isSubmitting} disabled={isSubmitting}>
                         Register Client
                     </Button>
                 )}

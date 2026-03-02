@@ -58,9 +58,9 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
     if (!mounted) return null;
 
     return (
-        <div className="min-h-screen w-full bg-[#edf1f8] flex items-center justify-center p-4 md:p-0">
+        <div className="min-h-screen w-full bg-[#edf1f8] dark:bg-slate-950 flex items-center justify-center p-4 md:p-0">
             <div
-                className={`w-full overflow-hidden rounded-2xl bg-white shadow-xl shadow-surface-200 transition-all duration-500 ${
+                className={`w-full overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl shadow-surface-200 transition-all duration-500 ${
                     formVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 }`}
                 style={{ maxWidth: '72rem' }}
@@ -137,7 +137,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
 
                     {/* ─── Right — Sign-in Form ─────────────────────────────── */}
                     <div
-                        className="w-full md:w-2/5 p-8 md:p-12 bg-white text-surface-900"
+                        className="w-full md:w-2/5 p-8 md:p-12 bg-white dark:bg-slate-900 text-surface-900"
                         style={{
                             transform: formVisible ? 'translateX(0)' : 'translateX(20px)',
                             opacity: formVisible ? 1 : 0,
@@ -179,7 +179,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         id="signin-email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="block w-full rounded-xl border border-surface-200 bg-white py-3 pl-11 pr-4 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+                                        className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
                                         placeholder="name@insurance-firm.com"
                                         required
                                         autoComplete="email"
@@ -201,7 +201,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         id="signin-password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full rounded-xl border border-surface-200 bg-white py-3 pl-11 pr-11 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
+                                        className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-11 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
                                         placeholder="••••••••"
                                         required
                                         autoComplete="current-password"

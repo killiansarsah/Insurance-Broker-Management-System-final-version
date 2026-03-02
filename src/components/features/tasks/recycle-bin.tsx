@@ -129,8 +129,8 @@ export function RecycleBin({ isOver, isEmpty = true, onClick, isGasping = false,
                                 className="absolute inset-x-2 bottom-1 top-6 z-10"
                             >
                                 <div className="absolute bottom-1 left-0 w-5 h-5 bg-white/80 rotate-[15deg] rounded-sm shadow-sm" />
-                                <div className="absolute bottom-2 right-0 w-4 h-6 bg-[#fef9c3]/80 -rotate-[12deg] rounded-sm shadow-sm" />
-                                <div className="absolute bottom-4 left-2 w-6 h-4 bg-[#fee2e2]/80 rotate-[45deg] rounded-sm shadow-sm" />
+                                <div className="absolute bottom-2 right-0 w-4 h-6 bg-[#fef9c3]/80 dark:bg-yellow-900/30 -rotate-[12deg] rounded-sm shadow-sm" />
+                                <div className="absolute bottom-4 left-2 w-6 h-4 bg-[#fee2e2]/80 dark:bg-red-900/30 rotate-[45deg] rounded-sm shadow-sm" />
                                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-8 bg-white/60 rotate-[5deg] rounded-sm" />
                             </motion.div>
                         )}

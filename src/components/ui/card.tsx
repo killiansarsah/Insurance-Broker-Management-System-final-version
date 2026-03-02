@@ -23,8 +23,8 @@ export function Card({
     return (
         <div
             className={cn(
-                'bg-white rounded-xl border border-surface-200/60', // Thinner, crisp border
-                'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)]', // Base layered shadow
+                'bg-white dark:bg-slate-900 rounded-xl border border-surface-200/60 dark:border-slate-700/60',
+                'shadow-[0_2px_8px_rgba(0,0,0,0.04),0_1px_2px_rgba(0,0,0,0.02)] dark:shadow-[0_2px_8px_rgba(0,0,0,0.2)]',
                 hover &&
                 'transition-all duration-300 ease-out hover:shadow-[0_8px_24px_rgba(0,0,0,0.08),0_4px_8px_rgba(0,0,0,0.04)] hover:-translate-y-1', // Premium lift
                 paddingStyles[padding],
@@ -56,9 +56,9 @@ export function CardHeader({ title, subtitle, action, className }: CardHeaderPro
     return (
         <div className={cn('flex items-start justify-between p-6', className)}>
             <div>
-                <h3 className="text-base font-semibold text-surface-900">{title}</h3>
+                <h3 className="text-base font-semibold text-surface-900 dark:text-white">{title}</h3>
                 {subtitle && (
-                    <p className="text-sm text-surface-500 mt-0.5">{subtitle}</p>
+                    <p className="text-sm text-surface-500 dark:text-slate-400 mt-0.5">{subtitle}</p>
                 )}
             </div>
             {action && <div>{action}</div>}

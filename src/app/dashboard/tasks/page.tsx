@@ -508,7 +508,7 @@ export default function TasksPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-7 px-3 bg-white border-primary-200 text-primary-600 hover:bg-primary-50 font-bold text-[9px] uppercase tracking-wider"
+                                                className="h-7 px-3 bg-white dark:bg-slate-800 border-primary-200 text-primary-600 hover:bg-primary-50 font-bold text-[9px] uppercase tracking-wider"
                                                 onClick={handleBulkArchive}
                                             >
                                                 Archive
@@ -516,7 +516,7 @@ export default function TasksPage() {
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="h-7 px-3 bg-white border-danger-200 text-danger-600 hover:bg-danger-50 font-bold text-[9px] uppercase tracking-wider"
+                                                className="h-7 px-3 bg-white dark:bg-slate-800 border-danger-200 text-danger-600 hover:bg-danger-50 font-bold text-[9px] uppercase tracking-wider"
                                                 onClick={handleBulkDelete}
                                             >
                                                 Delete
@@ -604,7 +604,7 @@ export default function TasksPage() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-7 px-3 bg-white border-primary-200 text-primary-600 hover:bg-primary-50 font-bold text-[9px] uppercase tracking-wider"
+                                        className="h-7 px-3 bg-white dark:bg-slate-800 border-primary-200 text-primary-600 hover:bg-primary-50 font-bold text-[9px] uppercase tracking-wider"
                                         onClick={handleBulkArchive}
                                     >
                                         Archive All
@@ -612,7 +612,7 @@ export default function TasksPage() {
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="h-7 px-3 bg-white border-danger-200 text-danger-600 hover:bg-danger-50 font-bold text-[9px] uppercase tracking-wider"
+                                        className="h-7 px-3 bg-white dark:bg-slate-800 border-danger-200 text-danger-600 hover:bg-danger-50 font-bold text-[9px] uppercase tracking-wider"
                                         onClick={handleBulkDelete}
                                     >
                                         Delete All
@@ -622,7 +622,7 @@ export default function TasksPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="bg-white"
+                                className="bg-white dark:bg-slate-900"
                                 onClick={() => setIsArchiveModalOpen(true)}
                             >
                                 View Archive ({archivedTasks.length})
@@ -639,7 +639,7 @@ export default function TasksPage() {
                                         "w-4 h-4 rounded border transition-all flex items-center justify-center",
                                         selectedTaskIds.size === filteredTasks.length && filteredTasks.length > 0
                                             ? "bg-primary-600 border-primary-600 text-white"
-                                            : "bg-white border-surface-300 hover:border-primary-400"
+                                            : "bg-white dark:bg-slate-800 border-surface-300 hover:border-primary-400"
                                     )}
                                 >
                                     {selectedTaskIds.size === filteredTasks.length && filteredTasks.length > 0 && <Check size={10} strokeWidth={4} />}
@@ -672,7 +672,7 @@ export default function TasksPage() {
                                                     "w-4 h-4 rounded border transition-all flex items-center justify-center",
                                                     selectedTaskIds.has(task.id)
                                                         ? "bg-primary-600 border-primary-600 text-white"
-                                                        : "bg-white border-surface-300 hover:border-primary-400"
+                                                        : "bg-white dark:bg-slate-800 border-surface-300 hover:border-primary-400"
                                                 )}
                                             >
                                                 {selectedTaskIds.has(task.id) && <Check size={10} strokeWidth={4} />}
@@ -722,7 +722,7 @@ export default function TasksPage() {
                                             >
                                                 <Trash2 size={16} />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-surface-300 hover:text-surface-600">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-surface-300 hover:text-surface-600" aria-label="More options">
                                                 <MoreVertical className="w-4 h-4" />
                                             </Button>
                                         </div>
@@ -779,7 +779,7 @@ export default function TasksPage() {
                                 value={newTask.title}
                                 onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
                                 required
-                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50"
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50 dark:bg-slate-800/50"
                             />
                         </div>
 
@@ -792,7 +792,7 @@ export default function TasksPage() {
                                 placeholder="e.g., Motor Comprehensive, Health, Life..."
                                 value={newTask.type}
                                 onChange={(e) => setNewTask({ ...newTask, type: e.target.value })}
-                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 shadow-sm placeholder:text-surface-400"
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
                             />
                         </div>
                     </div>
@@ -822,7 +822,7 @@ export default function TasksPage() {
                                 placeholder="e.g., Today, Feb 20"
                                 value={newTask.due}
                                 onChange={(e) => setNewTask({ ...newTask, due: e.target.value })}
-                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 shadow-sm placeholder:text-surface-400"
+                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
                             />
                         </div>
                     </div>
@@ -837,7 +837,7 @@ export default function TasksPage() {
                             rows={4}
                             value={newTask.description}
                             onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 shadow-sm placeholder:text-surface-400 resize-none"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400 resize-none"
                         />
                     </div>
                 </form>
@@ -880,7 +880,7 @@ export default function TasksPage() {
                                         "px-3 py-2.5 text-xs font-black rounded-xl border transition-all uppercase tracking-tight",
                                         activeFilters.priority === p
                                             ? "bg-primary-600 border-primary-600 text-white shadow-lg shadow-primary-500/20"
-                                            : "bg-surface-50 border-surface-200 text-surface-600 hover:bg-white hover:border-primary-300"
+                                            : "bg-surface-50 border-surface-200 text-surface-600 hover:bg-white dark:hover:bg-slate-800 hover:border-primary-300"
                                     )}
                                 >
                                     {p}
@@ -900,7 +900,7 @@ export default function TasksPage() {
                                         "px-4 py-3 text-xs font-black rounded-xl border transition-all uppercase tracking-tight text-left flex justify-between items-center",
                                         activeFilters.status === s
                                             ? "bg-primary-50 border-primary-500 text-primary-700 shadow-sm"
-                                            : "bg-surface-50 border-surface-200 text-surface-600 hover:bg-white hover:border-surface-300"
+                                            : "bg-surface-50 border-surface-200 text-surface-600 hover:bg-white dark:hover:bg-slate-800 hover:border-surface-300"
                                     )}
                                 >
                                     {s.replace('_', ' ')}
@@ -916,7 +916,7 @@ export default function TasksPage() {
                             placeholder="e.g., Motor, General, Tech..."
                             value={activeFilters.type === 'all' ? '' : activeFilters.type}
                             onChange={(e) => setActiveFilters({ ...activeFilters, type: e.target.value || 'all' })}
-                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 shadow-sm placeholder:text-surface-400"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
                         />
                     </div>
                 </div>

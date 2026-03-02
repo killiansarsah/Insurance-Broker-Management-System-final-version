@@ -21,8 +21,27 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
     const [role, setRole] = useState('broker');
     const [branch, setBranch] = useState('BR-ACC-01');
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
+
+        // Validate required fields
+        if (!firstName.trim()) {
+            toast.error('First name is required.');
+            return;
+        }
+        if (!lastName.trim()) {
+            toast.error('Last name is required.');
+            return;
+        }
+        if (!email.trim()) {
+            toast.error('Email address is required.');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            toast.error('Please enter a valid email address.');
+            return;
+        }
+
         setIsLoading(true);
 
         // Simulate API call

@@ -11,9 +11,21 @@ export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
+        if (!email.trim()) {
+            setError('Please enter your email address.');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            setError('Please enter a valid email address.');
+            return;
+        }
+
         setIsLoading(true);
         // Simulate API call
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -27,7 +39,7 @@ export default function ForgotPasswordPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-[440px] bg-white rounded-[32px] shadow-2xl shadow-surface-900/5 border border-surface-200 p-8 lg:p-10"
+                className="w-full max-w-[440px] bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl shadow-surface-900/5 border border-surface-200 p-8 lg:p-10"
             >
                 {!isSubmitted ? (
                     <div className="flex flex-col">
@@ -55,6 +67,11 @@ export default function ForgotPasswordPage() {
                         </div>
 
                         <form onSubmit={handleSubmit} className="flex flex-col gap-8 w-full">
+                            {error && (
+                                <div className="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-semibold">
+                                    {error}
+                                </div>
+                            )}
                             <Input
                                 label="Registered Email"
                                 placeholder="name@insurance-firm.com"
@@ -63,7 +80,7 @@ export default function ForgotPasswordPage() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 leftIcon={<Mail size={20} />}
-                                className="bg-white"
+                                className="bg-white dark:bg-slate-800"
                             />
 
                             <Button

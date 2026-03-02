@@ -111,6 +111,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                         <button
                             onClick={onClose}
                             className="p-2 rounded-lg hover:bg-surface-100 text-surface-500 transition-colors"
+                            aria-label="Close renewal details"
                         >
                             <X size={20} />
                         </button>

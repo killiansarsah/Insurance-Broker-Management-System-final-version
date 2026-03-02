@@ -42,12 +42,19 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
         }
     }, [isOpen, initialDate]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
 
         if (!title.trim()) {
             toast.error('Event Title Required', {
                 description: 'Please enter a title for your event.',
+            });
+            return;
+        }
+
+        if (endTime <= startTime) {
+            toast.error('Invalid Time Range', {
+                description: 'End time must be after start time.',
             });
             return;
         }

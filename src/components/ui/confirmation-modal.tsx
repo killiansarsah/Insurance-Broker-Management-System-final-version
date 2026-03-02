@@ -90,7 +90,7 @@ export function ConfirmationModal({
                 'w-full max-w-md rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col'
             )}
         >
-            <div className="bg-white flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 p-8 gap-5">
+            <div className="bg-white dark:bg-slate-900 flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 dark:border-slate-700 p-8 gap-5">
                 {/* Icon */}
                 <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center', styles.iconBg, styles.iconText)}>
                     {icon}
@@ -98,10 +98,10 @@ export function ConfirmationModal({
 
                 {/* Text */}
                 <div className="flex flex-col gap-2">
-                    <h2 className="text-xl font-extrabold text-surface-900 tracking-tight">
+                    <h2 className="text-xl font-extrabold text-surface-900 dark:text-white tracking-tight">
                         {title}
                     </h2>
-                    <p className="text-sm text-surface-500 leading-relaxed">
+                    <p className="text-sm text-surface-500 dark:text-slate-400 leading-relaxed">
                         {description}
                     </p>
                 </div>
@@ -111,7 +111,7 @@ export function ConfirmationModal({
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 h-12 rounded-xl border border-surface-200 font-bold text-sm text-surface-600 hover:bg-surface-50 transition-all cursor-pointer"
+                        className="flex-1 h-12 rounded-xl border border-surface-200 dark:border-slate-600 font-bold text-sm text-surface-600 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
                     >
                         {cancelLabel}
                     </button>

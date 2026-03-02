@@ -48,9 +48,9 @@ export function StickyNoteTask({
     };
 
     const stickyColors = {
-        hot: 'bg-[#fee2e2]',
-        warm: 'bg-[#fef9c3]',
-        cold: 'bg-[#dcfce7]',
+        hot: 'bg-[#fee2e2] dark:bg-red-900/30',
+        warm: 'bg-[#fef9c3] dark:bg-yellow-900/30',
+        cold: 'bg-[#dcfce7] dark:bg-green-900/30',
     };
 
     return (

@@ -144,7 +144,7 @@ export default function ClientProfilePage() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className={cn(
-                    "flex flex-col lg:flex-row lg:items-center gap-6 bg-white/60 backdrop-blur-xl p-6 lg:p-8 rounded-2xl border border-surface-200/50 shadow-xl relative",
+                    "flex flex-col lg:flex-row lg:items-center gap-6 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-6 lg:p-8 rounded-2xl border border-surface-200/50 shadow-xl relative",
                     (showStatusMenu || showKycMenu) && "z-[100]"
                 )}
             >
@@ -298,7 +298,7 @@ export default function ClientProfilePage() {
             </motion.div>
 
             {/* Tab Navigation */}
-            <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-surface-200/50 shadow-sm overflow-hidden">
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-surface-200/50 shadow-sm overflow-hidden">
                 <div className="flex overflow-x-auto scrollbar-hide border-b border-surface-200/50">
                     {TABS.map((tab) => (
                         <button
@@ -440,7 +440,7 @@ function OverviewTab({
                         <GlassCard title="Recent Claims" icon={<Shield size={16} />}>
                             <div className="space-y-3">
                                 {clientClaims.slice(0, 3).map((claim: any) => (
-                                    <div key={claim.id} className="p-4 rounded-xl bg-surface-50/50 border border-surface-200/30 hover:bg-white/50 transition-colors">
+                                    <div key={claim.id} className="p-4 rounded-xl bg-surface-50/50 border border-surface-200/30 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <div className="flex justify-between items-start mb-2">
                                             <div>
                                                 <span className="text-sm font-semibold text-surface-900">{claim.claimNumber}</span>
@@ -461,7 +461,7 @@ function OverviewTab({
                         <GlassCard title="Upcoming Renewals" icon={<Activity size={16} />}>
                             <div className="space-y-3">
                                 {expiringSoonPolicies.slice(0, 3).map((pol: any) => (
-                                    <div key={pol.id} className="p-4 rounded-xl bg-surface-50/50 border border-surface-200/30 hover:bg-white/50 transition-colors">
+                                    <div key={pol.id} className="p-4 rounded-xl bg-surface-50/50 border border-surface-200/30 hover:bg-white/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <div className="flex justify-between items-start mb-2">
                                             <div>
                                                 <span className="text-sm font-semibold text-surface-900">{pol.policyNumber}</span>
@@ -764,7 +764,7 @@ function DocumentsTab({ documents }: { documents: any[] }) {
                 ) : (
                     <div className="space-y-3">
                         {docs.map((doc: any) => (
-                            <div key={doc.id} className="flex items-center justify-between p-4 rounded-xl bg-surface-50/50 border border-surface-200/30 hover:bg-white/60 transition-colors group">
+                            <div key={doc.id} className="flex items-center justify-between p-4 rounded-xl bg-surface-50/50 border border-surface-200/30 hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors group">
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center">
                                         <FileText size={18} className="text-primary-500" />
@@ -781,10 +781,10 @@ function DocumentsTab({ documents }: { documents: any[] }) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors">
+                                    <button className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors" aria-label="View document">
                                         <Eye size={14} />
                                     </button>
-                                    <button className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors">
+                                    <button className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors" aria-label="Download document">
                                         <Download size={14} />
                                     </button>
                                 </div>
@@ -935,7 +935,7 @@ function GlassCard({ title, icon, children }: { title: string; icon: React.React
         <motion.div
             initial={{ opacity: 0, scale: 0.99 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/60 backdrop-blur-xl p-6 rounded-2xl border border-surface-200/50 shadow-lg relative overflow-hidden flex flex-col h-full"
+            className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-6 rounded-2xl border border-surface-200/50 shadow-lg relative overflow-hidden flex flex-col h-full"
         >
             <div className="flex items-center gap-3 mb-6">
                 <div className="w-8 h-8 rounded-lg bg-primary-500/10 flex items-center justify-center text-primary-500">
@@ -981,7 +981,7 @@ function KpiCard({ label, value, sub, icon, accent }: { label: string; value: st
         danger: 'from-danger-500 to-danger-600',
     };
     return (
-        <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-surface-200/50 shadow-sm p-4 relative overflow-hidden">
+        <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-2xl border border-surface-200/50 shadow-sm p-4 relative overflow-hidden">
             <div className={cn('absolute top-0 left-0 right-0 h-1 bg-gradient-to-r', accentColors[accent] || accentColors.primary)} />
             <div className="flex items-center justify-between mb-3">
                 <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center text-white bg-gradient-to-br shadow-md', accentColors[accent] || accentColors.primary)}>

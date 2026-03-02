@@ -427,7 +427,7 @@ export default function ClientsPage() {
                 >
                     Filters
                     {activeFilterCount > 0 && (
-                        <span className="ml-1.5 inline-flex items-center justify-center min-w-5 h-5 text-[10px] font-bold bg-white text-primary-600 rounded-full shadow-sm">
+                        <span className="ml-1.5 inline-flex items-center justify-center min-w-5 h-5 text-[10px] font-bold bg-white dark:bg-slate-800 text-primary-600 rounded-full shadow-sm">
                             {activeFilterCount}
                         </span>
                     )}
@@ -453,7 +453,7 @@ export default function ClientsPage() {
                             >
                                 <span className={cn(
                                     'w-2 h-2 rounded-full shrink-0',
-                                    filterStatus === item.value ? 'bg-white' : item.dot
+                                    filterStatus === item.value ? 'bg-white dark:bg-slate-800' : item.dot
                                 )} />
                                 {item.label}
                             </button>

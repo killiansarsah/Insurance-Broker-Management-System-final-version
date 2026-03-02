@@ -36,7 +36,7 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
             />
 
             <div className={cn(
-                "relative flex items-center justify-center bg-white shadow-2xl border border-white/50 ring-4 ring-white/20 backdrop-blur-xl transition-transform duration-700 hover:scale-105",
+                "relative flex items-center justify-center bg-white dark:bg-slate-900 shadow-2xl border border-white/50 ring-4 ring-white/20 backdrop-blur-xl transition-transform duration-700 hover:scale-105",
                 containerClass
             )}>
                 {carrier.logoUrl && !imgError ? (
@@ -173,7 +173,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             </Button>
                             <Button
                                 variant="outline"
-                                className="h-12 px-8 text-base bg-white/50 backdrop-blur-md border-surface-200 hover:bg-white"
+                                className="h-12 px-8 text-base bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-surface-200 hover:bg-white dark:hover:bg-slate-800"
                                 leftIcon={<ExternalLink size={18} />}
                                 onClick={() => window.open(carrier.website, '_blank')}
                             >
@@ -258,7 +258,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.3 }}
                     >
-                        <Card padding="none" className="overflow-hidden border-surface-200 bg-white/60 backdrop-blur-xl shadow-lg">
+                        <Card padding="none" className="overflow-hidden border-surface-200 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-lg">
                             <div className="p-5 border-b border-surface-100 bg-surface-50/50">
                                 <h3 className="font-bold text-surface-900 flex items-center gap-2">
                                     <Building2 size={16} className="text-primary-500" />
@@ -273,7 +273,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                     { icon: Globe, label: 'Website', value: carrier.website.replace(/^https?:\/\//, '') },
                                     { icon: User, label: 'Contact Person', value: carrier.contactPerson },
                                 ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 rounded-xl transition-colors group">
+                                    <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors group">
                                         <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
                                             <item.icon size={18} className="text-surface-500 group-hover:text-primary-600" />
                                         </div>
@@ -295,7 +295,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.35 }}
                     >
-                        <Card padding="none" className="overflow-hidden border-surface-200 bg-white/60 backdrop-blur-xl shadow-lg">
+                        <Card padding="none" className="overflow-hidden border-surface-200 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl shadow-lg">
                             <div className="p-5 border-b border-surface-100 bg-surface-50/50">
                                 <h3 className="font-bold text-surface-900 flex items-center gap-2">
                                     <Hash size={16} className="text-primary-500" />
@@ -310,7 +310,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                     ...(carrier.revenue2024 ? [{ icon: TrendingUp, label: 'Revenue (2024)', value: `GHS ${(carrier.revenue2024 / 1_000_000).toFixed(1)}M` }] : []),
                                     { icon: Shield, label: 'Product Lines', value: carrier.productCategories.join(', ') },
                                 ].map((item, i) => (
-                                    <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 rounded-xl transition-colors group">
+                                    <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors group">
                                         <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
                                             <item.icon size={18} className="text-surface-500 group-hover:text-primary-600" />
                                         </div>
@@ -352,7 +352,7 @@ function ProductCard({ product }: { product: CarrierProduct }) {
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="group bg-white/60 backdrop-blur-md border border-surface-200 rounded-2xl p-5 hover:bg-white hover:border-primary-200 hover:shadow-lg transition-all duration-300 flex items-start gap-4"
+            className="group bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-surface-200 rounded-2xl p-5 hover:bg-white dark:hover:bg-slate-900 hover:border-primary-200 hover:shadow-lg transition-all duration-300 flex items-start gap-4"
         >
             <div className="w-12 h-12 rounded-xl bg-surface-50 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <Shield size={20} className="text-surface-400 group-hover:text-primary-500 transition-colors" />

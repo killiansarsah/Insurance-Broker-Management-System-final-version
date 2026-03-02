@@ -27,14 +27,33 @@ export function UploadDocumentModal({ isOpen, onClose }: UploadDocumentModalProp
     const [referenceId, setReferenceId] = useState('');
     const [description, setDescription] = useState('');
 
+    const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+    const MAX_SIZE_MB = 25;
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0]);
+            const selected = e.target.files[0];
+
+            if (!ALLOWED_TYPES.includes(selected.type)) {
+                toast.error('Invalid File Type', {
+                    description: 'Only PDF, JPG, and PNG files are accepted.',
+                });
+                return;
+            }
+
+            if (selected.size > MAX_SIZE_MB * 1024 * 1024) {
+                toast.error('File Too Large', {
+                    description: `Maximum file size is ${MAX_SIZE_MB}MB. Your file is ${(selected.size / 1024 / 1024).toFixed(1)}MB.`,
+                });
+                return;
+            }
+
+            setFile(selected);
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = async (e?: React.FormEvent) => {
+        e?.preventDefault();
 
         if (!file) {
             toast.error('File Required', { description: 'Please select a file to upload.' });

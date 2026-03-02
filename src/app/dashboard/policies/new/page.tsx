@@ -160,10 +160,16 @@ function validateStep(step: number, form: FormData): string | null {
             if (!form.inceptionDate) return 'Please set inception date';
             if (!form.expiryDate) return 'Please set expiry date';
             if (new Date(form.expiryDate) <= new Date(form.inceptionDate)) return 'Expiry must be after inception';
+            if (form.insuranceType === 'motor' && form.vehicleYear) {
+                const yr = parseInt(form.vehicleYear, 10);
+                if (isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) return `Vehicle year must be between 1900 and ${new Date().getFullYear() + 1}`;
+            }
             return null;
         case 4:
             if (form.sumInsured <= 0) return 'Sum insured must be greater than 0';
+            if (form.premiumRate < 0 || form.premiumRate > 100) return 'Premium rate must be between 0 and 100%';
             if (form.premiumAmount <= 0) return 'Premium must be greater than 0';
+            if (form.commissionRate < 0 || form.commissionRate > 50) return 'Commission rate must be between 0 and 50%';
             return null;
         default: return null;
     }
@@ -175,6 +181,7 @@ export default function NewPolicyPage() {
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [clientSearch, setClientSearch] = useState('');
     const [errors, setErrors] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const filteredClients = clientSearch
         ? mockClients.filter(c =>
@@ -217,8 +224,14 @@ export default function NewPolicyPage() {
             setErrors(null);
             setStep(step + 1);
         } else {
-            toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.insurerName}` });
-            router.push('/dashboard/policies');
+            const err = validateStep(4, form);
+            if (err) { setErrors(err); toast.error(err); return; }
+            setIsSubmitting(true);
+            setTimeout(() => {
+                setIsSubmitting(false);
+                toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.insurerName}` });
+                router.push('/dashboard/policies');
+            }, 1200);
         }
     }
 
@@ -745,7 +758,7 @@ export default function NewPolicyPage() {
                         <Button variant="outline" onClick={handleSaveAsDraft} leftIcon={<Save size={14} />}>
                             Save as Draft
                         </Button>
-                        <Button variant="primary" onClick={handleNext} className="bg-success-600 hover:bg-success-700 border-success-600">
+                        <Button variant="primary" onClick={handleNext} className="bg-success-600 hover:bg-success-700 border-success-600" isLoading={isSubmitting} disabled={isSubmitting}>
                             Create Policy <Check size={16} className="ml-2" />
                         </Button>
                     </div>
