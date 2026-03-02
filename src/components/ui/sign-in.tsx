@@ -60,10 +60,9 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
     return (
         <div className="min-h-screen w-full bg-[#edf1f8] dark:bg-slate-950 flex items-center justify-center p-4 md:p-0">
             <div
-                className={`w-full overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl shadow-surface-200 transition-all duration-500 ${
+                className={`w-full overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl shadow-surface-200 transition-all duration-500 max-w-6xl ${
                     formVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
                 }`}
-                style={{ maxWidth: '72rem' }}
             >
                 <div className="flex flex-col md:flex-row">
                     {/* ─── Left Collage Panel ──────────────────────────────── */}
@@ -277,7 +276,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             {/* Google SSO */}
                             <button
                                 type="button"
-                                className="flex w-full items-center justify-center gap-2.5 rounded-xl py-3 px-4 text-sm font-medium border border-surface-200 bg-white text-surface-700 hover:bg-surface-50 transition-colors cursor-pointer"
+                                className="flex w-full items-center justify-center gap-2.5 rounded-xl py-3 px-4 text-sm font-medium border border-surface-200 dark:border-slate-600 bg-white dark:bg-slate-800 text-surface-700 dark:text-slate-200 hover:bg-surface-50 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                             >
                                 <svg className="h-5 w-5" viewBox="0 0 24 24">
                                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -289,20 +288,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             </button>
                         </form>
 
-                        {/* Demo hint */}
-                        <div className="mt-8 pt-6 border-t border-surface-100">
-                            <div className="p-3.5 rounded-xl bg-surface-50 border border-surface-200 flex items-start gap-3">
-                                <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-primary-600 shrink-0 shadow-sm">
-                                    <Info size={18} />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-surface-900 mb-0.5">Demo Access</p>
-                                    <p className="text-xs text-surface-500 leading-relaxed">
-                                        Use <code className="bg-white px-1.5 py-0.5 rounded text-primary-700 border border-surface-200 text-[11px]">admin@ibms.com</code> with any password.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+
 
                         {/* Footer */}
                         <p className="mt-6 text-center text-[11px] text-surface-400 font-medium tracking-wide">

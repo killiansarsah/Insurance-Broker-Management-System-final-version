@@ -281,7 +281,7 @@ export default function EditClientPage() {
         : `${form.firstName} ${form.lastName}`.trim();
 
     return (
-        <div className="space-y-6 animate-fade-in w-full pb-12" style={{ maxWidth: '56rem' }}>
+        <div className="space-y-6 animate-fade-in w-full pb-12 max-w-4xl">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href={`/dashboard/clients/${client.id}`} />

@@ -222,6 +222,7 @@ export default function PaymentsPage() {
                     },
                 ]}
                 searchKeys={['receiptNumber', 'clientName', 'reference', 'policyNumber']}
+                emptyMessage="No payment records found."
                 headerActions={
                     <CustomSelect
                         label="Payment Method"

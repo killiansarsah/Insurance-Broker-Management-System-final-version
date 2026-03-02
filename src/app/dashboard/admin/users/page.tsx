@@ -19,7 +19,7 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { users } from '@/mock/users';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { UserRole, User } from '@/types';
+import type { UserRole, User } from '@/types';
 import { InviteUserModal } from '@/components/admin/invite-user-modal';
 import { CustomSelect } from '@/components/ui/select-custom';
 
@@ -173,6 +173,7 @@ export default function UsersPage() {
                     }
                 ]}
                 searchKeys={['firstName', 'lastName', 'email', 'role']}
+                emptyMessage="No team members found."
                 headerActions={
                     <div className="flex items-center gap-2">
                         <CustomSelect

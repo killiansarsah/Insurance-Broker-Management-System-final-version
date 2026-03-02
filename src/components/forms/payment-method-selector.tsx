@@ -71,8 +71,8 @@ export function PaymentMethodSelector({ selectedMethod, onSelect }: PaymentMetho
                         className={cn(
                             'group relative flex items-start gap-4 p-5 rounded-[var(--radius-2xl)] border transition-all duration-500 text-left overflow-hidden',
                             isSelected
-                                ? 'bg-white border-primary ring-2 ring-primary/20 shadow-xl shadow-primary/10'
-                                : 'bg-white/50 border-surface-200 hover:border-primary/50 hover:bg-white hover:shadow-lg'
+                                ? 'bg-white dark:bg-slate-800 border-primary ring-2 ring-primary/20 shadow-xl shadow-primary/10'
+                                : 'bg-white/50 dark:bg-slate-800/50 border-surface-200 hover:border-primary/50 hover:bg-white dark:hover:bg-slate-800 hover:shadow-lg'
                         )}
                     >
                         {/* Interactive Background Glow */}

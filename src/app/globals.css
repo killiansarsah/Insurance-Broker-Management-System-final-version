@@ -134,6 +134,12 @@ body {
   color: #e2e8f0;
 }
 
+/* --- Dialog safety — prevent ghost ::backdrop from lingering --- */
+dialog:not([open]) {
+  display: none !important;
+  pointer-events: none;
+}
+
 /* --- Scrollbar --- */
 ::-webkit-scrollbar {
   width: 6px;

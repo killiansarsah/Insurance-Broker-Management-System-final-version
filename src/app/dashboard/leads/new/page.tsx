@@ -54,7 +54,7 @@ export default function NewLeadPage() {
     };
 
     return (
-        <div className="space-y-6 animate-fade-in w-full pb-10" style={{ maxWidth: '56rem', margin: '0 auto' }}>
+        <div className="space-y-6 animate-fade-in w-full pb-10 max-w-4xl mx-auto">
             {/* Header */}
             <div className="flex items-center gap-4">
                 <BackButton onClick={() => router.back()} />

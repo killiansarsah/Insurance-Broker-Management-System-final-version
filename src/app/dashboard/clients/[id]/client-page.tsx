@@ -138,7 +138,7 @@ export default function ClientProfilePage() {
     };
 
     return (
-        <div className="space-y-6 pb-20 p-4 lg:p-6 animate-fade-in" style={{ maxWidth: '1400px', margin: '0 auto' }}>
+        <div className="space-y-6 pb-20 p-4 lg:p-6 animate-fade-in max-w-[1400px] mx-auto">
             {/* Executive Header */}
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -781,10 +781,10 @@ function DocumentsTab({ documents }: { documents: any[] }) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors" aria-label="View document">
+                                    <button onClick={() => toast.info('Document Preview', { description: 'Opening document preview...' })} className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer" aria-label="View document">
                                         <Eye size={14} />
                                     </button>
-                                    <button className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors" aria-label="Download document">
+                                    <button onClick={() => toast.success('Download Started', { description: 'Your document download has begun.' })} className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer" aria-label="Download document">
                                         <Download size={14} />
                                     </button>
                                 </div>
@@ -813,12 +813,12 @@ function DocumentsTab({ documents }: { documents: any[] }) {
 // ===========================================================
 function CommunicationTab({ client }: { client: any }) {
     const commsLog = [
-        { id: 1, date: '2025-01-12', type: 'Call', direction: 'Outbound', summary: 'Discussed Motor Fleet renewal options and premium payment schedule', by: client.assignedBrokerName || 'Broker' },
-        { id: 2, date: '2025-01-08', type: 'Email', direction: 'Outbound', summary: 'Sent renewal quotation for upcoming Fire & Allied policy', by: client.assignedBrokerName || 'Broker' },
-        { id: 3, date: '2024-12-20', type: 'SMS', direction: 'Outbound', summary: 'Premium payment reminder for Q4 installment', by: 'System' },
-        { id: 4, date: '2024-12-15', type: 'Call', direction: 'Inbound', summary: 'Client called regarding claim status update on motor accident', by: client.assignedBrokerName || 'Broker' },
-        { id: 5, date: '2024-11-28', type: 'Email', direction: 'Outbound', summary: 'Sent updated policy schedule after endorsement', by: client.assignedBrokerName || 'Broker' },
-        { id: 6, date: '2024-11-10', type: 'Meeting', direction: 'In-person', summary: 'Annual review meeting — discussed portfolio expansion, new property coverage', by: client.assignedBrokerName || 'Broker' },
+        { id: 1, date: '2026-02-18', type: 'Call', direction: 'Outbound', summary: 'Discussed Motor Fleet renewal options and premium payment schedule', by: client.assignedBrokerName || 'Broker' },
+        { id: 2, date: '2026-02-12', type: 'Email', direction: 'Outbound', summary: 'Sent renewal quotation for upcoming Fire & Allied policy', by: client.assignedBrokerName || 'Broker' },
+        { id: 3, date: '2026-01-28', type: 'SMS', direction: 'Outbound', summary: 'Premium payment reminder for Q4 installment', by: 'System' },
+        { id: 4, date: '2026-01-20', type: 'Call', direction: 'Inbound', summary: 'Client called regarding claim status update on motor accident', by: client.assignedBrokerName || 'Broker' },
+        { id: 5, date: '2025-12-15', type: 'Email', direction: 'Outbound', summary: 'Sent updated policy schedule after endorsement', by: client.assignedBrokerName || 'Broker' },
+        { id: 6, date: '2025-11-20', type: 'Meeting', direction: 'In-person', summary: 'Annual review meeting — discussed portfolio expansion, new property coverage', by: client.assignedBrokerName || 'Broker' },
     ];
 
     const typeColors: Record<string, string> = {

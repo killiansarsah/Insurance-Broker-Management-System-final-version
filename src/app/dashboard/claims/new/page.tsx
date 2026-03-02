@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { cn, formatCurrency } from '@/lib/utils';
 import { policies } from '@/mock/policies';
 import { Policy } from '@/types';
+import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
 
 const STEPS = [
     { id: 1, label: 'Select Policy', icon: <Shield size={16} /> },
@@ -39,6 +40,7 @@ export default function NewClaimPage() {
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [estimatedAmount, setEstimatedAmount] = useState('');
+    const [showDocUpload, setShowDocUpload] = useState(false);
 
     // Filter policies for Step 1
     const filteredPolicies = policies.filter(p =>
@@ -64,7 +66,7 @@ export default function NewClaimPage() {
     }
 
     return (
-        <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '56rem' }}>
+        <div className="space-y-6 animate-fade-in w-full max-w-4xl">
             {/* Header */}
             <div className="flex items-center gap-3">
                 <BackButton href="/dashboard/claims" />
@@ -197,7 +199,12 @@ export default function NewClaimPage() {
                         <div className="p-6 border-2 border-dashed border-surface-200 rounded-[var(--radius-md)] text-center">
                             <Upload size={32} className="mx-auto text-surface-300 mb-2" />
                             <p className="text-sm text-surface-500">Upload evidence (Photos, Police Report)</p>
-                            <Button variant="outline" size="sm" className="mt-4" onClick={() => toast.info('File upload will be available when backend is connected')}>Choose Files</Button>
+                            <Button variant="outline" size="sm" className="mt-4" onClick={() => setShowDocUpload(true)}>Choose Files</Button>
+                            <UploadDocumentModal
+                                isOpen={showDocUpload}
+                                onClose={() => setShowDocUpload(false)}
+                                defaultCategory="claims"
+                            />
                         </div>
                     </div>
                 )}

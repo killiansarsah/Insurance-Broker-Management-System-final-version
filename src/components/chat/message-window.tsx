@@ -82,7 +82,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                 {conversation.linkedResourceId && (
                     <div className="px-6 py-2 bg-primary-50 border-t border-primary-100 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="p-1 bg-white rounded-md border border-primary-200 text-primary-600">
+                            <div className="p-1 bg-white dark:bg-slate-800 rounded-md border border-primary-200 dark:border-primary-700 text-primary-600 dark:text-primary-400">
                                 {conversation.linkedResourceType === 'claim' ? <Shield size={14} /> : <FileText size={14} />}
                             </div>
                             <span className="text-[11px] font-bold text-primary-900 uppercase tracking-tight">

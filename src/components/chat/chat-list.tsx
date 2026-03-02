@@ -42,7 +42,7 @@ export function ChatList({ activeId, onSelect }: ChatListProps) {
                             "w-full flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer group",
                             activeId === chat.id
                                 ? "bg-primary-600 text-white shadow-lg shadow-primary-500/20"
-                                : "hover:bg-white hover:shadow-md text-surface-900 border border-transparent hover:border-surface-200"
+                                : "hover:bg-white dark:hover:bg-slate-800 hover:shadow-md text-surface-900 dark:text-slate-200 border border-transparent hover:border-surface-200 dark:hover:border-slate-700"
                         )}
                     >
                         <div className="relative shrink-0">

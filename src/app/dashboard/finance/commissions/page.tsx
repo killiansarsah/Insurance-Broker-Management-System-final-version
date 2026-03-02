@@ -189,6 +189,7 @@ export default function CommissionsPage() {
                     },
                 ]}
                 searchKeys={['policyNumber', 'clientName', 'brokerName', 'productType']}
+                emptyMessage="No commission records found."
                 headerActions={
                     <div className="flex items-center gap-2">
                         <CustomSelect

@@ -863,6 +863,7 @@ export default function PremiumFinancingPage() {
                     ]}
                     searchKeys={['applicationNumber', 'clientName', 'insurerName', 'financier', 'assignedBroker']}
                     onRowClick={(row) => setSelectedApp(row)}
+                    emptyMessage="No financing applications found."
                     className="premium-glass-card"
                     headerActions={
                         <div className="flex items-center gap-2">

@@ -77,7 +77,7 @@ export function MoMoPaymentForm({
                         value={phoneNumber}
                         onChange={(e) => onPhoneChange(e.target.value)}
                         placeholder="24 000 0000"
-                        className="w-full pl-20 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
+                        className="w-full pl-20 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm dark:text-slate-200 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all font-medium"
                     />
                 </div>
                 <p className="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5 ml-1">

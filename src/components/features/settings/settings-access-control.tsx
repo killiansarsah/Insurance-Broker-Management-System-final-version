@@ -100,11 +100,11 @@ export function SettingsAccessControl() {
     };
 
     const [users, setUsers] = useState<User[]>([
-        { id: '1', name: 'Amara Ndiaye', email: 'amara.ndiaye@ibms.africa', role: 'Workspace owner', status: 'Active', active: 'Oct 24, 2023', img: '12' },
-        { id: '2', name: 'David Osei', email: 'david.osei@ibms.africa', role: 'Administrator', status: 'Active', active: 'Oct 24, 2023', img: '15' },
-        { id: '3', name: 'Sarah Smith', email: 'sarah.smith@ibms.africa', role: 'Manager', status: 'Inactive', active: 'Oct 20, 2023', initial: 'SS' },
-        { id: '4', name: 'Kwame Mensah', email: 'kwame.m@ibms.africa', role: 'Supervisor', status: 'Active', active: 'Oct 23, 2023', img: '18' },
-        { id: '5', name: 'Zainab Oladipo', email: 'zainab.o@ibms.africa', role: 'Agent', status: 'Suspended', active: 'Sep 12, 2023', initial: 'ZO' },
+        { id: '1', name: 'Amara Ndiaye', email: 'amara.ndiaye@ibms.africa', role: 'Workspace owner', status: 'Active', active: 'Feb 24, 2026', img: '12' },
+        { id: '2', name: 'David Osei', email: 'david.osei@ibms.africa', role: 'Administrator', status: 'Active', active: 'Feb 24, 2026', img: '15' },
+        { id: '3', name: 'Sarah Smith', email: 'sarah.smith@ibms.africa', role: 'Manager', status: 'Inactive', active: 'Feb 20, 2026', initial: 'SS' },
+        { id: '4', name: 'Kwame Mensah', email: 'kwame.m@ibms.africa', role: 'Supervisor', status: 'Active', active: 'Feb 23, 2026', img: '18' },
+        { id: '5', name: 'Zainab Oladipo', email: 'zainab.o@ibms.africa', role: 'Agent', status: 'Suspended', active: 'Jan 12, 2026', initial: 'ZO' },
     ]);
 
     const [permissions] = useState<Permission[]>([
@@ -153,11 +153,11 @@ export function SettingsAccessControl() {
             {subTab === 'users' && (
                 <div className="flex flex-col gap-8 animate-fade-in">
                     <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm flex flex-col md:flex-row gap-6 items-center justify-between">
-                        <div className="relative w-full" style={{ maxWidth: '28rem' }}>
+                        <div className="relative w-full max-w-md">
                             <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 text-xl">search</span>
                             <input className="w-full h-12 rounded-xl bg-slate-50 dark:bg-slate-800 border-none pl-12 pr-4 text-sm font-bold focus:ring-4 focus:ring-primary/10 transition-all placeholder:text-slate-400 dark:text-white" placeholder="Search team members..." />
                         </div>
-                        <button className="h-12 px-8 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2">
+                        <button onClick={() => toast.info('Invite User', { description: 'The user invitation form will be available in a future update.' })} className="h-12 px-8 rounded-xl bg-primary text-white font-black text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2 cursor-pointer">
                             <span className="material-symbols-outlined text-lg">person_add</span>
                             Invite User
                         </button>
@@ -257,7 +257,7 @@ export function SettingsAccessControl() {
                                 </button>
                             ))}
                         </div>
-                        <button className="w-full h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2">
+                        <button onClick={() => toast.info('New System Role', { description: 'Custom role creation will be available in a future update.' })} className="w-full h-14 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 text-slate-400 font-black text-[10px] uppercase tracking-widest hover:border-primary hover:text-primary transition-all flex items-center justify-center gap-2 cursor-pointer">
                             <span className="material-symbols-outlined">add_circle</span>
                             New System Role
                         </button>
@@ -317,7 +317,7 @@ export function SettingsAccessControl() {
             {modalType === 'edit' && selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-                    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col gap-6 animate-fade-in" style={{ maxWidth: '28rem' }}>
+                    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col gap-6 animate-fade-in max-w-md">
                         <div className="flex items-center gap-4">
                             <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
                                 <span className="material-symbols-outlined text-2xl">person_edit</span>
@@ -375,7 +375,7 @@ export function SettingsAccessControl() {
             {modalType === 'terminate' && selectedUser && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
-                    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col items-center gap-5 text-center animate-fade-in" style={{ maxWidth: '24rem' }}>
+                    <div className="relative w-full bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-8 flex flex-col items-center gap-5 text-center animate-fade-in max-w-sm">
                         <div className={cn(
                             "size-16 rounded-2xl flex items-center justify-center",
                             selectedUser.status === 'Suspended' ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-rose-50 dark:bg-rose-900/20 text-rose-600"

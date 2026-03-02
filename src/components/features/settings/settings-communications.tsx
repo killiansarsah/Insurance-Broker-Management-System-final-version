@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface NotificationTrigger {
     id: string;
@@ -181,7 +182,7 @@ export function SettingsCommunications() {
                                 </div>
                             </div>
 
-                            <button className="w-full h-11 border border-slate-200 dark:border-slate-800 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2">
+                            <button onClick={() => toast.success('Test Email Sent', { description: 'A test notification email has been sent to your inbox.' })} className="w-full h-11 border border-slate-200 dark:border-slate-800 rounded-xl font-black text-[10px] uppercase tracking-widest text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center gap-2 cursor-pointer">
                                 <span className="material-symbols-outlined text-lg">send</span>
                                 Send Test Email
                             </button>
@@ -204,7 +205,7 @@ export function SettingsCommunications() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">Push Alert Channels</h3>
-                    <button className="h-10 px-6 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2">
+                    <button onClick={() => toast.success('Push Signal Sent', { description: 'A test push notification has been dispatched.' })} className="h-10 px-6 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 flex items-center gap-2 cursor-pointer">
                         <span className="material-symbols-outlined text-lg">notifications_active</span>
                         Test Push Signal
                     </button>
@@ -217,7 +218,7 @@ export function SettingsCommunications() {
                         )}>
                             <div className="flex flex-col gap-1">
                                 <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">{t.title}</h4>
-                                <p className="text-sm font-medium text-slate-500 leading-relaxed" style={{ maxWidth: '28rem' }}>{t.desc}</p>
+                                <p className="text-sm font-medium text-slate-500 leading-relaxed max-w-md">{t.desc}</p>
                             </div>
                             <button
                                 onClick={() => handlePushToggle(t.id)}

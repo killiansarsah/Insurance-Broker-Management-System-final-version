@@ -3,7 +3,6 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useClickOutside } from '@/hooks/use-click-outside';
 
 interface ModalProps {
     isOpen: boolean;
@@ -37,18 +36,17 @@ export function Modal({
 }: ModalProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
 
-    // Handle clicks on the dialog itself (which represents the backdrop when using showModal)
+    // Handle clicks on the backdrop (the dialog element itself when using showModal)
     const handleDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
-        const dialog = dialogRef.current;
-        if (!dialog) return;
-
-        // Get the bounding box of the dialog content (if we were using a div inside, but here the dialog is the container)
-        // Since we have a div wrapper inside the dialog for styling, we check if the click was directly on the dialog element
-        if (e.target === dialog) {
+        if (e.target === dialogRef.current) {
             onClose();
         }
     };
 
+    // IMPORTANT: The <dialog> must remain in the DOM so useEffect can call
+    // dialog.close() BEFORE React removes it. Removing the dialog without
+    // calling .close() leaves a ghost ::backdrop in the browser's top layer,
+    // which renders as a visible white strip with blur.
     useEffect(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
@@ -66,6 +64,9 @@ export function Modal({
         }
 
         return () => {
+            if (dialog.open) {
+                dialog.close();
+            }
             document.body.style.overflow = '';
         };
     }, [isOpen]);
@@ -81,52 +82,52 @@ export function Modal({
             onCancel={handleCancel}
             onClick={handleDialogClick}
             className={cn(
-                'bg-transparent p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
-                'open:animate-in open:fade-in open:zoom-in-95 open:duration-300',
-                'backdrop:animate-in backdrop:fade-in backdrop:duration-300',
-                'w-full max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col',
+                'bg-transparent border-none p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
+                'max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none',
                 className
             )}
-            style={{ maxWidth: sizeMap[size] || sizeMap.md }}
+            style={{ width: 'calc(100vw - 2rem)', maxWidth: sizeMap[size] || sizeMap.md }}
         >
-            <div className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full h-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--glass-26-border)] bg-transparent shrink-0">
-                    <div>
-                        {title && (
-                            <h2 className="text-xl font-bold text-surface-900 dark:text-white tracking-tight">
-                                {title}
-                            </h2>
-                        )}
-                        {description && (
-                            <p className="text-sm text-surface-500 dark:text-slate-400 mt-1">{description}</p>
-                        )}
+            {isOpen && (
+                <div className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
+                    {/* Header */}
+                    <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--glass-26-border)] bg-transparent shrink-0">
+                        <div>
+                            {title && (
+                                <h2 className="text-xl font-bold text-surface-900 dark:text-white tracking-tight">
+                                    {title}
+                                </h2>
+                            )}
+                            {description && (
+                                <p className="text-sm text-surface-500 dark:text-slate-400 mt-1">{description}</p>
+                            )}
+                        </div>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onClose();
+                            }}
+                            type="button"
+                            className="p-2 text-surface-400 hover:text-surface-600 dark:hover:text-slate-200 hover:bg-surface-100 dark:hover:bg-slate-700 rounded-full transition-all active:scale-90 outline-none focus:ring-2 focus:ring-surface-200 dark:focus:ring-slate-600 cursor-pointer"
+                            aria-label="Close dialog"
+                        >
+                            <X size={20} />
+                        </button>
                     </div>
-                    <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onClose();
-                        }}
-                        type="button"
-                        className="p-2 text-surface-400 hover:text-surface-600 dark:hover:text-slate-200 hover:bg-surface-100 dark:hover:bg-slate-700 rounded-full transition-all active:scale-90 outline-none focus:ring-2 focus:ring-surface-200 dark:focus:ring-slate-600 cursor-pointer"
-                        aria-label="Close dialog"
-                    >
-                        <X size={20} />
-                    </button>
-                </div>
 
-                {/* Content */}
-                <div className="p-4 md:p-6 overflow-y-auto w-full flex-1">
-                    {children}
-                </div>
-
-                {/* Footer */}
-                {footer && (
-                    <div className="p-4 md:p-6 border-t border-t-[var(--glass-26-border)] bg-transparent shrink-0 mb-safe">
-                        {footer}
+                    {/* Content */}
+                    <div className="p-4 md:p-6 overflow-y-auto w-full flex-1">
+                        {children}
                     </div>
-                )}
-            </div>
+
+                    {/* Footer */}
+                    {footer && (
+                        <div className="p-4 md:p-6 border-t border-t-[var(--glass-26-border)] bg-transparent shrink-0 mb-safe">
+                            {footer}
+                        </div>
+                    )}
+                </div>
+            )}
         </dialog>
     );
 }

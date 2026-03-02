@@ -58,8 +58,8 @@ export function SettingsSecurityDetails() {
     const loginSessions = [
         { device: 'MacBook Pro 14"', browser: 'Chrome', location: 'Accra, Ghana', ip: '197.251.144.102', date: 'Today, 10:45 AM', current: true },
         { device: 'iPhone 15 Pro', browser: 'Mobile Safari', location: 'Accra, Ghana', ip: '197.251.144.102', date: 'Today, 08:22 AM', current: false },
-        { device: 'Windows Desktop', browser: 'Edge', location: 'Lagos, Nigeria', ip: '41.218.231.10', date: 'Oct 24, 2024, 04:15 PM', current: false },
-        { device: 'iPad Air', browser: 'Safari', location: 'Accra, Ghana', ip: '102.176.1.45', date: 'Oct 22, 2024, 11:30 AM', current: false },
+        { device: 'Windows Desktop', browser: 'Edge', location: 'Lagos, Nigeria', ip: '41.218.231.10', date: 'Feb 24, 2026, 04:15 PM', current: false },
+        { device: 'iPad Air', browser: 'Safari', location: 'Accra, Ghana', ip: '102.176.1.45', date: 'Feb 22, 2026, 11:30 AM', current: false },
     ];
 
     return (
@@ -164,7 +164,7 @@ export function SettingsSecurityDetails() {
                         <div className="flex items-start justify-between">
                             <div className="flex flex-col gap-2">
                                 <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Authenticator App</h3>
-                                <p className="text-slate-500 font-medium text-sm leading-relaxed" style={{ maxWidth: '24rem' }}>
+                                <p className="text-slate-500 font-medium text-sm leading-relaxed max-w-sm">
                                     Use an app like Google Authenticator or Authy to generate secure verification codes.
                                 </p>
                             </div>

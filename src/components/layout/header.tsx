@@ -3,9 +3,11 @@ import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useNotificationStore } from '@/stores/notification-store';
 import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { CalculatorModal } from '@/components/ui/calculator-modal';
 import { ConfirmationModal } from '@/components/ui/confirmation-modal';
 import { toast } from 'sonner';
@@ -14,6 +16,7 @@ export function Header() {
     const router = useRouter();
     const { sidebarCollapsed, setSidebarMobileOpen } = useUiStore();
     const { user, logout } = useAuthStore();
+    const { notifications: allNotifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
     const [searchOpen, setSearchOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -24,15 +27,11 @@ export function Header() {
     const profileRef = useClickOutside<HTMLDivElement>(() => setProfileOpen(false));
     const notificationsRef = useClickOutside<HTMLDivElement>(() => setNotificationsOpen(false));
 
-    const [notifications, setNotifications] = useState([
-        { id: '1', title: 'Policy renewal due', message: 'POL-2026-001 expires in 7 days', time: '2h ago', read: false, type: 'renewal', link: '/dashboard/policies/POL-2026-001' },
-        { id: '2', title: 'New claim registered', message: 'CLM-2026-015 submitted by Kwame Mensah', time: '4h ago', read: false, type: 'claim', link: '/dashboard/claims/clm-084' },
-        { id: '3', title: 'Commission paid', message: 'GHS 1,500 commission credited for POL-2026-0852', time: '5h ago', read: false, type: 'commission', link: '/dashboard/commissions' },
-        { id: '4', title: 'New lead assigned', message: 'Emmanuel Tetteh — Marine Cargo enquiry', time: '8h ago', read: true, type: 'lead', link: '/dashboard/leads' },
-        { id: '5', title: 'Follow-up reminder', message: 'Call Akosua Darko — Travel Insurance', time: '12h ago', read: true, type: 'followup', link: '/dashboard/calendar' },
-        { id: '6', title: 'KYC verification', message: 'Client Ama Serwaa requires KYC update', time: '1d ago', read: true, type: 'compliance', link: '/dashboard/clients/CL-001' },
-        { id: '7', title: 'Invoice overdue', message: 'INV-2026-004 for Akosua Darko is 4 days overdue', time: '1d ago', read: true, type: 'finance', link: '/dashboard/finance' },
-    ]);
+    // Show latest 7 non-archived notifications in the dropdown
+    const notifications = allNotifications
+        .filter((n) => !n.archived)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 7);
 
     const notifDot: Record<string, string> = {
         renewal: 'bg-warning-500',
@@ -42,21 +41,29 @@ export function Header() {
         followup: 'bg-accent-500',
         compliance: 'bg-surface-500',
         finance: 'bg-warning-600',
+        system: 'bg-surface-400',
+        document: 'bg-accent-500',
+        approval: 'bg-primary-500',
     };
 
-    const unreadCount = notifications.filter((n) => !n.read).length;
+    const unread = unreadCount();
 
-    const handleNotificationClick = (id: string, link: string) => {
-        setNotifications(prev =>
-            prev.map(n => n.id === id ? { ...n, read: true } : n)
-        );
+    const handleNotificationClick = (id: string, link?: string) => {
+        markAsRead(id);
         setNotificationsOpen(false);
-        router.push(link);
+        if (link) router.push(link);
     };
 
-    const markAllAsRead = () => {
-        setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    };
+    function timeAgo(dateStr: string): string {
+        const diff = Date.now() - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'Just now';
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days}d ago`;
+    }
 
     return (
         <header
@@ -135,9 +142,9 @@ export function Header() {
                         aria-label="Notifications"
                     >
                         <Bell size={20} />
-                        {unreadCount > 0 && (
+                        {unread > 0 && (
                             <span className="absolute top-1 right-1 w-4 h-4 bg-danger-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                {unreadCount}
+                                {unread > 9 ? '9+' : unread}
                             </span>
                         )}
                     </button>
@@ -148,7 +155,7 @@ export function Header() {
                                 <h3 className="text-sm font-bold text-surface-900 dark:text-white">
                                     Notifications
                                 </h3>
-                                {unreadCount > 0 && (
+                                {unread > 0 && (
                                     <button
                                         onClick={markAllAsRead}
                                         className="text-[10px] font-bold text-primary-600 hover:text-primary-700 uppercase tracking-wider flex items-center gap-1"
@@ -183,7 +190,7 @@ export function Header() {
                                                     <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">
                                                         {n.message}
                                                     </p>
-                                                    <p className="text-[10px] font-medium text-surface-400 mt-1 uppercase tracking-tight">{n.time}</p>
+                                                    <p className="text-[10px] font-medium text-surface-400 mt-1 uppercase tracking-tight">{timeAgo(n.createdAt)}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -195,9 +202,13 @@ export function Header() {
                                 )}
                             </div>
                             <div className="px-4 py-2 bg-surface-50 dark:bg-slate-900/50 border-t border-surface-100 dark:border-slate-700">
-                                <button className="w-full text-xs text-center text-primary-600 font-bold hover:text-primary-700 cursor-pointer uppercase tracking-widest py-1">
-                                    View All Activity
-                                </button>
+                                <Link
+                                    href="/dashboard/notifications"
+                                    onClick={() => setNotificationsOpen(false)}
+                                    className="block w-full text-xs text-center text-primary-600 font-bold hover:text-primary-700 cursor-pointer uppercase tracking-widest py-1"
+                                >
+                                    View All Notifications
+                                </Link>
                             </div>
                         </div>
                     )}
@@ -294,7 +305,10 @@ export function Header() {
             <ConfirmationModal
                 isOpen={isSignOutOpen}
                 onClose={() => setIsSignOutOpen(false)}
-                onConfirm={logout}
+                onConfirm={() => {
+                    logout();
+                    router.push('/login');
+                }}
                 title="Sign Out?"
                 description="You will be logged out of your current session. Any unsaved changes will be lost."
                 confirmLabel="Sign Out"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -26,10 +26,10 @@ import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
+import { useAuthStore } from '@/stores/auth-store';
 import { policies } from '@/mock/policies';
 import { mockClients as clients } from '@/mock/clients';
 import { claims } from '@/mock/claims';
@@ -243,6 +243,7 @@ function formatCompact(n: number): string {
 // MAIN DASHBOARD
 // =====================================================================
 export default function DashboardPage() {
+    const { user } = useAuthStore();
     const [period, setPeriod] = useState<Period>('mtd');
     const [selectedYear, setSelectedYear] = useState<number>(2026);
     const [filters, setFilters] = useState<Filters>({
@@ -409,7 +410,7 @@ export default function DashboardPage() {
                     {/* Centered Greeting (Visible on Desktop as absolute, Mobile as stacked) */}
                     <div className="md:absolute md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 w-full md:w-auto text-center mb-2 md:mb-0 pointer-events-none z-10">
                         <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-background border border-surface-200 shadow-sm text-sm text-surface-600 backdrop-blur-sm bg-opacity-80">
-                            {greeting}, <span className="font-bold text-surface-900">Kwame</span> <span className="animate-wave">👋</span>
+                            {greeting}, <span className="font-bold text-surface-900">{user?.firstName ?? 'User'}</span> <span className="animate-wave">👋</span>
                         </span>
                     </div>
 

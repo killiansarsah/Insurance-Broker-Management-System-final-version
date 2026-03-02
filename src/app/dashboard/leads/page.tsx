@@ -88,7 +88,7 @@ export default function LeadsPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 shrink-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-surface-900 tracking-tight">
+                    <h1 className="text-2xl font-bold text-surface-900 tracking-tight">
                         Leads
                     </h1>
                     <p className="text-sm text-surface-500 mt-1">
@@ -241,6 +241,7 @@ export default function LeadsPage() {
                             searchPlaceholder="Search leads..."
                             searchKeys={['contactName', 'companyName', 'email', 'phone']}
                             onRowClick={(row) => router.push(`/dashboard/leads/${row.id}`)}
+                            emptyMessage="No leads match the current filters."
                         />
                     </div>
                 )}

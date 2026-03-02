@@ -31,7 +31,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     }
 
     if (!isAuthenticated) {
-        return null;
+        return (
+            <div className="h-screen w-screen flex items-center justify-center bg-surface-50">
+                <PageLoader message="Signing out..." />
+            </div>
+        );
     }
 
     return <>{children}</>;

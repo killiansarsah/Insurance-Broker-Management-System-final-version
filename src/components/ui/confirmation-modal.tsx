@@ -52,6 +52,10 @@ export function ConfirmationModal({
     const dialogRef = useRef<HTMLDialogElement>(null);
     const styles = variantStyles[variant];
 
+    // IMPORTANT: The <dialog> must remain in the DOM so useEffect can call
+    // dialog.close() BEFORE React removes it. Removing the dialog without
+    // calling .close() leaves a ghost ::backdrop in the browser's top layer,
+    // which renders as a visible white strip with blur.
     useEffect(() => {
         const dialog = dialogRef.current;
         if (!dialog) return;
@@ -64,7 +68,10 @@ export function ConfirmationModal({
             document.body.style.overflow = '';
         }
 
-        return () => { document.body.style.overflow = ''; };
+        return () => {
+            if (dialog.open) dialog.close();
+            document.body.style.overflow = '';
+        };
     }, [isOpen]);
 
     const handleCancel = (e: React.SyntheticEvent<HTMLDialogElement>) => {
@@ -76,58 +83,54 @@ export function ConfirmationModal({
         if (e.target === dialogRef.current) onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
         <dialog
             ref={dialogRef}
             onCancel={handleCancel}
             onClick={handleBackdropClick}
-            className={cn(
-                'bg-transparent p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
-                'open:animate-in open:fade-in open:zoom-in-95 open:duration-300',
-                'backdrop:animate-in backdrop:fade-in backdrop:duration-300',
-                'w-full max-w-md rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col'
-            )}
+            className="bg-transparent border-none p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none"
+            style={{ width: 'min(28rem, calc(100vw - 2rem))' }}
         >
-            <div className="bg-white dark:bg-slate-900 flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 dark:border-slate-700 p-8 gap-5">
-                {/* Icon */}
-                <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center', styles.iconBg, styles.iconText)}>
-                    {icon}
-                </div>
+            {isOpen && (
+                <div className="bg-white dark:bg-slate-900 flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 dark:border-slate-700 p-8 gap-5">
+                    {/* Icon */}
+                    <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center', styles.iconBg, styles.iconText)}>
+                        {icon}
+                    </div>
 
-                {/* Text */}
-                <div className="flex flex-col gap-2">
-                    <h2 className="text-xl font-extrabold text-surface-900 dark:text-white tracking-tight">
-                        {title}
-                    </h2>
-                    <p className="text-sm text-surface-500 dark:text-slate-400 leading-relaxed">
-                        {description}
-                    </p>
-                </div>
+                    {/* Text */}
+                    <div className="flex flex-col gap-2">
+                        <h2 className="text-xl font-extrabold text-surface-900 dark:text-white tracking-tight">
+                            {title}
+                        </h2>
+                        <p className="text-sm text-surface-500 dark:text-slate-400 leading-relaxed">
+                            {description}
+                        </p>
+                    </div>
 
-                {/* Buttons */}
-                <div className="flex w-full gap-3 mt-2">
-                    <button
-                        type="button"
-                        onClick={onClose}
-                        className="flex-1 h-12 rounded-xl border border-surface-200 dark:border-slate-600 font-bold text-sm text-surface-600 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
-                    >
-                        {cancelLabel}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => { onConfirm(); onClose(); }}
-                        className={cn(
-                            'flex-1 h-12 rounded-xl text-white font-bold text-sm shadow-lg transition-all cursor-pointer',
-                            styles.buttonBg,
-                            styles.buttonShadow
-                        )}
-                    >
-                        {confirmLabel}
-                    </button>
+                    {/* Buttons */}
+                    <div className="flex w-full gap-3 mt-2">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="flex-1 h-12 rounded-xl border border-surface-200 dark:border-slate-600 font-bold text-sm text-surface-600 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-800 transition-all cursor-pointer"
+                        >
+                            {cancelLabel}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => { onConfirm(); onClose(); }}
+                            className={cn(
+                                'flex-1 h-12 rounded-xl text-white font-bold text-sm shadow-lg transition-all cursor-pointer',
+                                styles.buttonBg,
+                                styles.buttonShadow
+                            )}
+                        >
+                            {confirmLabel}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </dialog>
     );
 }

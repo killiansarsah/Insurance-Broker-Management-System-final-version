@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Plus, Filter, FileText, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, FileText, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
@@ -123,6 +123,7 @@ export default function ClaimsPage() {
                 ]}
                 searchKeys={['claimNumber', 'policyNumber', 'clientName']}
                 onRowClick={(row) => router.push(`/dashboard/claims/${row.id}`)}
+                emptyMessage="No claims match the current filters."
                 headerActions={
                     <div className="flex items-center gap-2">
                         <CustomSelect

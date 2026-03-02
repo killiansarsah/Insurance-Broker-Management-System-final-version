@@ -213,6 +213,7 @@ export default function InvoicesPage() {
                     },
                 ]}
                 searchKeys={['invoiceNumber', 'clientName', 'policyNumber', 'description']}
+                emptyMessage="No invoices match the current filters."
                 headerActions={
                     <CustomSelect
                         label="Status"

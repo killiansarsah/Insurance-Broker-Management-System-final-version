@@ -55,9 +55,9 @@ export function SettingsIntegrations() {
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [recentImports, setRecentImports] = useState<ImportRecord[]>([
-        { name: 'clients_q3_2023.csv', date: 'Oct 24, 2023', by: 'Alex J.', status: 'Success', ok: true },
-        { name: 'new_policies_batch_02.xlsx', date: 'Oct 22, 2023', by: 'Sarah K.', status: 'Success', ok: true },
-        { name: 'claims_legacy_data.csv', date: 'Oct 20, 2023', by: 'Alex J.', status: 'Failed', ok: false },
+        { name: 'clients_q3_2025.csv', date: 'Jan 24, 2026', by: 'Alex J.', status: 'Success', ok: true },
+        { name: 'new_policies_batch_02.xlsx', date: 'Jan 22, 2026', by: 'Sarah K.', status: 'Success', ok: true },
+        { name: 'claims_legacy_data.csv', date: 'Jan 20, 2026', by: 'Alex J.', status: 'Failed', ok: false },
     ]);
 
     const DATA_TYPES = [
@@ -384,7 +384,7 @@ export function SettingsIntegrations() {
                                                 )}>{row.status}</span>
                                             </td>
                                             <td className="px-8 py-5">
-                                                <button className="text-slate-400 hover:text-primary-600 transition-colors">
+                                                <button onClick={() => toast.info('Import Details', { description: `Viewing import details for ${row.name}` })} className="text-slate-400 hover:text-primary-600 transition-colors cursor-pointer">
                                                     <span className="material-symbols-outlined">visibility</span>
                                                 </button>
                                             </td>

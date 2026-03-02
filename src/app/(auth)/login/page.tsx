@@ -16,7 +16,7 @@ export default function LoginPage() {
             await login(email, password);
             router.push('/dashboard');
         } catch {
-            setError('Invalid credentials. Hint: use admin@ibms.com / any password');
+            setError('Invalid email or password. Please try again.');
         }
     };
 

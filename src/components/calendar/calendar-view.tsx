@@ -371,7 +371,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
                     <button
                         onClick={() => handleOpenModal(currentDate)}
-                        className="relative z-10 w-full py-5 rounded-full bg-white text-surface-900 font-black flex items-center justify-center gap-3 shadow-2xl hover:bg-primary-50 transition-all active:scale-95 group text-[11px] tracking-[3px]"
+                        className="relative z-10 w-full py-5 rounded-full bg-white dark:bg-slate-800 text-surface-900 dark:text-white font-black flex items-center justify-center gap-3 shadow-2xl hover:bg-primary-50 dark:hover:bg-slate-700 transition-all active:scale-95 group text-[11px] tracking-[3px]"
                     >
                         <Plus size={18} strokeWidth={3} className="group-hover:rotate-90 transition-transform" />
                         NEW ACTION
@@ -455,7 +455,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     };
 
     return (
-        <div className="w-full py-6" style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <div className="w-full py-6 max-w-7xl mx-auto">
             <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-2xl)] p-8 shadow-[var(--glass-shadow)] border border-[var(--glass-border)]">
                 {renderHeader()}
 

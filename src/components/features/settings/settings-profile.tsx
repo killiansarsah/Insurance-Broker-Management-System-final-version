@@ -96,7 +96,7 @@ export function SettingsProfile() {
                 <div className="flex flex-col gap-4 text-center md:text-left">
                     <div>
                         <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">Profile Photo</h3>
-                        <p className="text-sm font-medium text-slate-500 mt-1" style={{ maxWidth: '20rem' }}>Upload a professional headshot. Recommended size: 400x400px.</p>
+                        <p className="text-sm font-medium text-slate-500 mt-1 max-w-xs">Upload a professional headshot. Recommended size: 400x400px.</p>
                     </div>
                     <div className="flex items-center gap-4 justify-center md:justify-start">
                         <button
@@ -105,7 +105,7 @@ export function SettingsProfile() {
                         >
                             Change Photo
                         </button>
-                        <button className="px-6 h-10 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-600 transition-colors">
+                        <button onClick={() => toast.success('Photo Removed', { description: 'Your profile photo has been removed.' })} className="px-6 h-10 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-600 transition-colors cursor-pointer">
                             Remove
                         </button>
                     </div>

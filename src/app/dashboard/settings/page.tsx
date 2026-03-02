@@ -197,7 +197,7 @@ export default function SettingsPage() {
                                         <div
                                             key={idx}
                                             onClick={(e) => { e.stopPropagation(); setActiveTab(item.id); }}
-                                            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group/item"
+                                            className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group/item cursor-pointer"
                                         >
                                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300 group-hover/item:text-primary transition-colors">{item.label}</span>
                                             <span className="material-symbols-outlined text-slate-300 group-hover/item:text-primary transition-colors">chevron_right</span>

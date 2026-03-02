@@ -49,6 +49,10 @@ import { mockPolicies } from '@/mock/policies';
 import { claims as mockClaims } from '@/mock/claims';
 import { carriers } from '@/mock/carriers';
 import { toast } from 'sonner';
+import { RecordPaymentModal } from '@/components/forms/record-payment-modal';
+import { usePaymentStore } from '@/stores/payment-store';
+import { generateReceipt } from '@/lib/generate-receipt';
+import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
 
 const TABS = [
     { id: 'overview', label: 'Overview', icon: Eye },
@@ -78,10 +82,15 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     const [showEndorsementModal, setShowEndorsementModal] = useState(false);
     const [showRenewalModal, setShowRenewalModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showDocUploadModal, setShowDocUploadModal] = useState(false);
+
+    const { transactions } = usePaymentStore();
 
     const policy = useMemo(() => mockPolicies.find(p => p.id === policyId), [policyId]);
     const policyClaims = useMemo(() => mockClaims.filter(c => c.policyId === policyId), [policyId]);
     const carrier = useMemo(() => policy ? carriers.find(c => c.id === policy.insurerId || c.shortName === policy.insurerName) : null, [policy]);
+    const policyTransactions = useMemo(() => transactions.filter(t => t.policyId === policyId), [transactions, policyId]);
 
     if (!policy) {
         return (
@@ -507,7 +516,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     </h3>
                 </div>
                 <div className="p-6">
-                    <div className="space-y-3" style={{ maxWidth: '28rem' }}>
+                    <div className="space-y-3 max-w-md">
                         <div className="flex justify-between items-center text-surface-700">
                             <span>Base Premium</span>
                             <span className="font-semibold tabular-nums">{formatCurrency(taxes.base)}</span>
@@ -607,6 +616,81 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     </div>
                 </Card>
             )}
+
+            {/* Record Payment Button */}
+            <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-surface-900 flex items-center gap-2">
+                    <History size={18} className="text-primary-500" /> Payment History
+                </h3>
+                <Button
+                    variant="primary"
+                    size="sm"
+                    leftIcon={<Plus size={14} />}
+                    onClick={() => setShowPaymentModal(true)}
+                >
+                    Record Payment
+                </Button>
+            </div>
+
+            {/* Payment History */}
+            {policyTransactions.length > 0 ? (
+                <Card className="p-0 overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="text-xs text-surface-500 uppercase border-b border-surface-100 bg-surface-50/50">
+                                    <th className="text-left px-6 py-3">Reference</th>
+                                    <th className="text-right px-6 py-3">Amount</th>
+                                    <th className="text-left px-6 py-3">Method</th>
+                                    <th className="text-center px-6 py-3">Status</th>
+                                    <th className="text-left px-6 py-3">Date</th>
+                                    <th className="text-right px-6 py-3">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {policyTransactions.map((txn) => (
+                                    <tr key={txn.id} className="border-b border-surface-50 last:border-0 hover:bg-surface-50/50">
+                                        <td className="px-6 py-3 font-mono text-xs font-medium text-surface-900">{txn.reference}</td>
+                                        <td className="px-6 py-3 text-right font-semibold text-success-700 tabular-nums">
+                                            +{formatCurrency(txn.amount)}
+                                        </td>
+                                        <td className="px-6 py-3 capitalize text-surface-600">
+                                            {txn.method.replace(/_/g, ' ')}
+                                            {txn.momoNetwork ? ` (${txn.momoNetwork.toUpperCase()})` : ''}
+                                        </td>
+                                        <td className="px-6 py-3 text-center">
+                                            <StatusBadge status={txn.status} />
+                                        </td>
+                                        <td className="px-6 py-3 text-xs text-surface-500">
+                                            {formatDate(txn.processedAt || txn.createdAt)}
+                                        </td>
+                                        <td className="px-6 py-3 text-right">
+                                            <button
+                                                onClick={() => generateReceipt(txn)}
+                                                className="text-xs text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
+                                            >
+                                                <Download size={12} /> Receipt
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            ) : (
+                <Card padding="lg" className="text-center">
+                    <div className="flex flex-col items-center gap-3 py-6">
+                        <div className="w-12 h-12 rounded-full bg-surface-100 flex items-center justify-center">
+                            <Wallet size={24} className="text-surface-400" />
+                        </div>
+                        <div>
+                            <p className="font-semibold text-surface-700">No payments recorded</p>
+                            <p className="text-sm text-surface-500 mt-0.5">Click &quot;Record Payment&quot; to add the first payment for this policy.</p>
+                        </div>
+                    </div>
+                </Card>
+            )}
         </div>
     );
 
@@ -621,7 +705,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     variant="outline"
                     size="sm"
                     leftIcon={<UploadCloud size={14} />}
-                    onClick={() => toast.info('Document upload modal would open here')}
+                    onClick={() => setShowDocUploadModal(true)}
                 >
                     Upload
                 </Button>
@@ -691,7 +775,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                                 >
                                     <td className="px-6 py-3 font-mono text-xs text-primary-600">{claim.claimNumber}</td>
                                     <td className="px-6 py-3 text-surface-700">{formatDate(claim.incidentDate)}</td>
-                                    <td className="px-6 py-3 text-surface-600 truncate" style={{ maxWidth: '16rem' }}>
+                                    <td className="px-6 py-3 text-surface-600 truncate max-w-[16rem]">
                                         {claim.incidentDescription}
                                     </td>
                                     <td className="px-6 py-3 text-right font-semibold text-surface-900 tabular-nums">
@@ -812,7 +896,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         if (!showEndorsementModal) return null;
         return (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-                <div className="bg-background rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
+                <div className="bg-background rounded-2xl shadow-xl w-full max-w-lg p-6 animate-slide-up">
                     <h2 className="text-lg font-bold text-surface-900 mb-4">Add Endorsement</h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();
@@ -862,7 +946,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         })();
         return (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-                <div className="bg-background rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
+                <div className="bg-background rounded-2xl shadow-xl w-full max-w-lg p-6 animate-slide-up">
                     <h2 className="text-lg font-bold text-surface-900 mb-4">Renew Policy</h2>
                     <div className="space-y-4">
                         <div className="p-4 bg-surface-50 rounded-lg space-y-2">
@@ -911,7 +995,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         if (!showCancelModal) return null;
         return (
             <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-                <div className="bg-background rounded-2xl shadow-xl w-full p-6 animate-slide-up" style={{ maxWidth: '32rem' }}>
+                <div className="bg-background rounded-2xl shadow-xl w-full max-w-lg p-6 animate-slide-up">
                     <h2 className="text-lg font-bold text-danger-600 mb-4 flex items-center gap-2">
                         <Ban size={20} /> Cancel Policy
                     </h2>
@@ -972,7 +1056,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     };
 
     return (
-        <div className="w-full space-y-6 pb-20 animate-fade-in" style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <div className="w-full space-y-6 pb-20 animate-fade-in max-w-7xl mx-auto">
             {/* Back Button */}
             <BackButton href="/dashboard/policies" className="mb-4" />
 
@@ -1110,6 +1194,22 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
             {renderEndorsementModal()}
             {renderRenewalModal()}
             {renderCancelModal()}
+            <RecordPaymentModal
+                isOpen={showPaymentModal}
+                onClose={() => setShowPaymentModal(false)}
+                policyId={policy.id}
+                policyNumber={policy.policyNumber}
+                clientId={policy.clientId}
+                clientName={policy.clientName}
+                outstandingBalance={policy.outstandingBalance ?? 0}
+                currency={policy.currency}
+            />
+            <UploadDocumentModal
+                isOpen={showDocUploadModal}
+                onClose={() => setShowDocUploadModal(false)}
+                defaultReferenceId={policy.policyNumber}
+                defaultCategory="policy"
+            />
         </div>
     );
 }

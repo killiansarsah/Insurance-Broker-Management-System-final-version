@@ -656,3 +656,31 @@ export interface ImportResult {
         leads: number;
     };
 }
+
+// ─── Notifications ───────────────────────────────────────────────────────
+export type NotificationType =
+    | 'renewal'
+    | 'claim'
+    | 'commission'
+    | 'lead'
+    | 'followup'
+    | 'compliance'
+    | 'finance'
+    | 'system'
+    | 'document'
+    | 'approval';
+
+export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface Notification {
+    id: string;
+    title: string;
+    message: string;
+    type: NotificationType;
+    priority: NotificationPriority;
+    read: boolean;
+    archived: boolean;
+    link?: string;
+    createdAt: string;
+    readAt?: string;
+}

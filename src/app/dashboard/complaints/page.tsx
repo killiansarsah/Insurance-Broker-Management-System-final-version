@@ -108,6 +108,7 @@ export default function ComplaintsPage() {
                     ]}
                     searchKeys={['subject', 'complainantName', 'complaintNumber']}
                     onRowClick={(c) => router.push(`/dashboard/complaints/${c.id}`)}
+                    emptyMessage="No complaints found."
                 />
             </Card>
         </div>

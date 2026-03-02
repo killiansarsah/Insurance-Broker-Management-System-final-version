@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
+import { toast } from 'sonner';
 
 const themes = [
     { value: 'light', label: 'Classic Light', desc: 'Clean and bright interface with high contrast.', icon: 'light_mode' },
@@ -22,8 +23,8 @@ export function SettingsAppearance() {
         { id: 'recent_activity', title: 'Recent Activity', desc: 'A log of recent ledger entries and client updates.', enabled: false, icon: 'history' },
     ]);
 
-    const activeFiscalYear = "2024 / 2025";
-    const fiscalYears = ["2024 / 2025", "2023 / 2024", "2022 / 2023", "2021 / 2022"];
+    const activeFiscalYear = "2025 / 2026";
+    const fiscalYears = ["2025 / 2026", "2024 / 2025", "2023 / 2024", "2022 / 2023"];
 
     const toggleWidget = (id: string) => {
         setWidgets(prev => prev.map(w => w.id === id ? { ...w, enabled: !w.enabled } : w));
@@ -148,7 +149,7 @@ export function SettingsAppearance() {
                 <p className="text-xs font-medium text-slate-400 leading-relaxed">
                     In the upcoming v2.4 update, you will be able to drag and drop these blocks directly on your dashboard to customize their exact position. Currently, toggling a widget off will simply collapse its corresponding space.
                 </p>
-                <button className="h-12 w-full border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all">
+                <button onClick={() => toast.success('Custom View Saved', { description: 'Your dashboard widget configuration has been saved.' })} className="h-12 w-full border border-slate-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/5 transition-all cursor-pointer">
                     Save Custom View
                 </button>
             </div>

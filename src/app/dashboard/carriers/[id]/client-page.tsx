@@ -82,7 +82,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
         .flatMap(([, items]) => items);
 
     return (
-        <div className="w-full space-y-8 pb-20 animate-fade-in relative" style={{ maxWidth: '80rem', margin: '0 auto' }}>
+        <div className="w-full space-y-8 pb-20 animate-fade-in relative max-w-7xl mx-auto">
             {/* Background Atmosphere */}
             <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
                 <div
@@ -158,7 +158,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                         </div>
 
                         {/* Description */}
-                        <p className="text-surface-600 leading-relaxed md:mx-0" style={{ maxWidth: '48rem' }}>
+                        <p className="text-surface-600 leading-relaxed md:mx-0 max-w-3xl">
                             {carrier.description}
                         </p>
 

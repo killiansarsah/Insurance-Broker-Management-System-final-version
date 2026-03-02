@@ -397,7 +397,7 @@ export default function TasksPage() {
     };
 
     return (
-        <div className="space-y-6 animate-fade-in w-full" style={{ maxWidth: '72rem', margin: '0 auto' }}>
+        <div className="space-y-6 animate-fade-in w-full max-w-6xl mx-auto">
             {/* Header Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-background p-6 rounded-[var(--radius-lg)] shadow-sm border border-surface-200">
                 <div className="flex items-center gap-4">
@@ -544,6 +544,16 @@ export default function TasksPage() {
                         {/* Task Notes Grid */}
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-8">
                             <AnimatePresence>
+                                {filteredTasks.length === 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="col-span-full py-20 text-center"
+                                    >
+                                        <p className="text-surface-400 font-bold uppercase tracking-widest text-xs">No active tasks found</p>
+                                        <p className="text-surface-300 text-xs mt-1">Try adjusting your filters or create a new task.</p>
+                                    </motion.div>
+                                )}
                                 {filteredTasks.map((task) => (
                                     <StickyNoteTask
                                         key={task.id}

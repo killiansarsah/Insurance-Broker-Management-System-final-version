@@ -31,7 +31,8 @@ import { useProfileStore } from '@/stores/profile-store';
 import { useState } from 'react';
 import { GlobalSearch } from '@/components/features/global-search';
 import { QuickAddMenu } from '@/components/features/quick-add';
-import { NotificationsPopover } from '@/components/features/notifications';
+import { useNotificationStore } from '@/stores/notification-store';
+import { Bell } from 'lucide-react';
 
 // --- Types ---
 
@@ -217,7 +218,7 @@ function GlobalRail() {
                     <Search size={20} />
                 </button>
 
-                <NotificationsPopover />
+                <SidebarNotificationLink />
 
                 <QuickAddMenu />
             </div>
@@ -498,5 +499,24 @@ export function Sidebar() {
                 </div>
             </aside >
         </>
+    );
+}
+
+function SidebarNotificationLink() {
+    const unread = useNotificationStore((s) => s.unreadCount());
+
+    return (
+        <Link
+            href="/dashboard/notifications"
+            className="relative w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors outline-none focus:ring-2 focus:ring-primary-200"
+            title="Notifications"
+        >
+            <Bell size={20} />
+            {unread > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 bg-danger-500 text-white text-[8px] font-bold rounded-full flex items-center justify-center">
+                    {unread > 9 ? '9+' : unread}
+                </span>
+            )}
+        </Link>
     );
 }

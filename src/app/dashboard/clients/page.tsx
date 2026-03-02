@@ -585,6 +585,7 @@ export default function ClientsPage() {
                 searchPlaceholder="Search by name, client number, phone, email…"
                 searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'phone', 'email']}
                 onRowClick={(row) => router.push(`/dashboard/clients/${row.id}`)}
+                emptyMessage="No clients match the current filters."
             />
         </div>
     );

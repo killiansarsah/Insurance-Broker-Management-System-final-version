@@ -19,13 +19,16 @@ import { Badge } from '@/components/ui/badge';
 import { MOCK_DOCUMENTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
 import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
+import { DocumentPreviewModal } from '@/components/documents/document-preview-modal';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
+import type { Document } from '@/types';
 
 export default function DocumentsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [category, setCategory] = useState('all');
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
 
     const filteredDocs = MOCK_DOCUMENTS.filter(doc => {
         const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -62,6 +65,12 @@ export default function DocumentsPage() {
                 onClose={() => setIsUploadModalOpen(false)}
             />
 
+            <DocumentPreviewModal
+                isOpen={!!previewDoc}
+                onClose={() => setPreviewDoc(null)}
+                document={previewDoc}
+            />
+
             {/* Toolbar */}
             <Card padding="md" className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
@@ -93,14 +102,18 @@ export default function DocumentsPage() {
             {/* Document Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredDocs.map((doc) => (
-                    <Card key={doc.id} hover className="group flex flex-col p-4 h-full relative border-surface-200">
+                    <div key={doc.id} onClick={() => setPreviewDoc(doc)} className="cursor-pointer">
+                    <Card
+                        hover
+                        className="group flex flex-col p-4 h-full relative border-surface-200"
+                    >
                         <div className="flex items-start justify-between">
                             <div className="w-10 h-10 rounded-lg bg-surface-50 flex items-center justify-center p-2 mb-3">
                                 {getIcon(doc.mimeType)}
                             </div>
                             <button
                                 className="text-surface-400 hover:text-surface-900"
-                                onClick={() => toast.info('Document options', { description: `Actions for ${doc.name}` })}
+                                onClick={(e) => { e.stopPropagation(); setPreviewDoc(doc); }}
                             >
                                 <MoreVertical size={16} />
                             </button>
@@ -117,12 +130,16 @@ export default function DocumentsPage() {
                             <span className="text-[10px] text-surface-400">{formatDate(doc.createdAt)}</span>
                             <button
                                 className="p-1.5 rounded-full hover:bg-surface-50 text-primary-600 transition-colors"
-                                onClick={() => toast.success('Download started', { description: doc.name })}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toast.success('Download started', { description: doc.name });
+                                }}
                             >
                                 <Download size={16} />
                             </button>
                         </div>
                     </Card>
+                    </div>
                 ))}
             </div>
 

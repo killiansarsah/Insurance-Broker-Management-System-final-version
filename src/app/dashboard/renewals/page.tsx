@@ -686,6 +686,7 @@ export default function RenewalsPage() {
                 ]}
                 searchKeys={['policyNumber', 'clientName', 'insurerName', 'assignedAgent']}
                 onRowClick={(row) => setSelectedRenewal(row)}
+                emptyMessage="No renewals match the current filters."
                 headerActions={
                     <div className="flex items-center gap-2">
                         <CustomSelect
