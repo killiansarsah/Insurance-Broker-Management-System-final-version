@@ -136,7 +136,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.1 }}
-                        className="grid grid-cols-2 gap-3"
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
                     >
                         <InfoCard label="Client" value={app.clientName} icon={<User size={16} />} accent="primary" />
                         <InfoCard label="Client Type" value={app.clientType === 'corporate' ? 'Corporate' : 'Individual'} icon={<Building2 size={16} />} accent="blue" />
@@ -159,7 +159,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                             </div>
                             Financing Breakdown
                         </h3>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div className="pf-stat-cell">
                                 <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Total Premium</p>
                                 <p className="text-lg font-black text-surface-900 tracking-tight">{formatCurrency(app.totalPremium)}</p>
@@ -173,7 +173,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                 <p className="text-lg font-black text-primary-600 tracking-tight">{formatCurrency(app.financedAmount)}</p>
                             </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-3 mt-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
                             <div className="pf-stat-cell">
                                 <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Interest Rate</p>
                                 <p className="text-sm font-bold text-surface-800">{app.interestRateMonthly}% <span className="text-surface-400">/mo</span></p>
@@ -213,7 +213,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                             </div>
                             <span className="text-sm font-black text-surface-800 bg-surface-50 px-2.5 py-1 rounded-lg min-w-[3.5rem] text-center">{progressPct}%</span>
                         </div>
-                        <div className="grid grid-cols-4 gap-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div className="pf-stat-cell">
                                 <p className="text-[10px] uppercase font-bold text-surface-400 tracking-wider mb-1">Paid</p>
                                 <p className="text-sm font-black text-success-700">{app.installmentsPaid}<span className="text-surface-400 font-medium">/{app.numberOfInstallments}</span></p>

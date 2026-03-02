@@ -20,9 +20,7 @@ import {
     Eye,
     Edit,
     MessageSquare,
-    MoreVertical,
     Download,
-    Calendar,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -112,7 +110,6 @@ export default function ClientsPage() {
     const [filterBroker, setFilterBroker] = useState('');
     const [filterDateFrom, setFilterDateFrom] = useState('');
     const [filterDateTo, setFilterDateTo] = useState('');
-    const [actionMenuOpen, setActionMenuOpen] = useState<string | null>(null);
 
     const filteredClients = mockClients.filter((c) => {
         if (filterStatus && c.status !== filterStatus) return false;

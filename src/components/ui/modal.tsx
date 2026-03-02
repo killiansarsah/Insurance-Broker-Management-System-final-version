@@ -84,7 +84,7 @@ export function Modal({
                 'bg-transparent p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
                 'open:animate-in open:fade-in open:zoom-in-95 open:duration-300',
                 'backdrop:animate-in backdrop:fade-in backdrop:duration-300',
-                'w-full min-w-[340px] max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col',
+                'w-full max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col',
                 className
             )}
             style={{ maxWidth: sizeMap[size] || sizeMap.md }}

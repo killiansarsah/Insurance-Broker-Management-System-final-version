@@ -15,7 +15,6 @@ import {
     BarChart3,
     ArrowRight,
     TrendingUp,
-    Receipt,
     Wallet,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
@@ -171,7 +170,7 @@ export default function FinanceOverviewPage() {
             </div>
 
             {/* Module Quick-Access */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 {MODULE_CARDS.map((mod) => (
                     <Link key={mod.label} href={mod.href}>
                         <div className={cn(

@@ -70,11 +70,13 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                     <div className="hidden md:block w-full md:w-3/5 bg-surface-100 p-5">
                         <div className="grid grid-cols-2 grid-rows-3 gap-4 h-full overflow-hidden">
                             {/* Row 1 — image + stat */}
-                            <div className="overflow-hidden rounded-xl">
-                                <img
+                            <div className="overflow-hidden rounded-xl relative">
+                                <Image
                                     src={IMAGES[0].src}
                                     alt={IMAGES[0].alt}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(min-width: 768px) 30vw, 0px"
                                 />
                             </div>
                             <div
@@ -90,18 +92,22 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             </div>
 
                             {/* Row 2 — image + image */}
-                            <div className="overflow-hidden rounded-xl">
-                                <img
+                            <div className="overflow-hidden rounded-xl relative">
+                                <Image
                                     src={IMAGES[1].src}
                                     alt={IMAGES[1].alt}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(min-width: 768px) 30vw, 0px"
                                 />
                             </div>
-                            <div className="overflow-hidden rounded-xl">
-                                <img
+                            <div className="overflow-hidden rounded-xl relative">
+                                <Image
                                     src={IMAGES[2].src}
                                     alt={IMAGES[2].alt}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(min-width: 768px) 30vw, 0px"
                                 />
                             </div>
 
@@ -117,11 +123,13 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                 <h2 className="text-5xl font-bold mb-2">{STATS[1].value}</h2>
                                 <p className="text-center text-sm text-white/90">{STATS[1].text}</p>
                             </div>
-                            <div className="overflow-hidden rounded-xl">
-                                <img
+                            <div className="overflow-hidden rounded-xl relative">
+                                <Image
                                     src={IMAGES[3].src}
                                     alt={IMAGES[3].alt}
-                                    className="w-full h-full object-cover"
+                                    fill
+                                    className="object-cover"
+                                    sizes="(min-width: 768px) 30vw, 0px"
                                 />
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Search, Building2, Shield, RefreshCw, Globe, Trophy, ArrowRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,9 +44,11 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
             {/* Logo Container - Pedestal */}
             <div className="relative w-24 h-24 rounded-2xl flex items-center justify-center bg-white shadow-lg border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
                 {carrier.logoUrl && !imgError ? (
-                    <img
+                    <Image
                         src={carrier.logoUrl}
                         alt={`${carrier.name} logo`}
+                        width={80}
+                        height={80}
                         className="w-20 h-20 object-contain p-1"
                         onError={() => setImgError(true)}
                     />

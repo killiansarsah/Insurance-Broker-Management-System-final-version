@@ -128,7 +128,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
 
                 <div className="px-6 py-5 space-y-6">
                     {/* Client & Policy Info */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoCard label="Client" value={renewal.clientName} icon={<User size={16} />} />
                         <InfoCard label="Insurer" value={renewal.insurerName} icon={<Shield size={16} />} />
                         <InfoCard label="Coverage" value={renewal.coverageType || renewal.insuranceType} icon={<FileText size={16} />} />
@@ -143,7 +143,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                             <TrendingUp size={16} className="text-primary-600" />
                             Premium Analysis
                         </h3>
-                        <div className="grid grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div className="text-center p-3 bg-surface-50 rounded-lg">
                                 <p className="text-[10px] uppercase font-semibold text-surface-500">Current Premium</p>
                                 <p className="text-lg font-bold text-surface-900">{formatCurrency(renewal.currentPremium)}</p>
@@ -159,7 +159,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                 </p>
                             </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-4 mt-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-3">
                             <div className="text-center p-3 bg-surface-50 rounded-lg">
                                 <p className="text-[10px] uppercase font-semibold text-surface-500">Sum Insured</p>
                                 <p className="text-sm font-bold text-surface-800">{formatCurrency(renewal.sumInsured)}</p>

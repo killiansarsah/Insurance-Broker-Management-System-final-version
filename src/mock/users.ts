@@ -12,7 +12,7 @@ export const users: User[] = [
         branchId: 'HQ',
         isActive: true,
         lastLogin: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-        createdAt: '2023-01-01T08:00:00Z'
+        createdAt: '2025-01-01T08:00:00Z'
     },
     {
         id: 'usr-002',
@@ -25,7 +25,7 @@ export const users: User[] = [
         branchId: 'BR-ACC-01',
         isActive: true,
         lastLogin: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
-        createdAt: '2023-01-15T10:00:00Z'
+        createdAt: '2025-01-15T10:00:00Z'
     },
     {
         id: 'usr-003',
@@ -37,7 +37,7 @@ export const users: User[] = [
         branchId: 'BR-ACC-01',
         isActive: true,
         lastLogin: new Date(Date.now() - 10800000).toISOString(), // 3 hours ago
-        createdAt: '2023-02-01T09:00:00Z'
+        createdAt: '2025-02-01T09:00:00Z'
     },
     {
         id: 'usr-004',
@@ -49,7 +49,7 @@ export const users: User[] = [
         branchId: 'BR-KUM-01',
         isActive: true,
         lastLogin: new Date(Date.now() - 43200000).toISOString(), // 12 hours ago
-        createdAt: '2023-03-10T14:30:00Z'
+        createdAt: '2025-03-10T14:30:00Z'
     },
     {
         id: 'usr-005',
@@ -61,7 +61,7 @@ export const users: User[] = [
         branchId: 'BR-ACC-01',
         isActive: true,
         lastLogin: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
-        createdAt: '2023-04-05T11:15:00Z'
+        createdAt: '2025-04-05T11:15:00Z'
     },
     {
         id: 'usr-006',
@@ -73,7 +73,7 @@ export const users: User[] = [
         branchId: 'BR-ACC-01',
         isActive: false,
         lastLogin: new Date(Date.now() - 2592000000).toISOString(), // 30 days ago
-        createdAt: '2023-05-20T16:00:00Z'
+        createdAt: '2025-05-20T16:00:00Z'
     },
     {
         id: 'usr-007',
@@ -85,7 +85,7 @@ export const users: User[] = [
         branchId: 'BR-ACC-01',
         isActive: true,
         lastLogin: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-        createdAt: '2023-06-01T08:30:00Z'
+        createdAt: '2025-06-01T08:30:00Z'
     },
     {
         id: 'usr-008',
@@ -99,6 +99,6 @@ export const users: User[] = [
         isActive: true,
         delegatedTo: 'usr-004', // Delegated to Ama Serwaa
         lastLogin: new Date(Date.now() - 3600000).toISOString(),
-        createdAt: '2023-06-15T10:00:00Z'
+        createdAt: '2025-06-15T10:00:00Z'
     }
 ];

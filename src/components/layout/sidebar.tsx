@@ -413,7 +413,7 @@ export function Sidebar() {
                         ? 'w-[var(--sidebar-collapsed-width)]'
                         : 'w-[var(--sidebar-width)]',
                     // Mobile
-                    sidebarMobileOpen && '!flex w-[280px]'
+                    sidebarMobileOpen && '!flex w-[280px] max-w-[85vw]'
                 )}
             >
                 {/* RAIL A: Global Toolbelt (Only visible when expanded or on mobile) */}

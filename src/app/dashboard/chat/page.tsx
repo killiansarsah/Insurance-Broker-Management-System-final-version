@@ -5,7 +5,7 @@ import { ChatList } from '@/components/chat/chat-list';
 import { MessageWindow } from '@/components/chat/message-window';
 import { MOCK_CHATS } from '@/mock/chat';
 import { Card } from '@/components/ui/card';
-import { MessageSquareOff } from 'lucide-react';
+import { MessageSquareOff, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 
 export default function ChatPage() {
@@ -31,16 +31,23 @@ export default function ChatPage() {
             </div>
 
             <div className="flex-1 flex gap-6 overflow-hidden">
-                {/* Conversations Sidebar */}
-                <div className="w-80 shrink-0 h-full">
+                {/* Conversations Sidebar — hidden on mobile when a chat is active */}
+                <div className={`w-full md:w-80 md:shrink-0 h-full ${activeChatId ? 'hidden md:block' : 'block'}`}>
                     <ChatList
                         activeId={activeChatId}
                         onSelect={setActiveChatId}
                     />
                 </div>
 
-                {/* Message Window */}
-                <div className="flex-1 h-full min-w-0">
+                {/* Message Window — hidden on mobile when no chat selected */}
+                <div className={`flex-1 h-full min-w-0 ${!activeChatId ? 'hidden md:block' : 'block'}`}>
+                    {/* Mobile back button */}
+                    <button
+                        onClick={() => setActiveChatId('')}
+                        className="md:hidden flex items-center gap-2 text-sm font-medium text-primary-600 mb-3 cursor-pointer hover:text-primary-700"
+                    >
+                        <ArrowLeft size={16} /> Back to conversations
+                    </button>
                     {activeChat ? (
                         <MessageWindow conversation={activeChat} />
                     ) : (

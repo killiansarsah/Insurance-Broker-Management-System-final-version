@@ -31,12 +31,12 @@ export const MOCK_CHATS: ChatConversation[] = [
         participantName: 'Kofi Asante',
         participantAvatar: undefined,
         participantRole: 'Broker',
-        lastMessage: 'Checking the motor claim on CLM-2023-0001.',
+        lastMessage: 'Checking the motor claim on CLM-2025-0001.',
         lastMessageTime: new Date(Date.now() - 86400000 * 10).toISOString(),
         unreadCount: 0,
         isOnline: false,
         type: 'direct',
-        linkedResourceId: 'CLM-2023-0001',
+        linkedResourceId: 'CLM-2025-0001',
         linkedResourceType: 'claim'
     },
     {

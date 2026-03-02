@@ -25,13 +25,13 @@ export function Header() {
     const notificationsRef = useClickOutside<HTMLDivElement>(() => setNotificationsOpen(false));
 
     const [notifications, setNotifications] = useState([
-        { id: '1', title: 'Policy renewal due', message: 'POL-2024-001 expires in 7 days', time: '2h ago', read: false, type: 'renewal', link: '/dashboard/policies/POL-2024-001' },
-        { id: '2', title: 'New claim registered', message: 'CLM-2024-015 submitted by Kwame Mensah', time: '4h ago', read: false, type: 'claim', link: '/dashboard/claims/clm-084' },
-        { id: '3', title: 'Commission paid', message: 'GHS 1,500 commission credited for POL-2024-0852', time: '5h ago', read: false, type: 'commission', link: '/dashboard/commissions' },
+        { id: '1', title: 'Policy renewal due', message: 'POL-2026-001 expires in 7 days', time: '2h ago', read: false, type: 'renewal', link: '/dashboard/policies/POL-2026-001' },
+        { id: '2', title: 'New claim registered', message: 'CLM-2026-015 submitted by Kwame Mensah', time: '4h ago', read: false, type: 'claim', link: '/dashboard/claims/clm-084' },
+        { id: '3', title: 'Commission paid', message: 'GHS 1,500 commission credited for POL-2026-0852', time: '5h ago', read: false, type: 'commission', link: '/dashboard/commissions' },
         { id: '4', title: 'New lead assigned', message: 'Emmanuel Tetteh — Marine Cargo enquiry', time: '8h ago', read: true, type: 'lead', link: '/dashboard/leads' },
         { id: '5', title: 'Follow-up reminder', message: 'Call Akosua Darko — Travel Insurance', time: '12h ago', read: true, type: 'followup', link: '/dashboard/calendar' },
         { id: '6', title: 'KYC verification', message: 'Client Ama Serwaa requires KYC update', time: '1d ago', read: true, type: 'compliance', link: '/dashboard/clients/CL-001' },
-        { id: '7', title: 'Invoice overdue', message: 'INV-2024-004 for Akosua Darko is 4 days overdue', time: '1d ago', read: true, type: 'finance', link: '/dashboard/finance' },
+        { id: '7', title: 'Invoice overdue', message: 'INV-2026-004 for Akosua Darko is 4 days overdue', time: '1d ago', read: true, type: 'finance', link: '/dashboard/finance' },
     ]);
 
     const notifDot: Record<string, string> = {

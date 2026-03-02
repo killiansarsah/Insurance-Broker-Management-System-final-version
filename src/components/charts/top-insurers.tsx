@@ -30,7 +30,7 @@ export function TopInsurers({ data }: { data?: InsurerData[] }) {
 
     return (
         <div className="h-[300px] min-h-[300px] w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <ResponsiveContainer width="100%" height={280} debounce={50}>
                 <BarChart data={chartData} layout="vertical" margin={{ left: 20, right: 20 }}>
                     <CartesianGrid
                         strokeDasharray="3 3"

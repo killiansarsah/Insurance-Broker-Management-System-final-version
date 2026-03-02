@@ -9,7 +9,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import type { ImportEntityType, ImportColumnMapping, ImportValidationError } from '@/types';
 import {

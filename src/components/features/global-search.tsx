@@ -87,7 +87,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                     </CommandItem>
                     <CommandItem>
                         <FileText className="mr-2 h-4 w-4" />
-                        <span>Policy #POL-2024-001 (Motor)</span>
+                        <span>Policy #POL-2026-001 (Motor)</span>
                     </CommandItem>
                     <CommandItem>
                         <Shield className="mr-2 h-4 w-4" />

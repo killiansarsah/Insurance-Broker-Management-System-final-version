@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Calendar as CalendarIcon, Clock, Tag, AlignLeft, CheckCircle2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Tag, AlignLeft, CheckCircle2, MapPin, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { CalendarEventType } from '@/mock/calendar-events';
+import { CalendarEventType, CalendarEventPriority } from '@/mock/calendar-events';
 import { Modal } from '@/components/ui/modal';
 import { CustomSelect } from '@/components/ui/select-custom';
 
@@ -24,6 +24,8 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
     const [type, setType] = useState<CalendarEventType>('meeting');
     const [participant, setParticipant] = useState('');
     const [description, setDescription] = useState('');
+    const [location, setLocation] = useState('');
+    const [priority, setPriority] = useState<CalendarEventPriority>('medium');
 
     // Sync date field and reset form whenever modal opens or initialDate changes
     useEffect(() => {
@@ -35,6 +37,8 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
             setStartTime('09:00');
             setEndTime('10:00');
             setType('meeting');
+            setLocation('');
+            setPriority('medium');
         }
     }, [isOpen, initialDate]);
 
@@ -55,12 +59,14 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
         const newEvent = {
             id: Math.random().toString(36).substr(2, 9),
             title,
-            participant, // Include in event object
+            participant,
             description,
             start: startDateTime,
             end: endDateTime,
             type,
+            priority,
             status: 'upcoming' as const,
+            ...(location.trim() && { location: location.trim() }),
         };
 
         onSave(newEvent);
@@ -146,9 +152,41 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
                                 { label: 'Policy Renewal', value: 'policy' },
                                 { label: 'Claim Review', value: 'claim' },
                                 { label: 'Internal Scrum', value: 'team' },
+                                { label: 'Compliance Deadline', value: 'compliance' },
+                                { label: 'Payment Follow-up', value: 'payment' },
                             ]}
                             value={type}
                             onChange={(v) => setType(v as CalendarEventType)}
+                        />
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <MapPin size={12} className="text-primary-500" /> Location
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g., NIC Office, Zoom, Client Site"
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 shadow-sm placeholder:text-surface-400 bg-white/50"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                            <AlertTriangle size={12} className="text-warning-500" /> Priority
+                        </label>
+                        <CustomSelect
+                            options={[
+                                { label: 'Low', value: 'low' },
+                                { label: 'Medium', value: 'medium' },
+                                { label: 'High', value: 'high' },
+                                { label: 'Urgent', value: 'urgent' },
+                            ]}
+                            value={priority}
+                            onChange={(v) => setPriority(v as CalendarEventPriority)}
                         />
                     </div>
                 </div>

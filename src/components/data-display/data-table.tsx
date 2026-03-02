@@ -159,7 +159,7 @@ export function DataTable<T>({
             className
         )}>
             {/* Toolbar */}
-            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-surface-100 bg-surface-50/30">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-5 py-3 sm:py-4 border-b border-surface-100 bg-surface-50/30">
                 {searchable && (
                     <div
                         className="relative group z-10 transition-all duration-300 ease-out"

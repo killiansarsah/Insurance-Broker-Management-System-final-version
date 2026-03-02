@@ -20,7 +20,7 @@ const data = [
 export function PolicyMix() {
     return (
         <div className="h-[300px] min-h-[300px] w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+            <ResponsiveContainer width="100%" height={280} debounce={50}>
                 <PieChart>
                     <Pie
                         data={data}

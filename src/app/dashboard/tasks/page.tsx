@@ -220,7 +220,7 @@ export default function TasksPage() {
 
     const confirmDelete = () => {
         if (!deleteTarget) return;
-        if (deleteTarget.type === 'single') {
+        if (deleteTarget.type === 'single' && deleteTarget.id) {
             const task = taskList.find(t => t.id === deleteTarget.id);
             if (task) {
                 setTaskList(prev => prev.filter(t => t.id !== deleteTarget.id));

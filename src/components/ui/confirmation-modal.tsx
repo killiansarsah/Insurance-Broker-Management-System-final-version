@@ -87,7 +87,7 @@ export function ConfirmationModal({
                 'bg-transparent p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
                 'open:animate-in open:fade-in open:zoom-in-95 open:duration-300',
                 'backdrop:animate-in backdrop:fade-in backdrop:duration-300',
-                'w-full max-w-md min-w-[340px] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col'
+                'w-full max-w-md rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none hidden open:flex flex-col'
             )}
         >
             <div className="bg-white flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 p-8 gap-5">

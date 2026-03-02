@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -180,7 +181,7 @@ export function SettingsAccessControl() {
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-4">
                                                     {u.img ? (
-                                                        <img className="size-10 rounded-xl object-cover border-2 border-white dark:border-slate-800 shadow-sm" src={`https://picsum.photos/seed/${u.img}/100/100`} alt="" />
+                                                        <Image className="size-10 rounded-xl object-cover border-2 border-white dark:border-slate-800 shadow-sm" src={`https://picsum.photos/seed/${u.img}/100/100`} alt="" width={40} height={40} />
                                                     ) : (
                                                         <div className="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center text-xs font-black border-2 border-white dark:border-slate-800 shadow-sm">{u.initial}</div>
                                                     )}

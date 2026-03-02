@@ -371,9 +371,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-general",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-07-19",
+        inceptionDate: "2026-07-19",
         expiryDate: "2025-07-19",
-        issueDate: "2024-07-19",
+        issueDate: "2026-07-19",
         sumInsured: 450496,
         premiumAmount: 18020,
         commissionRate: 18,
@@ -385,8 +385,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-07-19T10:00:00Z",
-        updatedAt: "2024-07-19T10:00:00Z",
+        createdAt: "2026-07-19T10:00:00Z",
+        updatedAt: "2026-07-19T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "BA 4067-20",
                 "chassisNumber": "B3HKZJLFHTJ2EGP0X",
@@ -407,40 +407,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-4-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-08-01T10:00:00Z"
+                            "uploadedAt": "2026-08-01T10:00:00Z"
                   },
                   {
                             "id": "doc-4-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-07-26T10:00:00Z"
+                            "uploadedAt": "2026-07-26T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-07-19",
+                            "date": "2026-07-19",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-07-19",
+                            "date": "2026-07-19",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-07-21",
+                            "date": "2026-07-21",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-07-22",
+                            "date": "2026-07-22",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -449,34 +449,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-4-1",
-                            "dueDate": "2024-07-19",
+                            "dueDate": "2026-07-19",
                             "amount": 4505,
                             "status": "paid",
-                            "paidDate": "2024-07-23",
+                            "paidDate": "2026-07-23",
                             "reference": "PAY-200983"
                   },
                   {
                             "id": "inst-4-2",
-                            "dueDate": "2024-08-19",
+                            "dueDate": "2026-08-19",
                             "amount": 4505,
                             "status": "paid",
-                            "paidDate": "2024-08-19",
+                            "paidDate": "2026-08-19",
                             "reference": "PAY-855014"
                   },
                   {
                             "id": "inst-4-3",
-                            "dueDate": "2024-09-19",
+                            "dueDate": "2026-09-19",
                             "amount": 4505,
                             "status": "paid",
-                            "paidDate": "2024-09-23",
+                            "paidDate": "2026-09-23",
                             "reference": "PAY-147380"
                   },
                   {
                             "id": "inst-4-4",
-                            "dueDate": "2024-10-19",
+                            "dueDate": "2026-10-19",
                             "amount": 4505,
                             "status": "paid",
-                            "paidDate": "2024-10-22",
+                            "paidDate": "2026-10-22",
                             "reference": "PAY-546149"
                   }
         ],
@@ -497,9 +497,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-loyalty",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-09-11",
+        inceptionDate: "2026-09-11",
         expiryDate: "2025-09-11",
-        issueDate: "2024-09-11",
+        issueDate: "2026-09-11",
         sumInsured: 436420,
         premiumAmount: 16148,
         commissionRate: 15,
@@ -511,8 +511,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-09-11T10:00:00Z",
-        updatedAt: "2024-09-11T10:00:00Z",
+        createdAt: "2026-09-11T10:00:00Z",
+        updatedAt: "2026-09-11T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "CR 4063-20",
                 "chassisNumber": "3MK911XP3RV5X2P3V",
@@ -533,46 +533,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-5-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-09-25T10:00:00Z"
+                            "uploadedAt": "2026-09-25T10:00:00Z"
                   },
                   {
                             "id": "doc-5-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-09-16T10:00:00Z"
+                            "uploadedAt": "2026-09-16T10:00:00Z"
                   },
                   {
                             "id": "doc-5-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-09-24T10:00:00Z"
+                            "uploadedAt": "2026-09-24T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-09-11",
+                            "date": "2026-09-11",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-09-11",
+                            "date": "2026-09-11",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-09-14",
+                            "date": "2026-09-14",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-09-18",
+                            "date": "2026-09-18",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -581,34 +581,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-5-1",
-                            "dueDate": "2024-09-11",
+                            "dueDate": "2026-09-11",
                             "amount": 4037,
                             "status": "paid",
-                            "paidDate": "2024-09-13",
+                            "paidDate": "2026-09-13",
                             "reference": "PAY-161915"
                   },
                   {
                             "id": "inst-5-2",
-                            "dueDate": "2024-10-11",
+                            "dueDate": "2026-10-11",
                             "amount": 4037,
                             "status": "paid",
-                            "paidDate": "2024-10-12",
+                            "paidDate": "2026-10-12",
                             "reference": "PAY-658118"
                   },
                   {
                             "id": "inst-5-3",
-                            "dueDate": "2024-11-11",
+                            "dueDate": "2026-11-11",
                             "amount": 4037,
                             "status": "paid",
-                            "paidDate": "2024-11-13",
+                            "paidDate": "2026-11-13",
                             "reference": "PAY-674625"
                   },
                   {
                             "id": "inst-5-4",
-                            "dueDate": "2024-12-11",
+                            "dueDate": "2026-12-11",
                             "amount": 4037,
                             "status": "paid",
-                            "paidDate": "2024-12-14",
+                            "paidDate": "2026-12-14",
                             "reference": "PAY-139257"
                   }
         ],
@@ -629,9 +629,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-allianz",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-07-03",
-        expiryDate: "2024-07-03",
-        issueDate: "2023-07-03",
+        inceptionDate: "2025-07-03",
+        expiryDate: "2026-07-03",
+        issueDate: "2025-07-03",
         sumInsured: 657764,
         premiumAmount: 21706,
         commissionRate: 14,
@@ -643,8 +643,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-03T10:00:00Z",
-        updatedAt: "2023-07-03T10:00:00Z",
+        createdAt: "2025-07-03T10:00:00Z",
+        updatedAt: "2025-07-03T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "BA 6871-20",
                 "chassisNumber": "B6RU02CD9H3M5148V",
@@ -665,46 +665,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-6-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-07-06T10:00:00Z"
+                            "uploadedAt": "2025-07-06T10:00:00Z"
                   },
                   {
                             "id": "doc-6-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-07-07T10:00:00Z"
+                            "uploadedAt": "2025-07-07T10:00:00Z"
                   },
                   {
                             "id": "doc-6-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-07-13T10:00:00Z"
+                            "uploadedAt": "2025-07-13T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-03",
+                            "date": "2025-07-03",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-03",
+                            "date": "2025-07-03",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-07",
+                            "date": "2025-07-07",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-07-10",
+                            "date": "2025-07-10",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -713,10 +713,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-6-1",
-                            "dueDate": "2023-07-03",
+                            "dueDate": "2025-07-03",
                             "amount": 21706,
                             "status": "paid",
-                            "paidDate": "2023-07-07",
+                            "paidDate": "2025-07-07",
                             "reference": "PAY-815053"
                   }
         ],
@@ -836,9 +836,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-vanguard",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-12-25",
-        expiryDate: "2024-12-25",
-        issueDate: "2023-12-25",
+        inceptionDate: "2025-12-25",
+        expiryDate: "2026-12-25",
+        issueDate: "2025-12-25",
         sumInsured: 690585,
         premiumAmount: 25552,
         commissionRate: 13,
@@ -850,8 +850,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Commercial Vehicle — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-12-25T10:00:00Z",
-        updatedAt: "2023-12-25T10:00:00Z",
+        createdAt: "2025-12-25T10:00:00Z",
+        updatedAt: "2025-12-25T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "NR 5649-22",
                 "chassisNumber": "9MPBBV6LMFKU5K3YF",
@@ -873,10 +873,10 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "VAN/HQ/MOT/23/00008/END/1",
                             "type": "extension",
                             "status": "approved",
-                            "effectiveDate": "2024-05-26",
+                            "effectiveDate": "2026-05-26",
                             "description": "Extend to include windscreen",
                             "premiumAdjustment": 635,
-                            "createdAt": "2024-04-09T10:00:00Z"
+                            "createdAt": "2026-04-09T10:00:00Z"
                   }
         ],
         documents: [
@@ -884,46 +884,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-8-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-01-03T10:00:00Z"
+                            "uploadedAt": "2026-01-03T10:00:00Z"
                   },
                   {
                             "id": "doc-8-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-12-31T10:00:00Z"
+                            "uploadedAt": "2025-12-31T10:00:00Z"
                   },
                   {
                             "id": "doc-8-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-12-27T10:00:00Z"
+                            "uploadedAt": "2025-12-27T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-12-25",
+                            "date": "2025-12-25",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-12-25",
+                            "date": "2025-12-25",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-12-27",
+                            "date": "2025-12-27",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-12-30",
+                            "date": "2025-12-30",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -932,10 +932,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-8-1",
-                            "dueDate": "2023-12-25",
+                            "dueDate": "2025-12-25",
                             "amount": 25552,
                             "status": "paid",
-                            "paidDate": "2023-12-25",
+                            "paidDate": "2025-12-25",
                             "reference": "PAY-936893"
                   }
         ],
@@ -1801,9 +1801,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-hollard",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2024-07-28",
+        inceptionDate: "2026-07-28",
         expiryDate: "2025-07-28",
-        issueDate: "2024-07-28",
+        issueDate: "2026-07-28",
         sumInsured: 66996,
         premiumAmount: 383,
         commissionRate: 17,
@@ -1815,8 +1815,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Only — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-07-28T10:00:00Z",
-        updatedAt: "2024-07-28T10:00:00Z",
+        createdAt: "2026-07-28T10:00:00Z",
+        updatedAt: "2026-07-28T10:00:00Z",
         outstandingBalance: 149,
         vehicleDetails: {
                 "registrationNumber": "GN 9273-23",
@@ -1839,17 +1839,17 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "HOL/HQ/MOT/24/00016/END/1",
                             "type": "alteration",
                             "status": "approved",
-                            "effectiveDate": "2024-12-05",
+                            "effectiveDate": "2026-12-05",
                             "description": "Change coverage area",
                             "premiumAdjustment": 51,
-                            "createdAt": "2024-10-01T10:00:00Z"
+                            "createdAt": "2026-10-01T10:00:00Z"
                   },
                   {
                             "id": "end-16-2",
                             "endorsementNumber": "HOL/HQ/MOT/24/00016/END/2",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2024-11-10",
+                            "effectiveDate": "2026-11-10",
                             "description": "Pro-rata cancellation",
                             "premiumAdjustment": -383,
                             "createdAt": "2025-02-03T10:00:00Z"
@@ -1860,58 +1860,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-16-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-08-04T10:00:00Z"
+                            "uploadedAt": "2026-08-04T10:00:00Z"
                   },
                   {
                             "id": "doc-16-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-08-02T10:00:00Z"
+                            "uploadedAt": "2026-08-02T10:00:00Z"
                   },
                   {
                             "id": "doc-16-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-08-07T10:00:00Z"
+                            "uploadedAt": "2026-08-07T10:00:00Z"
                   },
                   {
                             "id": "doc-16-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-08-06T10:00:00Z"
+                            "uploadedAt": "2026-08-06T10:00:00Z"
                   },
                   {
                             "id": "doc-16-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-08-07T10:00:00Z"
+                            "uploadedAt": "2026-08-07T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-07-28",
+                            "date": "2026-07-28",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-07-28",
+                            "date": "2026-07-28",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-07-30",
+                            "date": "2026-07-30",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-08-03",
+                            "date": "2026-08-03",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -1920,10 +1920,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-16-1",
-                            "dueDate": "2024-07-28",
+                            "dueDate": "2026-07-28",
                             "amount": 383,
                             "status": "paid",
-                            "paidDate": "2024-07-28",
+                            "paidDate": "2026-07-28",
                             "reference": "PAY-119278"
                   }
         ],
@@ -2179,9 +2179,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-life",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-02-02",
+        inceptionDate: "2026-02-02",
         expiryDate: "2025-02-02",
-        issueDate: "2024-02-02",
+        issueDate: "2026-02-02",
         sumInsured: 442226,
         premiumAmount: 424,
         commissionRate: 14,
@@ -2193,8 +2193,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Only — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-02T10:00:00Z",
-        updatedAt: "2024-02-02T10:00:00Z",
+        createdAt: "2026-02-02T10:00:00Z",
+        updatedAt: "2026-02-02T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "GN 2042-25",
                 "chassisNumber": "D6PHU3XA7930TZLVP",
@@ -2215,59 +2215,59 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-19-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-02-09T10:00:00Z"
+                            "uploadedAt": "2026-02-09T10:00:00Z"
                   },
                   {
                             "id": "doc-19-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-02-08T10:00:00Z"
+                            "uploadedAt": "2026-02-08T10:00:00Z"
                   },
                   {
                             "id": "doc-19-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-02-05T10:00:00Z"
+                            "uploadedAt": "2026-02-05T10:00:00Z"
                   },
                   {
                             "id": "doc-19-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-02-15T10:00:00Z"
+                            "uploadedAt": "2026-02-15T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-02",
+                            "date": "2026-02-02",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-02",
+                            "date": "2026-02-02",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-06",
+                            "date": "2026-02-06",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-09",
+                            "date": "2026-02-09",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-03-07",
+                            "date": "2026-03-07",
                             "event": "Policy Cancelled",
                             "description": "Policy cancelled as per request",
                             "performedBy": "Admin"
@@ -2276,38 +2276,38 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-19-1",
-                            "dueDate": "2024-02-02",
+                            "dueDate": "2026-02-02",
                             "amount": 106,
                             "status": "paid",
-                            "paidDate": "2024-02-03",
+                            "paidDate": "2026-02-03",
                             "reference": "PAY-342395"
                   },
                   {
                             "id": "inst-19-2",
-                            "dueDate": "2024-03-02",
+                            "dueDate": "2026-03-02",
                             "amount": 106,
                             "status": "paid",
-                            "paidDate": "2024-03-07",
+                            "paidDate": "2026-03-07",
                             "reference": "PAY-353238"
                   },
                   {
                             "id": "inst-19-3",
-                            "dueDate": "2024-04-02",
+                            "dueDate": "2026-04-02",
                             "amount": 106,
                             "status": "paid",
-                            "paidDate": "2024-04-05",
+                            "paidDate": "2026-04-05",
                             "reference": "PAY-435021"
                   },
                   {
                             "id": "inst-19-4",
-                            "dueDate": "2024-05-02",
+                            "dueDate": "2026-05-02",
                             "amount": 106,
                             "status": "paid",
-                            "paidDate": "2024-05-05",
+                            "paidDate": "2026-05-05",
                             "reference": "PAY-881797"
                   }
         ],
-        cancellationDate: "2024-06-10",
+        cancellationDate: "2026-06-10",
         cancellationReason: "client_request",
         cancellationNotes: "Premium payment not received after multiple reminders",
     },
@@ -2801,9 +2801,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-hollard",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-12-06",
+        inceptionDate: "2026-12-06",
         expiryDate: "2025-12-06",
-        issueDate: "2024-12-06",
+        issueDate: "2026-12-06",
         sumInsured: 559294,
         premiumAmount: 20135,
         commissionRate: 18,
@@ -2815,8 +2815,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-12-06T10:00:00Z",
-        updatedAt: "2024-12-06T10:00:00Z",
+        createdAt: "2026-12-06T10:00:00Z",
+        updatedAt: "2026-12-06T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "GT 9855-23",
                 "chassisNumber": "12L1ABRC7J5AX844A",
@@ -2837,58 +2837,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-24-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-12-14T10:00:00Z"
+                            "uploadedAt": "2026-12-14T10:00:00Z"
                   },
                   {
                             "id": "doc-24-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-12-18T10:00:00Z"
+                            "uploadedAt": "2026-12-18T10:00:00Z"
                   },
                   {
                             "id": "doc-24-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-12-18T10:00:00Z"
+                            "uploadedAt": "2026-12-18T10:00:00Z"
                   },
                   {
                             "id": "doc-24-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-12-19T10:00:00Z"
+                            "uploadedAt": "2026-12-19T10:00:00Z"
                   },
                   {
                             "id": "doc-24-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-12-15T10:00:00Z"
+                            "uploadedAt": "2026-12-15T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-12-06",
+                            "date": "2026-12-06",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-12-06",
+                            "date": "2026-12-06",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-12-10",
+                            "date": "2026-12-10",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-12-09",
+                            "date": "2026-12-09",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -2911,9 +2911,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-donewell",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-07-17",
+        inceptionDate: "2026-07-17",
         expiryDate: "2025-07-17",
-        issueDate: "2024-07-17",
+        issueDate: "2026-07-17",
         sumInsured: 576127,
         premiumAmount: 23045,
         commissionRate: 16,
@@ -2925,8 +2925,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-07-17T10:00:00Z",
-        updatedAt: "2024-07-17T10:00:00Z",
+        createdAt: "2026-07-17T10:00:00Z",
+        updatedAt: "2026-07-17T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "NR 3606-24",
                 "chassisNumber": "HMYDHTZ2Y737BAYJJ",
@@ -2947,40 +2947,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-25-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-07-23T10:00:00Z"
+                            "uploadedAt": "2026-07-23T10:00:00Z"
                   },
                   {
                             "id": "doc-25-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-07-23T10:00:00Z"
+                            "uploadedAt": "2026-07-23T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-07-17",
+                            "date": "2026-07-17",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-07-17",
+                            "date": "2026-07-17",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-07-22",
+                            "date": "2026-07-22",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-07-22",
+                            "date": "2026-07-22",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -2989,10 +2989,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-25-1",
-                            "dueDate": "2024-07-17",
+                            "dueDate": "2026-07-17",
                             "amount": 23045,
                             "status": "paid",
-                            "paidDate": "2024-07-18",
+                            "paidDate": "2026-07-18",
                             "reference": "PAY-721410"
                   }
         ],
@@ -3144,9 +3144,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-imperial",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-09-28",
-        expiryDate: "2024-09-28",
-        issueDate: "2023-09-28",
+        inceptionDate: "2025-09-28",
+        expiryDate: "2026-09-28",
+        issueDate: "2025-09-28",
         sumInsured: 70736,
         premiumAmount: 2617,
         commissionRate: 15,
@@ -3158,8 +3158,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-09-28T10:00:00Z",
-        updatedAt: "2023-09-28T10:00:00Z",
+        createdAt: "2025-09-28T10:00:00Z",
+        updatedAt: "2025-09-28T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "BA 3835-24",
                 "chassisNumber": "ZMJP5ZHTCEHG8DSG3",
@@ -3180,58 +3180,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-27-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-10-05T10:00:00Z"
+                            "uploadedAt": "2025-10-05T10:00:00Z"
                   },
                   {
                             "id": "doc-27-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-10-08T10:00:00Z"
+                            "uploadedAt": "2025-10-08T10:00:00Z"
                   },
                   {
                             "id": "doc-27-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-09-30T10:00:00Z"
+                            "uploadedAt": "2025-09-30T10:00:00Z"
                   },
                   {
                             "id": "doc-27-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-10-08T10:00:00Z"
+                            "uploadedAt": "2025-10-08T10:00:00Z"
                   },
                   {
                             "id": "doc-27-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-10-06T10:00:00Z"
+                            "uploadedAt": "2025-10-06T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-09-28",
+                            "date": "2025-09-28",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-09-28",
+                            "date": "2025-09-28",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-10-02",
+                            "date": "2025-10-02",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-10-03",
+                            "date": "2025-10-03",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -3254,9 +3254,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-star",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-12-26",
+        inceptionDate: "2026-12-26",
         expiryDate: "2025-12-26",
-        issueDate: "2024-12-26",
+        issueDate: "2026-12-26",
         sumInsured: 647571,
         premiumAmount: 22017,
         commissionRate: 15,
@@ -3268,8 +3268,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Commercial Vehicle — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-12-26T10:00:00Z",
-        updatedAt: "2024-12-26T10:00:00Z",
+        createdAt: "2026-12-26T10:00:00Z",
+        updatedAt: "2026-12-26T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "GT 3349-24",
                 "chassisNumber": "G6AYM163502E4F3XF",
@@ -3296,27 +3296,27 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-28-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-12-28T10:00:00Z"
+                            "uploadedAt": "2026-12-28T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-12-26",
+                            "date": "2026-12-26",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-12-26",
+                            "date": "2026-12-26",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-12-30",
+                            "date": "2026-12-30",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
@@ -3332,10 +3332,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-28-1",
-                            "dueDate": "2024-12-26",
+                            "dueDate": "2026-12-26",
                             "amount": 5504,
                             "status": "paid",
-                            "paidDate": "2024-12-28",
+                            "paidDate": "2026-12-28",
                             "reference": "PAY-167576"
                   },
                   {
@@ -3590,9 +3590,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-02-14",
+        inceptionDate: "2026-02-14",
         expiryDate: "2025-02-14",
-        issueDate: "2024-02-14",
+        issueDate: "2026-02-14",
         sumInsured: 43025,
         premiumAmount: 2065,
         commissionRate: 16,
@@ -3604,8 +3604,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Commercial Vehicle — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-14T10:00:00Z",
-        updatedAt: "2024-02-14T10:00:00Z",
+        createdAt: "2026-02-14T10:00:00Z",
+        updatedAt: "2026-02-14T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "AS 1709-24",
                 "chassisNumber": "G4S5PHGKXRCR0MV4V",
@@ -3627,10 +3627,10 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "SIC/HQ/MOT/24/00031/END/1",
                             "type": "alteration",
                             "status": "approved",
-                            "effectiveDate": "2024-04-26",
+                            "effectiveDate": "2026-04-26",
                             "description": "Amend beneficiary details",
                             "premiumAdjustment": 700,
-                            "createdAt": "2024-03-25T10:00:00Z"
+                            "createdAt": "2026-03-25T10:00:00Z"
                   }
         ],
         documents: [
@@ -3638,46 +3638,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-31-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-02-22T10:00:00Z"
+                            "uploadedAt": "2026-02-22T10:00:00Z"
                   },
                   {
                             "id": "doc-31-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-02-14T10:00:00Z"
+                            "uploadedAt": "2026-02-14T10:00:00Z"
                   },
                   {
                             "id": "doc-31-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-02-19T10:00:00Z"
+                            "uploadedAt": "2026-02-19T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-14",
+                            "date": "2026-02-14",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-14",
+                            "date": "2026-02-14",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-19",
+                            "date": "2026-02-19",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-19",
+                            "date": "2026-02-19",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -3827,9 +3827,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-life",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-02-18",
-        expiryDate: "2024-02-18",
-        issueDate: "2023-02-18",
+        inceptionDate: "2025-02-18",
+        expiryDate: "2026-02-18",
+        issueDate: "2025-02-18",
         sumInsured: 22859,
         premiumAmount: 1006,
         commissionRate: 14,
@@ -3841,8 +3841,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Commercial Vehicle — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-02-18T10:00:00Z",
-        updatedAt: "2023-02-18T10:00:00Z",
+        createdAt: "2025-02-18T10:00:00Z",
+        updatedAt: "2025-02-18T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "UW 5723-22",
                 "chassisNumber": "J2P5WZPF44ZYKXDGX",
@@ -3863,52 +3863,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-33-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-02-28T10:00:00Z"
+                            "uploadedAt": "2025-02-28T10:00:00Z"
                   },
                   {
                             "id": "doc-33-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-03-02T10:00:00Z"
+                            "uploadedAt": "2025-03-02T10:00:00Z"
                   },
                   {
                             "id": "doc-33-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-03-04T10:00:00Z"
+                            "uploadedAt": "2025-03-04T10:00:00Z"
                   },
                   {
                             "id": "doc-33-4",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-02-24T10:00:00Z"
+                            "uploadedAt": "2025-02-24T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-02-18",
+                            "date": "2025-02-18",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-02-18",
+                            "date": "2025-02-18",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-02-21",
+                            "date": "2025-02-21",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-02-22",
+                            "date": "2025-02-22",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -3917,10 +3917,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-33-1",
-                            "dueDate": "2023-02-18",
+                            "dueDate": "2025-02-18",
                             "amount": 1006,
                             "status": "paid",
-                            "paidDate": "2023-02-21",
+                            "paidDate": "2025-02-21",
                             "reference": "PAY-551527"
                   }
         ],
@@ -4111,9 +4111,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-04-07",
+        inceptionDate: "2026-04-07",
         expiryDate: "2025-04-07",
-        issueDate: "2024-04-07",
+        issueDate: "2026-04-07",
         sumInsured: 82150,
         premiumAmount: 340,
         commissionRate: 15,
@@ -4125,8 +4125,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Only — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-04-07T10:00:00Z",
-        updatedAt: "2024-04-07T10:00:00Z",
+        createdAt: "2026-04-07T10:00:00Z",
+        updatedAt: "2026-04-07T10:00:00Z",
         outstandingBalance: 340,
         vehicleDetails: {
                 "registrationNumber": "UE 9391-22",
@@ -4148,66 +4148,66 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-35-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-04-21T10:00:00Z"
+                            "uploadedAt": "2026-04-21T10:00:00Z"
                   },
                   {
                             "id": "doc-35-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-04-09T10:00:00Z"
+                            "uploadedAt": "2026-04-09T10:00:00Z"
                   },
                   {
                             "id": "doc-35-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-04-21T10:00:00Z"
+                            "uploadedAt": "2026-04-21T10:00:00Z"
                   },
                   {
                             "id": "doc-35-4",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-04-08T10:00:00Z"
+                            "uploadedAt": "2026-04-08T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-04-07",
+                            "date": "2026-04-07",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-04-07",
+                            "date": "2026-04-07",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-04-09",
+                            "date": "2026-04-09",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-04-11",
+                            "date": "2026-04-11",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-08-08",
+                            "date": "2026-08-08",
                             "event": "Payment Overdue",
                             "description": "Premium payment past due date",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-6",
-                            "date": "2024-11-17",
+                            "date": "2026-11-17",
                             "event": "Policy Lapsed",
                             "description": "Policy lapsed due to non-payment",
                             "performedBy": "System"
@@ -4216,13 +4216,13 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-35-1",
-                            "dueDate": "2024-04-07",
+                            "dueDate": "2026-04-07",
                             "amount": 170,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-35-2",
-                            "dueDate": "2024-10-07",
+                            "dueDate": "2026-10-07",
                             "amount": 170,
                             "status": "overdue"
                   }
@@ -4244,9 +4244,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2023-10-24",
-        expiryDate: "2024-10-24",
-        issueDate: "2023-10-24",
+        inceptionDate: "2025-10-24",
+        expiryDate: "2026-10-24",
+        issueDate: "2025-10-24",
         sumInsured: 299513,
         premiumAmount: 369,
         commissionRate: 13,
@@ -4258,8 +4258,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Only — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-10-24T10:00:00Z",
-        updatedAt: "2023-10-24T10:00:00Z",
+        createdAt: "2025-10-24T10:00:00Z",
+        updatedAt: "2025-10-24T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "CR 6261-24",
                 "chassisNumber": "6D4LAPDR84ZXS965K",
@@ -4280,52 +4280,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-36-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-10-31T10:00:00Z"
+                            "uploadedAt": "2025-10-31T10:00:00Z"
                   },
                   {
                             "id": "doc-36-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-11-03T10:00:00Z"
+                            "uploadedAt": "2025-11-03T10:00:00Z"
                   },
                   {
                             "id": "doc-36-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-10-30T10:00:00Z"
+                            "uploadedAt": "2025-10-30T10:00:00Z"
                   },
                   {
                             "id": "doc-36-4",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-10-28T10:00:00Z"
+                            "uploadedAt": "2025-10-28T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-10-24",
+                            "date": "2025-10-24",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-10-24",
+                            "date": "2025-10-24",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-10-27",
+                            "date": "2025-10-27",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-10-28",
+                            "date": "2025-10-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -4472,9 +4472,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-allianz",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-08-12",
+        inceptionDate: "2026-08-12",
         expiryDate: "2025-08-12",
-        issueDate: "2024-08-12",
+        issueDate: "2026-08-12",
         sumInsured: 725603,
         premiumAmount: 23219,
         commissionRate: 12,
@@ -4486,8 +4486,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Commercial Vehicle — Motor Vehicle",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-08-12T10:00:00Z",
-        updatedAt: "2024-08-12T10:00:00Z",
+        createdAt: "2026-08-12T10:00:00Z",
+        updatedAt: "2026-08-12T10:00:00Z",
         outstandingBalance: 23219,
         vehicleDetails: {
                 "registrationNumber": "GN 9003-20",
@@ -4509,65 +4509,65 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-38-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-08-21T10:00:00Z"
+                            "uploadedAt": "2026-08-21T10:00:00Z"
                   },
                   {
                             "id": "doc-38-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-08-14T10:00:00Z"
+                            "uploadedAt": "2026-08-14T10:00:00Z"
                   },
                   {
                             "id": "doc-38-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-08-23T10:00:00Z"
+                            "uploadedAt": "2026-08-23T10:00:00Z"
                   },
                   {
                             "id": "doc-38-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-08-19T10:00:00Z"
+                            "uploadedAt": "2026-08-19T10:00:00Z"
                   },
                   {
                             "id": "doc-38-5",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-08-24T10:00:00Z"
+                            "uploadedAt": "2026-08-24T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-08-12",
+                            "date": "2026-08-12",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-08-12",
+                            "date": "2026-08-12",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-08-13",
+                            "date": "2026-08-13",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-08-18",
+                            "date": "2026-08-18",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-11-25",
+                            "date": "2026-11-25",
                             "event": "Payment Overdue",
                             "description": "Premium payment past due date",
                             "performedBy": "System"
@@ -4583,25 +4583,25 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-38-1",
-                            "dueDate": "2024-08-12",
+                            "dueDate": "2026-08-12",
                             "amount": 5805,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-38-2",
-                            "dueDate": "2024-09-12",
+                            "dueDate": "2026-09-12",
                             "amount": 5805,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-38-3",
-                            "dueDate": "2024-10-12",
+                            "dueDate": "2026-10-12",
                             "amount": 5805,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-38-4",
-                            "dueDate": "2024-11-12",
+                            "dueDate": "2026-11-12",
                             "amount": 5805,
                             "status": "overdue"
                   }
@@ -4825,9 +4825,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-life",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-02-12",
+        inceptionDate: "2026-02-12",
         expiryDate: "2025-02-12",
-        issueDate: "2024-02-12",
+        issueDate: "2026-02-12",
         sumInsured: 58715,
         premiumAmount: 2701,
         commissionRate: 14,
@@ -4839,8 +4839,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-12T10:00:00Z",
-        updatedAt: "2024-02-12T10:00:00Z",
+        createdAt: "2026-02-12T10:00:00Z",
+        updatedAt: "2026-02-12T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "GR 5319-26",
                 "chassisNumber": "ZJZRHAULL2V14W3X0",
@@ -4861,58 +4861,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-41-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-02-17T10:00:00Z"
+                            "uploadedAt": "2026-02-17T10:00:00Z"
                   },
                   {
                             "id": "doc-41-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-02-22T10:00:00Z"
+                            "uploadedAt": "2026-02-22T10:00:00Z"
                   },
                   {
                             "id": "doc-41-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-02-23T10:00:00Z"
+                            "uploadedAt": "2026-02-23T10:00:00Z"
                   },
                   {
                             "id": "doc-41-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-02-21T10:00:00Z"
+                            "uploadedAt": "2026-02-21T10:00:00Z"
                   },
                   {
                             "id": "doc-41-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-02-15T10:00:00Z"
+                            "uploadedAt": "2026-02-15T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-12",
+                            "date": "2026-02-12",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-12",
+                            "date": "2026-02-12",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-14",
+                            "date": "2026-02-14",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-19",
+                            "date": "2026-02-19",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -4921,18 +4921,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-41-1",
-                            "dueDate": "2024-02-12",
+                            "dueDate": "2026-02-12",
                             "amount": 1351,
                             "status": "paid",
-                            "paidDate": "2024-02-17",
+                            "paidDate": "2026-02-17",
                             "reference": "PAY-118001"
                   },
                   {
                             "id": "inst-41-2",
-                            "dueDate": "2024-08-12",
+                            "dueDate": "2026-08-12",
                             "amount": 1351,
                             "status": "paid",
-                            "paidDate": "2024-08-14",
+                            "paidDate": "2026-08-14",
                             "reference": "PAY-875266"
                   }
         ],
@@ -4953,9 +4953,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-donewell",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-10-15",
+        inceptionDate: "2026-10-15",
         expiryDate: "2025-10-15",
-        issueDate: "2024-10-15",
+        issueDate: "2026-10-15",
         sumInsured: 369105,
         premiumAmount: 19932,
         commissionRate: 16,
@@ -4967,8 +4967,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Third Party Fire & Theft — Motor Vehicle",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-10-15T10:00:00Z",
-        updatedAt: "2024-10-15T10:00:00Z",
+        createdAt: "2026-10-15T10:00:00Z",
+        updatedAt: "2026-10-15T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "BA 2867-22",
                 "chassisNumber": "2AU6A8VCEYGJS44A6",
@@ -4989,59 +4989,59 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-42-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-10-28T10:00:00Z"
+                            "uploadedAt": "2026-10-28T10:00:00Z"
                   },
                   {
                             "id": "doc-42-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-10-23T10:00:00Z"
+                            "uploadedAt": "2026-10-23T10:00:00Z"
                   },
                   {
                             "id": "doc-42-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-10-20T10:00:00Z"
+                            "uploadedAt": "2026-10-20T10:00:00Z"
                   },
                   {
                             "id": "doc-42-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-10-24T10:00:00Z"
+                            "uploadedAt": "2026-10-24T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-10-15",
+                            "date": "2026-10-15",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-10-15",
+                            "date": "2026-10-15",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-10-16",
+                            "date": "2026-10-16",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-10-22",
+                            "date": "2026-10-22",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-12-04",
+                            "date": "2026-12-04",
                             "event": "Policy Cancelled",
                             "description": "Policy cancelled as per request",
                             "performedBy": "Admin"
@@ -5959,9 +5959,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-loyalty",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-10-09",
+        inceptionDate: "2026-10-09",
         expiryDate: "2025-10-09",
-        issueDate: "2024-10-09",
+        issueDate: "2026-10-09",
         sumInsured: 385429,
         premiumAmount: 20813,
         commissionRate: 17,
@@ -5973,8 +5973,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Commercial Vehicle — Motor Vehicle",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-10-09T10:00:00Z",
-        updatedAt: "2024-10-09T10:00:00Z",
+        createdAt: "2026-10-09T10:00:00Z",
+        updatedAt: "2026-10-09T10:00:00Z",
         vehicleDetails: {
                 "registrationNumber": "GW 9327-21",
                 "chassisNumber": "V79VHCDGD3KK829ZX",
@@ -5995,52 +5995,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-50-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-10-20T10:00:00Z"
+                            "uploadedAt": "2026-10-20T10:00:00Z"
                   },
                   {
                             "id": "doc-50-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-10-16T10:00:00Z"
+                            "uploadedAt": "2026-10-16T10:00:00Z"
                   },
                   {
                             "id": "doc-50-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-10-17T10:00:00Z"
+                            "uploadedAt": "2026-10-17T10:00:00Z"
                   },
                   {
                             "id": "doc-50-4",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-10-22T10:00:00Z"
+                            "uploadedAt": "2026-10-22T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-10-09",
+                            "date": "2026-10-09",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-10-09",
+                            "date": "2026-10-09",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-10-13",
+                            "date": "2026-10-13",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-10-14",
+                            "date": "2026-10-14",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -6049,10 +6049,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-50-1",
-                            "dueDate": "2024-10-09",
+                            "dueDate": "2026-10-09",
                             "amount": 10407,
                             "status": "paid",
-                            "paidDate": "2024-10-13",
+                            "paidDate": "2026-10-13",
                             "reference": "PAY-587008"
                   },
                   {
@@ -6872,9 +6872,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-02-27",
-        expiryDate: "2024-02-27",
-        issueDate: "2023-02-27",
+        inceptionDate: "2025-02-27",
+        expiryDate: "2026-02-27",
+        issueDate: "2025-02-27",
         sumInsured: 1466742,
         premiumAmount: 2933,
         commissionRate: 17,
@@ -6886,8 +6886,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Fire & Allied Perils — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-02-27T10:00:00Z",
-        updatedAt: "2023-02-27T10:00:00Z",
+        createdAt: "2025-02-27T10:00:00Z",
+        updatedAt: "2025-02-27T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "43 East Legon, Accra",
                 "propertyType": "commercial",
@@ -6901,46 +6901,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-57-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-03-06T10:00:00Z"
+                            "uploadedAt": "2025-03-06T10:00:00Z"
                   },
                   {
                             "id": "doc-57-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-03-10T10:00:00Z"
+                            "uploadedAt": "2025-03-10T10:00:00Z"
                   },
                   {
                             "id": "doc-57-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-03-01T10:00:00Z"
+                            "uploadedAt": "2025-03-01T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-02-27",
+                            "date": "2025-02-27",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-02-27",
+                            "date": "2025-02-27",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-03-02",
+                            "date": "2025-03-02",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-03-04",
+                            "date": "2025-03-04",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -6949,34 +6949,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-57-1",
-                            "dueDate": "2023-02-27",
+                            "dueDate": "2025-02-27",
                             "amount": 733,
                             "status": "paid",
-                            "paidDate": "2023-03-02",
+                            "paidDate": "2025-03-02",
                             "reference": "PAY-796648"
                   },
                   {
                             "id": "inst-57-2",
-                            "dueDate": "2023-05-27",
+                            "dueDate": "2025-05-27",
                             "amount": 733,
                             "status": "paid",
-                            "paidDate": "2023-05-29",
+                            "paidDate": "2025-05-29",
                             "reference": "PAY-857166"
                   },
                   {
                             "id": "inst-57-3",
-                            "dueDate": "2023-08-27",
+                            "dueDate": "2025-08-27",
                             "amount": 733,
                             "status": "paid",
-                            "paidDate": "2023-08-31",
+                            "paidDate": "2025-08-31",
                             "reference": "PAY-403496"
                   },
                   {
                             "id": "inst-57-4",
-                            "dueDate": "2023-11-27",
+                            "dueDate": "2025-11-27",
                             "amount": 733,
                             "status": "paid",
-                            "paidDate": "2023-12-02",
+                            "paidDate": "2025-12-02",
                             "reference": "PAY-227313"
                   }
         ],
@@ -7107,9 +7107,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-imperial",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-10-13",
+        inceptionDate: "2026-10-13",
         expiryDate: "2025-10-13",
-        issueDate: "2024-10-13",
+        issueDate: "2026-10-13",
         sumInsured: 4467310,
         premiumAmount: 4914,
         commissionRate: 18,
@@ -7121,8 +7121,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Homeowners Comprehensive — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-10-13T10:00:00Z",
-        updatedAt: "2024-10-13T10:00:00Z",
+        createdAt: "2026-10-13T10:00:00Z",
+        updatedAt: "2026-10-13T10:00:00Z",
         outstandingBalance: 1474,
         propertyDetails: {
                 "propertyAddress": "186 Cantonments Rd, Tema",
@@ -7138,7 +7138,7 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "IMP/HQ/FIR/24/00059/END/1",
                             "type": "addition",
                             "status": "pending",
-                            "effectiveDate": "2024-11-15",
+                            "effectiveDate": "2026-11-15",
                             "description": "Include additional peril",
                             "premiumAdjustment": 60,
                             "createdAt": "2025-03-13T10:00:00Z"
@@ -7161,7 +7161,7 @@ export const mockPolicies: Policy[] = [
                             "effectiveDate": "2025-04-23",
                             "description": "Delete optional rider",
                             "premiumAdjustment": -175,
-                            "createdAt": "2024-12-13T10:00:00Z"
+                            "createdAt": "2026-12-13T10:00:00Z"
                   }
         ],
         documents: [
@@ -7169,40 +7169,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-59-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-10-22T10:00:00Z"
+                            "uploadedAt": "2026-10-22T10:00:00Z"
                   },
                   {
                             "id": "doc-59-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-10-26T10:00:00Z"
+                            "uploadedAt": "2026-10-26T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-10-13",
+                            "date": "2026-10-13",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-10-13",
+                            "date": "2026-10-13",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-10-17",
+                            "date": "2026-10-17",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-10-21",
+                            "date": "2026-10-21",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -7225,9 +7225,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-life",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2024-07-21",
+        inceptionDate: "2026-07-21",
         expiryDate: "2025-07-21",
-        issueDate: "2024-07-21",
+        issueDate: "2026-07-21",
         sumInsured: 4538450,
         premiumAmount: 5900,
         commissionRate: 18,
@@ -7239,8 +7239,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Industrial All Risks — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-07-21T10:00:00Z",
-        updatedAt: "2024-07-21T10:00:00Z",
+        createdAt: "2026-07-21T10:00:00Z",
+        updatedAt: "2026-07-21T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "73 Castle Rd, Takoradi",
                 "propertyType": "warehouse",
@@ -7254,65 +7254,65 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-60-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-07-31T10:00:00Z"
+                            "uploadedAt": "2026-07-31T10:00:00Z"
                   },
                   {
                             "id": "doc-60-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-08-01T10:00:00Z"
+                            "uploadedAt": "2026-08-01T10:00:00Z"
                   },
                   {
                             "id": "doc-60-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-07-22T10:00:00Z"
+                            "uploadedAt": "2026-07-22T10:00:00Z"
                   },
                   {
                             "id": "doc-60-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-08-01T10:00:00Z"
+                            "uploadedAt": "2026-08-01T10:00:00Z"
                   },
                   {
                             "id": "doc-60-5",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-07-30T10:00:00Z"
+                            "uploadedAt": "2026-07-30T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-07-21",
+                            "date": "2026-07-21",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-07-21",
+                            "date": "2026-07-21",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-07-25",
+                            "date": "2026-07-25",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-07-28",
+                            "date": "2026-07-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-10-08",
+                            "date": "2026-10-08",
                             "event": "Policy Cancelled",
                             "description": "Policy cancelled as per request",
                             "performedBy": "Admin"
@@ -7321,10 +7321,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-60-1",
-                            "dueDate": "2024-07-21",
+                            "dueDate": "2026-07-21",
                             "amount": 2950,
                             "status": "paid",
-                            "paidDate": "2024-07-25",
+                            "paidDate": "2026-07-25",
                             "reference": "PAY-530160"
                   },
                   {
@@ -7476,9 +7476,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-donewell",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-09-04",
-        expiryDate: "2024-09-04",
-        issueDate: "2023-09-04",
+        inceptionDate: "2025-09-04",
+        expiryDate: "2026-09-04",
+        issueDate: "2025-09-04",
         sumInsured: 7777580,
         premiumAmount: 9333,
         commissionRate: 18,
@@ -7490,8 +7490,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Fire & Allied Perils — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-09-04T10:00:00Z",
-        updatedAt: "2023-09-04T10:00:00Z",
+        createdAt: "2025-09-04T10:00:00Z",
+        updatedAt: "2025-09-04T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "170 East Legon, Accra",
                 "propertyType": "warehouse",
@@ -7506,20 +7506,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "DON/HQ/FIR/23/00062/END/1",
                             "type": "deletion",
                             "status": "approved",
-                            "effectiveDate": "2023-12-03",
+                            "effectiveDate": "2025-12-03",
                             "description": "Remove named driver",
                             "premiumAdjustment": -126,
-                            "createdAt": "2024-02-19T10:00:00Z"
+                            "createdAt": "2026-02-19T10:00:00Z"
                   },
                   {
                             "id": "end-62-2",
                             "endorsementNumber": "DON/HQ/FIR/23/00062/END/2",
                             "type": "extension",
                             "status": "pending",
-                            "effectiveDate": "2023-12-05",
+                            "effectiveDate": "2025-12-05",
                             "description": "Include breakdown assist",
                             "premiumAdjustment": 525,
-                            "createdAt": "2024-02-04T10:00:00Z"
+                            "createdAt": "2026-02-04T10:00:00Z"
                   }
         ],
         documents: [
@@ -7527,46 +7527,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-62-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-09-08T10:00:00Z"
+                            "uploadedAt": "2025-09-08T10:00:00Z"
                   },
                   {
                             "id": "doc-62-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-09-08T10:00:00Z"
+                            "uploadedAt": "2025-09-08T10:00:00Z"
                   },
                   {
                             "id": "doc-62-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-09-08T10:00:00Z"
+                            "uploadedAt": "2025-09-08T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-09-04",
+                            "date": "2025-09-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-09-04",
+                            "date": "2025-09-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-09-07",
+                            "date": "2025-09-07",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-09-12",
+                            "date": "2025-09-12",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -7575,10 +7575,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-62-1",
-                            "dueDate": "2023-09-04",
+                            "dueDate": "2025-09-04",
                             "amount": 9333,
                             "status": "paid",
-                            "paidDate": "2023-09-07",
+                            "paidDate": "2025-09-07",
                             "reference": "PAY-100183"
                   }
         ],
@@ -7599,9 +7599,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-loyalty",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-01-03",
+        inceptionDate: "2026-01-03",
         expiryDate: "2025-01-03",
-        issueDate: "2024-01-03",
+        issueDate: "2026-01-03",
         sumInsured: 1131540,
         premiumAmount: 1018,
         commissionRate: 17,
@@ -7613,8 +7613,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Business Interruption — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-01-03T10:00:00Z",
-        updatedAt: "2024-01-03T10:00:00Z",
+        createdAt: "2026-01-03T10:00:00Z",
+        updatedAt: "2026-01-03T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "71 East Legon, Accra",
                 "propertyType": "commercial",
@@ -7629,20 +7629,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "LOY/HQ/FIR/24/00063/END/1",
                             "type": "addition",
                             "status": "approved",
-                            "effectiveDate": "2024-05-17",
+                            "effectiveDate": "2026-05-17",
                             "description": "Add additional driver",
                             "premiumAdjustment": 371,
-                            "createdAt": "2024-05-12T10:00:00Z"
+                            "createdAt": "2026-05-12T10:00:00Z"
                   },
                   {
                             "id": "end-63-2",
                             "endorsementNumber": "LOY/HQ/FIR/24/00063/END/2",
                             "type": "addition",
                             "status": "pending",
-                            "effectiveDate": "2024-03-13",
+                            "effectiveDate": "2026-03-13",
                             "description": "Include additional peril",
                             "premiumAdjustment": 684,
-                            "createdAt": "2024-03-11T10:00:00Z"
+                            "createdAt": "2026-03-11T10:00:00Z"
                   }
         ],
         documents: [
@@ -7650,52 +7650,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-63-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-01-06T10:00:00Z"
+                            "uploadedAt": "2026-01-06T10:00:00Z"
                   },
                   {
                             "id": "doc-63-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-01-09T10:00:00Z"
+                            "uploadedAt": "2026-01-09T10:00:00Z"
                   },
                   {
                             "id": "doc-63-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-01-06T10:00:00Z"
+                            "uploadedAt": "2026-01-06T10:00:00Z"
                   },
                   {
                             "id": "doc-63-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-01-08T10:00:00Z"
+                            "uploadedAt": "2026-01-08T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-01-03",
+                            "date": "2026-01-03",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-01-03",
+                            "date": "2026-01-03",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-01-07",
+                            "date": "2026-01-07",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-01-11",
+                            "date": "2026-01-11",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -7704,18 +7704,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-63-1",
-                            "dueDate": "2024-01-03",
+                            "dueDate": "2026-01-03",
                             "amount": 509,
                             "status": "paid",
-                            "paidDate": "2024-01-08",
+                            "paidDate": "2026-01-08",
                             "reference": "PAY-847842"
                   },
                   {
                             "id": "inst-63-2",
-                            "dueDate": "2024-07-03",
+                            "dueDate": "2026-07-03",
                             "amount": 509,
                             "status": "paid",
-                            "paidDate": "2024-07-07",
+                            "paidDate": "2026-07-07",
                             "reference": "PAY-785903"
                   }
         ],
@@ -7875,9 +7875,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-prime",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-10-19",
+        inceptionDate: "2026-10-19",
         expiryDate: "2025-10-19",
-        issueDate: "2024-10-19",
+        issueDate: "2026-10-19",
         sumInsured: 5345611,
         premiumAmount: 8018,
         commissionRate: 19,
@@ -7889,8 +7889,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Homeowners Comprehensive — Fire & Property",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-10-19T10:00:00Z",
-        updatedAt: "2024-10-19T10:00:00Z",
+        createdAt: "2026-10-19T10:00:00Z",
+        updatedAt: "2026-10-19T10:00:00Z",
         outstandingBalance: 3528,
         propertyDetails: {
                 "propertyAddress": "188 Oxford Street, Takoradi",
@@ -7905,40 +7905,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-65-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-10-30T10:00:00Z"
+                            "uploadedAt": "2026-10-30T10:00:00Z"
                   },
                   {
                             "id": "doc-65-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-11-01T10:00:00Z"
+                            "uploadedAt": "2026-11-01T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-10-19",
+                            "date": "2026-10-19",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-10-19",
+                            "date": "2026-10-19",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-10-21",
+                            "date": "2026-10-21",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-10-29",
+                            "date": "2026-10-29",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -8114,9 +8114,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-03-10",
+        inceptionDate: "2026-03-10",
         expiryDate: "2025-03-10",
-        issueDate: "2024-03-10",
+        issueDate: "2026-03-10",
         sumInsured: 5801910,
         premiumAmount: 8123,
         commissionRate: 16,
@@ -8128,8 +8128,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Business Interruption — Fire & Property",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-03-10T10:00:00Z",
-        updatedAt: "2024-03-10T10:00:00Z",
+        createdAt: "2026-03-10T10:00:00Z",
+        updatedAt: "2026-03-10T10:00:00Z",
         outstandingBalance: 8123,
         propertyDetails: {
                 "propertyAddress": "41 Liberation Rd, Tema",
@@ -8144,66 +8144,66 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-67-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-03-20T10:00:00Z"
+                            "uploadedAt": "2026-03-20T10:00:00Z"
                   },
                   {
                             "id": "doc-67-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-03-13T10:00:00Z"
+                            "uploadedAt": "2026-03-13T10:00:00Z"
                   },
                   {
                             "id": "doc-67-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-03-14T10:00:00Z"
+                            "uploadedAt": "2026-03-14T10:00:00Z"
                   },
                   {
                             "id": "doc-67-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-03-14T10:00:00Z"
+                            "uploadedAt": "2026-03-14T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-03-10",
+                            "date": "2026-03-10",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-03-10",
+                            "date": "2026-03-10",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-03-13",
+                            "date": "2026-03-13",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-03-19",
+                            "date": "2026-03-19",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-06-29",
+                            "date": "2026-06-29",
                             "event": "Payment Overdue",
                             "description": "Premium payment past due date",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-6",
-                            "date": "2024-12-11",
+                            "date": "2026-12-11",
                             "event": "Policy Lapsed",
                             "description": "Policy lapsed due to non-payment",
                             "performedBy": "System"
@@ -8212,25 +8212,25 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-67-1",
-                            "dueDate": "2024-03-10",
+                            "dueDate": "2026-03-10",
                             "amount": 2031,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-67-2",
-                            "dueDate": "2024-04-10",
+                            "dueDate": "2026-04-10",
                             "amount": 2031,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-67-3",
-                            "dueDate": "2024-05-10",
+                            "dueDate": "2026-05-10",
                             "amount": 2031,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-67-4",
-                            "dueDate": "2024-06-10",
+                            "dueDate": "2026-06-10",
                             "amount": 2031,
                             "status": "overdue"
                   }
@@ -8253,9 +8253,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-general",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-05-10",
-        expiryDate: "2024-05-10",
-        issueDate: "2023-05-10",
+        inceptionDate: "2025-05-10",
+        expiryDate: "2026-05-10",
+        issueDate: "2025-05-10",
         sumInsured: 8685834,
         premiumAmount: 6949,
         commissionRate: 17,
@@ -8267,8 +8267,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Industrial All Risks — Fire & Property",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2023-05-10T10:00:00Z",
-        updatedAt: "2023-05-10T10:00:00Z",
+        createdAt: "2025-05-10T10:00:00Z",
+        updatedAt: "2025-05-10T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "160 Tema Motorway, Takoradi",
                 "propertyType": "residential",
@@ -8282,58 +8282,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-68-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-05-22T10:00:00Z"
+                            "uploadedAt": "2025-05-22T10:00:00Z"
                   },
                   {
                             "id": "doc-68-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-05-19T10:00:00Z"
+                            "uploadedAt": "2025-05-19T10:00:00Z"
                   },
                   {
                             "id": "doc-68-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-05-12T10:00:00Z"
+                            "uploadedAt": "2025-05-12T10:00:00Z"
                   },
                   {
                             "id": "doc-68-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-05-12T10:00:00Z"
+                            "uploadedAt": "2025-05-12T10:00:00Z"
                   },
                   {
                             "id": "doc-68-5",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-05-20T10:00:00Z"
+                            "uploadedAt": "2025-05-20T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-05-10",
+                            "date": "2025-05-10",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-05-10",
+                            "date": "2025-05-10",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-05-12",
+                            "date": "2025-05-12",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-05-15",
+                            "date": "2025-05-15",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -8342,34 +8342,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-68-1",
-                            "dueDate": "2023-05-10",
+                            "dueDate": "2025-05-10",
                             "amount": 1737,
                             "status": "paid",
-                            "paidDate": "2023-05-14",
+                            "paidDate": "2025-05-14",
                             "reference": "PAY-330302"
                   },
                   {
                             "id": "inst-68-2",
-                            "dueDate": "2023-06-10",
+                            "dueDate": "2025-06-10",
                             "amount": 1737,
                             "status": "paid",
-                            "paidDate": "2023-06-11",
+                            "paidDate": "2025-06-11",
                             "reference": "PAY-785661"
                   },
                   {
                             "id": "inst-68-3",
-                            "dueDate": "2023-07-10",
+                            "dueDate": "2025-07-10",
                             "amount": 1737,
                             "status": "paid",
-                            "paidDate": "2023-07-14",
+                            "paidDate": "2025-07-14",
                             "reference": "PAY-232174"
                   },
                   {
                             "id": "inst-68-4",
-                            "dueDate": "2023-08-10",
+                            "dueDate": "2025-08-10",
                             "amount": 1737,
                             "status": "paid",
-                            "paidDate": "2023-08-11",
+                            "paidDate": "2025-08-11",
                             "reference": "PAY-762394"
                   }
         ],
@@ -8391,9 +8391,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-star",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2023-07-19",
-        expiryDate: "2024-07-19",
-        issueDate: "2023-07-19",
+        inceptionDate: "2025-07-19",
+        expiryDate: "2026-07-19",
+        issueDate: "2025-07-19",
         sumInsured: 7916564,
         premiumAmount: 13458,
         commissionRate: 19,
@@ -8405,8 +8405,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Homeowners Comprehensive — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-19T10:00:00Z",
-        updatedAt: "2023-07-19T10:00:00Z",
+        createdAt: "2025-07-19T10:00:00Z",
+        updatedAt: "2025-07-19T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "8 Spintex Rd, Tema",
                 "propertyType": "commercial",
@@ -8421,20 +8421,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "STA/HQ/FIR/23/00069/END/1",
                             "type": "deletion",
                             "status": "approved",
-                            "effectiveDate": "2023-11-03",
+                            "effectiveDate": "2025-11-03",
                             "description": "Remove vehicle from cover",
                             "premiumAdjustment": -422,
-                            "createdAt": "2024-01-24T10:00:00Z"
+                            "createdAt": "2026-01-24T10:00:00Z"
                   },
                   {
                             "id": "end-69-2",
                             "endorsementNumber": "STA/HQ/FIR/23/00069/END/2",
                             "type": "alteration",
                             "status": "approved",
-                            "effectiveDate": "2024-01-15",
+                            "effectiveDate": "2026-01-15",
                             "description": "Change coverage area",
                             "premiumAdjustment": 571,
-                            "createdAt": "2023-10-06T10:00:00Z"
+                            "createdAt": "2025-10-06T10:00:00Z"
                   }
         ],
         documents: [
@@ -8442,52 +8442,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-69-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-07-28T10:00:00Z"
+                            "uploadedAt": "2025-07-28T10:00:00Z"
                   },
                   {
                             "id": "doc-69-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-07-31T10:00:00Z"
+                            "uploadedAt": "2025-07-31T10:00:00Z"
                   },
                   {
                             "id": "doc-69-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-07-25T10:00:00Z"
+                            "uploadedAt": "2025-07-25T10:00:00Z"
                   },
                   {
                             "id": "doc-69-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-07-30T10:00:00Z"
+                            "uploadedAt": "2025-07-30T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-19",
+                            "date": "2025-07-19",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-19",
+                            "date": "2025-07-19",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-20",
+                            "date": "2025-07-20",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-07-28",
+                            "date": "2025-07-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -8496,18 +8496,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-69-1",
-                            "dueDate": "2023-07-19",
+                            "dueDate": "2025-07-19",
                             "amount": 6729,
                             "status": "paid",
-                            "paidDate": "2023-07-24",
+                            "paidDate": "2025-07-24",
                             "reference": "PAY-987160"
                   },
                   {
                             "id": "inst-69-2",
-                            "dueDate": "2024-01-19",
+                            "dueDate": "2026-01-19",
                             "amount": 6729,
                             "status": "paid",
-                            "paidDate": "2024-01-20",
+                            "paidDate": "2026-01-20",
                             "reference": "PAY-684968"
                   }
         ],
@@ -8743,9 +8743,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-star",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-12-27",
-        expiryDate: "2024-12-27",
-        issueDate: "2023-12-27",
+        inceptionDate: "2025-12-27",
+        expiryDate: "2026-12-27",
+        issueDate: "2025-12-27",
         sumInsured: 485788,
         premiumAmount: 972,
         commissionRate: 19,
@@ -8757,8 +8757,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Industrial All Risks — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-12-27T10:00:00Z",
-        updatedAt: "2023-12-27T10:00:00Z",
+        createdAt: "2025-12-27T10:00:00Z",
+        updatedAt: "2025-12-27T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "26 Madina Highway, Takoradi",
                 "propertyType": "commercial",
@@ -8773,10 +8773,10 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "STA/HQ/FIR/23/00072/END/1",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2024-05-28",
+                            "effectiveDate": "2026-05-28",
                             "description": "Short period cancellation",
                             "premiumAdjustment": -972,
-                            "createdAt": "2024-06-25T10:00:00Z"
+                            "createdAt": "2026-06-25T10:00:00Z"
                   }
         ],
         documents: [
@@ -8784,52 +8784,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-72-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-12-31T10:00:00Z"
+                            "uploadedAt": "2025-12-31T10:00:00Z"
                   },
                   {
                             "id": "doc-72-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-01-04T10:00:00Z"
+                            "uploadedAt": "2026-01-04T10:00:00Z"
                   },
                   {
                             "id": "doc-72-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-12-27T10:00:00Z"
+                            "uploadedAt": "2025-12-27T10:00:00Z"
                   },
                   {
                             "id": "doc-72-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-12-30T10:00:00Z"
+                            "uploadedAt": "2025-12-30T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-12-27",
+                            "date": "2025-12-27",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-12-27",
+                            "date": "2025-12-27",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-12-28",
+                            "date": "2025-12-28",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-01-03",
+                            "date": "2026-01-03",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -8838,18 +8838,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-72-1",
-                            "dueDate": "2023-12-27",
+                            "dueDate": "2025-12-27",
                             "amount": 486,
                             "status": "paid",
-                            "paidDate": "2023-12-31",
+                            "paidDate": "2025-12-31",
                             "reference": "PAY-507945"
                   },
                   {
                             "id": "inst-72-2",
-                            "dueDate": "2024-06-27",
+                            "dueDate": "2026-06-27",
                             "amount": 486,
                             "status": "paid",
-                            "paidDate": "2024-07-01",
+                            "paidDate": "2026-07-01",
                             "reference": "PAY-415142"
                   }
         ],
@@ -8870,9 +8870,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2023-07-03",
-        expiryDate: "2024-07-03",
-        issueDate: "2023-07-03",
+        inceptionDate: "2025-07-03",
+        expiryDate: "2026-07-03",
+        issueDate: "2025-07-03",
         sumInsured: 4428647,
         premiumAmount: 3986,
         commissionRate: 17,
@@ -8884,8 +8884,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Homeowners Comprehensive — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-03T10:00:00Z",
-        updatedAt: "2023-07-03T10:00:00Z",
+        createdAt: "2025-07-03T10:00:00Z",
+        updatedAt: "2025-07-03T10:00:00Z",
         outstandingBalance: 1355,
         propertyDetails: {
                 "propertyAddress": "94 Airport Residential, Cape Coast",
@@ -8900,46 +8900,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-73-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-07-03T10:00:00Z"
+                            "uploadedAt": "2025-07-03T10:00:00Z"
                   },
                   {
                             "id": "doc-73-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-07-03T10:00:00Z"
+                            "uploadedAt": "2025-07-03T10:00:00Z"
                   },
                   {
                             "id": "doc-73-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-07-04T10:00:00Z"
+                            "uploadedAt": "2025-07-04T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-03",
+                            "date": "2025-07-03",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-03",
+                            "date": "2025-07-03",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-06",
+                            "date": "2025-07-06",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-07-13",
+                            "date": "2025-07-13",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -8948,18 +8948,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-73-1",
-                            "dueDate": "2023-07-03",
+                            "dueDate": "2025-07-03",
                             "amount": 1993,
                             "status": "paid",
-                            "paidDate": "2023-07-05",
+                            "paidDate": "2025-07-05",
                             "reference": "PAY-594778"
                   },
                   {
                             "id": "inst-73-2",
-                            "dueDate": "2024-01-03",
+                            "dueDate": "2026-01-03",
                             "amount": 1993,
                             "status": "paid",
-                            "paidDate": "2024-01-05",
+                            "paidDate": "2026-01-05",
                             "reference": "PAY-901042"
                   }
         ],
@@ -8980,9 +8980,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-metropolitan",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-09-15",
-        expiryDate: "2024-09-15",
-        issueDate: "2023-09-15",
+        inceptionDate: "2025-09-15",
+        expiryDate: "2026-09-15",
+        issueDate: "2025-09-15",
         sumInsured: 901110,
         premiumAmount: 1532,
         commissionRate: 20,
@@ -8994,8 +8994,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Industrial All Risks — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-09-15T10:00:00Z",
-        updatedAt: "2023-09-15T10:00:00Z",
+        createdAt: "2025-09-15T10:00:00Z",
+        updatedAt: "2025-09-15T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "196 Oxford Street, Takoradi",
                 "propertyType": "commercial",
@@ -9009,58 +9009,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-74-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-09-23T10:00:00Z"
+                            "uploadedAt": "2025-09-23T10:00:00Z"
                   },
                   {
                             "id": "doc-74-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-09-18T10:00:00Z"
+                            "uploadedAt": "2025-09-18T10:00:00Z"
                   },
                   {
                             "id": "doc-74-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-09-21T10:00:00Z"
+                            "uploadedAt": "2025-09-21T10:00:00Z"
                   },
                   {
                             "id": "doc-74-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-09-20T10:00:00Z"
+                            "uploadedAt": "2025-09-20T10:00:00Z"
                   },
                   {
                             "id": "doc-74-5",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-09-16T10:00:00Z"
+                            "uploadedAt": "2025-09-16T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-09-15",
+                            "date": "2025-09-15",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-09-15",
+                            "date": "2025-09-15",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-09-17",
+                            "date": "2025-09-17",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-09-19",
+                            "date": "2025-09-19",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -9069,34 +9069,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-74-1",
-                            "dueDate": "2023-09-15",
+                            "dueDate": "2025-09-15",
                             "amount": 383,
                             "status": "paid",
-                            "paidDate": "2023-09-15",
+                            "paidDate": "2025-09-15",
                             "reference": "PAY-368069"
                   },
                   {
                             "id": "inst-74-2",
-                            "dueDate": "2023-12-15",
+                            "dueDate": "2025-12-15",
                             "amount": 383,
                             "status": "paid",
-                            "paidDate": "2023-12-18",
+                            "paidDate": "2025-12-18",
                             "reference": "PAY-907958"
                   },
                   {
                             "id": "inst-74-3",
-                            "dueDate": "2024-03-15",
+                            "dueDate": "2026-03-15",
                             "amount": 383,
                             "status": "paid",
-                            "paidDate": "2024-03-19",
+                            "paidDate": "2026-03-19",
                             "reference": "PAY-617316"
                   },
                   {
                             "id": "inst-74-4",
-                            "dueDate": "2024-06-15",
+                            "dueDate": "2026-06-15",
                             "amount": 383,
                             "status": "paid",
-                            "paidDate": "2024-06-18",
+                            "paidDate": "2026-06-18",
                             "reference": "PAY-424321"
                   }
         ],
@@ -9212,9 +9212,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-imperial",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2024-11-09",
+        inceptionDate: "2026-11-09",
         expiryDate: "2025-11-09",
-        issueDate: "2024-11-09",
+        issueDate: "2026-11-09",
         sumInsured: 2825979,
         premiumAmount: 3109,
         commissionRate: 15,
@@ -9226,8 +9226,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Industrial All Risks — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-11-09T10:00:00Z",
-        updatedAt: "2024-11-09T10:00:00Z",
+        createdAt: "2026-11-09T10:00:00Z",
+        updatedAt: "2026-11-09T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "177 Tema Motorway, Cape Coast",
                 "propertyType": "residential",
@@ -9241,46 +9241,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-76-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-11-15T10:00:00Z"
+                            "uploadedAt": "2026-11-15T10:00:00Z"
                   },
                   {
                             "id": "doc-76-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-11-21T10:00:00Z"
+                            "uploadedAt": "2026-11-21T10:00:00Z"
                   },
                   {
                             "id": "doc-76-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-11-12T10:00:00Z"
+                            "uploadedAt": "2026-11-12T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-11-09",
+                            "date": "2026-11-09",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-11-09",
+                            "date": "2026-11-09",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-11-12",
+                            "date": "2026-11-12",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-11-14",
+                            "date": "2026-11-14",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -9289,10 +9289,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-76-1",
-                            "dueDate": "2024-11-09",
+                            "dueDate": "2026-11-09",
                             "amount": 1555,
                             "status": "paid",
-                            "paidDate": "2024-11-10",
+                            "paidDate": "2026-11-10",
                             "reference": "PAY-916695"
                   },
                   {
@@ -9406,9 +9406,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-general",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-10-12",
+        inceptionDate: "2026-10-12",
         expiryDate: "2025-10-12",
-        issueDate: "2024-10-12",
+        issueDate: "2026-10-12",
         sumInsured: 8032649,
         premiumAmount: 10442,
         commissionRate: 20,
@@ -9420,8 +9420,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Fire & Allied Perils — Fire & Property",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-10-12T10:00:00Z",
-        updatedAt: "2024-10-12T10:00:00Z",
+        createdAt: "2026-10-12T10:00:00Z",
+        updatedAt: "2026-10-12T10:00:00Z",
         propertyDetails: {
                 "propertyAddress": "28 Airport Residential, Accra",
                 "propertyType": "warehouse",
@@ -9435,58 +9435,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-78-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-10-20T10:00:00Z"
+                            "uploadedAt": "2026-10-20T10:00:00Z"
                   },
                   {
                             "id": "doc-78-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-10-14T10:00:00Z"
+                            "uploadedAt": "2026-10-14T10:00:00Z"
                   },
                   {
                             "id": "doc-78-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-10-14T10:00:00Z"
+                            "uploadedAt": "2026-10-14T10:00:00Z"
                   },
                   {
                             "id": "doc-78-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-10-19T10:00:00Z"
+                            "uploadedAt": "2026-10-19T10:00:00Z"
                   },
                   {
                             "id": "doc-78-5",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-10-23T10:00:00Z"
+                            "uploadedAt": "2026-10-23T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-10-12",
+                            "date": "2026-10-12",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-10-12",
+                            "date": "2026-10-12",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-10-14",
+                            "date": "2026-10-14",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-10-17",
+                            "date": "2026-10-17",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -9495,26 +9495,26 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-78-1",
-                            "dueDate": "2024-10-12",
+                            "dueDate": "2026-10-12",
                             "amount": 2611,
                             "status": "paid",
-                            "paidDate": "2024-10-16",
+                            "paidDate": "2026-10-16",
                             "reference": "PAY-697017"
                   },
                   {
                             "id": "inst-78-2",
-                            "dueDate": "2024-11-12",
+                            "dueDate": "2026-11-12",
                             "amount": 2611,
                             "status": "paid",
-                            "paidDate": "2024-11-14",
+                            "paidDate": "2026-11-14",
                             "reference": "PAY-309952"
                   },
                   {
                             "id": "inst-78-3",
-                            "dueDate": "2024-12-12",
+                            "dueDate": "2026-12-12",
                             "amount": 2611,
                             "status": "paid",
-                            "paidDate": "2024-12-16",
+                            "paidDate": "2026-12-16",
                             "reference": "PAY-492580"
                   },
                   {
@@ -10005,9 +10005,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-imperial",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-08-17",
+        inceptionDate: "2026-08-17",
         expiryDate: "2025-08-17",
-        issueDate: "2024-08-17",
+        issueDate: "2026-08-17",
         sumInsured: 889068,
         premiumAmount: 11558,
         commissionRate: 11,
@@ -10019,8 +10019,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Marine Hull — Marine & Aviation",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-08-17T10:00:00Z",
-        updatedAt: "2024-08-17T10:00:00Z",
+        createdAt: "2026-08-17T10:00:00Z",
+        updatedAt: "2026-08-17T10:00:00Z",
         marineDetails: {
                 "vesselName": "MV Tema Star",
                 "voyageFrom": "Shanghai",
@@ -10034,52 +10034,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-83-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-08-28T10:00:00Z"
+                            "uploadedAt": "2026-08-28T10:00:00Z"
                   },
                   {
                             "id": "doc-83-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-08-21T10:00:00Z"
+                            "uploadedAt": "2026-08-21T10:00:00Z"
                   },
                   {
                             "id": "doc-83-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-08-31T10:00:00Z"
+                            "uploadedAt": "2026-08-31T10:00:00Z"
                   },
                   {
                             "id": "doc-83-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-08-17T10:00:00Z"
+                            "uploadedAt": "2026-08-17T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-08-17",
+                            "date": "2026-08-17",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-08-17",
+                            "date": "2026-08-17",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-08-19",
+                            "date": "2026-08-19",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-08-25",
+                            "date": "2026-08-25",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -10423,9 +10423,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2023-07-27",
-        expiryDate: "2024-07-27",
-        issueDate: "2023-07-27",
+        inceptionDate: "2025-07-27",
+        expiryDate: "2026-07-27",
+        issueDate: "2025-07-27",
         sumInsured: 3489331,
         premiumAmount: 48851,
         commissionRate: 13,
@@ -10437,8 +10437,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Marine Cargo — Marine & Aviation",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-27T10:00:00Z",
-        updatedAt: "2023-07-27T10:00:00Z",
+        createdAt: "2025-07-27T10:00:00Z",
+        updatedAt: "2025-07-27T10:00:00Z",
         marineDetails: {
                 "vesselName": "MV Tema Star",
                 "voyageFrom": "Durban",
@@ -10453,30 +10453,30 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "PHO/HQ/MAR/23/00087/END/1",
                             "type": "extension",
                             "status": "approved",
-                            "effectiveDate": "2023-11-14",
+                            "effectiveDate": "2025-11-14",
                             "description": "Extend to include windscreen",
                             "premiumAdjustment": 565,
-                            "createdAt": "2023-12-24T10:00:00Z"
+                            "createdAt": "2025-12-24T10:00:00Z"
                   },
                   {
                             "id": "end-87-2",
                             "endorsementNumber": "PHO/HQ/MAR/23/00087/END/2",
                             "type": "addition",
                             "status": "approved",
-                            "effectiveDate": "2023-12-05",
+                            "effectiveDate": "2025-12-05",
                             "description": "Add additional driver",
                             "premiumAdjustment": 382,
-                            "createdAt": "2023-09-25T10:00:00Z"
+                            "createdAt": "2025-09-25T10:00:00Z"
                   },
                   {
                             "id": "end-87-3",
                             "endorsementNumber": "PHO/HQ/MAR/23/00087/END/3",
                             "type": "alteration",
                             "status": "pending",
-                            "effectiveDate": "2023-11-16",
+                            "effectiveDate": "2025-11-16",
                             "description": "Update vehicle registration",
                             "premiumAdjustment": 265,
-                            "createdAt": "2023-09-23T10:00:00Z"
+                            "createdAt": "2025-09-23T10:00:00Z"
                   }
         ],
         documents: [
@@ -10484,46 +10484,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-87-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-07-30T10:00:00Z"
+                            "uploadedAt": "2025-07-30T10:00:00Z"
                   },
                   {
                             "id": "doc-87-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-08-03T10:00:00Z"
+                            "uploadedAt": "2025-08-03T10:00:00Z"
                   },
                   {
                             "id": "doc-87-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-07-31T10:00:00Z"
+                            "uploadedAt": "2025-07-31T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-27",
+                            "date": "2025-07-27",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-27",
+                            "date": "2025-07-27",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-28",
+                            "date": "2025-07-28",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-08-04",
+                            "date": "2025-08-04",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -10679,9 +10679,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-allianz",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-02-04",
+        inceptionDate: "2026-02-04",
         expiryDate: "2025-02-04",
-        issueDate: "2024-02-04",
+        issueDate: "2026-02-04",
         sumInsured: 3117319,
         premiumAmount: 31173,
         commissionRate: 14,
@@ -10693,8 +10693,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Freight Liability — Marine & Aviation",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-02-04T10:00:00Z",
-        updatedAt: "2024-02-04T10:00:00Z",
+        createdAt: "2026-02-04T10:00:00Z",
+        updatedAt: "2026-02-04T10:00:00Z",
         marineDetails: {
                 "vesselName": "MV Tema Star",
                 "voyageFrom": "Tema Port",
@@ -10709,20 +10709,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "ALL/HQ/MAR/24/00089/END/1",
                             "type": "extension",
                             "status": "pending",
-                            "effectiveDate": "2024-07-11",
+                            "effectiveDate": "2026-07-11",
                             "description": "Extend territorial limits",
                             "premiumAdjustment": 748,
-                            "createdAt": "2024-06-07T10:00:00Z"
+                            "createdAt": "2026-06-07T10:00:00Z"
                   },
                   {
                             "id": "end-89-2",
                             "endorsementNumber": "ALL/HQ/MAR/24/00089/END/2",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2024-06-10",
+                            "effectiveDate": "2026-06-10",
                             "description": "Short period cancellation",
                             "premiumAdjustment": -31173,
-                            "createdAt": "2024-07-17T10:00:00Z"
+                            "createdAt": "2026-07-17T10:00:00Z"
                   }
         ],
         documents: [
@@ -10730,46 +10730,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-89-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-02-06T10:00:00Z"
+                            "uploadedAt": "2026-02-06T10:00:00Z"
                   },
                   {
                             "id": "doc-89-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-02-07T10:00:00Z"
+                            "uploadedAt": "2026-02-07T10:00:00Z"
                   },
                   {
                             "id": "doc-89-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-02-18T10:00:00Z"
+                            "uploadedAt": "2026-02-18T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-04",
+                            "date": "2026-02-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-04",
+                            "date": "2026-02-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-05",
+                            "date": "2026-02-05",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-13",
+                            "date": "2026-02-13",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -10793,9 +10793,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-prime",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2023-04-28",
-        expiryDate: "2024-04-28",
-        issueDate: "2023-04-28",
+        inceptionDate: "2025-04-28",
+        expiryDate: "2026-04-28",
+        issueDate: "2025-04-28",
         sumInsured: 1108737,
         premiumAmount: 13305,
         commissionRate: 10,
@@ -10807,8 +10807,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Marine Cargo — Marine & Aviation",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-04-28T10:00:00Z",
-        updatedAt: "2023-04-28T10:00:00Z",
+        createdAt: "2025-04-28T10:00:00Z",
+        updatedAt: "2025-04-28T10:00:00Z",
         marineDetails: {
                 "vesselName": "SS Volta",
                 "voyageFrom": "Shanghai",
@@ -10822,58 +10822,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-90-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-05-11T10:00:00Z"
+                            "uploadedAt": "2025-05-11T10:00:00Z"
                   },
                   {
                             "id": "doc-90-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-05-03T10:00:00Z"
+                            "uploadedAt": "2025-05-03T10:00:00Z"
                   },
                   {
                             "id": "doc-90-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-05-10T10:00:00Z"
+                            "uploadedAt": "2025-05-10T10:00:00Z"
                   },
                   {
                             "id": "doc-90-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-05-06T10:00:00Z"
+                            "uploadedAt": "2025-05-06T10:00:00Z"
                   },
                   {
                             "id": "doc-90-5",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-05-04T10:00:00Z"
+                            "uploadedAt": "2025-05-04T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-04-28",
+                            "date": "2025-04-28",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-04-28",
+                            "date": "2025-04-28",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-05-02",
+                            "date": "2025-05-02",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-05-07",
+                            "date": "2025-05-07",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -10882,10 +10882,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-90-1",
-                            "dueDate": "2023-04-28",
+                            "dueDate": "2025-04-28",
                             "amount": 13305,
                             "status": "paid",
-                            "paidDate": "2023-04-29",
+                            "paidDate": "2025-04-29",
                             "reference": "PAY-949519"
                   }
         ],
@@ -10997,9 +10997,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-general",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-07-13",
-        expiryDate: "2024-07-13",
-        issueDate: "2023-07-13",
+        inceptionDate: "2025-07-13",
+        expiryDate: "2026-07-13",
+        issueDate: "2025-07-13",
         sumInsured: 2854376,
         premiumAmount: 37107,
         commissionRate: 15,
@@ -11011,8 +11011,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Marine Hull — Marine & Aviation",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-13T10:00:00Z",
-        updatedAt: "2023-07-13T10:00:00Z",
+        createdAt: "2025-07-13T10:00:00Z",
+        updatedAt: "2025-07-13T10:00:00Z",
         outstandingBalance: 12245,
         marineDetails: {
                 "vesselName": "MV Gold Coast",
@@ -11027,46 +11027,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-92-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-07-17T10:00:00Z"
+                            "uploadedAt": "2025-07-17T10:00:00Z"
                   },
                   {
                             "id": "doc-92-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-07-23T10:00:00Z"
+                            "uploadedAt": "2025-07-23T10:00:00Z"
                   },
                   {
                             "id": "doc-92-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-07-13T10:00:00Z"
+                            "uploadedAt": "2025-07-13T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-13",
+                            "date": "2025-07-13",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-13",
+                            "date": "2025-07-13",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-17",
+                            "date": "2025-07-17",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-07-19",
+                            "date": "2025-07-19",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -11350,9 +11350,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-star",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-01-13",
+        inceptionDate: "2026-01-13",
         expiryDate: "2025-01-13",
-        issueDate: "2024-01-13",
+        issueDate: "2026-01-13",
         sumInsured: 124558,
         premiumAmount: 11960,
         commissionRate: 9,
@@ -11364,8 +11364,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Individual Health — Health",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-01-13T10:00:00Z",
-        updatedAt: "2024-01-13T10:00:00Z",
+        createdAt: "2026-01-13T10:00:00Z",
+        updatedAt: "2026-01-13T10:00:00Z",
         exclusions: ["Cosmetic surgery","Pre-existing conditions (wait)","Self-inflicted injury"],
         endorsements: [
                   {
@@ -11373,20 +11373,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "STA/HQ/HLT/24/00095/END/1",
                             "type": "cancellation",
                             "status": "pending",
-                            "effectiveDate": "2024-03-02",
+                            "effectiveDate": "2026-03-02",
                             "description": "Pro-rata cancellation",
                             "premiumAdjustment": -11960,
-                            "createdAt": "2024-07-05T10:00:00Z"
+                            "createdAt": "2026-07-05T10:00:00Z"
                   },
                   {
                             "id": "end-95-2",
                             "endorsementNumber": "STA/HQ/HLT/24/00095/END/2",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2024-04-18",
+                            "effectiveDate": "2026-04-18",
                             "description": "Short period cancellation",
                             "premiumAdjustment": -11960,
-                            "createdAt": "2024-06-23T10:00:00Z"
+                            "createdAt": "2026-06-23T10:00:00Z"
                   }
         ],
         documents: [
@@ -11394,52 +11394,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-95-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-01-19T10:00:00Z"
+                            "uploadedAt": "2026-01-19T10:00:00Z"
                   },
                   {
                             "id": "doc-95-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-01-18T10:00:00Z"
+                            "uploadedAt": "2026-01-18T10:00:00Z"
                   },
                   {
                             "id": "doc-95-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-01-18T10:00:00Z"
+                            "uploadedAt": "2026-01-18T10:00:00Z"
                   },
                   {
                             "id": "doc-95-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-01-15T10:00:00Z"
+                            "uploadedAt": "2026-01-15T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-01-13",
+                            "date": "2026-01-13",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-01-13",
+                            "date": "2026-01-13",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-01-17",
+                            "date": "2026-01-17",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-01-23",
+                            "date": "2026-01-23",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -11764,9 +11764,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-imperial",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-07-18",
+        inceptionDate: "2026-07-18",
         expiryDate: "2025-07-18",
-        issueDate: "2024-07-18",
+        issueDate: "2026-07-18",
         sumInsured: 465611,
         premiumAmount: 12609,
         commissionRate: 14,
@@ -11778,60 +11778,60 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Outpatient Only — Health",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-07-18T10:00:00Z",
-        updatedAt: "2024-07-18T10:00:00Z",
+        createdAt: "2026-07-18T10:00:00Z",
+        updatedAt: "2026-07-18T10:00:00Z",
         exclusions: ["Experimental treatments","Pre-existing conditions (wait)","Dental (unless endorsed)"],
         documents: [
                   {
                             "id": "doc-99-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-08-01T10:00:00Z"
+                            "uploadedAt": "2026-08-01T10:00:00Z"
                   },
                   {
                             "id": "doc-99-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-07-21T10:00:00Z"
+                            "uploadedAt": "2026-07-21T10:00:00Z"
                   },
                   {
                             "id": "doc-99-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-07-23T10:00:00Z"
+                            "uploadedAt": "2026-07-23T10:00:00Z"
                   },
                   {
                             "id": "doc-99-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-07-21T10:00:00Z"
+                            "uploadedAt": "2026-07-21T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-07-18",
+                            "date": "2026-07-18",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-07-18",
+                            "date": "2026-07-18",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-07-22",
+                            "date": "2026-07-22",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-07-28",
+                            "date": "2026-07-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -11840,34 +11840,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-99-1",
-                            "dueDate": "2024-07-18",
+                            "dueDate": "2026-07-18",
                             "amount": 3152,
                             "status": "paid",
-                            "paidDate": "2024-07-20",
+                            "paidDate": "2026-07-20",
                             "reference": "PAY-518122"
                   },
                   {
                             "id": "inst-99-2",
-                            "dueDate": "2024-08-18",
+                            "dueDate": "2026-08-18",
                             "amount": 3152,
                             "status": "paid",
-                            "paidDate": "2024-08-21",
+                            "paidDate": "2026-08-21",
                             "reference": "PAY-268787"
                   },
                   {
                             "id": "inst-99-3",
-                            "dueDate": "2024-09-18",
+                            "dueDate": "2026-09-18",
                             "amount": 3152,
                             "status": "paid",
-                            "paidDate": "2024-09-21",
+                            "paidDate": "2026-09-21",
                             "reference": "PAY-115352"
                   },
                   {
                             "id": "inst-99-4",
-                            "dueDate": "2024-10-18",
+                            "dueDate": "2026-10-18",
                             "amount": 3152,
                             "status": "paid",
-                            "paidDate": "2024-10-21",
+                            "paidDate": "2026-10-21",
                             "reference": "PAY-141723"
                   }
         ],
@@ -11888,9 +11888,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2023-02-02",
-        expiryDate: "2024-02-02",
-        issueDate: "2023-02-02",
+        inceptionDate: "2025-02-02",
+        expiryDate: "2026-02-02",
+        issueDate: "2025-02-02",
         sumInsured: 68243,
         premiumAmount: 10855,
         commissionRate: 14,
@@ -11902,66 +11902,66 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Outpatient Only — Health",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-02-02T10:00:00Z",
-        updatedAt: "2023-02-02T10:00:00Z",
+        createdAt: "2025-02-02T10:00:00Z",
+        updatedAt: "2025-02-02T10:00:00Z",
         exclusions: ["Self-inflicted injury","Experimental treatments"],
         documents: [
                   {
                             "id": "doc-100-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-02-10T10:00:00Z"
+                            "uploadedAt": "2025-02-10T10:00:00Z"
                   },
                   {
                             "id": "doc-100-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-02-02T10:00:00Z"
+                            "uploadedAt": "2025-02-02T10:00:00Z"
                   },
                   {
                             "id": "doc-100-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-02-16T10:00:00Z"
+                            "uploadedAt": "2025-02-16T10:00:00Z"
                   },
                   {
                             "id": "doc-100-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-02-08T10:00:00Z"
+                            "uploadedAt": "2025-02-08T10:00:00Z"
                   },
                   {
                             "id": "doc-100-5",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-02-05T10:00:00Z"
+                            "uploadedAt": "2025-02-05T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-02-02",
+                            "date": "2025-02-02",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-02-02",
+                            "date": "2025-02-02",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-02-06",
+                            "date": "2025-02-06",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-02-10",
+                            "date": "2025-02-10",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -12074,9 +12074,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-prime",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2024-01-13",
+        inceptionDate: "2026-01-13",
         expiryDate: "2025-01-13",
-        issueDate: "2024-01-13",
+        issueDate: "2026-01-13",
         sumInsured: 406740,
         premiumAmount: 1413,
         commissionRate: 14,
@@ -12088,48 +12088,48 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Individual Health — Health",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-01-13T10:00:00Z",
-        updatedAt: "2024-01-13T10:00:00Z",
+        createdAt: "2026-01-13T10:00:00Z",
+        updatedAt: "2026-01-13T10:00:00Z",
         exclusions: ["Dental (unless endorsed)","Pre-existing conditions (wait)","Experimental treatments"],
         documents: [
                   {
                             "id": "doc-102-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-01-19T10:00:00Z"
+                            "uploadedAt": "2026-01-19T10:00:00Z"
                   },
                   {
                             "id": "doc-102-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-01-25T10:00:00Z"
+                            "uploadedAt": "2026-01-25T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-01-13",
+                            "date": "2026-01-13",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-01-13",
+                            "date": "2026-01-13",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-01-17",
+                            "date": "2026-01-17",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-01-22",
+                            "date": "2026-01-22",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -12138,10 +12138,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-102-1",
-                            "dueDate": "2024-01-13",
+                            "dueDate": "2026-01-13",
                             "amount": 1413,
                             "status": "paid",
-                            "paidDate": "2024-01-14",
+                            "paidDate": "2026-01-14",
                             "reference": "PAY-598945"
                   }
         ],
@@ -12616,9 +12616,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-08-22",
-        expiryDate: "2024-08-22",
-        issueDate: "2023-08-22",
+        inceptionDate: "2025-08-22",
+        expiryDate: "2026-08-22",
+        issueDate: "2025-08-22",
         sumInsured: 971959,
         premiumAmount: 6804,
         commissionRate: 17,
@@ -12630,8 +12630,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Employers Liability — General Accident",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-08-22T10:00:00Z",
-        updatedAt: "2023-08-22T10:00:00Z",
+        createdAt: "2025-08-22T10:00:00Z",
+        updatedAt: "2025-08-22T10:00:00Z",
         outstandingBalance: 3538,
         exclusions: ["Wilful misconduct","War and terrorism","Consequential loss"],
         documents: [
@@ -12639,52 +12639,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-107-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-08-24T10:00:00Z"
+                            "uploadedAt": "2025-08-24T10:00:00Z"
                   },
                   {
                             "id": "doc-107-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-08-25T10:00:00Z"
+                            "uploadedAt": "2025-08-25T10:00:00Z"
                   },
                   {
                             "id": "doc-107-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-08-28T10:00:00Z"
+                            "uploadedAt": "2025-08-28T10:00:00Z"
                   },
                   {
                             "id": "doc-107-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-09-02T10:00:00Z"
+                            "uploadedAt": "2025-09-02T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-08-22",
+                            "date": "2025-08-22",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-08-22",
+                            "date": "2025-08-22",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-08-23",
+                            "date": "2025-08-23",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-08-25",
+                            "date": "2025-08-25",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -12693,34 +12693,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-107-1",
-                            "dueDate": "2023-08-22",
+                            "dueDate": "2025-08-22",
                             "amount": 1701,
                             "status": "paid",
-                            "paidDate": "2023-08-25",
+                            "paidDate": "2025-08-25",
                             "reference": "PAY-881419"
                   },
                   {
                             "id": "inst-107-2",
-                            "dueDate": "2023-09-22",
+                            "dueDate": "2025-09-22",
                             "amount": 1701,
                             "status": "paid",
-                            "paidDate": "2023-09-24",
+                            "paidDate": "2025-09-24",
                             "reference": "PAY-793069"
                   },
                   {
                             "id": "inst-107-3",
-                            "dueDate": "2023-10-22",
+                            "dueDate": "2025-10-22",
                             "amount": 1701,
                             "status": "paid",
-                            "paidDate": "2023-10-25",
+                            "paidDate": "2025-10-25",
                             "reference": "PAY-379139"
                   },
                   {
                             "id": "inst-107-4",
-                            "dueDate": "2023-11-22",
+                            "dueDate": "2025-11-22",
                             "amount": 1701,
                             "status": "paid",
-                            "paidDate": "2023-11-25",
+                            "paidDate": "2025-11-25",
                             "reference": "PAY-119951"
                   }
         ],
@@ -13358,9 +13358,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-general",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2023-04-22",
-        expiryDate: "2024-04-22",
-        issueDate: "2023-04-22",
+        inceptionDate: "2025-04-22",
+        expiryDate: "2026-04-22",
+        issueDate: "2025-04-22",
         sumInsured: 1497677,
         premiumAmount: 20967,
         commissionRate: 17,
@@ -13372,8 +13372,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Employers Liability — General Accident",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-04-22T10:00:00Z",
-        updatedAt: "2023-04-22T10:00:00Z",
+        createdAt: "2025-04-22T10:00:00Z",
+        updatedAt: "2025-04-22T10:00:00Z",
         exclusions: ["Nuclear contamination","Wilful misconduct","War and terrorism"],
         endorsements: [
                   {
@@ -13381,20 +13381,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "GLI/HQ/LIA/23/00114/END/1",
                             "type": "deletion",
                             "status": "approved",
-                            "effectiveDate": "2023-10-26",
+                            "effectiveDate": "2025-10-26",
                             "description": "Remove named driver",
                             "premiumAdjustment": -434,
-                            "createdAt": "2023-09-22T10:00:00Z"
+                            "createdAt": "2025-09-22T10:00:00Z"
                   },
                   {
                             "id": "end-114-2",
                             "endorsementNumber": "GLI/HQ/LIA/23/00114/END/2",
                             "type": "alteration",
                             "status": "pending",
-                            "effectiveDate": "2023-08-21",
+                            "effectiveDate": "2025-08-21",
                             "description": "Change coverage area",
                             "premiumAdjustment": 412,
-                            "createdAt": "2023-07-20T10:00:00Z"
+                            "createdAt": "2025-07-20T10:00:00Z"
                   }
         ],
         documents: [
@@ -13402,40 +13402,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-114-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-04-28T10:00:00Z"
+                            "uploadedAt": "2025-04-28T10:00:00Z"
                   },
                   {
                             "id": "doc-114-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-04-24T10:00:00Z"
+                            "uploadedAt": "2025-04-24T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-04-22",
+                            "date": "2025-04-22",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-04-22",
+                            "date": "2025-04-22",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-04-26",
+                            "date": "2025-04-26",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-04-28",
+                            "date": "2025-04-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -13444,10 +13444,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-114-1",
-                            "dueDate": "2023-04-22",
+                            "dueDate": "2025-04-22",
                             "amount": 20967,
                             "status": "paid",
-                            "paidDate": "2023-04-22",
+                            "paidDate": "2025-04-22",
                             "reference": "PAY-648047"
                   }
         ],
@@ -13468,9 +13468,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-02-13",
+        inceptionDate: "2026-02-13",
         expiryDate: "2025-02-13",
-        issueDate: "2024-02-13",
+        issueDate: "2026-02-13",
         sumInsured: 380565,
         premiumAmount: 6089,
         commissionRate: 17,
@@ -13482,8 +13482,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Public Liability — General Accident",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-13T10:00:00Z",
-        updatedAt: "2024-02-13T10:00:00Z",
+        createdAt: "2026-02-13T10:00:00Z",
+        updatedAt: "2026-02-13T10:00:00Z",
         outstandingBalance: 1644,
         exclusions: ["Wilful misconduct","War and terrorism","Nuclear contamination","Consequential loss"],
         documents: [
@@ -13491,58 +13491,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-115-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-02-14T10:00:00Z"
+                            "uploadedAt": "2026-02-14T10:00:00Z"
                   },
                   {
                             "id": "doc-115-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-02-25T10:00:00Z"
+                            "uploadedAt": "2026-02-25T10:00:00Z"
                   },
                   {
                             "id": "doc-115-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-02-13T10:00:00Z"
+                            "uploadedAt": "2026-02-13T10:00:00Z"
                   },
                   {
                             "id": "doc-115-4",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-02-16T10:00:00Z"
+                            "uploadedAt": "2026-02-16T10:00:00Z"
                   },
                   {
                             "id": "doc-115-5",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-02-14T10:00:00Z"
+                            "uploadedAt": "2026-02-14T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-13",
+                            "date": "2026-02-13",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-13",
+                            "date": "2026-02-13",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-15",
+                            "date": "2026-02-15",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-19",
+                            "date": "2026-02-19",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -13665,9 +13665,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-metropolitan",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-01-22",
+        inceptionDate: "2026-01-22",
         expiryDate: "2025-01-22",
-        issueDate: "2024-01-22",
+        issueDate: "2026-01-22",
         sumInsured: 1663295,
         premiumAmount: 26613,
         commissionRate: 16,
@@ -13679,48 +13679,48 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Product Liability — General Accident",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-01-22T10:00:00Z",
-        updatedAt: "2024-01-22T10:00:00Z",
+        createdAt: "2026-01-22T10:00:00Z",
+        updatedAt: "2026-01-22T10:00:00Z",
         exclusions: ["Nuclear contamination","Consequential loss"],
         documents: [
                   {
                             "id": "doc-117-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-02-02T10:00:00Z"
+                            "uploadedAt": "2026-02-02T10:00:00Z"
                   },
                   {
                             "id": "doc-117-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-01-25T10:00:00Z"
+                            "uploadedAt": "2026-01-25T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-01-22",
+                            "date": "2026-01-22",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-01-22",
+                            "date": "2026-01-22",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-01-27",
+                            "date": "2026-01-27",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-01-28",
+                            "date": "2026-01-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -13729,18 +13729,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-117-1",
-                            "dueDate": "2024-01-22",
+                            "dueDate": "2026-01-22",
                             "amount": 13307,
                             "status": "paid",
-                            "paidDate": "2024-01-25",
+                            "paidDate": "2026-01-25",
                             "reference": "PAY-602353"
                   },
                   {
                             "id": "inst-117-2",
-                            "dueDate": "2024-07-22",
+                            "dueDate": "2026-07-22",
                             "amount": 13307,
                             "status": "paid",
-                            "paidDate": "2024-07-26",
+                            "paidDate": "2026-07-26",
                             "reference": "PAY-704594"
                   }
         ],
@@ -13904,9 +13904,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-saham",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-10-22",
-        expiryDate: "2024-10-22",
-        issueDate: "2023-10-22",
+        inceptionDate: "2025-10-22",
+        expiryDate: "2026-10-22",
+        issueDate: "2025-10-22",
         sumInsured: 19102435,
         premiumAmount: 152819,
         commissionRate: 18,
@@ -13918,60 +13918,60 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Contractors All Risks — Engineering",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-10-22T10:00:00Z",
-        updatedAt: "2023-10-22T10:00:00Z",
+        createdAt: "2025-10-22T10:00:00Z",
+        updatedAt: "2025-10-22T10:00:00Z",
         exclusions: ["War and terrorism","Nuclear contamination","Wilful misconduct"],
         documents: [
                   {
                             "id": "doc-119-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-10-26T10:00:00Z"
+                            "uploadedAt": "2025-10-26T10:00:00Z"
                   },
                   {
                             "id": "doc-119-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-10-31T10:00:00Z"
+                            "uploadedAt": "2025-10-31T10:00:00Z"
                   },
                   {
                             "id": "doc-119-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-10-25T10:00:00Z"
+                            "uploadedAt": "2025-10-25T10:00:00Z"
                   },
                   {
                             "id": "doc-119-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-10-27T10:00:00Z"
+                            "uploadedAt": "2025-10-27T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-10-22",
+                            "date": "2025-10-22",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-10-22",
+                            "date": "2025-10-22",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-10-25",
+                            "date": "2025-10-25",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-10-31",
+                            "date": "2025-10-31",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -13980,34 +13980,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-119-1",
-                            "dueDate": "2023-10-22",
+                            "dueDate": "2025-10-22",
                             "amount": 38205,
                             "status": "paid",
-                            "paidDate": "2023-10-26",
+                            "paidDate": "2025-10-26",
                             "reference": "PAY-711792"
                   },
                   {
                             "id": "inst-119-2",
-                            "dueDate": "2023-11-22",
+                            "dueDate": "2025-11-22",
                             "amount": 38205,
                             "status": "paid",
-                            "paidDate": "2023-11-24",
+                            "paidDate": "2025-11-24",
                             "reference": "PAY-508372"
                   },
                   {
                             "id": "inst-119-3",
-                            "dueDate": "2023-12-22",
+                            "dueDate": "2025-12-22",
                             "amount": 38205,
                             "status": "paid",
-                            "paidDate": "2023-12-23",
+                            "paidDate": "2025-12-23",
                             "reference": "PAY-922899"
                   },
                   {
                             "id": "inst-119-4",
-                            "dueDate": "2024-01-22",
+                            "dueDate": "2026-01-22",
                             "amount": 38205,
                             "status": "paid",
-                            "paidDate": "2024-01-27",
+                            "paidDate": "2026-01-27",
                             "reference": "PAY-736797"
                   }
         ],
@@ -14028,9 +14028,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-prime",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-03-18",
+        inceptionDate: "2026-03-18",
         expiryDate: "2025-03-18",
-        issueDate: "2024-03-18",
+        issueDate: "2026-03-18",
         sumInsured: 3328815,
         premiumAmount: 19973,
         commissionRate: 13,
@@ -14042,66 +14042,66 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Erection All Risks — Engineering",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-03-18T10:00:00Z",
-        updatedAt: "2024-03-18T10:00:00Z",
+        createdAt: "2026-03-18T10:00:00Z",
+        updatedAt: "2026-03-18T10:00:00Z",
         exclusions: ["Wear and tear","Consequential loss","Nuclear contamination"],
         documents: [
                   {
                             "id": "doc-120-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-03-25T10:00:00Z"
+                            "uploadedAt": "2026-03-25T10:00:00Z"
                   },
                   {
                             "id": "doc-120-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-03-20T10:00:00Z"
+                            "uploadedAt": "2026-03-20T10:00:00Z"
                   },
                   {
                             "id": "doc-120-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-03-29T10:00:00Z"
+                            "uploadedAt": "2026-03-29T10:00:00Z"
                   },
                   {
                             "id": "doc-120-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-03-27T10:00:00Z"
+                            "uploadedAt": "2026-03-27T10:00:00Z"
                   },
                   {
                             "id": "doc-120-5",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-03-19T10:00:00Z"
+                            "uploadedAt": "2026-03-19T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-03-18",
+                            "date": "2026-03-18",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-03-18",
+                            "date": "2026-03-18",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-03-21",
+                            "date": "2026-03-21",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-03-22",
+                            "date": "2026-03-22",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -14110,34 +14110,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-120-1",
-                            "dueDate": "2024-03-18",
+                            "dueDate": "2026-03-18",
                             "amount": 4993,
                             "status": "paid",
-                            "paidDate": "2024-03-18",
+                            "paidDate": "2026-03-18",
                             "reference": "PAY-912615"
                   },
                   {
                             "id": "inst-120-2",
-                            "dueDate": "2024-06-18",
+                            "dueDate": "2026-06-18",
                             "amount": 4993,
                             "status": "paid",
-                            "paidDate": "2024-06-19",
+                            "paidDate": "2026-06-19",
                             "reference": "PAY-559667"
                   },
                   {
                             "id": "inst-120-3",
-                            "dueDate": "2024-09-18",
+                            "dueDate": "2026-09-18",
                             "amount": 4993,
                             "status": "paid",
-                            "paidDate": "2024-09-18",
+                            "paidDate": "2026-09-18",
                             "reference": "PAY-930775"
                   },
                   {
                             "id": "inst-120-4",
-                            "dueDate": "2024-12-18",
+                            "dueDate": "2026-12-18",
                             "amount": 4993,
                             "status": "paid",
-                            "paidDate": "2024-12-21",
+                            "paidDate": "2026-12-21",
                             "reference": "PAY-660243"
                   }
         ],
@@ -14338,9 +14338,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-loyalty",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-05-15",
-        expiryDate: "2024-05-15",
-        issueDate: "2023-05-15",
+        inceptionDate: "2025-05-15",
+        expiryDate: "2026-05-15",
+        issueDate: "2025-05-15",
         sumInsured: 40610661,
         premiumAmount: 162443,
         commissionRate: 14,
@@ -14352,60 +14352,60 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Contractors All Risks — Engineering",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-05-15T10:00:00Z",
-        updatedAt: "2023-05-15T10:00:00Z",
+        createdAt: "2025-05-15T10:00:00Z",
+        updatedAt: "2025-05-15T10:00:00Z",
         exclusions: ["War and terrorism","Wilful misconduct"],
         documents: [
                   {
                             "id": "doc-123-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-05-16T10:00:00Z"
+                            "uploadedAt": "2025-05-16T10:00:00Z"
                   },
                   {
                             "id": "doc-123-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-05-29T10:00:00Z"
+                            "uploadedAt": "2025-05-29T10:00:00Z"
                   },
                   {
                             "id": "doc-123-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-05-28T10:00:00Z"
+                            "uploadedAt": "2025-05-28T10:00:00Z"
                   },
                   {
                             "id": "doc-123-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-05-23T10:00:00Z"
+                            "uploadedAt": "2025-05-23T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-05-15",
+                            "date": "2025-05-15",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-05-15",
+                            "date": "2025-05-15",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-05-18",
+                            "date": "2025-05-18",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-05-25",
+                            "date": "2025-05-25",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -14414,10 +14414,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-123-1",
-                            "dueDate": "2023-05-15",
+                            "dueDate": "2025-05-15",
                             "amount": 162443,
                             "status": "paid",
-                            "paidDate": "2023-05-19",
+                            "paidDate": "2025-05-19",
                             "reference": "PAY-368602"
                   }
         ],
@@ -14637,9 +14637,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-hollard",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2024-03-10",
+        inceptionDate: "2026-03-10",
         expiryDate: "2025-03-10",
-        issueDate: "2024-03-10",
+        issueDate: "2026-03-10",
         sumInsured: 46151872,
         premiumAmount: 138456,
         commissionRate: 17,
@@ -14651,8 +14651,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Electronic Equipment — Engineering",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-03-10T10:00:00Z",
-        updatedAt: "2024-03-10T10:00:00Z",
+        createdAt: "2026-03-10T10:00:00Z",
+        updatedAt: "2026-03-10T10:00:00Z",
         outstandingBalance: 138456,
         exclusions: ["Consequential loss","War and terrorism","Wear and tear"],
         documents: [
@@ -14660,66 +14660,66 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-126-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-03-12T10:00:00Z"
+                            "uploadedAt": "2026-03-12T10:00:00Z"
                   },
                   {
                             "id": "doc-126-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-03-22T10:00:00Z"
+                            "uploadedAt": "2026-03-22T10:00:00Z"
                   },
                   {
                             "id": "doc-126-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-03-15T10:00:00Z"
+                            "uploadedAt": "2026-03-15T10:00:00Z"
                   },
                   {
                             "id": "doc-126-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-03-13T10:00:00Z"
+                            "uploadedAt": "2026-03-13T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-03-10",
+                            "date": "2026-03-10",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-03-10",
+                            "date": "2026-03-10",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-03-12",
+                            "date": "2026-03-12",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-03-15",
+                            "date": "2026-03-15",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-09-19",
+                            "date": "2026-09-19",
                             "event": "Payment Overdue",
                             "description": "Premium payment past due date",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-6",
-                            "date": "2024-11-11",
+                            "date": "2026-11-11",
                             "event": "Policy Lapsed",
                             "description": "Policy lapsed due to non-payment",
                             "performedBy": "System"
@@ -14869,9 +14869,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-08-26",
-        expiryDate: "2024-08-26",
-        issueDate: "2023-08-26",
+        inceptionDate: "2025-08-26",
+        expiryDate: "2026-08-26",
+        issueDate: "2025-08-26",
         sumInsured: 956417,
         premiumAmount: 32518,
         commissionRate: 29,
@@ -14883,8 +14883,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Term Life — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-08-26T10:00:00Z",
-        updatedAt: "2023-08-26T10:00:00Z",
+        createdAt: "2025-08-26T10:00:00Z",
+        updatedAt: "2025-08-26T10:00:00Z",
         beneficiaries: [
                   {
                             "name": "Kwaku Frimpong",
@@ -14903,52 +14903,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-128-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-09-06T10:00:00Z"
+                            "uploadedAt": "2025-09-06T10:00:00Z"
                   },
                   {
                             "id": "doc-128-2",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-09-01T10:00:00Z"
+                            "uploadedAt": "2025-09-01T10:00:00Z"
                   },
                   {
                             "id": "doc-128-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-08-31T10:00:00Z"
+                            "uploadedAt": "2025-08-31T10:00:00Z"
                   },
                   {
                             "id": "doc-128-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-09-04T10:00:00Z"
+                            "uploadedAt": "2025-09-04T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-08-26",
+                            "date": "2025-08-26",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-08-26",
+                            "date": "2025-08-26",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-08-28",
+                            "date": "2025-08-28",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-09-01",
+                            "date": "2025-09-01",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -14957,34 +14957,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-128-1",
-                            "dueDate": "2023-08-26",
+                            "dueDate": "2025-08-26",
                             "amount": 8130,
                             "status": "paid",
-                            "paidDate": "2023-08-27",
+                            "paidDate": "2025-08-27",
                             "reference": "PAY-734811"
                   },
                   {
                             "id": "inst-128-2",
-                            "dueDate": "2023-11-26",
+                            "dueDate": "2025-11-26",
                             "amount": 8130,
                             "status": "paid",
-                            "paidDate": "2023-11-28",
+                            "paidDate": "2025-11-28",
                             "reference": "PAY-591793"
                   },
                   {
                             "id": "inst-128-3",
-                            "dueDate": "2024-02-26",
+                            "dueDate": "2026-02-26",
                             "amount": 8130,
                             "status": "paid",
-                            "paidDate": "2024-02-27",
+                            "paidDate": "2026-02-27",
                             "reference": "PAY-854324"
                   },
                   {
                             "id": "inst-128-4",
-                            "dueDate": "2024-05-26",
+                            "dueDate": "2026-05-26",
                             "amount": 8130,
                             "status": "paid",
-                            "paidDate": "2024-05-27",
+                            "paidDate": "2026-05-27",
                             "reference": "PAY-824282"
                   }
         ],
@@ -15148,9 +15148,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise-life",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2024-02-25",
+        inceptionDate: "2026-02-25",
         expiryDate: "2025-02-25",
-        issueDate: "2024-02-25",
+        issueDate: "2026-02-25",
         sumInsured: 1223984,
         premiumAmount: 22032,
         commissionRate: 23,
@@ -15162,8 +15162,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Group Life — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-25T10:00:00Z",
-        updatedAt: "2024-02-25T10:00:00Z",
+        createdAt: "2026-02-25T10:00:00Z",
+        updatedAt: "2026-02-25T10:00:00Z",
         outstandingBalance: 22032,
         beneficiaries: [
                   {
@@ -15189,60 +15189,60 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-130-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-03-01T10:00:00Z"
+                            "uploadedAt": "2026-03-01T10:00:00Z"
                   },
                   {
                             "id": "doc-130-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-03-03T10:00:00Z"
+                            "uploadedAt": "2026-03-03T10:00:00Z"
                   },
                   {
                             "id": "doc-130-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-03-03T10:00:00Z"
+                            "uploadedAt": "2026-03-03T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-25",
+                            "date": "2026-02-25",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-25",
+                            "date": "2026-02-25",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-28",
+                            "date": "2026-02-28",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-29",
+                            "date": "2026-02-29",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-07-26",
+                            "date": "2026-07-26",
                             "event": "Payment Overdue",
                             "description": "Premium payment past due date",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-6",
-                            "date": "2024-10-06",
+                            "date": "2026-10-06",
                             "event": "Policy Lapsed",
                             "description": "Policy lapsed due to non-payment",
                             "performedBy": "System"
@@ -15251,25 +15251,25 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-130-1",
-                            "dueDate": "2024-02-25",
+                            "dueDate": "2026-02-25",
                             "amount": 5508,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-130-2",
-                            "dueDate": "2024-05-25",
+                            "dueDate": "2026-05-25",
                             "amount": 5508,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-130-3",
-                            "dueDate": "2024-08-25",
+                            "dueDate": "2026-08-25",
                             "amount": 5508,
                             "status": "overdue"
                   },
                   {
                             "id": "inst-130-4",
-                            "dueDate": "2024-11-25",
+                            "dueDate": "2026-11-25",
                             "amount": 5508,
                             "status": "overdue"
                   }
@@ -15291,9 +15291,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise-life",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-02-24",
+        inceptionDate: "2026-02-24",
         expiryDate: "2025-02-24",
-        issueDate: "2024-02-24",
+        issueDate: "2026-02-24",
         sumInsured: 867968,
         premiumAmount: 30379,
         commissionRate: 28,
@@ -15305,8 +15305,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Endowment — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-24T10:00:00Z",
-        updatedAt: "2024-02-24T10:00:00Z",
+        createdAt: "2026-02-24T10:00:00Z",
+        updatedAt: "2026-02-24T10:00:00Z",
         outstandingBalance: 30379,
         beneficiaries: [
                   {
@@ -15326,66 +15326,66 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-131-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-03-07T10:00:00Z"
+                            "uploadedAt": "2026-03-07T10:00:00Z"
                   },
                   {
                             "id": "doc-131-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-02-26T10:00:00Z"
+                            "uploadedAt": "2026-02-26T10:00:00Z"
                   },
                   {
                             "id": "doc-131-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-02-28T10:00:00Z"
+                            "uploadedAt": "2026-02-28T10:00:00Z"
                   },
                   {
                             "id": "doc-131-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-03-01T10:00:00Z"
+                            "uploadedAt": "2026-03-01T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-24",
+                            "date": "2026-02-24",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-24",
+                            "date": "2026-02-24",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-25",
+                            "date": "2026-02-25",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-03-03",
+                            "date": "2026-03-03",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-5",
-                            "date": "2024-07-03",
+                            "date": "2026-07-03",
                             "event": "Payment Overdue",
                             "description": "Premium payment past due date",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-6",
-                            "date": "2024-10-29",
+                            "date": "2026-10-29",
                             "event": "Policy Lapsed",
                             "description": "Policy lapsed due to non-payment",
                             "performedBy": "System"
@@ -15504,9 +15504,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2023-05-04",
-        expiryDate: "2024-05-04",
-        issueDate: "2023-05-04",
+        inceptionDate: "2025-05-04",
+        expiryDate: "2026-05-04",
+        issueDate: "2025-05-04",
         sumInsured: 666318,
         premiumAmount: 16658,
         commissionRate: 23,
@@ -15518,8 +15518,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Credit Life — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-05-04T10:00:00Z",
-        updatedAt: "2023-05-04T10:00:00Z",
+        createdAt: "2025-05-04T10:00:00Z",
+        updatedAt: "2025-05-04T10:00:00Z",
         beneficiaries: [
                   {
                             "name": "Akosua Dede",
@@ -15538,40 +15538,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-133-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-05-10T10:00:00Z"
+                            "uploadedAt": "2025-05-10T10:00:00Z"
                   },
                   {
                             "id": "doc-133-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-05-05T10:00:00Z"
+                            "uploadedAt": "2025-05-05T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-05-04",
+                            "date": "2025-05-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-05-04",
+                            "date": "2025-05-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-05-08",
+                            "date": "2025-05-08",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-05-10",
+                            "date": "2025-05-10",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -15580,34 +15580,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-133-1",
-                            "dueDate": "2023-05-04",
+                            "dueDate": "2025-05-04",
                             "amount": 4165,
                             "status": "paid",
-                            "paidDate": "2023-05-07",
+                            "paidDate": "2025-05-07",
                             "reference": "PAY-443892"
                   },
                   {
                             "id": "inst-133-2",
-                            "dueDate": "2023-08-04",
+                            "dueDate": "2025-08-04",
                             "amount": 4165,
                             "status": "paid",
-                            "paidDate": "2023-08-06",
+                            "paidDate": "2025-08-06",
                             "reference": "PAY-561738"
                   },
                   {
                             "id": "inst-133-3",
-                            "dueDate": "2023-11-04",
+                            "dueDate": "2025-11-04",
                             "amount": 4165,
                             "status": "paid",
-                            "paidDate": "2023-11-08",
+                            "paidDate": "2025-11-08",
                             "reference": "PAY-927901"
                   },
                   {
                             "id": "inst-133-4",
-                            "dueDate": "2024-02-04",
+                            "dueDate": "2026-02-04",
                             "amount": 4165,
                             "status": "paid",
-                            "paidDate": "2024-02-07",
+                            "paidDate": "2026-02-07",
                             "reference": "PAY-775319"
                   }
         ],
@@ -15628,9 +15628,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-04-05",
-        expiryDate: "2024-04-05",
-        issueDate: "2023-04-05",
+        inceptionDate: "2025-04-05",
+        expiryDate: "2026-04-05",
+        issueDate: "2025-04-05",
         sumInsured: 914225,
         premiumAmount: 16456,
         commissionRate: 21,
@@ -15642,8 +15642,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Endowment — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-04-05T10:00:00Z",
-        updatedAt: "2023-04-05T10:00:00Z",
+        createdAt: "2025-04-05T10:00:00Z",
+        updatedAt: "2025-04-05T10:00:00Z",
         beneficiaries: [
                   {
                             "name": "Kofi Asare",
@@ -15663,10 +15663,10 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "SIC/HQ/LIF/23/00134/END/1",
                             "type": "extension",
                             "status": "approved",
-                            "effectiveDate": "2023-10-02",
+                            "effectiveDate": "2025-10-02",
                             "description": "Add riot & strike cover",
                             "premiumAdjustment": 542,
-                            "createdAt": "2023-05-04T10:00:00Z"
+                            "createdAt": "2025-05-04T10:00:00Z"
                   }
         ],
         documents: [
@@ -15674,46 +15674,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-134-1",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-04-12T10:00:00Z"
+                            "uploadedAt": "2025-04-12T10:00:00Z"
                   },
                   {
                             "id": "doc-134-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-04-10T10:00:00Z"
+                            "uploadedAt": "2025-04-10T10:00:00Z"
                   },
                   {
                             "id": "doc-134-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-04-08T10:00:00Z"
+                            "uploadedAt": "2025-04-08T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-04-05",
+                            "date": "2025-04-05",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-04-05",
+                            "date": "2025-04-05",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-04-09",
+                            "date": "2025-04-09",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-04-14",
+                            "date": "2025-04-14",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -15722,34 +15722,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-134-1",
-                            "dueDate": "2023-04-05",
+                            "dueDate": "2025-04-05",
                             "amount": 4114,
                             "status": "paid",
-                            "paidDate": "2023-04-07",
+                            "paidDate": "2025-04-07",
                             "reference": "PAY-266852"
                   },
                   {
                             "id": "inst-134-2",
-                            "dueDate": "2023-07-05",
+                            "dueDate": "2025-07-05",
                             "amount": 4114,
                             "status": "paid",
-                            "paidDate": "2023-07-05",
+                            "paidDate": "2025-07-05",
                             "reference": "PAY-780004"
                   },
                   {
                             "id": "inst-134-3",
-                            "dueDate": "2023-10-05",
+                            "dueDate": "2025-10-05",
                             "amount": 4114,
                             "status": "paid",
-                            "paidDate": "2023-10-06",
+                            "paidDate": "2025-10-06",
                             "reference": "PAY-464053"
                   },
                   {
                             "id": "inst-134-4",
-                            "dueDate": "2024-01-05",
+                            "dueDate": "2026-01-05",
                             "amount": 4114,
                             "status": "paid",
-                            "paidDate": "2024-01-07",
+                            "paidDate": "2026-01-07",
                             "reference": "PAY-596572"
                   }
         ],
@@ -15867,9 +15867,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-07-05",
-        expiryDate: "2024-07-05",
-        issueDate: "2023-07-05",
+        inceptionDate: "2025-07-05",
+        expiryDate: "2026-07-05",
+        issueDate: "2025-07-05",
         sumInsured: 1795442,
         premiumAmount: 39500,
         commissionRate: 20,
@@ -15881,8 +15881,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Credit Life — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-05T10:00:00Z",
-        updatedAt: "2023-07-05T10:00:00Z",
+        createdAt: "2025-07-05T10:00:00Z",
+        updatedAt: "2025-07-05T10:00:00Z",
         beneficiaries: [
                   {
                             "name": "Kwaku Frimpong",
@@ -15908,20 +15908,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "SIC/HQ/LIF/23/00136/END/1",
                             "type": "alteration",
                             "status": "approved",
-                            "effectiveDate": "2023-10-01",
+                            "effectiveDate": "2025-10-01",
                             "description": "Amend beneficiary details",
                             "premiumAdjustment": 82,
-                            "createdAt": "2023-11-20T10:00:00Z"
+                            "createdAt": "2025-11-20T10:00:00Z"
                   },
                   {
                             "id": "end-136-2",
                             "endorsementNumber": "SIC/HQ/LIF/23/00136/END/2",
                             "type": "extension",
                             "status": "pending",
-                            "effectiveDate": "2023-11-07",
+                            "effectiveDate": "2025-11-07",
                             "description": "Extend to include windscreen",
                             "premiumAdjustment": 237,
-                            "createdAt": "2023-12-10T10:00:00Z"
+                            "createdAt": "2025-12-10T10:00:00Z"
                   }
         ],
         documents: [
@@ -15929,46 +15929,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-136-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-07-12T10:00:00Z"
+                            "uploadedAt": "2025-07-12T10:00:00Z"
                   },
                   {
                             "id": "doc-136-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-07-14T10:00:00Z"
+                            "uploadedAt": "2025-07-14T10:00:00Z"
                   },
                   {
                             "id": "doc-136-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-07-17T10:00:00Z"
+                            "uploadedAt": "2025-07-17T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-05",
+                            "date": "2025-07-05",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-05",
+                            "date": "2025-07-05",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-07",
+                            "date": "2025-07-07",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-07-10",
+                            "date": "2025-07-10",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -15977,34 +15977,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-136-1",
-                            "dueDate": "2023-07-05",
+                            "dueDate": "2025-07-05",
                             "amount": 9875,
                             "status": "paid",
-                            "paidDate": "2023-07-10",
+                            "paidDate": "2025-07-10",
                             "reference": "PAY-710382"
                   },
                   {
                             "id": "inst-136-2",
-                            "dueDate": "2023-08-05",
+                            "dueDate": "2025-08-05",
                             "amount": 9875,
                             "status": "paid",
-                            "paidDate": "2023-08-08",
+                            "paidDate": "2025-08-08",
                             "reference": "PAY-543665"
                   },
                   {
                             "id": "inst-136-3",
-                            "dueDate": "2023-09-05",
+                            "dueDate": "2025-09-05",
                             "amount": 9875,
                             "status": "paid",
-                            "paidDate": "2023-09-07",
+                            "paidDate": "2025-09-07",
                             "reference": "PAY-166450"
                   },
                   {
                             "id": "inst-136-4",
-                            "dueDate": "2023-10-05",
+                            "dueDate": "2025-10-05",
                             "amount": 9875,
                             "status": "paid",
-                            "paidDate": "2023-10-08",
+                            "paidDate": "2025-10-08",
                             "reference": "PAY-310524"
                   }
         ],
@@ -16025,9 +16025,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-05-04",
+        inceptionDate: "2026-05-04",
         expiryDate: "2025-05-04",
-        issueDate: "2024-05-04",
+        issueDate: "2026-05-04",
         sumInsured: 939319,
         premiumAmount: 29119,
         commissionRate: 30,
@@ -16039,8 +16039,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Term Life — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-05-04T10:00:00Z",
-        updatedAt: "2024-05-04T10:00:00Z",
+        createdAt: "2026-05-04T10:00:00Z",
+        updatedAt: "2026-05-04T10:00:00Z",
         outstandingBalance: 15142,
         beneficiaries: [
                   {
@@ -16060,46 +16060,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-137-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-05-09T10:00:00Z"
+                            "uploadedAt": "2026-05-09T10:00:00Z"
                   },
                   {
                             "id": "doc-137-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-05-09T10:00:00Z"
+                            "uploadedAt": "2026-05-09T10:00:00Z"
                   },
                   {
                             "id": "doc-137-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-05-05T10:00:00Z"
+                            "uploadedAt": "2026-05-05T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-05-04",
+                            "date": "2026-05-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-05-04",
+                            "date": "2026-05-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-05-05",
+                            "date": "2026-05-05",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-05-13",
+                            "date": "2026-05-13",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -16108,18 +16108,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-137-1",
-                            "dueDate": "2024-05-04",
+                            "dueDate": "2026-05-04",
                             "amount": 14560,
                             "status": "paid",
-                            "paidDate": "2024-05-04",
+                            "paidDate": "2026-05-04",
                             "reference": "PAY-376694"
                   },
                   {
                             "id": "inst-137-2",
-                            "dueDate": "2024-11-04",
+                            "dueDate": "2026-11-04",
                             "amount": 14560,
                             "status": "paid",
-                            "paidDate": "2024-11-08",
+                            "paidDate": "2026-11-08",
                             "reference": "PAY-106997"
                   }
         ],
@@ -16140,9 +16140,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-sic",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-10-23",
-        expiryDate: "2024-10-23",
-        issueDate: "2023-10-23",
+        inceptionDate: "2025-10-23",
+        expiryDate: "2026-10-23",
+        issueDate: "2025-10-23",
         sumInsured: 413320,
         premiumAmount: 9920,
         commissionRate: 28,
@@ -16154,8 +16154,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Endowment — Life",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2023-10-23T10:00:00Z",
-        updatedAt: "2023-10-23T10:00:00Z",
+        createdAt: "2025-10-23T10:00:00Z",
+        updatedAt: "2025-10-23T10:00:00Z",
         beneficiaries: [
                   {
                             "name": "Ama Mensah",
@@ -16174,52 +16174,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-138-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-10-23T10:00:00Z"
+                            "uploadedAt": "2025-10-23T10:00:00Z"
                   },
                   {
                             "id": "doc-138-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-10-31T10:00:00Z"
+                            "uploadedAt": "2025-10-31T10:00:00Z"
                   },
                   {
                             "id": "doc-138-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-11-02T10:00:00Z"
+                            "uploadedAt": "2025-11-02T10:00:00Z"
                   },
                   {
                             "id": "doc-138-4",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-10-30T10:00:00Z"
+                            "uploadedAt": "2025-10-30T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-10-23",
+                            "date": "2025-10-23",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-10-23",
+                            "date": "2025-10-23",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-10-26",
+                            "date": "2025-10-26",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-10-28",
+                            "date": "2025-10-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -16364,9 +16364,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-enterprise-life",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-07-27",
-        expiryDate: "2024-07-27",
-        issueDate: "2023-07-27",
+        inceptionDate: "2025-07-27",
+        expiryDate: "2026-07-27",
+        issueDate: "2025-07-27",
         sumInsured: 1540236,
         premiumAmount: 36966,
         commissionRate: 29,
@@ -16378,8 +16378,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Credit Life — Life",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-07-27T10:00:00Z",
-        updatedAt: "2023-07-27T10:00:00Z",
+        createdAt: "2025-07-27T10:00:00Z",
+        updatedAt: "2025-07-27T10:00:00Z",
         beneficiaries: [
                   {
                             "name": "Kofi Asare",
@@ -16404,58 +16404,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-140-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-07-30T10:00:00Z"
+                            "uploadedAt": "2025-07-30T10:00:00Z"
                   },
                   {
                             "id": "doc-140-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-08-03T10:00:00Z"
+                            "uploadedAt": "2025-08-03T10:00:00Z"
                   },
                   {
                             "id": "doc-140-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-08-08T10:00:00Z"
+                            "uploadedAt": "2025-08-08T10:00:00Z"
                   },
                   {
                             "id": "doc-140-4",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-07-28T10:00:00Z"
+                            "uploadedAt": "2025-07-28T10:00:00Z"
                   },
                   {
                             "id": "doc-140-5",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-08-09T10:00:00Z"
+                            "uploadedAt": "2025-08-09T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-07-27",
+                            "date": "2025-07-27",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-07-27",
+                            "date": "2025-07-27",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-07-29",
+                            "date": "2025-07-29",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-08-04",
+                            "date": "2025-08-04",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -16464,18 +16464,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-140-1",
-                            "dueDate": "2023-07-27",
+                            "dueDate": "2025-07-27",
                             "amount": 18483,
                             "status": "paid",
-                            "paidDate": "2023-07-27",
+                            "paidDate": "2025-07-27",
                             "reference": "PAY-264505"
                   },
                   {
                             "id": "inst-140-2",
-                            "dueDate": "2024-01-27",
+                            "dueDate": "2026-01-27",
                             "amount": 18483,
                             "status": "paid",
-                            "paidDate": "2024-01-30",
+                            "paidDate": "2026-01-30",
                             "reference": "PAY-954034"
                   }
         ],
@@ -16900,9 +16900,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-metropolitan",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2023-11-05",
-        expiryDate: "2024-11-05",
-        issueDate: "2023-11-05",
+        inceptionDate: "2025-11-05",
+        expiryDate: "2026-11-05",
+        issueDate: "2025-11-05",
         sumInsured: 4054305,
         premiumAmount: 56760,
         commissionRate: 7,
@@ -16914,8 +16914,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Advance Payment Bond — Bonds & Guarantees",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-11-05T10:00:00Z",
-        updatedAt: "2023-11-05T10:00:00Z",
+        createdAt: "2025-11-05T10:00:00Z",
+        updatedAt: "2025-11-05T10:00:00Z",
         exclusions: ["War and terrorism","Nuclear contamination","Consequential loss","Wear and tear"],
         endorsements: [
                   {
@@ -16923,20 +16923,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "MET/HQ/BND/23/00145/END/1",
                             "type": "extension",
                             "status": "pending",
-                            "effectiveDate": "2024-01-05",
+                            "effectiveDate": "2026-01-05",
                             "description": "Add riot & strike cover",
                             "premiumAdjustment": 248,
-                            "createdAt": "2023-12-31T10:00:00Z"
+                            "createdAt": "2025-12-31T10:00:00Z"
                   },
                   {
                             "id": "end-145-2",
                             "endorsementNumber": "MET/HQ/BND/23/00145/END/2",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2024-04-14",
+                            "effectiveDate": "2026-04-14",
                             "description": "Pro-rata cancellation",
                             "premiumAdjustment": -56760,
-                            "createdAt": "2024-03-30T10:00:00Z"
+                            "createdAt": "2026-03-30T10:00:00Z"
                   }
         ],
         documents: [
@@ -16944,40 +16944,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-145-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-11-13T10:00:00Z"
+                            "uploadedAt": "2025-11-13T10:00:00Z"
                   },
                   {
                             "id": "doc-145-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-11-14T10:00:00Z"
+                            "uploadedAt": "2025-11-14T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-11-05",
+                            "date": "2025-11-05",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-11-05",
+                            "date": "2025-11-05",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-11-10",
+                            "date": "2025-11-10",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-11-13",
+                            "date": "2025-11-13",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -17000,9 +17000,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-06-04",
-        expiryDate: "2024-06-04",
-        issueDate: "2023-06-04",
+        inceptionDate: "2025-06-04",
+        expiryDate: "2026-06-04",
+        issueDate: "2025-06-04",
         sumInsured: 1351633,
         premiumAmount: 13516,
         commissionRate: 7,
@@ -17014,54 +17014,54 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Advance Payment Bond — Bonds & Guarantees",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2023-06-04T10:00:00Z",
-        updatedAt: "2023-06-04T10:00:00Z",
+        createdAt: "2025-06-04T10:00:00Z",
+        updatedAt: "2025-06-04T10:00:00Z",
         exclusions: ["War and terrorism","Consequential loss","Wear and tear"],
         documents: [
                   {
                             "id": "doc-146-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-06-14T10:00:00Z"
+                            "uploadedAt": "2025-06-14T10:00:00Z"
                   },
                   {
                             "id": "doc-146-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-06-17T10:00:00Z"
+                            "uploadedAt": "2025-06-17T10:00:00Z"
                   },
                   {
                             "id": "doc-146-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-06-06T10:00:00Z"
+                            "uploadedAt": "2025-06-06T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-06-04",
+                            "date": "2025-06-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-06-04",
+                            "date": "2025-06-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-06-09",
+                            "date": "2025-06-09",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-06-09",
+                            "date": "2025-06-09",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -17085,9 +17085,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-loyalty",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-04-09",
-        expiryDate: "2024-04-09",
-        issueDate: "2023-04-09",
+        inceptionDate: "2025-04-09",
+        expiryDate: "2026-04-09",
+        issueDate: "2025-04-09",
         sumInsured: 1129321,
         premiumAmount: 25974,
         commissionRate: 6,
@@ -17099,54 +17099,54 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Bid Bond — Bonds & Guarantees",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-04-09T10:00:00Z",
-        updatedAt: "2023-04-09T10:00:00Z",
+        createdAt: "2025-04-09T10:00:00Z",
+        updatedAt: "2025-04-09T10:00:00Z",
         exclusions: ["War and terrorism","Wilful misconduct","Consequential loss"],
         documents: [
                   {
                             "id": "doc-147-1",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-04-19T10:00:00Z"
+                            "uploadedAt": "2025-04-19T10:00:00Z"
                   },
                   {
                             "id": "doc-147-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-04-13T10:00:00Z"
+                            "uploadedAt": "2025-04-13T10:00:00Z"
                   },
                   {
                             "id": "doc-147-3",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-04-20T10:00:00Z"
+                            "uploadedAt": "2025-04-20T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-04-09",
+                            "date": "2025-04-09",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-04-09",
+                            "date": "2025-04-09",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-04-13",
+                            "date": "2025-04-13",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-04-18",
+                            "date": "2025-04-18",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -17331,9 +17331,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-regency",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-11-12",
+        inceptionDate: "2026-11-12",
         expiryDate: "2025-11-12",
-        issueDate: "2024-11-12",
+        issueDate: "2026-11-12",
         sumInsured: 60366,
         premiumAmount: 1727,
         commissionRate: 20,
@@ -17345,8 +17345,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Business Travel — Travel",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-11-12T10:00:00Z",
-        updatedAt: "2024-11-12T10:00:00Z",
+        createdAt: "2026-11-12T10:00:00Z",
+        updatedAt: "2026-11-12T10:00:00Z",
         outstandingBalance: 1727,
         exclusions: ["Wilful misconduct","Consequential loss","Wear and tear"],
         documents: [
@@ -17354,58 +17354,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-150-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-11-16T10:00:00Z"
+                            "uploadedAt": "2026-11-16T10:00:00Z"
                   },
                   {
                             "id": "doc-150-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-11-25T10:00:00Z"
+                            "uploadedAt": "2026-11-25T10:00:00Z"
                   },
                   {
                             "id": "doc-150-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-11-22T10:00:00Z"
+                            "uploadedAt": "2026-11-22T10:00:00Z"
                   },
                   {
                             "id": "doc-150-4",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-11-15T10:00:00Z"
+                            "uploadedAt": "2026-11-15T10:00:00Z"
                   },
                   {
                             "id": "doc-150-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-11-18T10:00:00Z"
+                            "uploadedAt": "2026-11-18T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-11-12",
+                            "date": "2026-11-12",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-11-12",
+                            "date": "2026-11-12",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-11-13",
+                            "date": "2026-11-13",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-11-17",
+                            "date": "2026-11-17",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -17708,9 +17708,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-allianz",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-10-08",
+        inceptionDate: "2026-10-08",
         expiryDate: "2025-10-08",
-        issueDate: "2024-10-08",
+        issueDate: "2026-10-08",
         sumInsured: 29716,
         premiumAmount: 2910,
         commissionRate: 21,
@@ -17722,8 +17722,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Single Trip — Travel",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-10-08T10:00:00Z",
-        updatedAt: "2024-10-08T10:00:00Z",
+        createdAt: "2026-10-08T10:00:00Z",
+        updatedAt: "2026-10-08T10:00:00Z",
         outstandingBalance: 2910,
         exclusions: ["Nuclear contamination","Wilful misconduct","Consequential loss"],
         documents: [
@@ -17731,58 +17731,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-154-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-10-15T10:00:00Z"
+                            "uploadedAt": "2026-10-15T10:00:00Z"
                   },
                   {
                             "id": "doc-154-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-10-18T10:00:00Z"
+                            "uploadedAt": "2026-10-18T10:00:00Z"
                   },
                   {
                             "id": "doc-154-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-10-09T10:00:00Z"
+                            "uploadedAt": "2026-10-09T10:00:00Z"
                   },
                   {
                             "id": "doc-154-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-10-17T10:00:00Z"
+                            "uploadedAt": "2026-10-17T10:00:00Z"
                   },
                   {
                             "id": "doc-154-5",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-10-11T10:00:00Z"
+                            "uploadedAt": "2026-10-11T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-10-08",
+                            "date": "2026-10-08",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-10-08",
+                            "date": "2026-10-08",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-10-10",
+                            "date": "2026-10-10",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-10-15",
+                            "date": "2026-10-15",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -17819,9 +17819,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-09-27",
-        expiryDate: "2024-09-27",
-        issueDate: "2023-09-27",
+        inceptionDate: "2025-09-27",
+        expiryDate: "2026-09-27",
+        issueDate: "2025-09-27",
         sumInsured: 31944,
         premiumAmount: 1692,
         commissionRate: 21,
@@ -17833,8 +17833,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Business Travel — Travel",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-09-27T10:00:00Z",
-        updatedAt: "2023-09-27T10:00:00Z",
+        createdAt: "2025-09-27T10:00:00Z",
+        updatedAt: "2025-09-27T10:00:00Z",
         exclusions: ["Nuclear contamination","Consequential loss"],
         endorsements: [
                   {
@@ -17842,30 +17842,30 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "PHO/HQ/TRV/23/00155/END/1",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2024-02-19",
+                            "effectiveDate": "2026-02-19",
                             "description": "Short period cancellation",
                             "premiumAdjustment": -1692,
-                            "createdAt": "2024-01-22T10:00:00Z"
+                            "createdAt": "2026-01-22T10:00:00Z"
                   },
                   {
                             "id": "end-155-2",
                             "endorsementNumber": "PHO/HQ/TRV/23/00155/END/2",
                             "type": "cancellation",
                             "status": "approved",
-                            "effectiveDate": "2023-12-04",
+                            "effectiveDate": "2025-12-04",
                             "description": "Pro-rata cancellation",
                             "premiumAdjustment": -1692,
-                            "createdAt": "2024-01-27T10:00:00Z"
+                            "createdAt": "2026-01-27T10:00:00Z"
                   },
                   {
                             "id": "end-155-3",
                             "endorsementNumber": "PHO/HQ/TRV/23/00155/END/3",
                             "type": "extension",
                             "status": "pending",
-                            "effectiveDate": "2023-12-01",
+                            "effectiveDate": "2025-12-01",
                             "description": "Include breakdown assist",
                             "premiumAdjustment": 775,
-                            "createdAt": "2023-11-26T10:00:00Z"
+                            "createdAt": "2025-11-26T10:00:00Z"
                   }
         ],
         documents: [
@@ -17873,40 +17873,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-155-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-10-10T10:00:00Z"
+                            "uploadedAt": "2025-10-10T10:00:00Z"
                   },
                   {
                             "id": "doc-155-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-09-29T10:00:00Z"
+                            "uploadedAt": "2025-09-29T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-09-27",
+                            "date": "2025-09-27",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-09-27",
+                            "date": "2025-09-27",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-09-29",
+                            "date": "2025-09-29",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-10-04",
+                            "date": "2025-10-04",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -18224,9 +18224,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-glico-life",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-06-04",
-        expiryDate: "2024-06-04",
-        issueDate: "2023-06-04",
+        inceptionDate: "2025-06-04",
+        expiryDate: "2026-06-04",
+        issueDate: "2025-06-04",
         sumInsured: 1949572,
         premiumAmount: 27294,
         commissionRate: 13,
@@ -18238,60 +18238,60 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Fisheries Insurance — Agriculture",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2023-06-04T10:00:00Z",
-        updatedAt: "2023-06-04T10:00:00Z",
+        createdAt: "2025-06-04T10:00:00Z",
+        updatedAt: "2025-06-04T10:00:00Z",
         exclusions: ["War and terrorism","Nuclear contamination","Wear and tear"],
         documents: [
                   {
                             "id": "doc-159-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-06-07T10:00:00Z"
+                            "uploadedAt": "2025-06-07T10:00:00Z"
                   },
                   {
                             "id": "doc-159-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-06-14T10:00:00Z"
+                            "uploadedAt": "2025-06-14T10:00:00Z"
                   },
                   {
                             "id": "doc-159-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-06-13T10:00:00Z"
+                            "uploadedAt": "2025-06-13T10:00:00Z"
                   },
                   {
                             "id": "doc-159-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-06-06T10:00:00Z"
+                            "uploadedAt": "2025-06-06T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-06-04",
+                            "date": "2025-06-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-06-04",
+                            "date": "2025-06-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-06-06",
+                            "date": "2025-06-06",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-06-08",
+                            "date": "2025-06-08",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -18300,10 +18300,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-159-1",
-                            "dueDate": "2023-06-04",
+                            "dueDate": "2025-06-04",
                             "amount": 27294,
                             "status": "paid",
-                            "paidDate": "2023-06-06",
+                            "paidDate": "2025-06-06",
                             "reference": "PAY-497858"
                   }
         ],
@@ -19201,9 +19201,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-saham",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2024-12-14",
+        inceptionDate: "2026-12-14",
         expiryDate: "2025-12-14",
-        issueDate: "2024-12-14",
+        issueDate: "2026-12-14",
         sumInsured: 1038358,
         premiumAmount: 17652,
         commissionRate: 21,
@@ -19215,8 +19215,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Medical Malpractice — Professional Indemnity",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-12-14T10:00:00Z",
-        updatedAt: "2024-12-14T10:00:00Z",
+        createdAt: "2026-12-14T10:00:00Z",
+        updatedAt: "2026-12-14T10:00:00Z",
         outstandingBalance: 7943,
         exclusions: ["Consequential loss","War and terrorism","Wilful misconduct","Nuclear contamination"],
         endorsements: [
@@ -19246,52 +19246,52 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-168-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-12-15T10:00:00Z"
+                            "uploadedAt": "2026-12-15T10:00:00Z"
                   },
                   {
                             "id": "doc-168-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-12-19T10:00:00Z"
+                            "uploadedAt": "2026-12-19T10:00:00Z"
                   },
                   {
                             "id": "doc-168-3",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-12-24T10:00:00Z"
+                            "uploadedAt": "2026-12-24T10:00:00Z"
                   },
                   {
                             "id": "doc-168-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-12-15T10:00:00Z"
+                            "uploadedAt": "2026-12-15T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-12-14",
+                            "date": "2026-12-14",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-12-14",
+                            "date": "2026-12-14",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-12-18",
+                            "date": "2026-12-18",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-12-23",
+                            "date": "2026-12-23",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -19300,10 +19300,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-168-1",
-                            "dueDate": "2024-12-14",
+                            "dueDate": "2026-12-14",
                             "amount": 4413,
                             "status": "paid",
-                            "paidDate": "2024-12-16",
+                            "paidDate": "2026-12-16",
                             "reference": "PAY-154135"
                   },
                   {
@@ -19348,9 +19348,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-vanguard",
         brokerId: "brk-002",
         brokerName: "Kofi Asante",
-        inceptionDate: "2024-06-05",
+        inceptionDate: "2026-06-05",
         expiryDate: "2025-06-05",
-        issueDate: "2024-06-05",
+        issueDate: "2026-06-05",
         sumInsured: 1966708,
         premiumAmount: 13767,
         commissionRate: 17,
@@ -19362,66 +19362,66 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Medical Malpractice — Professional Indemnity",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-06-05T10:00:00Z",
-        updatedAt: "2024-06-05T10:00:00Z",
+        createdAt: "2026-06-05T10:00:00Z",
+        updatedAt: "2026-06-05T10:00:00Z",
         exclusions: ["Nuclear contamination","Consequential loss","War and terrorism"],
         documents: [
                   {
                             "id": "doc-169-1",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-06-07T10:00:00Z"
+                            "uploadedAt": "2026-06-07T10:00:00Z"
                   },
                   {
                             "id": "doc-169-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-06-16T10:00:00Z"
+                            "uploadedAt": "2026-06-16T10:00:00Z"
                   },
                   {
                             "id": "doc-169-3",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-06-17T10:00:00Z"
+                            "uploadedAt": "2026-06-17T10:00:00Z"
                   },
                   {
                             "id": "doc-169-4",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-06-14T10:00:00Z"
+                            "uploadedAt": "2026-06-14T10:00:00Z"
                   },
                   {
                             "id": "doc-169-5",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-06-18T10:00:00Z"
+                            "uploadedAt": "2026-06-18T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-06-05",
+                            "date": "2026-06-05",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-06-05",
+                            "date": "2026-06-05",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-06-09",
+                            "date": "2026-06-09",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-06-08",
+                            "date": "2026-06-08",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -19430,18 +19430,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-169-1",
-                            "dueDate": "2024-06-05",
+                            "dueDate": "2026-06-05",
                             "amount": 6884,
                             "status": "paid",
-                            "paidDate": "2024-06-09",
+                            "paidDate": "2026-06-09",
                             "reference": "PAY-867752"
                   },
                   {
                             "id": "inst-169-2",
-                            "dueDate": "2024-12-05",
+                            "dueDate": "2026-12-05",
                             "amount": 6884,
                             "status": "paid",
-                            "paidDate": "2024-12-09",
+                            "paidDate": "2026-12-09",
                             "reference": "PAY-389910"
                   }
         ],
@@ -19463,9 +19463,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-02-02",
+        inceptionDate: "2026-02-02",
         expiryDate: "2025-02-02",
-        issueDate: "2024-02-02",
+        issueDate: "2026-02-02",
         sumInsured: 1548623,
         premiumAmount: 27875,
         commissionRate: 16,
@@ -19477,8 +19477,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Legal PI — Professional Indemnity",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-02-02T10:00:00Z",
-        updatedAt: "2024-02-02T10:00:00Z",
+        createdAt: "2026-02-02T10:00:00Z",
+        updatedAt: "2026-02-02T10:00:00Z",
         exclusions: ["War and terrorism","Nuclear contamination"],
         endorsements: [
                   {
@@ -19486,20 +19486,20 @@ export const mockPolicies: Policy[] = [
                             "endorsementNumber": "PHO/HQ/PI/24/00170/END/1",
                             "type": "addition",
                             "status": "pending",
-                            "effectiveDate": "2024-08-03",
+                            "effectiveDate": "2026-08-03",
                             "description": "Include additional peril",
                             "premiumAdjustment": 578,
-                            "createdAt": "2024-08-14T10:00:00Z"
+                            "createdAt": "2026-08-14T10:00:00Z"
                   },
                   {
                             "id": "end-170-2",
                             "endorsementNumber": "PHO/HQ/PI/24/00170/END/2",
                             "type": "extension",
                             "status": "approved",
-                            "effectiveDate": "2024-08-19",
+                            "effectiveDate": "2026-08-19",
                             "description": "Extend territorial limits",
                             "premiumAdjustment": 256,
-                            "createdAt": "2024-06-21T10:00:00Z"
+                            "createdAt": "2026-06-21T10:00:00Z"
                   }
         ],
         documents: [
@@ -19507,58 +19507,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-170-1",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-02-03T10:00:00Z"
+                            "uploadedAt": "2026-02-03T10:00:00Z"
                   },
                   {
                             "id": "doc-170-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-02-04T10:00:00Z"
+                            "uploadedAt": "2026-02-04T10:00:00Z"
                   },
                   {
                             "id": "doc-170-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-02-14T10:00:00Z"
+                            "uploadedAt": "2026-02-14T10:00:00Z"
                   },
                   {
                             "id": "doc-170-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-02-10T10:00:00Z"
+                            "uploadedAt": "2026-02-10T10:00:00Z"
                   },
                   {
                             "id": "doc-170-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-02-04T10:00:00Z"
+                            "uploadedAt": "2026-02-04T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-02-02",
+                            "date": "2026-02-02",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-02-02",
+                            "date": "2026-02-02",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-02-06",
+                            "date": "2026-02-06",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-02-10",
+                            "date": "2026-02-10",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -19567,34 +19567,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-170-1",
-                            "dueDate": "2024-02-02",
+                            "dueDate": "2026-02-02",
                             "amount": 6969,
                             "status": "paid",
-                            "paidDate": "2024-02-02",
+                            "paidDate": "2026-02-02",
                             "reference": "PAY-729410"
                   },
                   {
                             "id": "inst-170-2",
-                            "dueDate": "2024-05-02",
+                            "dueDate": "2026-05-02",
                             "amount": 6969,
                             "status": "paid",
-                            "paidDate": "2024-05-06",
+                            "paidDate": "2026-05-06",
                             "reference": "PAY-550219"
                   },
                   {
                             "id": "inst-170-3",
-                            "dueDate": "2024-08-02",
+                            "dueDate": "2026-08-02",
                             "amount": 6969,
                             "status": "paid",
-                            "paidDate": "2024-08-03",
+                            "paidDate": "2026-08-03",
                             "reference": "PAY-904148"
                   },
                   {
                             "id": "inst-170-4",
-                            "dueDate": "2024-11-02",
+                            "dueDate": "2026-11-02",
                             "amount": 6969,
                             "status": "paid",
-                            "paidDate": "2024-11-05",
+                            "paidDate": "2026-11-05",
                             "reference": "PAY-153911"
                   }
         ],
@@ -19919,9 +19919,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-regency",
         brokerId: "brk-004",
         brokerName: "Kwame Mensah",
-        inceptionDate: "2024-09-24",
+        inceptionDate: "2026-09-24",
         expiryDate: "2025-09-24",
-        issueDate: "2024-09-24",
+        issueDate: "2026-09-24",
         sumInsured: 33655463,
         premiumAmount: 100966,
         commissionRate: 15,
@@ -19933,54 +19933,54 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Downstream Oil & Gas — Energy",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-09-24T10:00:00Z",
-        updatedAt: "2024-09-24T10:00:00Z",
+        createdAt: "2026-09-24T10:00:00Z",
+        updatedAt: "2026-09-24T10:00:00Z",
         exclusions: ["Consequential loss","War and terrorism"],
         documents: [
                   {
                             "id": "doc-174-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-10-08T10:00:00Z"
+                            "uploadedAt": "2026-10-08T10:00:00Z"
                   },
                   {
                             "id": "doc-174-2",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-09-30T10:00:00Z"
+                            "uploadedAt": "2026-09-30T10:00:00Z"
                   },
                   {
                             "id": "doc-174-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-10-03T10:00:00Z"
+                            "uploadedAt": "2026-10-03T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-09-24",
+                            "date": "2026-09-24",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-09-24",
+                            "date": "2026-09-24",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-09-26",
+                            "date": "2026-09-26",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-09-28",
+                            "date": "2026-09-28",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20003,9 +20003,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-star",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-03-06",
-        expiryDate: "2024-03-06",
-        issueDate: "2023-03-06",
+        inceptionDate: "2025-03-06",
+        expiryDate: "2026-03-06",
+        issueDate: "2025-03-06",
         sumInsured: 68490275,
         premiumAmount: 273961,
         commissionRate: 10,
@@ -20017,66 +20017,66 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Control of Well — Energy",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-03-06T10:00:00Z",
-        updatedAt: "2023-03-06T10:00:00Z",
+        createdAt: "2025-03-06T10:00:00Z",
+        updatedAt: "2025-03-06T10:00:00Z",
         exclusions: ["Nuclear contamination","Consequential loss","Wear and tear"],
         documents: [
                   {
                             "id": "doc-175-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-03-13T10:00:00Z"
+                            "uploadedAt": "2025-03-13T10:00:00Z"
                   },
                   {
                             "id": "doc-175-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-03-17T10:00:00Z"
+                            "uploadedAt": "2025-03-17T10:00:00Z"
                   },
                   {
                             "id": "doc-175-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-03-19T10:00:00Z"
+                            "uploadedAt": "2025-03-19T10:00:00Z"
                   },
                   {
                             "id": "doc-175-4",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-03-18T10:00:00Z"
+                            "uploadedAt": "2025-03-18T10:00:00Z"
                   },
                   {
                             "id": "doc-175-5",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-03-10T10:00:00Z"
+                            "uploadedAt": "2025-03-10T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-03-06",
+                            "date": "2025-03-06",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-03-06",
+                            "date": "2025-03-06",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-03-08",
+                            "date": "2025-03-08",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-03-11",
+                            "date": "2025-03-11",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20225,9 +20225,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-imperial",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2024-12-14",
+        inceptionDate: "2026-12-14",
         expiryDate: "2025-12-14",
-        issueDate: "2024-12-14",
+        issueDate: "2026-12-14",
         sumInsured: 14518263,
         premiumAmount: 87110,
         commissionRate: 11,
@@ -20239,8 +20239,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Aircraft Hull — Aviation",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-12-14T10:00:00Z",
-        updatedAt: "2024-12-14T10:00:00Z",
+        createdAt: "2026-12-14T10:00:00Z",
+        updatedAt: "2026-12-14T10:00:00Z",
         exclusions: ["Wear and tear","Consequential loss"],
         endorsements: [
                   {
@@ -20279,46 +20279,46 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-177-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-12-21T10:00:00Z"
+                            "uploadedAt": "2026-12-21T10:00:00Z"
                   },
                   {
                             "id": "doc-177-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-12-23T10:00:00Z"
+                            "uploadedAt": "2026-12-23T10:00:00Z"
                   },
                   {
                             "id": "doc-177-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2024-12-25T10:00:00Z"
+                            "uploadedAt": "2026-12-25T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-12-14",
+                            "date": "2026-12-14",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-12-14",
+                            "date": "2026-12-14",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-12-16",
+                            "date": "2026-12-16",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-12-20",
+                            "date": "2026-12-20",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20327,10 +20327,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-177-1",
-                            "dueDate": "2024-12-14",
+                            "dueDate": "2026-12-14",
                             "amount": 21778,
                             "status": "paid",
-                            "paidDate": "2024-12-18",
+                            "paidDate": "2026-12-18",
                             "reference": "PAY-644140"
                   },
                   {
@@ -20375,9 +20375,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-loyalty",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2024-09-19",
+        inceptionDate: "2026-09-19",
         expiryDate: "2025-09-19",
-        issueDate: "2024-09-19",
+        issueDate: "2026-09-19",
         sumInsured: 14695429,
         premiumAmount: 161650,
         commissionRate: 11,
@@ -20389,8 +20389,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Aviation Liability — Aviation",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2024-09-19T10:00:00Z",
-        updatedAt: "2024-09-19T10:00:00Z",
+        createdAt: "2026-09-19T10:00:00Z",
+        updatedAt: "2026-09-19T10:00:00Z",
         outstandingBalance: 61427,
         exclusions: ["Consequential loss","Nuclear contamination","Wilful misconduct"],
         documents: [
@@ -20398,58 +20398,58 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-178-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2024-09-25T10:00:00Z"
+                            "uploadedAt": "2026-09-25T10:00:00Z"
                   },
                   {
                             "id": "doc-178-2",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2024-09-21T10:00:00Z"
+                            "uploadedAt": "2026-09-21T10:00:00Z"
                   },
                   {
                             "id": "doc-178-3",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2024-09-25T10:00:00Z"
+                            "uploadedAt": "2026-09-25T10:00:00Z"
                   },
                   {
                             "id": "doc-178-4",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-09-27T10:00:00Z"
+                            "uploadedAt": "2026-09-27T10:00:00Z"
                   },
                   {
                             "id": "doc-178-5",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-10-02T10:00:00Z"
+                            "uploadedAt": "2026-10-02T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-09-19",
+                            "date": "2026-09-19",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-09-19",
+                            "date": "2026-09-19",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-09-20",
+                            "date": "2026-09-20",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-09-26",
+                            "date": "2026-09-26",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20458,10 +20458,10 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-178-1",
-                            "dueDate": "2024-09-19",
+                            "dueDate": "2026-09-19",
                             "amount": 80825,
                             "status": "paid",
-                            "paidDate": "2024-09-23",
+                            "paidDate": "2026-09-23",
                             "reference": "PAY-741786"
                   },
                   {
@@ -20619,9 +20619,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-unique",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2023-06-09",
-        expiryDate: "2024-06-09",
-        issueDate: "2023-06-09",
+        inceptionDate: "2025-06-09",
+        expiryDate: "2026-06-09",
+        issueDate: "2025-06-09",
         sumInsured: 44147240,
         premiumAmount: 264883,
         commissionRate: 9,
@@ -20633,66 +20633,66 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Aircraft Hull — Aviation",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-06-09T10:00:00Z",
-        updatedAt: "2023-06-09T10:00:00Z",
+        createdAt: "2025-06-09T10:00:00Z",
+        updatedAt: "2025-06-09T10:00:00Z",
         exclusions: ["War and terrorism","Wear and tear","Consequential loss","Wilful misconduct"],
         documents: [
                   {
                             "id": "doc-180-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-06-11T10:00:00Z"
+                            "uploadedAt": "2025-06-11T10:00:00Z"
                   },
                   {
                             "id": "doc-180-2",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-06-15T10:00:00Z"
+                            "uploadedAt": "2025-06-15T10:00:00Z"
                   },
                   {
                             "id": "doc-180-3",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-06-12T10:00:00Z"
+                            "uploadedAt": "2025-06-12T10:00:00Z"
                   },
                   {
                             "id": "doc-180-4",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-06-18T10:00:00Z"
+                            "uploadedAt": "2025-06-18T10:00:00Z"
                   },
                   {
                             "id": "doc-180-5",
                             "name": "Debit Note.pdf",
                             "type": "debit_note",
-                            "uploadedAt": "2023-06-12T10:00:00Z"
+                            "uploadedAt": "2025-06-12T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-06-09",
+                            "date": "2025-06-09",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-06-09",
+                            "date": "2025-06-09",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-06-12",
+                            "date": "2025-06-12",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-06-16",
+                            "date": "2025-06-16",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20701,34 +20701,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-180-1",
-                            "dueDate": "2023-06-09",
+                            "dueDate": "2025-06-09",
                             "amount": 66221,
                             "status": "paid",
-                            "paidDate": "2023-06-13",
+                            "paidDate": "2025-06-13",
                             "reference": "PAY-935896"
                   },
                   {
                             "id": "inst-180-2",
-                            "dueDate": "2023-07-09",
+                            "dueDate": "2025-07-09",
                             "amount": 66221,
                             "status": "paid",
-                            "paidDate": "2023-07-10",
+                            "paidDate": "2025-07-10",
                             "reference": "PAY-352259"
                   },
                   {
                             "id": "inst-180-3",
-                            "dueDate": "2023-08-09",
+                            "dueDate": "2025-08-09",
                             "amount": 66221,
                             "status": "paid",
-                            "paidDate": "2023-08-13",
+                            "paidDate": "2025-08-13",
                             "reference": "PAY-247899"
                   },
                   {
                             "id": "inst-180-4",
-                            "dueDate": "2023-09-09",
+                            "dueDate": "2025-09-09",
                             "amount": 66221,
                             "status": "paid",
-                            "paidDate": "2023-09-13",
+                            "paidDate": "2025-09-13",
                             "reference": "PAY-326714"
                   }
         ],
@@ -20749,9 +20749,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-saham",
         brokerId: "brk-001",
         brokerName: "Esi Donkor",
-        inceptionDate: "2023-02-18",
-        expiryDate: "2024-02-18",
-        issueDate: "2023-02-18",
+        inceptionDate: "2025-02-18",
+        expiryDate: "2026-02-18",
+        issueDate: "2025-02-18",
         sumInsured: 43005,
         premiumAmount: 860,
         commissionRate: 12,
@@ -20763,8 +20763,8 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "All Risks — Miscellaneous",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2023-02-18T10:00:00Z",
-        updatedAt: "2023-02-18T10:00:00Z",
+        createdAt: "2025-02-18T10:00:00Z",
+        updatedAt: "2025-02-18T10:00:00Z",
         outstandingBalance: 241,
         exclusions: ["Wear and tear","Consequential loss"],
         documents: [
@@ -20772,40 +20772,40 @@ export const mockPolicies: Policy[] = [
                             "id": "doc-181-1",
                             "name": "Cover Note.pdf",
                             "type": "cover_note",
-                            "uploadedAt": "2023-02-19T10:00:00Z"
+                            "uploadedAt": "2025-02-19T10:00:00Z"
                   },
                   {
                             "id": "doc-181-2",
                             "name": "Certificate of Insurance.pdf",
                             "type": "certificate",
-                            "uploadedAt": "2023-02-23T10:00:00Z"
+                            "uploadedAt": "2025-02-23T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-02-18",
+                            "date": "2025-02-18",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-02-18",
+                            "date": "2025-02-18",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-02-22",
+                            "date": "2025-02-22",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-02-27",
+                            "date": "2025-02-27",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20814,34 +20814,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-181-1",
-                            "dueDate": "2023-02-18",
+                            "dueDate": "2025-02-18",
                             "amount": 215,
                             "status": "paid",
-                            "paidDate": "2023-02-22",
+                            "paidDate": "2025-02-22",
                             "reference": "PAY-555144"
                   },
                   {
                             "id": "inst-181-2",
-                            "dueDate": "2023-05-18",
+                            "dueDate": "2025-05-18",
                             "amount": 215,
                             "status": "paid",
-                            "paidDate": "2023-05-18",
+                            "paidDate": "2025-05-18",
                             "reference": "PAY-167907"
                   },
                   {
                             "id": "inst-181-3",
-                            "dueDate": "2023-08-18",
+                            "dueDate": "2025-08-18",
                             "amount": 215,
                             "status": "paid",
-                            "paidDate": "2023-08-22",
+                            "paidDate": "2025-08-22",
                             "reference": "PAY-855924"
                   },
                   {
                             "id": "inst-181-4",
-                            "dueDate": "2023-11-18",
+                            "dueDate": "2025-11-18",
                             "amount": 215,
                             "status": "paid",
-                            "paidDate": "2023-11-22",
+                            "paidDate": "2025-11-22",
                             "reference": "PAY-581982"
                   }
         ],
@@ -20862,9 +20862,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-phoenix",
         brokerId: "brk-005",
         brokerName: "Adjoa Boateng",
-        inceptionDate: "2023-05-04",
-        expiryDate: "2024-05-04",
-        issueDate: "2023-05-04",
+        inceptionDate: "2025-05-04",
+        expiryDate: "2026-05-04",
+        issueDate: "2025-05-04",
         sumInsured: 1906580,
         premiumAmount: 15253,
         commissionRate: 12,
@@ -20876,54 +20876,54 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Fidelity Guarantee — Miscellaneous",
         isRenewal: true,
         daysToExpiry: 0,
-        createdAt: "2023-05-04T10:00:00Z",
-        updatedAt: "2023-05-04T10:00:00Z",
+        createdAt: "2025-05-04T10:00:00Z",
+        updatedAt: "2025-05-04T10:00:00Z",
         exclusions: ["Nuclear contamination","Wilful misconduct","Wear and tear"],
         documents: [
                   {
                             "id": "doc-182-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2023-05-18T10:00:00Z"
+                            "uploadedAt": "2025-05-18T10:00:00Z"
                   },
                   {
                             "id": "doc-182-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2023-05-05T10:00:00Z"
+                            "uploadedAt": "2025-05-05T10:00:00Z"
                   },
                   {
                             "id": "doc-182-3",
                             "name": "Proposal Form.pdf",
                             "type": "proposal_form",
-                            "uploadedAt": "2023-05-05T10:00:00Z"
+                            "uploadedAt": "2025-05-05T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2023-05-04",
+                            "date": "2025-05-04",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2023-05-04",
+                            "date": "2025-05-04",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2023-05-05",
+                            "date": "2025-05-05",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2023-05-12",
+                            "date": "2025-05-12",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -20932,34 +20932,34 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-182-1",
-                            "dueDate": "2023-05-04",
+                            "dueDate": "2025-05-04",
                             "amount": 3813,
                             "status": "paid",
-                            "paidDate": "2023-05-07",
+                            "paidDate": "2025-05-07",
                             "reference": "PAY-106952"
                   },
                   {
                             "id": "inst-182-2",
-                            "dueDate": "2023-08-04",
+                            "dueDate": "2025-08-04",
                             "amount": 3813,
                             "status": "paid",
-                            "paidDate": "2023-08-04",
+                            "paidDate": "2025-08-04",
                             "reference": "PAY-750761"
                   },
                   {
                             "id": "inst-182-3",
-                            "dueDate": "2023-11-04",
+                            "dueDate": "2025-11-04",
                             "amount": 3813,
                             "status": "paid",
-                            "paidDate": "2023-11-09",
+                            "paidDate": "2025-11-09",
                             "reference": "PAY-323803"
                   },
                   {
                             "id": "inst-182-4",
-                            "dueDate": "2024-02-04",
+                            "dueDate": "2026-02-04",
                             "amount": 3813,
                             "status": "paid",
-                            "paidDate": "2024-02-05",
+                            "paidDate": "2026-02-05",
                             "reference": "PAY-102838"
                   }
         ],
@@ -21065,9 +21065,9 @@ export const mockPolicies: Policy[] = [
         insurerId: "carrier-star",
         brokerId: "brk-003",
         brokerName: "Abena Nyarko",
-        inceptionDate: "2024-07-17",
+        inceptionDate: "2026-07-17",
         expiryDate: "2025-07-17",
-        issueDate: "2024-07-17",
+        issueDate: "2026-07-17",
         sumInsured: 605493,
         premiumAmount: 9082,
         commissionRate: 14,
@@ -21079,48 +21079,48 @@ export const mockPolicies: Policy[] = [
         coverageDetails: "Burglary Insurance — Miscellaneous",
         isRenewal: false,
         daysToExpiry: 0,
-        createdAt: "2024-07-17T10:00:00Z",
-        updatedAt: "2024-07-17T10:00:00Z",
+        createdAt: "2026-07-17T10:00:00Z",
+        updatedAt: "2026-07-17T10:00:00Z",
         exclusions: ["War and terrorism","Wear and tear","Nuclear contamination","Wilful misconduct"],
         documents: [
                   {
                             "id": "doc-184-1",
                             "name": "Policy Schedule.pdf",
                             "type": "policy_schedule",
-                            "uploadedAt": "2024-07-22T10:00:00Z"
+                            "uploadedAt": "2026-07-22T10:00:00Z"
                   },
                   {
                             "id": "doc-184-2",
                             "name": "Premium Receipt.pdf",
                             "type": "receipt",
-                            "uploadedAt": "2024-07-26T10:00:00Z"
+                            "uploadedAt": "2026-07-26T10:00:00Z"
                   }
         ],
         timeline: [
                   {
                             "id": "evt-1",
-                            "date": "2024-07-17",
+                            "date": "2026-07-17",
                             "event": "Policy Created",
                             "description": "Policy application submitted and processed",
                             "performedBy": "System"
                   },
                   {
                             "id": "evt-2",
-                            "date": "2024-07-17",
+                            "date": "2026-07-17",
                             "event": "Cover Note Issued",
                             "description": "Temporary cover note issued pending full documentation",
                             "performedBy": "Underwriting"
                   },
                   {
                             "id": "evt-3",
-                            "date": "2024-07-19",
+                            "date": "2026-07-19",
                             "event": "Premium Received",
                             "description": "Initial premium payment confirmed",
                             "performedBy": "Accounts"
                   },
                   {
                             "id": "evt-4",
-                            "date": "2024-07-23",
+                            "date": "2026-07-23",
                             "event": "Policy Schedule Issued",
                             "description": "Full policy documentation generated and dispatched",
                             "performedBy": "Underwriting"
@@ -21129,18 +21129,18 @@ export const mockPolicies: Policy[] = [
         installments: [
                   {
                             "id": "inst-184-1",
-                            "dueDate": "2024-07-17",
+                            "dueDate": "2026-07-17",
                             "amount": 2271,
                             "status": "paid",
-                            "paidDate": "2024-07-20",
+                            "paidDate": "2026-07-20",
                             "reference": "PAY-884712"
                   },
                   {
                             "id": "inst-184-2",
-                            "dueDate": "2024-10-17",
+                            "dueDate": "2026-10-17",
                             "amount": 2271,
                             "status": "paid",
-                            "paidDate": "2024-10-20",
+                            "paidDate": "2026-10-20",
                             "reference": "PAY-964140"
                   },
                   {

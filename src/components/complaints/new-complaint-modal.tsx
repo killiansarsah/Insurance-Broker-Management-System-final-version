@@ -103,7 +103,7 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
                             type="text"
                             value={policyNo}
                             onChange={(e) => setPolicyNo(e.target.value)}
-                            placeholder="e.g. POL-2024-001"
+                            placeholder="e.g. POL-2026-001"
                             className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 shadow-sm placeholder:text-surface-400 bg-white/50"
                         />
                     </div>

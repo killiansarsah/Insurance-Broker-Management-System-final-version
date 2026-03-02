@@ -482,7 +482,7 @@ function generateRenewals(): Renewal[] {
             insuranceType: 'motor',
             coverageType: 'Fleet Comprehensive',
             policyType: 'non-life',
-            inceptionDate: '2024-12-01',
+            inceptionDate: '2026-12-01',
             expiryDate: '2025-12-01',
             daysToExpiry: -88,
             currentPremium: 210000,

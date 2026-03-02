@@ -62,14 +62,14 @@ export const MOCK_DOCUMENTS: Document[] = [
 export const MOCK_COMPLAINTS: Complaint[] = [
     {
         id: 'cmp-1',
-        complaintNumber: 'CMP-2024-001',
+        complaintNumber: 'CMP-2026-001',
         status: 'registered',
         priority: 'high',
         complainantName: 'Ghana Shippers\' Authority',
         complainantPhone: '+233 20 100 1111',
         subject: 'Claim settlement timeline',
         category: 'Claims',
-        description: 'Client is inquiring about the status of CLM-2023-0001. It has been over 7 days since intimation.',
+        description: 'Client is inquiring about the status of CLM-2025-0001. It has been over 7 days since intimation.',
         escalationLevel: 0,
         slaDeadline: new Date(Date.now() + 86400000 * 2).toISOString(),
         isBreached: false,
@@ -78,7 +78,7 @@ export const MOCK_COMPLAINTS: Complaint[] = [
     },
     {
         id: 'cmp-2',
-        complaintNumber: 'CMP-2024-002',
+        complaintNumber: 'CMP-2026-002',
         status: 'resolved',
         priority: 'medium',
         complainantName: 'Radiance Petroleum',

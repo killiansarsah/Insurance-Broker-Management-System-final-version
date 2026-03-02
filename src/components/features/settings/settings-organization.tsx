@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useCallback, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useProfileStore } from '@/stores/profile-store';
@@ -93,7 +94,7 @@ export function SettingsOrganization() {
                     <div className="relative group">
                         <div className="size-40 rounded-full border-4 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden shadow-inner p-4 relative font-black text-3xl text-primary">
                             {logoUrl ? (
-                                <img src={logoUrl} alt="Company Logo" className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                <Image src={logoUrl} alt="Company Logo" width={160} height={160} className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
                             ) : (
                                 `${lCompanyName.charAt(0)}${lCompanyName.split(/\s+/).slice(1, 2).map(w => w[0]).join('')}`
                             )}

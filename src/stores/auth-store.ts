@@ -26,7 +26,7 @@ const MOCK_USER: User = {
     avatarUrl: undefined,
     isActive: true,
     lastLogin: new Date().toISOString(),
-    createdAt: '2024-01-01T00:00:00Z',
+    createdAt: '2025-01-01T00:00:00Z',
 };
 
 // Role hierarchy for permission checks

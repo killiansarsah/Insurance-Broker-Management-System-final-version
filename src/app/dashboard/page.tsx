@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { Calendar } from 'lucide-react';
+import { format } from 'date-fns';
 import {
     Users,
     FileText,
@@ -16,12 +17,13 @@ import {
     AlertTriangle,
     Building2,
     Briefcase,
-    ChevronDown,
     Shield,
     X,
-    Check,
+    XCircle,
+    PieChart,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import dynamic from 'next/dynamic';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,10 +35,29 @@ import { mockClients as clients } from '@/mock/clients';
 import { claims } from '@/mock/claims';
 import { invoices } from '@/mock/finance';
 import { mockLeads } from '@/mock/leads';
-import { PremiumTrend } from '@/components/charts/premium-trend';
-import { PolicyMix } from '@/components/charts/policy-mix';
-import { TopInsurers } from '@/components/charts/top-insurers';
 import { toast } from 'sonner';
+import { Download } from 'lucide-react';
+
+// Lazy-load heavy chart components (recharts ~240KB)
+const ChartSkeleton = () => (
+    <div className="h-[260px] flex items-center justify-center text-sm text-slate-400 animate-pulse">Loading chart…</div>
+);
+const PremiumTrend = dynamic(
+    () => import('@/components/charts/premium-trend').then(m => ({ default: m.PremiumTrend })),
+    { ssr: false, loading: ChartSkeleton },
+);
+const PolicyMix = dynamic(
+    () => import('@/components/charts/policy-mix').then(m => ({ default: m.PolicyMix })),
+    { ssr: false, loading: ChartSkeleton },
+);
+const TopInsurers = dynamic(
+    () => import('@/components/charts/top-insurers').then(m => ({ default: m.TopInsurers })),
+    { ssr: false, loading: ChartSkeleton },
+);
+const ClaimsRatioGauge = dynamic(
+    () => import('@/components/charts/claims-ratio-gauge').then(m => ({ default: m.ClaimsRatioGauge })),
+    { ssr: false, loading: ChartSkeleton },
+);
 
 // =====================================================================
 // TYPES
@@ -265,6 +286,23 @@ export default function DashboardPage() {
     }), [filters]);
     const filteredClaims = useMemo(() => filterData(claims, filters, period), [filters, period]);
 
+    // --- Claims Ratio (must be before kpiData) ---
+    const claimsRatioData = useMemo(() => {
+        const totalClaimsPaid = filteredClaims
+            .filter(c => c.status === 'settled')
+            .reduce((sum, c) => sum + (c.settledAmount || c.claimAmount || 0), 0);
+        const totalPremium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+        const ratio = totalPremium > 0 ? (totalClaimsPaid / totalPremium) * 100 : 0;
+        return { ratio: Math.min(ratio, 100), claimsPaid: totalClaimsPaid, premiumReceived: totalPremium };
+    }, [filteredClaims, filteredPolicies]);
+
+    const claimsRatioValue = claimsRatioData.ratio;
+
+    // --- Lapsed Policies (must be before kpiData) ---
+    const lapsedPolicies = useMemo(() => policies.filter(p => p.status === 'lapsed'), []);
+    const lapsedCount = lapsedPolicies.length;
+    const lapsedPremium = lapsedPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+
     const kpiData = useMemo(() => {
         const premium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
         const commission = filteredPolicies.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
@@ -282,8 +320,10 @@ export default function DashboardPage() {
             { label: 'Active Policies', value: policyCount.toString(), change: 5, direction: 'up' as const, icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `${(policyCount / (clientCount || 1)).toFixed(1)} per client` },
             { label: 'Expiring (7d)', value: expiringCount.toString(), change: 0, direction: 'down' as const, icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: `${expiringCount > 5 ? 'High volume' : 'Manageable'}`, warn: expiringCount > 0 },
             { label: 'Leads Pipeline', value: mockLeads.filter(l => l.status !== 'converted' && l.status !== 'lost').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(mockLeads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
+            { label: 'Claims Ratio', value: `${claimsRatioValue.toFixed(1)}%`, change: 1.5, direction: claimsRatioValue > 50 ? 'up' as const : 'down' as const, icon: <PieChart size={20} />, color: claimsRatioValue > 70 ? 'text-danger-600 bg-danger-50' : claimsRatioValue > 50 ? 'text-warning-600 bg-warning-50' : 'text-success-600 bg-success-50', subtitle: claimsRatioValue > 70 ? 'Above threshold' : 'Within target', warn: claimsRatioValue > 70 },
+            { label: 'Lapsed Policies', value: lapsedCount.toString(), change: 0, direction: 'down' as const, icon: <XCircle size={20} />, color: lapsedCount > 5 ? 'text-danger-600 bg-danger-50' : 'text-warning-600 bg-warning-50', subtitle: lapsedCount > 0 ? `${formatCompact(lapsedPremium)} at risk` : 'No lapsed policies', warn: lapsedCount > 0 },
         ];
-    }, [filteredPolicies, filteredClients, period]);
+    }, [filteredPolicies, filteredClients, period, claimsRatioValue, lapsedCount, lapsedPremium]);
 
     const commissionData = useMemo(() => {
         const expected = filteredPolicies.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
@@ -327,6 +367,40 @@ export default function DashboardPage() {
     // Total expiring count for renewals header
     const totalExpiring = renewalsData.reduce((sum, r) => sum + r.count, 0);
 
+    // --- Export Dashboard as CSV ---
+    const handleExportCSV = () => {
+        const rows: string[][] = [
+            ['Metric', 'Value', 'Change', 'Subtitle'],
+            ...kpiData.map(k => [k.label, k.value, `${k.change}%`, k.subtitle]),
+            [],
+            ['Claims Ratio Details'],
+            ['Claims Paid', `GHS ${claimsRatioData.claimsPaid.toFixed(2)}`],
+            ['Premium Received', `GHS ${claimsRatioData.premiumReceived.toFixed(2)}`],
+            ['Ratio', `${claimsRatioData.ratio.toFixed(1)}%`],
+            [],
+            ['Commission Tracking'],
+            ['Expected', `GHS ${commissionData.expected.toFixed(2)}`],
+            ['Paid', `GHS ${commissionData.paid.toFixed(2)}`],
+            ['Outstanding', `GHS ${commissionData.outstanding.toFixed(2)}`],
+            [],
+            ['Renewals by Product', 'Count', 'Premium'],
+            ...renewalsData.map(r => [r.product, r.count.toString(), `GHS ${r.premium.toFixed(2)}`]),
+            [],
+            ['Lapsed Policies'],
+            ['Count', lapsedCount.toString()],
+            ['Premium at Risk', `GHS ${lapsedPremium.toFixed(2)}`],
+        ];
+        const csvContent = rows.map(r => r.join(',')).join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `IBMS_Dashboard_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
+        toast.success('Dashboard Exported', { description: 'CSV file downloaded successfully.' });
+    };
+
     return (
         <div className="space-y-6 animate-fade-in mb-12">
             {/* === HEADER === */}
@@ -348,7 +422,7 @@ export default function DashboardPage() {
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                         {activeFilterCount > 0 && (
                             <button
                                 onClick={clearAllFilters}
@@ -358,6 +432,13 @@ export default function DashboardPage() {
                                 <span>Clear Filters</span>
                             </button>
                         )}
+                        <button
+                            onClick={handleExportCSV}
+                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-background/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-background hover:text-success-600 hover:border-success-300 transition-all cursor-pointer shadow-sm group active:scale-95"
+                        >
+                            <Download size={12} className="group-hover:translate-y-0.5 transition-transform" />
+                            <span>Export</span>
+                        </button>
                         <button
                             onClick={() => toast.info('Dashboard refreshed', { description: 'All metrics recalculated with latest data.' })}
                             className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-background/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-background hover:text-primary-600 hover:border-primary-300 transition-all cursor-pointer shadow-sm group active:scale-95"
@@ -413,7 +494,7 @@ export default function DashboardPage() {
             </div>
 
             {/* === KPI STRIP === */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
                 {kpiData.map((kpi) => (
                     <Card key={kpi.label} padding="md" hover className="relative overflow-hidden group">
                         <div className="flex items-start justify-between">
@@ -442,7 +523,7 @@ export default function DashboardPage() {
             </div>
 
             {/* === VISUAL CHARTS === */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                 <Card padding="none" className="overflow-hidden">
                     <CardHeader title="Premium Trend" subtitle="Monthly gross written premium" className="p-6 pb-0" />
                     <div className="px-4 pb-4">
@@ -454,6 +535,17 @@ export default function DashboardPage() {
                     <CardHeader title="Policy Mix" subtitle="Distribution by product line" className="p-6 pb-0" />
                     <div className="px-4 pb-4">
                         <PolicyMix />
+                    </div>
+                </Card>
+
+                <Card padding="none" className="overflow-hidden">
+                    <CardHeader title="Claims Ratio" subtitle="Claims paid vs premium received" className="p-6 pb-0" />
+                    <div className="px-4 pb-4">
+                        <ClaimsRatioGauge
+                            ratio={claimsRatioData.ratio}
+                            claimsPaid={claimsRatioData.claimsPaid}
+                            premiumReceived={claimsRatioData.premiumReceived}
+                        />
                     </div>
                 </Card>
 
@@ -576,7 +668,7 @@ export default function DashboardPage() {
                         action={<Badge variant="danger" size="md">{formatCompact(commissionData.overdue60)} overdue</Badge>}
                         className="p-6 pb-4"
                     />
-                    <div className="px-6 pb-4 grid grid-cols-3 gap-3">
+                    <div className="px-6 pb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="bg-primary-50 rounded-lg p-3 text-center">
                             <p className="text-xs text-primary-600 font-medium">Expected</p>
                             <p className="text-base font-bold text-primary-900 mt-1">{formatCompact(commissionData.expected)}</p>
@@ -621,7 +713,7 @@ export default function DashboardPage() {
                         action={claimsData.escalated > 0 ? <Badge variant="danger" size="md">{claimsData.escalated} Escalated</Badge> : undefined}
                         className="p-6 pb-4"
                     />
-                    <div className="px-6 pb-6 grid grid-cols-2 gap-4">
+                    <div className="px-6 pb-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="bg-surface-50 rounded-lg p-4">
                             <p className="text-2xl font-bold text-surface-900">{claimsData.lodged}</p>
                             <p className="text-xs text-surface-500 mt-1">Claims Lodged</p>
@@ -644,7 +736,7 @@ export default function DashboardPage() {
                 <Card padding="none" className="overflow-hidden">
                     <CardHeader title="Sales & Pipeline" subtitle={`Account officer performance — ${periodLabels[period]}`} className="p-6 pb-4" />
                     <div className="px-6 pb-6 space-y-4">
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <p className="text-xs text-surface-500 uppercase tracking-wider">Quotes Issued</p>
                                 <p className="text-2xl font-bold text-surface-900 mt-1">{salesData.quotesIssued}</p>

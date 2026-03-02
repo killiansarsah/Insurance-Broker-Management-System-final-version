@@ -12,6 +12,17 @@ const nextConfig: NextConfig = {
   basePath: isProd ? `/${REPO_NAME}` : '',
   assetPrefix: isProd ? `/${REPO_NAME}/` : '',
   trailingSlash: true,
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      'date-fns',
+      'framer-motion',
+    ],
+  },
+  compiler: {
+    removeConsole: isProd ? { exclude: ['error', 'warn'] } : false,
+  },
 };
 
 export default nextConfig;

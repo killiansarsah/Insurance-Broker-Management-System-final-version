@@ -6,7 +6,7 @@
    ============================================================ */
 
 @theme {
-  --font-handwriting: "Caveat", cursive;
+  --font-handwriting: var(--font-caveat, "Caveat", cursive);
 
   /* --- Primary Palette --- */
   --color-primary-50: var(--primary-50);

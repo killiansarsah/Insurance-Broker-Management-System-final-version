@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import {
     Plus,
     Search,
@@ -103,7 +104,7 @@ export default function UsersPage() {
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-surface-500 font-medium text-xs overflow-hidden">
                                     {row.avatarUrl ? (
-                                        <img src={row.avatarUrl} alt="" className="w-full h-full object-cover" />
+                                        <Image src={row.avatarUrl} alt="" width={32} height={32} className="w-full h-full object-cover" />
                                     ) : (
                                         <span>{row.firstName[0]}{row.lastName[0]}</span>
                                     )}

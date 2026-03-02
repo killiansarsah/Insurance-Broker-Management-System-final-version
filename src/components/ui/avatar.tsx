@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { cn, getInitials } from '@/lib/utils';
 
 type AvatarSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -35,10 +36,13 @@ function getColorFromName(name: string): string {
 
 export function Avatar({ name, src, icon, size = 'md', className }: AvatarProps) {
     if (src) {
+        const dim = size === 'sm' ? 32 : size === 'md' ? 40 : size === 'lg' ? 48 : 64;
         return (
-            <img
+            <Image
                 src={src}
                 alt={name}
+                width={dim}
+                height={dim}
                 className={cn(
                     'rounded-full object-cover ring-2 ring-white',
                     sizeStyles[size],

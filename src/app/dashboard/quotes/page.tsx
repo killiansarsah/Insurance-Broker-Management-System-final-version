@@ -133,7 +133,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
 
                 <div className="px-6 py-5 space-y-6">
                     {/* Client & Quote Info Grid */}
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoCard label="Client" value={quote.clientName} icon={<User size={16} />} />
                         <InfoCard label="Insurance Type" value={`${quote.coverageType} (${quote.insuranceType})`} icon={<Shield size={16} />} />
                         <InfoCard label="Policy Type" value={quote.policyType === 'life' ? 'Life' : 'Non-Life'} icon={<FileText size={16} />} />
@@ -188,7 +188,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                             )}
                                         </div>
                                         {/* Metrics Grid */}
-                                        <div className="grid grid-cols-4 gap-3">
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                                             <div>
                                                 <p className="text-[10px] uppercase font-semibold text-surface-500">Premium</p>
                                                 <p className="text-base font-bold text-surface-900">{formatCurrency(opt.premium)}</p>
