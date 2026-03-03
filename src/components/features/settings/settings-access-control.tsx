@@ -40,7 +40,7 @@ interface Role {
     icon: React.ElementType;
 }
 
-type ModalType = 'edit' | 'terminate' | null;
+type ModalType = 'edit' | 'terminate' | 'invite' | 'new-role' | null;
 
 export function SettingsAccessControl() {
     const [subTab, setSubTab] = useState<'users' | 'roles'>('users');
@@ -52,6 +52,12 @@ export function SettingsAccessControl() {
     const [showToast, setShowToast] = useState(false);
     const [toastMsg, setToastMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [inviteName, setInviteName] = useState('');
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteRole, setInviteRole] = useState('Agent');
+    const [newRoleName, setNewRoleName] = useState('');
+    const [newRoleColor, setNewRoleColor] = useState<'violet' | 'blue' | 'emerald' | 'amber'>('blue');
+    const [newRoleIconKey, setNewRoleIconKey] = useState<string>('UserCheck');
 
     const roleOptions = ['Workspace owner', 'Administrator', 'Manager', 'Supervisor', 'Agent'];
 
@@ -107,6 +113,70 @@ export function SettingsAccessControl() {
             setIsSaving(false);
             closeModal();
             triggerToast(isSuspended ? `${selectedUser.name} has been restored` : `${selectedUser.name} has been suspended`);
+        }, 600);
+    };
+
+    const roleIconOptions: Array<{ key: string; icon: React.ElementType; label: string }> = [
+        { key: 'Crown', icon: Crown, label: 'Crown' },
+        { key: 'ShieldCheck', icon: ShieldCheck, label: 'Shield' },
+        { key: 'Briefcase', icon: Briefcase, label: 'Briefcase' },
+        { key: 'UserCheck', icon: UserCheck, label: 'Agent' },
+        { key: 'Users', icon: Users, label: 'Team' },
+        { key: 'UserCog', icon: UserCog, label: 'Config' },
+    ];
+
+    const openInviteModal = () => {
+        setInviteName('');
+        setInviteEmail('');
+        setInviteRole('Agent');
+        setModalType('invite');
+    };
+
+    const openNewRoleModal = () => {
+        setNewRoleName('');
+        setNewRoleColor('blue');
+        setNewRoleIconKey('UserCheck');
+        setModalType('new-role');
+    };
+
+    const confirmInvite = () => {
+        if (!inviteName.trim() || !inviteEmail.trim()) return;
+        setIsSaving(true);
+        setTimeout(() => {
+            const newUser: User = {
+                id: String(Date.now()),
+                name: inviteName.trim(),
+                email: inviteEmail.trim(),
+                role: inviteRole,
+                status: 'Active',
+                active: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                initial: inviteName.trim().split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
+            };
+            setUsers(prev => [...prev, newUser]);
+            setIsSaving(false);
+            closeModal();
+            triggerToast(`Invite sent to ${inviteName.trim()}`);
+        }, 600);
+    };
+
+    const confirmNewRole = () => {
+        if (!newRoleName.trim()) return;
+        setIsSaving(true);
+        const icon = roleIconOptions.find(o => o.key === newRoleIconKey)?.icon ?? UserCheck;
+        setTimeout(() => {
+            const newRole: Role = {
+                id: String(Date.now()),
+                name: newRoleName.trim(),
+                userCount: 0,
+                permissions: [],
+                color: newRoleColor,
+                icon,
+            };
+            setRoles(prev => [...prev, newRole]);
+            setSelectedRoleId(newRole.id);
+            setIsSaving(false);
+            closeModal();
+            triggerToast(`Role "${newRoleName.trim()}" created`);
         }, 600);
     };
 
@@ -234,7 +304,7 @@ export function SettingsAccessControl() {
                             />
                         </div>
                         <button
-                            onClick={() => toast.info('Invite User', { description: 'User invitation will be available in a future update.' })}
+                            onClick={openInviteModal}
                             className="h-10 px-5 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold flex items-center gap-2 transition active:scale-95 shadow-sm"
                         >
                             <UserPlus size={15} />
@@ -317,7 +387,7 @@ export function SettingsAccessControl() {
                             );
                         })}
                         <button
-                            onClick={() => toast.info('New Role', { description: 'Custom role creation coming soon.' })}
+                            onClick={openNewRoleModal}
                             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-surface-300 dark:border-slate-700 text-sm text-surface-400 hover:text-primary-600 hover:border-primary-400 transition"
                         >
                             <PlusCircle size={15} />
@@ -491,6 +561,144 @@ export function SettingsAccessControl() {
                             <button onClick={confirmTerminate} disabled={isSaving} className={cn('flex-1 h-10 rounded-xl text-white text-sm font-semibold transition active:scale-95 shadow-sm disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2', selectedUser.status === 'Suspended' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700')}>
                                 {isSaving ? <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
                                 {selectedUser.status === 'Suspended' ? 'Restore' : 'Suspend'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Invite Member Modal */}
+            {modalType === 'invite' && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
+                    <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-surface-200 dark:border-slate-800 shadow-2xl p-6 flex flex-col gap-5 animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-primary-50 dark:bg-primary-900/20">
+                                <UserPlus size={18} className="text-primary-600 dark:text-primary-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-surface-900 dark:text-white">Invite Team Member</h3>
+                                <p className="text-xs text-surface-400">They will be added to your workspace</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium text-surface-600 dark:text-slate-400">Full Name</label>
+                                <input
+                                    value={inviteName}
+                                    onChange={e => setInviteName(e.target.value)}
+                                    placeholder="e.g. Kofi Mensah"
+                                    className="h-11 rounded-xl border border-surface-200 dark:border-slate-700 bg-surface-50 dark:bg-slate-800 px-4 text-sm text-surface-900 dark:text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium text-surface-600 dark:text-slate-400">Email Address</label>
+                                <input
+                                    value={inviteEmail}
+                                    onChange={e => setInviteEmail(e.target.value)}
+                                    placeholder="e.g. kofi@ibms.africa"
+                                    type="email"
+                                    className="h-11 rounded-xl border border-surface-200 dark:border-slate-700 bg-surface-50 dark:bg-slate-800 px-4 text-sm text-surface-900 dark:text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium text-surface-600 dark:text-slate-400">Role</label>
+                                <select
+                                    value={inviteRole}
+                                    onChange={e => setInviteRole(e.target.value)}
+                                    className="h-11 rounded-xl border border-surface-200 dark:border-slate-700 bg-surface-50 dark:bg-slate-800 px-4 text-sm text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition appearance-none cursor-pointer"
+                                >
+                                    {roleOptions.map(r => <option key={r} value={r}>{r}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 pt-1">
+                            <button onClick={closeModal} className="flex-1 h-10 rounded-xl border border-surface-200 dark:border-slate-700 text-sm font-medium text-surface-600 hover:bg-surface-50 dark:hover:bg-slate-800 transition">Cancel</button>
+                            <button
+                                onClick={confirmInvite}
+                                disabled={isSaving || !inviteName.trim() || !inviteEmail.trim()}
+                                className="flex-1 h-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition active:scale-95 shadow-sm disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                            >
+                                {isSaving ? <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+                                Send Invite
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* New Role Modal */}
+            {modalType === 'new-role' && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={closeModal} />
+                    <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl border border-surface-200 dark:border-slate-800 shadow-2xl p-6 flex flex-col gap-5 animate-fade-in">
+                        <div className="flex items-center gap-3">
+                            <div className="p-2.5 rounded-xl bg-primary-50 dark:bg-primary-900/20">
+                                <PlusCircle size={18} className="text-primary-600 dark:text-primary-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-sm font-semibold text-surface-900 dark:text-white">Create New Role</h3>
+                                <p className="text-xs text-surface-400">Assign permissions after creating the role</p>
+                            </div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium text-surface-600 dark:text-slate-400">Role Name</label>
+                                <input
+                                    value={newRoleName}
+                                    onChange={e => setNewRoleName(e.target.value)}
+                                    placeholder="e.g. Compliance Officer"
+                                    className="h-11 rounded-xl border border-surface-200 dark:border-slate-700 bg-surface-50 dark:bg-slate-800 px-4 text-sm text-surface-900 dark:text-white placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-primary-500/30 transition"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium text-surface-600 dark:text-slate-400">Color Theme</label>
+                                <div className="flex gap-2">
+                                    {(['violet', 'blue', 'emerald', 'amber'] as const).map(c => (
+                                        <button
+                                            key={c}
+                                            onClick={() => setNewRoleColor(c)}
+                                            className={cn(
+                                                'h-8 w-8 rounded-lg transition ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-900',
+                                                c === 'violet' ? 'bg-violet-500' : c === 'blue' ? 'bg-blue-500' : c === 'emerald' ? 'bg-emerald-500' : 'bg-amber-500',
+                                                newRoleColor === c
+                                                    ? (c === 'violet' ? 'ring-violet-500' : c === 'blue' ? 'ring-blue-500' : c === 'emerald' ? 'ring-emerald-500' : 'ring-amber-500')
+                                                    : 'ring-transparent'
+                                            )}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-xs font-medium text-surface-600 dark:text-slate-400">Icon</label>
+                                <div className="flex gap-2 flex-wrap">
+                                    {roleIconOptions.map(({ key, icon: Icon, label }) => (
+                                        <button
+                                            key={key}
+                                            onClick={() => setNewRoleIconKey(key)}
+                                            aria-label={label}
+                                            className={cn(
+                                                'p-2.5 rounded-xl border text-sm transition',
+                                                newRoleIconKey === key
+                                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-600'
+                                                    : 'border-surface-200 dark:border-slate-700 text-surface-500 hover:border-surface-300 bg-white dark:bg-slate-800'
+                                            )}
+                                        >
+                                            <Icon size={16} />
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 pt-1">
+                            <button onClick={closeModal} className="flex-1 h-10 rounded-xl border border-surface-200 dark:border-slate-700 text-sm font-medium text-surface-600 hover:bg-surface-50 dark:hover:bg-slate-800 transition">Cancel</button>
+                            <button
+                                onClick={confirmNewRole}
+                                disabled={isSaving || !newRoleName.trim()}
+                                className="flex-1 h-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold transition active:scale-95 shadow-sm disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                            >
+                                {isSaving ? <span className="size-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : null}
+                                Create Role
                             </button>
                         </div>
                     </div>
