@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import * as XLSX from 'xlsx';
 import {
     DollarSign,
     Download,
@@ -20,6 +21,9 @@ import {
     ChevronDown,
     Search,
     Paperclip,
+    BarChart3,
+    Settings2,
+    RotateCcw,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +46,7 @@ import {
     type ExpenseStatus,
     type PaymentMethod,
 } from '@/mock/expenses';
+import { mockCommissions } from '@/mock/commissions';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -60,31 +65,214 @@ const STATUS_LABEL: Record<ExpenseStatus, string> = {
     draft: 'Draft',
 };
 
-// ─── CSV Export ──────────────────────────────────────────────
-function exportToCSV(data: Expense[]) {
-    const headers = [
-        'Date', 'Description', 'Category', 'Amount', 'Currency', 'Vendor',
-        'Reference', 'Payment Method', 'Status', 'Department', 'Notes',
-    ];
+const MONTH_NAMES: Record<string, string> = {
+    '01': 'JANUARY', '02': 'FEBRUARY', '03': 'MARCH',
+    '04': 'APRIL',   '05': 'MAY',      '06': 'JUNE',
+    '07': 'JULY',    '08': 'AUGUST',   '09': 'SEPTEMBER',
+    '10': 'OCTOBER', '11': 'NOVEMBER', '12': 'DECEMBER',
+};
+
+// Exact 16 columns matching the real DEZAG Excel file (in order)
+const EXCEL_COLUMNS: { key: ExpenseCategory; header: string }[] = [
+    { key: 'fuel_car_maintenance',  header: 'FUEL/CAR MAINTENANCE' },
+    { key: 'printing_stationery',   header: 'PRINTING & STATIONERY' },
+    { key: 'tele_post',             header: 'TELE & POST' },
+    { key: 'utilities',             header: 'UTILITIES(WATER & ECG)' },
+    { key: 'levies_licenses',       header: 'LEVIES & LICENSES' },
+    { key: 'transport',             header: 'TRANSPORT' },
+    { key: 'provisions_toiletries', header: 'PROVISIONS & TOILETRIES' },
+    { key: 'allowances',            header: 'ALLOWANCES' },
+    { key: 'training',              header: 'COURSES AND TRAINING' },
+    { key: 'subscriptions',         header: 'SUBCRIPTIONS' },
+    { key: 'miscellaneous',         header: 'MISCELLANEOUS' },
+    { key: 'food',                  header: 'FOOD' },
+    { key: 'salaries',              header: 'SALARIES AND WAGES' },
+    { key: 'ssnit',                 header: 'SSNIT' },
+    { key: 'insurance',             header: 'INSURANCE' },
+    { key: 'business_prospecting',  header: 'BUSINESS PROSPECTING' },
+];
+
+const DEFAULT_COMPANY = 'DEZAG INSURANCE BROKERS';
+const DEFAULT_COL_HEADERS = EXCEL_COLUMNS.map(c => c.header);
+const LS_COMPANY_KEY = 'ibms_expense_company';
+const LS_HEADERS_KEY = 'ibms_expense_col_headers';
+const EXCEL_COL_HEADERS = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...EXCEL_COLUMNS.map(c => c.header)];
+const EXCEL_TOTAL_COLS = EXCEL_COL_HEADERS.length; // 20
+
+// ─── XLSX Export ─────────────────────────────────────────────
+function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
+    const monthMap = new Map<string, Expense[]>();
+    data.forEach(e => {
+        const key = e.date.slice(0, 7);
+        if (!monthMap.has(key)) monthMap.set(key, []);
+        monthMap.get(key)!.push(e);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const expColHeaders = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
+
+    // Monthly expense sheets (JANUARY, FEBRUARY, MARCH …)
+    [...monthMap.keys()].sort().forEach(month => {
+        const entries = monthMap.get(month)!;
+        const [yr, mo] = month.split('-');
+        const sheetName = (MONTH_NAMES[mo] || month).slice(0, 31);
+
+        const rows: (string | number)[][] = [
+            [`${company}, ${sheetName} ${yr} EXPENSES`],
+            expColHeaders,
+        ];
+
+        // Data rows — pad up to minimum 18 rows so template looks like original
+        const NUM_ROWS = Math.max(18, entries.length);
+        for (let i = 0; i < NUM_ROWS; i++) {
+            const e = entries[i];
+            if (e) {
+                rows.push([
+                    e.date,
+                    e.description,
+                    i + 1,
+                    e.amount,
+                    ...EXCEL_COLUMNS.map(c => c.key === e.category ? e.amount : ''),
+                ]);
+            } else {
+                // blank row with pre-filled REF NO
+                rows.push(['', '', i + 1, '', ...EXCEL_COLUMNS.map(() => '')]);
+            }
+        }
+
+        // Blank separator row
+        rows.push(new Array(EXCEL_TOTAL_COLS).fill(''));
+
+        // Totals row
+        rows.push([
+            '', 'TOTAL', '',
+            entries.reduce((s, e) => s + e.amount, 0),
+            ...EXCEL_COLUMNS.map(c =>
+                entries.filter(e => e.category === c.key).reduce((s, e) => s + e.amount, 0) || ''
+            ),
+        ]);
+
+        // Blank row then STAFF / DIRECTOR / SSNIT footer labels
+        rows.push(new Array(EXCEL_TOTAL_COLS).fill(''));
+        rows.push(['STAFF',    ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
+        rows.push(['DIRECTOR', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
+        rows.push(['SSNIT',    ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
+
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: EXCEL_TOTAL_COLS - 1 } }];
+        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+
+    // COMMISSION sheet
+    {
+        const commRows: (string | number)[][] = [
+            [`${company} - COMMISSIONS`],
+            ['DATE', 'CLIENT', 'POLICY NO', 'PRODUCT TYPE', 'INSURER',
+             'PREMIUM (GHS)', 'RATE %', 'GROSS COMMISSION (GHS)',
+             'NIC LEVY', 'NET COMMISSION (GHS)', 'STATUS'],
+        ];
+        mockCommissions.forEach(c => {
+            commRows.push([
+                c.dateEarned, c.clientName, c.policyNumber, c.productType,
+                c.insurerName, c.premiumAmount, c.commissionRate,
+                c.commissionAmount, c.nicLevy, c.netCommission,
+                c.status.toUpperCase(),
+            ]);
+        });
+        const totalGross = mockCommissions.reduce((s, c) => s + c.commissionAmount, 0);
+        const totalNic   = mockCommissions.reduce((s, c) => s + c.nicLevy, 0);
+        const totalNet   = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
+        commRows.push(['', '', '', '', 'TOTAL', '', '', totalGross, totalNic, totalNet, '']);
+        const ws = XLSX.utils.aoa_to_sheet(commRows);
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
+        XLSX.utils.book_append_sheet(wb, ws, 'COMMISSION');
+    }
+
+    // OVER RIDER sheet — commission totals grouped by insurer
+    {
+        const insurerMap = new Map<string, { gross: number; net: number }>();
+        mockCommissions.forEach(c => {
+            const cur = insurerMap.get(c.insurerName) || { gross: 0, net: 0 };
+            insurerMap.set(c.insurerName, {
+                gross: cur.gross + c.commissionAmount,
+                net:   cur.net   + c.netCommission,
+            });
+        });
+        const orRows: (string | number)[][] = [
+            [`${company} - OVER RIDER`],
+            ['INSURER', 'AMOUNT GHS', 'NET GHS'],
+        ];
+        insurerMap.forEach((v, insurer) => orRows.push([insurer, v.gross, v.net]));
+        const totalGross = [...insurerMap.values()].reduce((s, v) => s + v.gross, 0);
+        const totalNet   = [...insurerMap.values()].reduce((s, v) => s + v.net, 0);
+        orRows.push(['TOTAL', totalGross, totalNet]);
+        const ws = XLSX.utils.aoa_to_sheet(orRows);
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
+        XLSX.utils.book_append_sheet(wb, ws, 'OVER RIDER');
+    }
+
+    // ACCOUNT sheet
+    {
+        const totalExp  = data.reduce((s, e) => s + e.amount, 0);
+        const totalComm = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
+        const acRows: (string | number)[][] = [
+            [`${company} - ACCOUNT SUMMARY`],
+            ['', ''],
+            ['Total Commission Earned (GHS)', totalComm],
+            ['Total Expenses (GHS)',          totalExp],
+            ['Net Balance (GHS)',             totalComm - totalExp],
+            ['', ''],
+            ['Generated', new Date().toLocaleDateString('en-GB')],
+        ];
+        const ws = XLSX.utils.aoa_to_sheet(acRows);
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
+        XLSX.utils.book_append_sheet(wb, ws, 'ACCOUNT');
+    }
+
+    // BUSINESS TYPE sheet
+    {
+        const btMap = new Map<string, { count: number; premium: number; commission: number }>();
+        mockCommissions.forEach(c => {
+            const cur = btMap.get(c.productType) || { count: 0, premium: 0, commission: 0 };
+            btMap.set(c.productType, {
+                count:      cur.count + 1,
+                premium:    cur.premium    + c.premiumAmount,
+                commission: cur.commission + c.netCommission,
+            });
+        });
+        const btRows: (string | number)[][] = [
+            [`${company} - BUSINESS TYPE`],
+            ['PRODUCT TYPE', 'POLICY COUNT', 'TOTAL PREMIUM (GHS)', 'NET COMMISSION (GHS)'],
+        ];
+        btMap.forEach((v, type) => btRows.push([type, v.count, v.premium, v.commission]));
+        const ws = XLSX.utils.aoa_to_sheet(btRows);
+        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
+        XLSX.utils.book_append_sheet(wb, ws, 'BUSINESS TYPE');
+    }
+
+    const year = data[0]?.date.slice(0, 4) || new Date().getFullYear();
+    XLSX.writeFile(wb, `DEZAG_Expenses_${year}.xlsx`);
+}
+
+// ─── CSV Export (wide format matching Excel layout) ──────────
+function exportToCSV(data: Expense[], colHeaders: string[]) {
+    const headers = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
+
+    let refNo = 1;
     const rows = data.map(e => [
         e.date,
         `"${e.description.replace(/"/g, '""')}"`,
-        CATEGORY_LABEL[e.category],
+        refNo++,
         e.amount.toFixed(2),
-        e.currency,
-        `"${e.vendor.replace(/"/g, '""')}"`,
-        e.reference,
-        PAYMENT_METHOD_LABEL[e.paymentMethod],
-        STATUS_LABEL[e.status],
-        e.department,
-        `"${(e.notes || '').replace(/"/g, '""')}"`,
+        ...EXCEL_COLUMNS.map(c => c.key === e.category ? e.amount.toFixed(2) : ''),
     ]);
+
     const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `expenses_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `DEZAG_Expenses_${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
 }
@@ -121,36 +309,7 @@ function parseCSV(text: string): Partial<Expense>[] {
 }
 
 // ─── KPI data ────────────────────────────────────────────────
-const KPIS = [
-    {
-        label: 'Total Expenses',
-        value: formatCurrency(expenseSummary.totalExpenses),
-        icon: DollarSign,
-        color: 'text-primary-600',
-        bg: 'bg-primary-50',
-    },
-    {
-        label: 'Approved',
-        value: formatCurrency(expenseSummary.approved),
-        icon: CheckCircle2,
-        color: 'text-success-600',
-        bg: 'bg-success-50',
-    },
-    {
-        label: 'Pending',
-        value: formatCurrency(expenseSummary.pending),
-        icon: Clock,
-        color: 'text-warning-600',
-        bg: 'bg-warning-50',
-    },
-    {
-        label: 'Rejected',
-        value: formatCurrency(expenseSummary.rejected),
-        icon: XCircle,
-        color: 'text-danger-600',
-        bg: 'bg-danger-50',
-    },
-];
+
 
 const STATUS_FILTER_OPTIONS = [
     { label: 'All Statuses', value: 'all' },
@@ -224,6 +383,7 @@ function CellSelect({
 // ─── Main component ─────────────────────────────────────────
 export default function ExpensesPage() {
     const [expenses, setExpenses] = useState<Expense[]>([...initialExpenses]);
+    const [showSummary, setShowSummary] = useState(false);
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [deptFilter, setDeptFilter] = useState('all');
@@ -234,6 +394,86 @@ export default function ExpensesPage() {
     const [showImportHint, setShowImportHint] = useState(false);
     const [expDeleteTarget, setExpDeleteTarget] = useState<{ type: 'single' | 'bulk'; id?: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // ─── Export customization ───
+    const [showCustomize, setShowCustomize] = useState(false);
+    const [customCompany, setCustomCompany] = useState(DEFAULT_COMPANY);
+    const [customHeaders, setCustomHeaders] = useState<string[]>(DEFAULT_COL_HEADERS);
+    // draft state inside modal
+    const [draftCompany, setDraftCompany] = useState(DEFAULT_COMPANY);
+    const [draftHeaders, setDraftHeaders] = useState<string[]>(DEFAULT_COL_HEADERS);
+
+    useEffect(() => {
+        const co = localStorage.getItem(LS_COMPANY_KEY);
+        const hd = localStorage.getItem(LS_HEADERS_KEY);
+        if (co) setCustomCompany(co);
+        if (hd) {
+            try {
+                const parsed = JSON.parse(hd) as string[];
+                if (Array.isArray(parsed) && parsed.length === DEFAULT_COL_HEADERS.length)
+                    setCustomHeaders(parsed);
+            } catch { /* ignore */ }
+        }
+    }, []);
+
+    const openCustomize = () => {
+        setDraftCompany(customCompany);
+        setDraftHeaders([...customHeaders]);
+        setShowCustomize(true);
+    };
+
+    const saveCustomize = () => {
+        const co = draftCompany.trim() || DEFAULT_COMPANY;
+        const hd = draftHeaders.map(h => h.trim() || DEFAULT_COL_HEADERS[draftHeaders.indexOf(h)]);
+        setCustomCompany(co);
+        setCustomHeaders(hd);
+        localStorage.setItem(LS_COMPANY_KEY, co);
+        localStorage.setItem(LS_HEADERS_KEY, JSON.stringify(hd));
+        setShowCustomize(false);
+        toast.success('Export settings saved');
+    };
+
+    const resetCustomize = () => {
+        setDraftCompany(DEFAULT_COMPANY);
+        setDraftHeaders([...DEFAULT_COL_HEADERS]);
+    };
+    const summaryMonths = useMemo(() => {
+        const keys = new Set(expenses.map(e => e.date.slice(0, 7)));
+        return [...keys].sort();
+    }, [expenses]);
+
+    const summaryData = useMemo(() => {
+        return EXPENSE_CATEGORIES.map(cat => {
+            const monthAmounts = summaryMonths.map(m =>
+                expenses
+                    .filter(e => e.date.slice(0, 7) === m && e.category === cat.value)
+                    .reduce((s, e) => s + e.amount, 0)
+            );
+            const total = monthAmounts.reduce((s, v) => s + v, 0);
+            return { cat, monthAmounts, total };
+        }).filter(r => r.total > 0);
+    }, [expenses, summaryMonths]);
+
+    const summaryGrandTotal = useMemo(() =>
+        summaryData.reduce((s, r) => s + r.total, 0)
+    , [summaryData]);
+
+    // ─── KPI data ───
+    const KPIS = useMemo(() => {
+        const currentMonth = new Date().toISOString().slice(0, 7);
+        const thisMonthTotal = expenses
+            .filter(e => e.date.slice(0, 7) === currentMonth)
+            .reduce((s, e) => s + e.amount, 0);
+        const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+        const pending = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0);
+        const rejected = expenses.filter(e => e.status === 'rejected').reduce((s, e) => s + e.amount, 0);
+        return [
+            { label: 'Total Expenses', value: formatCurrency(totalExpenses), icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50' },
+            { label: 'This Month', value: formatCurrency(thisMonthTotal), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+            { label: 'Pending', value: formatCurrency(pending), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
+            { label: 'Rejected', value: formatCurrency(rejected), icon: XCircle, color: 'text-danger-600', bg: 'bg-danger-50' },
+        ];
+    }, [expenses]);
 
     // ─── Filtering ───
     const filtered = useMemo(() => {
@@ -397,6 +637,13 @@ export default function ExpensesPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                     <Button
+                        variant={showSummary ? 'primary' : 'outline'}
+                        leftIcon={<BarChart3 size={16} />}
+                        onClick={() => setShowSummary(v => !v)}
+                    >
+                        {showSummary ? 'View List' : 'Q Summary'}
+                    </Button>
+                    <Button
                         variant="outline"
                         leftIcon={<Upload size={16} />}
                         onClick={() => fileInputRef.current?.click()}
@@ -406,9 +653,24 @@ export default function ExpensesPage() {
                     <Button
                         variant="outline"
                         leftIcon={<Download size={16} />}
-                        onClick={() => exportToCSV(filtered)}
+                        onClick={() => exportToCSV(filtered, customHeaders)}
                     >
                         Export CSV
+                    </Button>
+                    <Button
+                        variant="outline"
+                        leftIcon={<FileSpreadsheet size={16} />}
+                        onClick={() => exportToXLSX(filtered, customCompany, customHeaders)}
+                    >
+                        Export Excel
+                    </Button>
+                    <Button
+                        variant="outline"
+                        leftIcon={<Settings2 size={16} />}
+                        onClick={openCustomize}
+                        title="Customize export column headers & company name"
+                    >
+                        Customize
                     </Button>
                     <Button
                         variant="primary"
@@ -444,54 +706,122 @@ export default function ExpensesPage() {
             </div>
 
             {/* Filters + Search bar */}
-            <Card padding="none" className="p-4">
-                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                    {/* Search */}
-                    <div className="relative flex-1 min-w-[200px]">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
-                        <input
-                            type="text"
-                            placeholder="Search expenses…"
-                            value={search}
-                            onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 rounded-lg
-                                focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400
-                                transition-all bg-surface-50 placeholder-surface-400"
-                        />
+            {!showSummary && (
+                <Card padding="none" className="p-4">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                        {/* Search */}
+                        <div className="relative flex-1 min-w-[200px]">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
+                            <input
+                                type="text"
+                                placeholder="Search expenses…"
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                className="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 rounded-lg
+                                    focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400
+                                    transition-all bg-surface-50 placeholder-surface-400"
+                            />
+                        </div>
+
+                        <div className="flex flex-wrap gap-2">
+                            <CustomSelect
+                                options={STATUS_FILTER_OPTIONS}
+                                value={statusFilter}
+                                onChange={(v) => setStatusFilter(v as string)}
+                            />
+                            <CustomSelect
+                                options={CATEGORY_FILTER_OPTIONS}
+                                value={categoryFilter}
+                                onChange={(v) => setCategoryFilter(v as string)}
+                            />
+                            <CustomSelect
+                                options={DEPT_FILTER_OPTIONS}
+                                value={deptFilter}
+                                onChange={(v) => setDeptFilter(v as string)}
+                            />
+                        </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2">
-                        <CustomSelect
-                            options={STATUS_FILTER_OPTIONS}
-                            value={statusFilter}
-                            onChange={(v) => setStatusFilter(v as string)}
-                        />
-                        <CustomSelect
-                            options={CATEGORY_FILTER_OPTIONS}
-                            value={categoryFilter}
-                            onChange={(v) => setCategoryFilter(v as string)}
-                        />
-                        <CustomSelect
-                            options={DEPT_FILTER_OPTIONS}
-                            value={deptFilter}
-                            onChange={(v) => setDeptFilter(v as string)}
-                        />
-                    </div>
-                </div>
+                    {/* Bulk actions */}
+                    {selectedIds.size > 0 && (
+                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-surface-100">
+                            <span className="text-xs text-surface-500 font-medium">{selectedIds.size} selected</span>
+                            <Button variant="outline" size="sm" leftIcon={<Trash2 size={14} />} onClick={deleteSelected}
+                                className="text-danger-600 border-danger-200 hover:bg-danger-50">
+                                Delete Selected
+                            </Button>
+                        </div>
+                    )}
+                </Card>
+            )}
 
-                {/* Bulk actions */}
-                {selectedIds.size > 0 && (
-                    <div className="flex items-center gap-3 mt-3 pt-3 border-t border-surface-100">
-                        <span className="text-xs text-surface-500 font-medium">{selectedIds.size} selected</span>
-                        <Button variant="outline" size="sm" leftIcon={<Trash2 size={14} />} onClick={deleteSelected}
-                            className="text-danger-600 border-danger-200 hover:bg-danger-50">
-                            Delete Selected
-                        </Button>
+            {/* Quarter Summary View */}
+            {showSummary && (
+                <Card padding="none" className="overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-surface-100 bg-surface-50">
+                        <h3 className="text-sm font-bold text-surface-900">Expense Summary by Category &amp; Month</h3>
+                        <span className="text-xs text-surface-500">
+                            {summaryMonths.map(m => MONTH_NAMES[m.split('-')[1]] || m).join(' · ')} &nbsp;·&nbsp; {summaryData.length} active categories
+                        </span>
                     </div>
-                )}
-            </Card>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-surface-50 border-b border-surface-200">
+                                    <th className="px-4 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider min-w-[200px]">Category</th>
+                                    {summaryMonths.map(m => (
+                                        <th key={m} className="px-3 py-3 text-right text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[140px]">
+                                            {MONTH_NAMES[m.split('-')[1]] || m}
+                                        </th>
+                                    ))}
+                                    <th className="px-3 py-3 text-right text-[10px] font-bold text-surface-900 uppercase tracking-wider w-[140px] bg-primary-50">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-surface-100">
+                                {summaryData.map(row => (
+                                    <tr key={row.cat.value} className="hover:bg-surface-50/80 transition-colors">
+                                        <td className="px-4 py-2.5">
+                                            <span className="text-xs font-medium text-surface-800">{row.cat.label}</span>
+                                        </td>
+                                        {row.monthAmounts.map((amt, i) => (
+                                            <td key={i} className="px-3 py-2.5 text-right">
+                                                {amt > 0
+                                                    ? <span className="text-xs tabular-nums text-surface-700">{formatCurrency(amt)}</span>
+                                                    : <span className="text-surface-300 text-xs">—</span>
+                                                }
+                                            </td>
+                                        ))}
+                                        <td className="px-3 py-2.5 text-right bg-primary-50/40">
+                                            <span className="text-xs font-bold tabular-nums text-surface-900">{formatCurrency(row.total)}</span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                <tr className="bg-surface-50 border-t-2 border-surface-200">
+                                    <td className="px-4 py-3">
+                                        <span className="text-xs font-bold text-surface-700 uppercase tracking-wider">Grand Total</span>
+                                    </td>
+                                    {summaryMonths.map((m, mi) => {
+                                        const monthTotal = summaryData.reduce((s, r) => s + (r.monthAmounts[mi] || 0), 0);
+                                        return (
+                                            <td key={m} className="px-3 py-3 text-right">
+                                                <span className="text-xs font-bold tabular-nums text-surface-900">{formatCurrency(monthTotal)}</span>
+                                            </td>
+                                        );
+                                    })}
+                                    <td className="px-3 py-3 text-right bg-primary-100/60">
+                                        <span className="text-sm font-bold tabular-nums text-primary-700">{formatCurrency(summaryGrandTotal)}</span>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </Card>
+            )}
 
             {/* Spreadsheet Table */}
+            {!showSummary && (
             <Card padding="none" className="overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -749,6 +1079,7 @@ export default function ExpensesPage() {
                     </table>
                 </div>
             </Card>
+            )}
 
             {/* Category Breakdown */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -820,6 +1151,91 @@ export default function ExpensesPage() {
                 variant="danger"
                 icon={<Trash2 size={28} />}
             />
+
+            {/* Customize Export Modal */}
+            {showCustomize && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowCustomize(false)} />
+                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90svh]">
+                        {/* Modal header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b border-surface-100">
+                            <div>
+                                <h2 className="text-base font-bold text-surface-900">Customize Export</h2>
+                                <p className="text-xs text-surface-500 mt-0.5">Edit your company name and rename any column header. Changes apply to both CSV and Excel exports and are saved in your browser.</p>
+                            </div>
+                            <button onClick={() => setShowCustomize(false)} className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-700 transition-colors cursor-pointer">
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        {/* Modal body */}
+                        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-4 space-y-4">
+                            {/* Company name */}
+                            <div>
+                                <label className="block text-xs font-bold text-surface-700 mb-1.5 uppercase tracking-wider">Company Name</label>
+                                <input
+                                    type="text"
+                                    value={draftCompany}
+                                    onChange={e => setDraftCompany(e.target.value)}
+                                    placeholder={DEFAULT_COMPANY}
+                                    className="w-full px-3 py-2 text-sm border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 transition-all"
+                                />
+                                <p className="text-[10px] text-surface-400 mt-1">Appears in the header row of each exported sheet.</p>
+                            </div>
+
+                            {/* Column headers */}
+                            <div>
+                                <label className="block text-xs font-bold text-surface-700 mb-2 uppercase tracking-wider">Expense Column Headers</label>
+                                <div className="space-y-2">
+                                    {EXCEL_COLUMNS.map((col, i) => (
+                                        <div key={col.key} className="flex items-center gap-2">
+                                            <span className="w-5 text-[10px] text-surface-400 text-right shrink-0">{i + 1}</span>
+                                            <input
+                                                type="text"
+                                                value={draftHeaders[i] ?? col.header}
+                                                onChange={e => {
+                                                    const updated = [...draftHeaders];
+                                                    updated[i] = e.target.value;
+                                                    setDraftHeaders(updated);
+                                                }}
+                                                placeholder={col.header}
+                                                className="flex-1 px-3 py-1.5 text-xs border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 transition-all"
+                                            />
+                                            {draftHeaders[i] !== DEFAULT_COL_HEADERS[i] && (
+                                                <button
+                                                    onClick={() => {
+                                                        const updated = [...draftHeaders];
+                                                        updated[i] = DEFAULT_COL_HEADERS[i];
+                                                        setDraftHeaders(updated);
+                                                    }}
+                                                    className="p-1 text-surface-400 hover:text-surface-700 transition-colors cursor-pointer"
+                                                    title="Reset to default"
+                                                >
+                                                    <RotateCcw size={12} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal footer */}
+                        <div className="flex items-center justify-between gap-2 px-6 py-4 border-t border-surface-100">
+                            <button
+                                onClick={resetCustomize}
+                                className="flex items-center gap-1.5 text-xs text-surface-500 hover:text-surface-800 transition-colors cursor-pointer"
+                            >
+                                <RotateCcw size={13} /> Reset all to defaults
+                            </button>
+                            <div className="flex gap-2">
+                                <Button variant="outline" onClick={() => setShowCustomize(false)}>Cancel</Button>
+                                <Button variant="primary" leftIcon={<Save size={14} />} onClick={saveCustomize}>Save Changes</Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

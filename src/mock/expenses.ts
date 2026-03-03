@@ -1,20 +1,29 @@
 // Expenses Mock Data — Insurance Brokerage Operating Expenses
 
 export type ExpenseCategory =
-    | 'office_rent'
-    | 'salaries'
+    | 'fuel_car_maintenance'
+    | 'printing_stationery'
+    | 'tele_post'
     | 'utilities'
-    | 'marketing'
-    | 'travel'
+    | 'levies_licenses'
+    | 'transport'
+    | 'provisions_toiletries'
+    | 'allowances'
+    | 'training'
+    | 'subscriptions'
+    | 'miscellaneous'
+    | 'food'
+    | 'salaries'
+    | 'ssnit'
     | 'insurance'
+    | 'business_prospecting'
+    | 'csr'
+    // kept from original data
+    | 'office_rent'
     | 'technology'
     | 'professional_fees'
-    | 'office_supplies'
-    | 'training'
     | 'entertainment'
-    | 'motor_vehicle'
-    | 'bank_charges'
-    | 'miscellaneous';
+    | 'bank_charges';
 
 export type ExpenseStatus = 'approved' | 'pending' | 'rejected' | 'draft';
 export type PaymentMethod = 'bank_transfer' | 'mobile_money' | 'cash' | 'cheque' | 'card';
@@ -37,20 +46,30 @@ export interface Expense {
 }
 
 export const EXPENSE_CATEGORIES: { value: ExpenseCategory; label: string }[] = [
-    { value: 'office_rent', label: 'Office Rent' },
+    // Excel-aligned categories (match real workbook column headers)
+    { value: 'fuel_car_maintenance', label: 'Fuel / Car Maintenance' },
+    { value: 'printing_stationery', label: 'Printing & Stationery' },
+    { value: 'tele_post', label: 'Tele & Post' },
+    { value: 'utilities', label: 'Utilities (Water & ECG)' },
+    { value: 'levies_licenses', label: 'Levies & Licenses' },
+    { value: 'transport', label: 'Transport' },
+    { value: 'provisions_toiletries', label: 'Provisions & Toiletries' },
+    { value: 'allowances', label: 'Allowances' },
+    { value: 'training', label: 'Courses & Training' },
+    { value: 'subscriptions', label: 'Subscriptions' },
+    { value: 'miscellaneous', label: 'Miscellaneous' },
+    { value: 'food', label: 'Food' },
     { value: 'salaries', label: 'Salaries & Wages' },
-    { value: 'utilities', label: 'Utilities' },
-    { value: 'marketing', label: 'Marketing & Advertising' },
-    { value: 'travel', label: 'Travel & Transport' },
-    { value: 'insurance', label: 'Insurance Premiums' },
+    { value: 'ssnit', label: 'SSNIT' },
+    { value: 'insurance', label: 'Insurance' },
+    { value: 'business_prospecting', label: 'Business Prospecting' },
+    { value: 'csr', label: 'CSR' },
+    // additional categories
+    { value: 'office_rent', label: 'Office Rent' },
     { value: 'technology', label: 'Technology & Software' },
     { value: 'professional_fees', label: 'Professional Fees' },
-    { value: 'office_supplies', label: 'Office Supplies' },
-    { value: 'training', label: 'Training & Development' },
     { value: 'entertainment', label: 'Entertainment & Meals' },
-    { value: 'motor_vehicle', label: 'Motor Vehicle Expenses' },
     { value: 'bank_charges', label: 'Bank Charges & Fees' },
-    { value: 'miscellaneous', label: 'Miscellaneous' },
 ];
 
 export const CATEGORY_LABEL: Record<ExpenseCategory, string> = Object.fromEntries(
@@ -151,7 +170,7 @@ export const expenses: Expense[] = [
         id: 'exp-006',
         date: '2025-09-22',
         description: 'Facebook & Instagram ad campaign - Q1 2024',
-        category: 'marketing',
+        category: 'business_prospecting',
         amount: 3200,
         currency: 'GHS',
         vendor: 'Meta Platforms',
@@ -166,7 +185,7 @@ export const expenses: Expense[] = [
         id: 'exp-007',
         date: '2025-09-25',
         description: 'Travel to Kumasi - Client site visit',
-        category: 'travel',
+        category: 'transport',
         amount: 1200,
         currency: 'GHS',
         vendor: 'Various',
@@ -212,7 +231,7 @@ export const expenses: Expense[] = [
         id: 'exp-010',
         date: '2025-10-08',
         description: 'Office printer & toner cartridges',
-        category: 'office_supplies',
+        category: 'printing_stationery',
         amount: 3500,
         currency: 'GHS',
         vendor: 'Compu-Ghana',
@@ -273,7 +292,7 @@ export const expenses: Expense[] = [
         id: 'exp-014',
         date: '2025-10-22',
         description: 'Company vehicle fuel - February',
-        category: 'motor_vehicle',
+        category: 'fuel_car_maintenance',
         amount: 1800,
         currency: 'GHS',
         vendor: 'Shell Ghana',
@@ -333,7 +352,7 @@ export const expenses: Expense[] = [
         id: 'exp-018',
         date: '2025-11-08',
         description: 'Company branded merchandise for conference',
-        category: 'marketing',
+        category: 'business_prospecting',
         amount: 4200,
         currency: 'GHS',
         vendor: 'PrintExpress Ghana',
@@ -391,7 +410,7 @@ export const expenses: Expense[] = [
         id: 'exp-022',
         date: '2025-11-15',
         description: 'Company vehicle servicing - Routine maintenance',
-        category: 'motor_vehicle',
+        category: 'fuel_car_maintenance',
         amount: 2500,
         currency: 'GHS',
         vendor: 'Silver Star Auto',
@@ -406,7 +425,7 @@ export const expenses: Expense[] = [
         id: 'exp-023',
         date: '2025-11-18',
         description: 'Stationery & printing supplies',
-        category: 'office_supplies',
+        category: 'printing_stationery',
         amount: 800,
         currency: 'GHS',
         vendor: 'Kingdom Books & Stationery',
