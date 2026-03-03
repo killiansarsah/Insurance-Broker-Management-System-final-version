@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
 import {
     ChevronUp,
     ChevronDown,
@@ -40,6 +40,47 @@ interface DataTableProps<T> {
 type SortDirection = 'asc' | 'desc' | null;
 
 const PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
+
+// Memoized row — prevents re-renders caused by parent state unrelated to row data
+// (e.g. search input width animation, focus state, pagination UI changes)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const MemoTableRow = memo(function MemoTableRow({ row, columns, index, onRowClick }: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    row: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    columns: Column<any>[];
+    index: number;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onRowClick?: (row: any) => void;
+}) {
+    return (
+        <tr
+            onClick={() => onRowClick?.(row)}
+            className={cn(
+                'border-b border-surface-100/80 dark:border-slate-700/40 transition-all duration-150',
+                'hover:bg-primary-50/30 dark:hover:bg-primary-900/20 hover:shadow-[inset_3px_0_0_0_var(--color-primary-500)]',
+                onRowClick && 'cursor-pointer',
+                index % 2 === 1 && 'bg-surface-50/40 dark:bg-slate-800/40',
+                'table-row-enter'
+            )}
+            style={{ animationDelay: `${index * 25}ms` }}
+        >
+            {columns.map((col) => (
+                <td
+                    key={col.key}
+                    className={cn(
+                        'px-5 py-4 text-surface-700 dark:text-slate-300 whitespace-nowrap',
+                        col.className
+                    )}
+                >
+                    {col.render
+                        ? col.render(row)
+                        : (row[col.key] as React.ReactNode) ?? '\u2014'}
+                </td>
+            ))}
+        </tr>
+    );
+});
 
 export function DataTable<T>({
     data,
@@ -111,7 +152,7 @@ export function DataTable<T>({
         safePage * currentPageSize
     );
 
-    function handleSort(key: string) {
+    const handleSort = useCallback((key: string) => {
         if (sortKey === key) {
             if (sortDir === 'asc') setSortDir('desc');
             else if (sortDir === 'desc') {
@@ -123,9 +164,9 @@ export function DataTable<T>({
             setSortDir('asc');
         }
         setPage(1);
-    }
+    }, [sortKey, sortDir]);
 
-    function handleExportCSV() {
+    const handleExportCSV = useCallback(() => {
         const headers = columns.map((c) => c.label).join(',');
         const rows = sortedData.map((row) =>
             columns
@@ -144,12 +185,12 @@ export function DataTable<T>({
         link.download = `IBMS_Export_${new Date().toISOString().slice(0, 10)}.csv`;
         link.click();
         URL.revokeObjectURL(url);
-    }
+    }, [columns, sortedData]);
 
-    function handlePageSizeChange(newSize: number) {
+    const handlePageSizeChange = useCallback((newSize: number) => {
         setCurrentPageSize(newSize);
         setPage(1);
-    }
+    }, []);
 
     return (
         <div className={cn(
@@ -290,32 +331,13 @@ export function DataTable<T>({
                             </tr>
                         ) : (
                             paginatedData.map((row, i) => (
-                                <tr
+                                <MemoTableRow
                                     key={i}
-                                    onClick={() => onRowClick?.(row)}
-                                    className={cn(
-                                        'border-b border-surface-100/80 dark:border-slate-700/40 transition-all duration-150',
-                                        'hover:bg-primary-50/30 dark:hover:bg-primary-900/20 hover:shadow-[inset_3px_0_0_0_var(--color-primary-500)]',
-                                        onRowClick && 'cursor-pointer',
-                                        i % 2 === 1 && 'bg-surface-50/40 dark:bg-slate-800/40',
-                                        'table-row-enter'
-                                    )}
-                                    style={{ animationDelay: `${i * 25}ms` }}
-                                >
-                                    {columns.map((col) => (
-                                        <td
-                                            key={col.key}
-                                            className={cn(
-                                                'px-5 py-4 text-surface-700 dark:text-slate-300 whitespace-nowrap',
-                                                col.className
-                                            )}
-                                        >
-                                            {col.render
-                                                ? col.render(row)
-                                                : ((row as Record<string, unknown>)[col.key] as React.ReactNode) ?? '—'}
-                                        </td>
-                                    ))}
-                                </tr>
+                                    row={row}
+                                    columns={columns}
+                                    index={i}
+                                    onRowClick={onRowClick}
+                                />
                             ))
                         )}
                     </tbody>

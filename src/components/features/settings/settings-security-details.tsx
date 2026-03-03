@@ -1,9 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+const ConfirmationModal = dynamic(
+    () => import('@/components/ui/confirmation-modal').then(m => ({ default: m.ConfirmationModal })),
+    { ssr: false }
+);
 import { toast } from 'sonner';
 
 export function SettingsSecurityDetails() {

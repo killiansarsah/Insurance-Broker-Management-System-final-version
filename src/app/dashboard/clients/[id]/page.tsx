@@ -7,7 +7,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const client = mockClients.find((c) => c.id === id);
     if (!client) return { title: 'Client not found' };
-    return { title: getClientDisplayName(client), description: `View profile and policies for ${getClientDisplayName(client)}.` };
+    return {
+        title: getClientDisplayName(client),
+        description: `View profile and policies for ${getClientDisplayName(client)}.`,
+        openGraph: {
+            title: getClientDisplayName(client),
+            description: `View profile and policies for ${getClientDisplayName(client)}.`,
+            type: 'article',
+        },
+        alternates: { canonical: `/dashboard/clients/${id}` },
+    };
 }
 
 export async function generateStaticParams() {

@@ -8,7 +8,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const lead = mockLeads.find((l) => l.id === id);
     if (!lead) return { title: 'Lead not found' };
     const name = lead.companyName || lead.contactName;
-    return { title: name, description: `View lead profile for ${name}.` };
+    return {
+        title: name,
+        description: `View lead profile for ${name}.`,
+        openGraph: {
+            title: name,
+            description: `View lead profile for ${name}.`,
+            type: 'article',
+        },
+        alternates: { canonical: `/dashboard/leads/${id}` },
+    };
 }
 
 export async function generateStaticParams() {

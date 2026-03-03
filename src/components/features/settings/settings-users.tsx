@@ -1,13 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { users as initialUsers } from '@/mock/users';
 import { User } from '@/types';
 import { TeamFilters } from '@/components/features/team/team-filters';
-import { DelegationModal } from '@/components/features/team/delegation-modal';
 import { PermissionsMatrix } from '@/components/features/team/permissions-matrix';
-import { AddStaffModal } from '@/components/features/team/add-staff-modal';
+const DelegationModal = dynamic(
+    () => import('@/components/features/team/delegation-modal').then(m => ({ default: m.DelegationModal })),
+    { ssr: false }
+);
+const AddStaffModal = dynamic(
+    () => import('@/components/features/team/add-staff-modal').then(m => ({ default: m.AddStaffModal })),
+    { ssr: false }
+);
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 

@@ -7,7 +7,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const claim = claims.find((c) => c.id === id);
     if (!claim) return { title: 'Claim not found' };
-    return { title: `Claim ${claim.claimNumber}`, description: `Claim ${claim.claimNumber} — ${claim.clientName}.` };
+    return {
+        title: `Claim ${claim.claimNumber}`,
+        description: `Claim ${claim.claimNumber} — ${claim.clientName}.`,
+        openGraph: {
+            title: `Claim ${claim.claimNumber}`,
+            description: `Claim ${claim.claimNumber} — ${claim.clientName}.`,
+            type: 'article',
+        },
+        alternates: { canonical: `/dashboard/claims/${id}` },
+    };
 }
 
 // Generate static params for static export

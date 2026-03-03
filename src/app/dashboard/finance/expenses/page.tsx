@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import {
     DollarSign,
     Download,
@@ -23,7 +24,10 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+const ConfirmationModal = dynamic(
+    () => import('@/components/ui/confirmation-modal').then(m => ({ default: m.ConfirmationModal })),
+    { ssr: false }
+);
 import { toast } from 'sonner';
 import { BackButton } from '@/components/ui/back-button';
 import { CustomSelect } from '@/components/ui/select-custom';

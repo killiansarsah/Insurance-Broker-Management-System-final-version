@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -20,7 +21,10 @@ import { toast } from 'sonner';
 import { cn, formatCurrency } from '@/lib/utils';
 import { policies } from '@/mock/policies';
 import { Policy } from '@/types';
-import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
+const UploadDocumentModal = dynamic(
+    () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
+    { ssr: false }
+);
 
 const STEPS = [
     { id: 1, label: 'Select Policy', icon: <Shield size={16} /> },

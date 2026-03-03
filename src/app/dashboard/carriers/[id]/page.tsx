@@ -9,7 +9,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const carrier = carriers.find((c) => c.slug === id);
     if (!carrier) return { title: 'Carrier not found' };
-    return { title: carrier.name, description: `Products, contacts and performance overview for ${carrier.name}.` };
+    return {
+        title: carrier.name,
+        description: `Products, contacts and performance overview for ${carrier.name}.`,
+        openGraph: {
+            title: carrier.name,
+            description: `Products, contacts and performance overview for ${carrier.name}.`,
+            type: 'article',
+        },
+        alternates: { canonical: `/dashboard/carriers/${id}` },
+    };
 }
 
 // Required for static export

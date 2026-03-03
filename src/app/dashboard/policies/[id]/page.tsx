@@ -7,7 +7,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const policy = mockPolicies.find((p) => p.id === id);
     if (!policy) return { title: 'Policy not found' };
-    return { title: `Policy ${policy.policyNumber}`, description: `Details for policy ${policy.policyNumber}.` };
+    return {
+        title: `Policy ${policy.policyNumber}`,
+        description: `Details for policy ${policy.policyNumber}.`,
+        openGraph: {
+            title: `Policy ${policy.policyNumber}`,
+            description: `Details for policy ${policy.policyNumber}.`,
+            type: 'article',
+        },
+        alternates: { canonical: `/dashboard/policies/${id}` },
+    };
 }
 
 // Static export — pre-generate all policy detail routes

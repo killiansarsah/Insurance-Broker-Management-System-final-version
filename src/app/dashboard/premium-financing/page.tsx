@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
@@ -30,7 +31,10 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { NewPFAModal } from '@/components/features/premium-financing/new-application-modal';
+const NewPFAModal = dynamic(
+    () => import('@/components/features/premium-financing/new-application-modal').then(m => ({ default: m.NewPFAModal })),
+    { ssr: false }
+);
 import {
     mockPFApplications,
     pfSummary,

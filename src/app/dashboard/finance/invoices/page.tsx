@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     FileText,
@@ -19,7 +20,10 @@ import { BackButton } from '@/components/ui/back-button';
 import { invoices, financeSummary, Invoice } from '@/mock/finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { NewInvoiceModal } from '@/components/finance/new-invoice-modal';
+const NewInvoiceModal = dynamic(
+    () => import('@/components/finance/new-invoice-modal').then(m => ({ default: m.NewInvoiceModal })),
+    { ssr: false }
+);
 import Link from 'next/link';
 
 type InvoiceStatus = 'all' | 'paid' | 'outstanding' | 'overdue' | 'partial' | 'cancelled';

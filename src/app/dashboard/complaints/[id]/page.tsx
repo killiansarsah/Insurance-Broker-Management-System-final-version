@@ -7,7 +7,16 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     const { id } = await params;
     const complaint = MOCK_COMPLAINTS.find((c) => c.id === id);
     if (!complaint) return { title: 'Complaint not found' };
-    return { title: complaint.subject, description: `Complaint from ${complaint.complainantName}: ${complaint.subject}.` };
+    return {
+        title: complaint.subject,
+        description: `Complaint from ${complaint.complainantName}: ${complaint.subject}.`,
+        openGraph: {
+            title: complaint.subject,
+            description: `Complaint from ${complaint.complainantName}: ${complaint.subject}.`,
+            type: 'article',
+        },
+        alternates: { canonical: `/dashboard/complaints/${id}` },
+    };
 }
 
 // Generate static params for static export

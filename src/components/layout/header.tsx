@@ -1,3 +1,4 @@
+import dynamic from 'next/dynamic';
 import { Bell, Search, Menu, CheckCircle2, LogOut, Calculator, Headset, ShieldAlert } from 'lucide-react';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
@@ -8,8 +9,14 @@ import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CalculatorModal } from '@/components/ui/calculator-modal';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+const CalculatorModal = dynamic(
+    () => import('@/components/ui/calculator-modal').then(m => ({ default: m.CalculatorModal })),
+    { ssr: false }
+);
+const ConfirmationModal = dynamic(
+    () => import('@/components/ui/confirmation-modal').then(m => ({ default: m.ConfirmationModal })),
+    { ssr: false }
+);
 import { toast } from 'sonner';
 
 export function Header() {

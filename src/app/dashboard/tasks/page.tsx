@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import {
     Briefcase,
     CheckCircle2,
@@ -22,8 +23,14 @@ import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
 import { StickyNoteTask } from '@/components/features/tasks/sticky-note-task';
 import { RecycleBin } from '@/components/features/tasks/recycle-bin';
-import { ArchiveModal } from '@/components/features/tasks/archive-modal';
-import { ConfirmationModal } from '@/components/ui/confirmation-modal';
+const ArchiveModal = dynamic(
+    () => import('@/components/features/tasks/archive-modal').then(m => ({ default: m.ArchiveModal })),
+    { ssr: false }
+);
+const ConfirmationModal = dynamic(
+    () => import('@/components/ui/confirmation-modal').then(m => ({ default: m.ConfirmationModal })),
+    { ssr: false }
+);
 
 import { AnimatePresence, motion } from 'framer-motion';
 

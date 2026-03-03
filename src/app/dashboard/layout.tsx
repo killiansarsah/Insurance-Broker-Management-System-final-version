@@ -34,6 +34,14 @@ export default function DashboardLayout({
                 >
                     <div className="p-4 lg:p-6">{children}</div>
                 </main>
+                {/* Accessible live region for toast/status announcements */}
+                <div
+                    id="aria-live-region"
+                    role="status"
+                    aria-live="polite"
+                    aria-atomic="true"
+                    className="sr-only"
+                />
             </div>
         </ProtectedRoute>
     );
