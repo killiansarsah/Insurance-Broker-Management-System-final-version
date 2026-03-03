@@ -4,6 +4,11 @@
         "Set-Content": true,
         "Test-Path": true,
         "ConvertFrom-Json": true,
-        "==": true
+        "==": true,
+        "Add-Content": true,
+        "/^node fix-access-control\\.js$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
     }
 }
