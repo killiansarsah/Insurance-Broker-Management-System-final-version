@@ -104,13 +104,13 @@ export function Modal({
             onClick={handleDialogClick}
             className={cn(
                 'bg-transparent border-none p-0 m-auto backdrop:bg-slate-900/60 backdrop:backdrop-blur-sm',
-                'max-h-[90vh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none',
+                'max-h-[90svh] rounded-[var(--radius-2xl)] shadow-[var(--glass-shadow)] overflow-hidden outline-none',
                 className
             )}
-            style={{ width: 'calc(100vw - 2rem)', maxWidth: sizeMap[size] || sizeMap.md }}
+            style={{ width: 'calc(100vw - 1.5rem)', maxWidth: sizeMap[size] || sizeMap.md }}
         >
             {isOpen && (
-                <div ref={innerRef} className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
+                <div ref={innerRef} className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full max-h-[90svh] border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--glass-26-border)] bg-transparent shrink-0">
                         <div>
@@ -137,13 +137,13 @@ export function Modal({
                     </div>
 
                     {/* Content */}
-                    <div className="p-4 md:p-6 overflow-y-auto w-full flex-1">
+                    <div className="p-4 md:p-6 overflow-y-auto w-full flex-1 min-h-0">
                         {children}
                     </div>
 
                     {/* Footer */}
                     {footer && (
-                        <div className="p-4 md:p-6 border-t border-t-[var(--glass-26-border)] bg-transparent shrink-0 mb-safe">
+                        <div className="p-3 sm:p-4 md:p-6 border-t border-t-[var(--glass-26-border)] bg-transparent shrink-0">
                             {footer}
                         </div>
                     )}

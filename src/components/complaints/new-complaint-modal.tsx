@@ -66,18 +66,18 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
     };
 
     const footer = (
-        <div className="flex justify-center gap-3 w-full">
+        <div className="flex items-center gap-3 w-full">
             <button
                 type="button"
                 onClick={onClose}
-                className="py-3 px-8 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
+                className="flex-1 sm:flex-none py-3 px-8 rounded-[var(--radius-2xl)] bg-surface-100 text-surface-700 font-bold hover:bg-surface-200 transition-all active:scale-95 cursor-pointer text-sm"
             >
                 Cancel
             </button>
             <button
                 onClick={handleSubmit}
                 type="button"
-                className="py-3 px-12 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
+                className="flex-1 sm:flex-none py-3 px-12 rounded-[var(--radius-2xl)] bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 cursor-pointer text-sm"
             >
                 Log Complaint
             </button>

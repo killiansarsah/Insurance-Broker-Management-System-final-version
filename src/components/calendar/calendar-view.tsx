@@ -275,14 +275,19 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                 {/* Background Shadow Glow */}
                 <div className="absolute inset-0 bg-primary-500/5 blur-[120px] rounded-full pointer-events-none" />
 
-                {/* Floating Glass Panes Grid */}
-                <div className="grid grid-cols-7 gap-3 mb-3">
-                    {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                        <div key={d} className="text-center text-[11px] font-black text-surface-400/60 uppercase tracking-[4px] py-1">{d}</div>
-                    ))}
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                    {dayCells}
+                {/* Scrollable calendar grid — scrolls horizontally on small screens */}
+                <div className="overflow-x-auto -mx-1 px-1">
+                    <div className="min-w-[480px]">
+                        {/* Floating Glass Panes Grid */}
+                        <div className="grid grid-cols-7 gap-3 mb-3">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
+                                <div key={d} className="text-center text-[11px] font-black text-surface-400/60 uppercase tracking-[4px] py-1">{d}</div>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-7 gap-3">
+                            {dayCells}
+                        </div>
+                    </div>
                 </div>
             </div>
         );
