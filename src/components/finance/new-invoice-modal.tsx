@@ -171,7 +171,7 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
                             value={amount}
                             onChange={(e) => setAmount(e.target.value)}
                             placeholder="e.g. 15000.00"
-                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 shadow-sm placeholder:text-surface-400 tabular-nums"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400 tabular-nums"
                         />
                     </div>
                     <div className="space-y-2">
@@ -198,7 +198,7 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
                             type="date"
                             value={dueDate}
                             onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-700 bg-white/50 shadow-sm"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-700 bg-white/50 dark:bg-slate-800/50 shadow-sm"
                         />
                     </div>
                     {selectedPolicy && (
@@ -221,7 +221,7 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="e.g. Annual premium for Motor Comprehensive — Policy renewal 2026"
-                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 shadow-sm placeholder:text-surface-400 resize-none"
+                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400 resize-none"
                     />
                 </div>
             </form>

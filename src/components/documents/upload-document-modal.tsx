@@ -307,7 +307,7 @@ export function UploadDocumentModal({
                             value={referenceId}
                             onChange={(e) => setReferenceId(e.target.value)}
                             placeholder={category === 'kyc' ? 'e.g. Client Name or ID' : 'e.g. Policy # or Claim #'}
-                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50"
+                            className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50 dark:bg-slate-800/50"
                         />
                     </div>
                 </div>
@@ -321,7 +321,7 @@ export function UploadDocumentModal({
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Briefly describe the file contents for faster retrieval..."
-                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 shadow-sm placeholder:text-surface-400 resize-none"
+                        className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-medium text-surface-700 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400 resize-none"
                     />
                 </div>
             </form>

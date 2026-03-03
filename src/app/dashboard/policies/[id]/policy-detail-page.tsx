@@ -667,7 +667,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                                         <td className="px-6 py-3 text-right">
                                             <button
                                                 onClick={() => generateReceipt(txn)}
-                                                className="text-xs text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1"
+                                                className="text-xs text-primary-600 hover:text-primary-700 font-medium inline-flex items-center gap-1 cursor-pointer"
                                             >
                                                 <Download size={12} /> Receipt
                                             </button>
@@ -904,8 +904,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         setShowEndorsementModal(false);
                     }} className="space-y-4">
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Endorsement Type</label>
-                            <select className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30">
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Endorsement Type</label>
+                            <select className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30">
                                 <option value="addition">Addition</option>
                                 <option value="deletion">Deletion</option>
                                 <option value="alteration">Alteration</option>
@@ -914,16 +914,16 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Effective Date</label>
-                            <input type="date" className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Effective Date</label>
+                            <input type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Description</label>
-                            <textarea rows={3} className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" required placeholder="Describe the endorsement..." />
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Description</label>
+                            <textarea rows={3} className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required placeholder="Describe the endorsement..." />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Premium Adjustment (GHS)</label>
-                            <input type="number" step="0.01" className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Premium Adjustment (GHS)</label>
+                            <input type="number" step="0.01" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
                         </div>
                         <div className="flex gap-3 pt-2">
                             <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEndorsementModal(false)}>Cancel</Button>
@@ -1011,8 +1011,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             </p>
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Cancellation Reason</label>
-                            <select className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" required>
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Cancellation Reason</label>
+                            <select className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required>
                                 <option value="">Select reason...</option>
                                 <option value="non_payment">Non-payment of premium</option>
                                 <option value="client_request">Client request</option>
@@ -1023,16 +1023,16 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             </select>
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Effective Date</label>
-                            <input type="date" className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Effective Date</label>
+                            <input type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Notes</label>
-                            <textarea rows={3} className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="Additional notes..." />
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Notes</label>
+                            <textarea rows={3} className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="Additional notes..." />
                         </div>
                         <div>
-                            <label className="text-sm font-medium text-surface-700 block mb-1">Estimated Refund (GHS)</label>
-                            <input type="number" step="0.01" className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Estimated Refund (GHS)</label>
+                            <input type="number" step="0.01" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
                         </div>
                         <div className="flex gap-3 pt-2">
                             <Button type="button" variant="outline" className="flex-1" onClick={() => setShowCancelModal(false)}>Go Back</Button>

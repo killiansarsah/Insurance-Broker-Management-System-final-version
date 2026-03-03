@@ -312,7 +312,7 @@ export default function ClientsPage() {
                 <div className="flex items-center gap-1 relative" onClick={(e) => e.stopPropagation()}>
                     <button
                         onClick={() => router.push(`/dashboard/clients/${row.id}`)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors cursor-pointer"
                         title="View"
                     >
                         <Eye size={14} />
@@ -326,7 +326,7 @@ export default function ClientsPage() {
                     </button>
                     <button
                         onClick={() => router.push('/dashboard/chat')}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-surface-400 hover:bg-primary-50 hover:text-primary-600 transition-colors cursor-pointer"
                         title="Message"
                     >
                         <MessageSquare size={14} />

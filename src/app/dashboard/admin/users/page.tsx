@@ -140,7 +140,7 @@ export default function UsersPage() {
                                         e.stopPropagation();
                                         setOpenMenuId(openMenuId === row.id ? null : row.id);
                                     }}
-                                    className="p-1 text-surface-400 hover:text-primary-600 transition-colors rounded hover:bg-surface-100"
+                                    className="p-1 text-surface-400 hover:text-primary-600 transition-colors rounded hover:bg-surface-100 cursor-pointer"
                                 >
                                     <MoreVertical size={16} />
                                 </button>

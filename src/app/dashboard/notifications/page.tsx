@@ -259,7 +259,7 @@ export default function NotificationsPage() {
                                         {!notif.read && (
                                             <button
                                                 onClick={() => markAsRead(notif.id)}
-                                                className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-600 transition-colors"
+                                                className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-600 transition-colors cursor-pointer"
                                                 title="Mark as read"
                                             >
                                                 <CheckCircle2 size={14} />
@@ -271,7 +271,7 @@ export default function NotificationsPage() {
                                                     archiveNotification(notif.id);
                                                     toast.success('Notification archived');
                                                 }}
-                                                className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-600 transition-colors"
+                                                className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-600 transition-colors cursor-pointer"
                                                 title="Archive"
                                             >
                                                 <Archive size={14} />
@@ -282,7 +282,7 @@ export default function NotificationsPage() {
                                                 deleteNotification(notif.id);
                                                 toast.success('Notification deleted');
                                             }}
-                                            className="p-1.5 rounded-lg hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors"
+                                            className="p-1.5 rounded-lg hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors cursor-pointer"
                                             title="Delete"
                                         >
                                             <Trash2 size={14} />

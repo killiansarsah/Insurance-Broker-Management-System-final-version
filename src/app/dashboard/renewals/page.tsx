@@ -110,7 +110,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-lg hover:bg-surface-100 text-surface-500 transition-colors"
+                            className="p-2 rounded-lg hover:bg-surface-100 text-surface-500 transition-colors cursor-pointer"
                             aria-label="Close renewal details"
                         >
                             <X size={20} />
@@ -516,7 +516,7 @@ export default function RenewalsPage() {
                         <button
                             key={tab.id}
                             onClick={() => handleTabChange(tab.id)}
-                            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
                                 activeTab === tab.id
                                     ? 'bg-primary-600 text-white shadow-sm'
                                     : 'text-surface-600 hover:bg-surface-50'
@@ -677,7 +677,7 @@ export default function RenewalsPage() {
                                     e.stopPropagation();
                                     setSelectedRenewal(r);
                                 }}
-                                className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-primary-600 transition-colors"
+                                className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-primary-600 transition-colors cursor-pointer"
                             >
                                 <Eye size={16} />
                             </button>

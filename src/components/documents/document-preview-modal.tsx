@@ -54,7 +54,7 @@ export function DocumentPreviewModal({ isOpen, onClose, document: doc }: Documen
     const isPdf = doc.mimeType.includes('pdf');
 
     const handleDownload = () => {
-        toast.success('Download Started', { description: doc.name });
+        if (doc) toast.success('Download Started', { description: doc.name });
     };
 
     const footer = (

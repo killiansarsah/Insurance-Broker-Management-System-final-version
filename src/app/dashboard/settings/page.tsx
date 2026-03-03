@@ -116,7 +116,7 @@ export default function SettingsPage() {
                     {activeTab !== 'overview' && (
                         <button
                             onClick={() => setActiveTab('overview')}
-                            className="size-10 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shrink-0"
+                            className="size-10 rounded-full flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all shrink-0 cursor-pointer"
                         >
                             <span className="material-symbols-outlined">arrow_back</span>
                         </button>
@@ -137,7 +137,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 border-b border-slate-100 dark:border-slate-800">
                     <button
                         onClick={() => setActiveTab('overview')}
-                        className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all whitespace-nowrap"
+                        className="px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all whitespace-nowrap cursor-pointer"
                     >
                         Overview
                     </button>
@@ -146,7 +146,7 @@ export default function SettingsPage() {
                             key={group.id}
                             onClick={() => setActiveTab(group.id)}
                             className={cn(
-                                "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                                "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
                                 activeTab === group.id
                                     ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg"
                                     : "text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -158,7 +158,7 @@ export default function SettingsPage() {
                     <button
                         onClick={() => setActiveTab('terms')}
                         className={cn(
-                            "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                            "px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all whitespace-nowrap cursor-pointer",
                             activeTab === 'terms'
                                 ? "bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 shadow-lg"
                                 : "text-slate-400 hover:text-slate-900 dark:hover:text-white"

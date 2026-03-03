@@ -163,7 +163,7 @@ export default function LeadsPage() {
                 {(searchTerm || filterPriority) && (
                     <button
                         onClick={() => { setSearchTerm(''); setFilterPriority(''); }}
-                        className="p-2 text-danger-500 hover:bg-danger-50 rounded-lg transition-colors shrink-0"
+                        className="p-2 text-danger-500 hover:bg-danger-50 rounded-lg transition-colors shrink-0 cursor-pointer"
                     >
                         <X size={18} />
                     </button>

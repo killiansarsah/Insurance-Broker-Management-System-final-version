@@ -416,7 +416,7 @@ export default function TasksPage() {
                         <button
                             onClick={() => setViewMode('desk')}
                             className={cn(
-                                "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                                "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer",
                                 viewMode === 'desk' ? "bg-background text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
                             )}
                         >
@@ -425,7 +425,7 @@ export default function TasksPage() {
                         <button
                             onClick={() => setViewMode('list')}
                             className={cn(
-                                "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300",
+                                "px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all duration-300 cursor-pointer",
                                 viewMode === 'list' ? "bg-background text-primary-600 shadow-sm" : "text-surface-500 hover:text-surface-700"
                             )}
                         >
@@ -580,7 +580,7 @@ export default function TasksPage() {
                                 onClick={() => {
                                     deskScrollRef.current?.scrollBy({ top: 300, behavior: 'smooth' });
                                 }}
-                                className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-background/80 backdrop-blur-md border border-surface-200 shadow-lg px-4 py-2 rounded-full flex items-center gap-2 text-primary-600 hover:bg-primary-50 transition-all group"
+                                className="absolute bottom-20 left-1/2 -translate-x-1/2 z-40 bg-background/80 backdrop-blur-md border border-surface-200 shadow-lg px-4 py-2 rounded-full flex items-center gap-2 text-primary-600 hover:bg-primary-50 transition-all group cursor-pointer"
                             >
                                 <span className="text-[10px] font-black uppercase tracking-widest">More Tasks Below</span>
                                 <ChevronDown size={14} className="group-hover:translate-y-0.5 transition-transform" />
@@ -732,7 +732,7 @@ export default function TasksPage() {
                                             >
                                                 <Trash2 size={16} />
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-surface-300 hover:text-surface-600" aria-label="More options">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-surface-300 hover:text-surface-600" aria-label="More options" onClick={() => toast.info('Task Options', { description: `More actions for "${task.title}" coming soon.` })}>
                                                 <MoreVertical className="w-4 h-4" />
                                             </Button>
                                         </div>

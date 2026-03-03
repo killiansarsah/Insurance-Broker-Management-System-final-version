@@ -80,7 +80,7 @@ export default function ImportPage() {
                     <Info size={18} className="text-primary-600 mt-0.5" />
                     <p className="text-sm text-primary-900/80 leading-relaxed">
                         <strong>Need help getting started?</strong> Download our
-                        <button onClick={() => toast.success('Template Downloaded', { description: 'The standard import template (XLSX) is being downloaded.' })} className="text-primary-700 font-bold underline px-1 hover:text-primary-800">standard import template</button>
+                        <button onClick={() => toast.success('Template Downloaded', { description: 'The standard import template (XLSX) is being downloaded.' })} className="text-primary-700 font-bold underline px-1 hover:text-primary-800 cursor-pointer">standard import template</button>
                         to ensure your data structure matches the system requirements for a seamless migration.
                     </p>
                 </div>

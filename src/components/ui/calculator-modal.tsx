@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useMemo } from 'react';
 import { Modal } from './modal';
@@ -166,14 +166,14 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-7 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                     {section === 'motor' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-0.5">Number of Passengers</label>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Number of Passengers</label>
                             <div className="relative group">
                                 <Input
                                     type="number"
                                     placeholder="Enter number of passengers"
                                     value={passengers}
                                     onChange={(e) => setPassengers(e.target.value)}
-                                    className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm group-hover:shadow-md"
+                                    className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm group-hover:shadow-md"
                                 />
                                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 text-slate-300 group-focus-within:text-warning-500 transition-colors">
                                     <ChevronRight size={10} className="-rotate-90" />
@@ -185,19 +185,19 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
 
                     {section === 'motor' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-0.5">Registration Year</label>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Registration Year</label>
                             <Input
                                 type="number"
                                 placeholder="Enter registration year"
                                 value={regYear}
                                 onChange={(e) => setRegYear(e.target.value)}
-                                className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 hover:border-slate-300 focus:border-primary-400 transition-all duration-500 rounded-xl shadow-sm"
+                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-slate-300 focus:border-primary-400 transition-all duration-500 rounded-xl shadow-sm"
                             />
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">
                             {section === 'life' ? 'Sum Assured' : "Value to be Insured"}
                         </label>
                         <div className="relative group">
@@ -206,7 +206,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                                 placeholder={`Enter ${section === 'life' ? 'sum assured' : 'insured value'}`}
                                 value={insuredValue}
                                 onChange={(e) => setInsuredValue(e.target.value)}
-                                className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm"
+                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm"
                             />
                             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 text-slate-300 group-focus-within:text-warning-500 transition-colors">
                                 <ChevronRight size={10} className="-rotate-90" />
@@ -216,7 +216,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5 flex items-center gap-1">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
                             Insurance Company <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -229,7 +229,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5 flex items-center gap-1">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
                             Cover Type <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -246,7 +246,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5 flex items-center gap-1">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
                             {section === 'life' ? 'Product Category' : 'Risk Type'} <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -264,30 +264,30 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
 
                     {section === 'motor' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-0.5">Extra Third Party Property Damage Limit</label>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Extra Third Party Property Damage Limit</label>
                             <Input
                                 placeholder="Enter extra TPPDL"
                                 value={extraTppdl}
                                 onChange={(e) => setExtraTppdl(e.target.value)}
-                                className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 rounded-xl shadow-sm"
+                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm"
                             />
                         </div>
                     )}
 
                     {section === 'motor' && (
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 ml-0.5">Umbrella Limit</label>
+                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Umbrella Limit</label>
                             <Input
                                 placeholder="Enter umbrella limit"
                                 value={umbrellaLimit}
                                 onChange={(e) => setUmbrellaLimit(e.target.value)}
-                                className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 rounded-xl shadow-sm"
+                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm"
                             />
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5 flex items-center gap-1">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
                             Currency <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -300,7 +300,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5 flex items-center gap-1">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
                             Start Date <span className="text-danger-500">*</span>
                         </label>
                         <div className="relative">
@@ -308,13 +308,13 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                                 type="date"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
-                                className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 rounded-xl shadow-sm pr-10 appearance-none"
+                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm pr-10 appearance-none"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5 flex items-center gap-1">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
                             End Date <span className="text-danger-500">*</span>
                         </label>
                         <div className="relative">
@@ -322,14 +322,14 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                                 type="date"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
-                                className="h-11 bg-white/30 backdrop-blur-xl border-slate-200 rounded-xl shadow-sm pr-10 appearance-none"
+                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm pr-10 appearance-none"
                             />
                         </div>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 ml-0.5">Total Days</label>
-                        <div className="h-11 bg-slate-100/50 backdrop-blur-md border border-slate-200 rounded-xl flex items-center px-4 text-slate-500 font-bold tracking-tight shadow-inner transition-all duration-500">
+                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Total Days</label>
+                        <div className="h-11 bg-slate-100/50 dark:bg-slate-700/50 backdrop-blur-md border border-slate-200 dark:border-slate-600 rounded-xl flex items-center px-4 text-slate-500 dark:text-slate-400 font-bold tracking-tight shadow-inner transition-all duration-500">
                             {totalDays}
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState } from 'react';
 import { Modal } from './modal';
@@ -120,13 +120,13 @@ export function PaymentProcessModal({
                 </div>
 
                 {/* Scrollable content container for XL size */}
-                <div className="bg-white/50 rounded-[var(--radius-xl)] p-6 border border-surface-100 shadow-sm backdrop-blur-sm">
+                <div className="bg-white/50 dark:bg-slate-800/50 rounded-[var(--radius-xl)] p-6 border border-surface-100 shadow-sm backdrop-blur-sm">
                     {step === 'method' && (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                             <div className="mb-6">
-                                <h3 className="text-xl font-bold text-slate-900">Choose how to pay</h3>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Choose how to pay</h3>
                                 <p className="text-sm text-slate-500 mt-1">
-                                    Securely pay your premium for policy <span className="text-slate-900 font-medium">{policy.policyNumber}</span>
+                                    Securely pay your premium for policy <span className="text-slate-900 dark:text-white font-medium">{policy.policyNumber}</span>
                                 </p>
                             </div>
                             <PaymentMethodSelector
@@ -139,7 +139,7 @@ export function PaymentProcessModal({
                     {step === 'details' && (
                         <div className="animate-in fade-in slide-in-from-right-4 duration-500">
                             <div className="mb-6">
-                                <h3 className="text-xl font-bold text-slate-900">MoMo Details</h3>
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">MoMo Details</h3>
                                 <p className="text-sm text-slate-500 mt-1">
                                     Enter your mobile money number to receive a payment prompt
                                 </p>
@@ -162,9 +162,9 @@ export function PaymentProcessModal({
                                     <Spinner size="lg" className="text-primary" />
                                 </div>
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900">Waiting for prompt...</h3>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white">Waiting for prompt...</h3>
                             <p className="text-sm text-slate-500 mt-2 text-center max-w-[280px]">
-                                Check your phone <span className="font-bold text-slate-900">+233 {phone}</span> for the authorization request.
+                                Check your phone <span className="font-bold text-slate-900 dark:text-white">+233 {phone}</span> for the authorization request.
                             </p>
                         </div>
                     )}
@@ -174,19 +174,19 @@ export function PaymentProcessModal({
                             <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 text-green-500">
                                 <CheckCircle2 size={48} strokeWidth={2.5} className="animate-in zoom-in spin-in-12 duration-1000" />
                             </div>
-                            <h3 className="text-2xl font-bold text-slate-900">Payment Successful</h3>
+                            <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Payment Successful</h3>
                             <p className="text-sm text-slate-500 mt-2 text-center">
-                                Premium for <span className="font-medium text-slate-900">{policy.policyNumber}</span> has been received.
+                                Premium for <span className="font-medium text-slate-900 dark:text-white">{policy.policyNumber}</span> has been received.
                             </p>
 
                             <div className="mt-8 p-4 bg-transparent rounded-2xl w-full border border-[var(--glass-border)] border-dashed">
                                 <div className="flex justify-between text-xs mb-2">
                                     <span className="text-slate-500">Amount Paid</span>
-                                    <span className="font-bold text-slate-900">{policy.premiumAmount} {policy.currency}</span>
+                                    <span className="font-bold text-slate-900 dark:text-white">{policy.premiumAmount} {policy.currency}</span>
                                 </div>
                                 <div className="flex justify-between text-xs mb-2">
                                     <span className="text-slate-500">Method</span>
-                                    <span className="font-bold text-slate-900 uppercase">{network} MoMo</span>
+                                    <span className="font-bold text-slate-900 dark:text-white uppercase">{network} MoMo</span>
                                 </div>
                                 <div className="flex justify-between text-xs">
                                     <span className="text-slate-500">Reference</span>

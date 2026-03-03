@@ -99,7 +99,7 @@ export default function CalendarPage() {
 
                     <button
                         onClick={() => calendarRef.current?.openModal()}
-                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all active:scale-95"
+                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all active:scale-95 cursor-pointer"
                     >
                         <Plus size={14} strokeWidth={3} />
                         New Action

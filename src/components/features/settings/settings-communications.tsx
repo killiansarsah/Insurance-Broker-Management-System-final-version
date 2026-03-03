@@ -174,11 +174,11 @@ export function SettingsCommunications() {
                             <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sender Name</label>
-                                    <input className="h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-sm font-bold focus:bg-white transition-all outline-none dark:text-white" defaultValue="IBMS Portal" />
+                                    <input className="h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-sm font-bold focus:bg-white dark:focus:bg-slate-800 transition-all outline-none dark:text-white" defaultValue="IBMS Portal" />
                                 </div>
                                 <div className="flex flex-col gap-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Sender Email</label>
-                                    <input className="h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-sm font-bold focus:bg-white transition-all outline-none dark:text-white" defaultValue="no-reply@ibms-portal.com" />
+                                    <input className="h-11 px-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-sm font-bold focus:bg-white dark:focus:bg-slate-800 transition-all outline-none dark:text-white" defaultValue="no-reply@ibms-portal.com" />
                                 </div>
                             </div>
 

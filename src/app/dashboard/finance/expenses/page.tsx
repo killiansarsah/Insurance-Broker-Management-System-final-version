@@ -687,14 +687,14 @@ export default function ExpensesPage() {
                                                 <div className="flex items-center justify-center gap-1">
                                                     <button
                                                         onClick={saveEdit}
-                                                        className="p-1.5 rounded-md bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                                                        className="p-1.5 rounded-md bg-success-50 text-success-600 hover:bg-success-100 transition-colors cursor-pointer"
                                                         title="Save"
                                                     >
                                                         <Save size={14} />
                                                     </button>
                                                     <button
                                                         onClick={cancelEdit}
-                                                        className="p-1.5 rounded-md bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors"
+                                                        className="p-1.5 rounded-md bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors cursor-pointer"
                                                         title="Cancel"
                                                     >
                                                         <X size={14} />
@@ -704,14 +704,14 @@ export default function ExpensesPage() {
                                                 <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <button
                                                         onClick={() => startEdit(exp)}
-                                                        className="p-1.5 rounded-md hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-colors"
+                                                        className="p-1.5 rounded-md hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-colors cursor-pointer"
                                                         title="Edit"
                                                     >
                                                         <Pencil size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => setExpDeleteTarget({ type: 'single', id: exp.id })}
-                                                        className="p-1.5 rounded-md hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors"
+                                                        className="p-1.5 rounded-md hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors cursor-pointer"
                                                         title="Delete"
                                                     >
                                                         <Trash2 size={14} />

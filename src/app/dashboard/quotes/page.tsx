@@ -117,7 +117,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                 <p className="text-sm text-surface-500 font-mono">{quote.quoteNumber}</p>
                             </div>
                         </div>
-                        <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-100 text-surface-500 transition-colors" aria-label="Close quote details">
+                        <button onClick={onClose} className="p-2 rounded-lg hover:bg-surface-100 text-surface-500 transition-colors cursor-pointer" aria-label="Close quote details">
                             <X size={20} />
                         </button>
                     </div>

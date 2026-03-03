@@ -355,7 +355,7 @@ export function SettingsIntegrations() {
                     <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-sm flex flex-col">
                         <div className="px-8 py-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
                             <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent Imports</h3>
-                            <button onClick={() => toast.info('Import Logs', { description: 'Displaying all data import history and audit trail.' })} className="text-[10px] font-black uppercase tracking-widest text-primary-600 dark:text-primary-400 hover:underline">View Full Logs</button>
+                            <button onClick={() => toast.info('Import Logs', { description: 'Displaying all data import history and audit trail.' })} className="text-[10px] font-black uppercase tracking-widest text-primary-600 dark:text-primary-400 hover:underline cursor-pointer">View Full Logs</button>
                         </div>
                         <div className="overflow-x-auto no-scrollbar">
                             <table className="w-full text-left">

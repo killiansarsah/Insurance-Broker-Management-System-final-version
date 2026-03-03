@@ -75,7 +75,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     {
         id: 'n7',
         title: 'Monthly Report Ready',
-        message: 'May 2025 premium collection report has been generated and is ready for review.',
+        message: 'February 2026 premium collection report has been generated and is ready for review.',
         type: 'finance',
         priority: 'low',
         read: true,
@@ -87,7 +87,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
     {
         id: 'n8',
         title: 'Document Expiring',
-        message: 'KYC document for client Yaw Boateng (Ghana Card) expires on 2025-07-15.',
+        message: 'KYC document for client Yaw Boateng (Ghana Card) expires on 2026-07-15.',
         type: 'document',
         priority: 'medium',
         read: false,

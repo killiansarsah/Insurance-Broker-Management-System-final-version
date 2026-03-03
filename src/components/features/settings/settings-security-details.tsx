@@ -228,7 +228,7 @@ export function SettingsSecurityDetails() {
                         <p className="text-xs font-bold text-slate-500 uppercase leading-relaxed tracking-tight">
                             Print or securely store your backup codes. These allow you to regain access if you lose your authentication device.
                         </p>
-                        <button className="h-11 w-full rounded-xl border-2 border-primary text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 transition-all"
+                        <button className="h-11 w-full rounded-xl border-2 border-primary text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 transition-all cursor-pointer"
                             onClick={() => toast.success('Recovery Codes Downloaded', { description: 'Your backup codes have been saved to your downloads folder. Store them securely.' })}
                         >
                             Download Recovery Codes
@@ -241,7 +241,7 @@ export function SettingsSecurityDetails() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                 <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Recent Session Activity</h3>
-                    <button onClick={() => setIsSignOutAllOpen(true)} className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors">Sign out all devices</button>
+                    <button onClick={() => setIsSignOutAllOpen(true)} className="text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors cursor-pointer">Sign out all devices</button>
                 </div>
                 <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left border-collapse">

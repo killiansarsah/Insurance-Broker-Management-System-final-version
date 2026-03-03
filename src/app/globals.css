@@ -75,13 +75,13 @@
   --color-sidebar-text-active: #ffffff;
 
   /* --- Spacing (8-point grid) --- */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-  --spacing-2xl: 48px;
-  --spacing-3xl: 64px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
 
   /* --- Border Radius --- */
   --radius-sm: 4px;
@@ -926,6 +926,9 @@ dialog:not([open]) {
 }
 
 @utility custom-scrollbar-subtle {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--color-surface-300) 40%, transparent) transparent;
+
   &::-webkit-scrollbar {
     width: 6px;
   }

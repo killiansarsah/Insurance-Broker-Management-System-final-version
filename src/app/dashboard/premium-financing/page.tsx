@@ -119,7 +119,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                         </div>
                         <button
                             onClick={onClose}
-                            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all"
+                            className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/70 hover:text-white transition-all cursor-pointer"
                             aria-label="Close financing details"
                         >
                             <X size={20} />
@@ -710,7 +710,7 @@ export default function PremiumFinancingPage() {
                         <button
                             key={tab.id}
                             onClick={() => handleTabChange(tab.id)}
-                            className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap border-b-2 -mb-px ${
+                            className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap border-b-2 -mb-px cursor-pointer ${
                                 activeTab === tab.id
                                     ? `${tab.activeColor} text-surface-900`
                                     : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
@@ -854,7 +854,7 @@ export default function PremiumFinancingPage() {
                                         e.stopPropagation();
                                         setSelectedApp(r);
                                     }}
-                                    className="p-2 rounded-xl hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-all hover:scale-110"
+                                    className="p-2 rounded-xl hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-all hover:scale-110 cursor-pointer"
                                 >
                                     <Eye size={16} />
                                 </button>
