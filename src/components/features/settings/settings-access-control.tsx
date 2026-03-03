@@ -116,15 +116,45 @@ export function SettingsAccessControl() {
         { id: 'export_data', name: 'Export Data', category: 'Reports', description: 'Can download bulk data in Excel/CSV' },
     ]);
 
-    const [roles] = useState<Role[]>([
-        { id: '1', name: 'Workspace Owner', userCount: 1, permissions: permissions.map(p => p.id) },
-        { id: '2', name: 'Administrator', userCount: 2, permissions: permissions.map(p => p.id).filter(id => id !== 'delete_policies') },
-        { id: '3', name: 'Manager', userCount: 5, permissions: ['view_policies', 'edit_policies', 'view_financials', 'export_data'] },
-        { id: '4', name: 'Agent', userCount: 12, permissions: ['view_policies', 'edit_policies'] },
+    // Default permissions per role — used by the Reset button
+    const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
+        '1': ['view_policies', 'edit_policies', 'delete_policies', 'view_financials', 'manage_users', 'export_data'],
+        '2': ['view_policies', 'edit_policies', 'view_financials', 'manage_users', 'export_data'],
+        '3': ['view_policies', 'edit_policies', 'view_financials', 'export_data'],
+        '4': ['view_policies', 'edit_policies'],
+    };
+
+    const [roles, setRoles] = useState<Role[]>([
+        { id: '1', name: 'Workspace Owner', userCount: 1, permissions: DEFAULT_ROLE_PERMISSIONS['1'] },
+        { id: '2', name: 'Administrator', userCount: 2, permissions: DEFAULT_ROLE_PERMISSIONS['2'] },
+        { id: '3', name: 'Manager', userCount: 5, permissions: DEFAULT_ROLE_PERMISSIONS['3'] },
+        { id: '4', name: 'Agent', userCount: 12, permissions: DEFAULT_ROLE_PERMISSIONS['4'] },
     ]);
 
     const [selectedRoleId, setSelectedRoleId] = useState<string>('1');
     const selectedRole = roles.find(r => r.id === selectedRoleId);
+
+    const togglePermission = (permissionId: string) => {
+        setRoles(prev => prev.map(role => {
+            if (role.id !== selectedRoleId) return role;
+            const has = role.permissions.includes(permissionId);
+            return {
+                ...role,
+                permissions: has
+                    ? role.permissions.filter(p => p !== permissionId)
+                    : [...role.permissions, permissionId],
+            };
+        }));
+    };
+
+    const resetSelectedRole = () => {
+        setRoles(prev => prev.map(role =>
+            role.id === selectedRoleId
+                ? { ...role, permissions: DEFAULT_ROLE_PERMISSIONS[role.id] ?? [] }
+                : role
+        ));
+        toast.success('Permissions Reset', { description: `${selectedRole?.name} permissions restored to defaults.` });
+    };
 
     return (
         <div className="flex flex-col gap-10">
@@ -272,7 +302,7 @@ export function SettingsAccessControl() {
                                     </div>
                                     <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">{selectedRole?.name} Permissions</h4>
                                 </div>
-                                <button onClick={() => toast.info('Permissions Reset', { description: `${selectedRole?.name} permissions have been restored to defaults.` })} className="h-10 px-6 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all cursor-pointer">Reset</button>
+                                <button onClick={resetSelectedRole} className="h-10 px-6 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all cursor-pointer">Reset</button>
                             </div>
                             <div className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {permissions.map(permission => {
@@ -288,13 +318,16 @@ export function SettingsAccessControl() {
                                                     <p className="text-sm font-medium text-slate-500 leading-relaxed">{permission.description}</p>
                                                 </div>
                                                 <button
-                                                    onClick={() => toast.info('Permission Toggled', { description: `${permission.name} ${isEnabled ? 'disabled' : 'enabled'} for ${selectedRole?.name}.` })}
+                                                    onClick={() => togglePermission(permission.id)}
+                                                    aria-checked={isEnabled}
+                                                    role="switch"
+                                                    aria-label={`Toggle ${permission.name}`}
                                                     className={cn(
-                                                    "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
+                                                    "relative inline-flex items-center h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
                                                     isEnabled ? "bg-primary border-primary ring-4 ring-primary/20 shadow-lg shadow-primary/30" : "bg-slate-200 dark:bg-slate-700 border-transparent"
                                                 )}>
                                                     <span className={cn(
-                                                        "pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-lg ring-0 transition duration-300 ease-in-out",
+                                                        "pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow-lg ring-0 transition duration-300 ease-in-out ml-0.5",
                                                         isEnabled ? "translate-x-6" : "translate-x-0"
                                                     )} />
                                                 </button>
