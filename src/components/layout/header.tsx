@@ -1,5 +1,6 @@
 import dynamic from 'next/dynamic';
-import { Bell, Search, Menu, CheckCircle2, LogOut, Calculator, Headset, ShieldAlert } from 'lucide-react';
+import { Bell, Search, Menu, CheckCircle2, LogOut, Calculator, Headset, ShieldAlert, User } from 'lucide-react';
+import Image from 'next/image';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
@@ -93,6 +94,17 @@ export function Header() {
                 >
                     <Menu size={20} />
                 </button>
+
+                {/* Company logo — mobile only (sidebar is hidden on mobile) */}
+                <div className="lg:hidden relative w-7 h-7 shrink-0">
+                    <Image
+                        src="/logo.png"
+                        alt="Company Logo"
+                        fill
+                        className="object-contain"
+                        sizes="28px"
+                    />
+                </div>
 
                 <div className="hidden md:block relative">
                     <Search
@@ -260,20 +272,10 @@ export function Header() {
                                     }}
                                     className="w-full px-5 py-2.5 text-sm text-left text-surface-700 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-700 cursor-pointer transition-colors font-medium flex items-center gap-3"
                                 >
-                                    <Avatar name={user?.firstName || 'U'} size="sm" className="w-6 h-6 text-[10px]" />
-                                    My Profile
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        router.push('/dashboard/settings');
-                                        setProfileOpen(false);
-                                    }}
-                                    className="w-full px-5 py-2.5 text-sm text-left text-surface-700 dark:text-slate-300 hover:bg-surface-50 dark:hover:bg-slate-700 cursor-pointer transition-colors font-medium flex items-center gap-3"
-                                >
-                                    <div className="w-6 h-6 rounded-full bg-surface-100 flex items-center justify-center">
-                                        <Bell size={12} className="text-surface-500" />
+                                    <div className="w-6 h-6 rounded-full bg-surface-100 dark:bg-slate-700 flex items-center justify-center">
+                                        <User size={12} className="text-surface-500" />
                                     </div>
-                                    Preferences
+                                    My Profile
                                 </button>
                             </div>
                             <div className="border-t border-surface-100 dark:border-slate-700 py-2 bg-surface-50/30 dark:bg-slate-900/30">

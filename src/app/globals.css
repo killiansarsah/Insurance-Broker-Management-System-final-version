@@ -294,6 +294,31 @@ dialog:not([open]) {
   }
 }
 
+@keyframes chevron-kick {
+  0%   { transform: scale(1)    translateX(0);    }
+  25%  { transform: scale(0.7)  translateX(-5px); }
+  60%  { transform: scale(1.1)  translateX(2px);  }
+  100% { transform: scale(1)    translateX(0);    }
+}
+
+@keyframes chevron-tap {
+  0%, 30%, 100%  { transform: translateX(0);    }
+  42%            { transform: translateX(-6px); }
+  54%            { transform: translateX(0);    }
+  66%            { transform: translateX(-6px); }
+  78%            { transform: translateX(0);    }
+}
+
+@keyframes collapse-breathe {
+  0%, 25%, 75%, 100% { background-color: transparent;            }
+  50%                { background-color: rgba(99, 102, 241, 0.1); }
+}
+
+@keyframes chevron-color {
+  0%, 25%, 75%, 100% { color: rgb(100 116 139);  }
+  50%                { color: rgb(99 102 241);   }
+}
+
 @keyframes pulse-subtle {
 
   0%,

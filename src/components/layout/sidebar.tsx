@@ -23,6 +23,8 @@ import {
     Calendar,
     Search,
     Upload,
+    Sun,
+    Moon,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -190,7 +192,8 @@ function SidebarCompanyHeader() {
 
 function GlobalRail() {
     const [searchOpen, setSearchOpen] = useState(false);
-    const { firstName, lastName, avatarUrl } = useProfileStore();
+    const { currentTheme, setTheme } = useUiStore();
+    const isDark = currentTheme === 'dark';
 
     return (
         <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white dark:bg-slate-900 border-r border-surface-200 dark:border-slate-700/60 shrink-0 z-20">
@@ -225,21 +228,19 @@ function GlobalRail() {
 
             <div className="flex-1" />
 
-            {/* Bottom Actions */}
-            <div className="flex flex-col gap-3 w-full items-center mb-2">
-                <Link
-                    href="/dashboard/settings"
-                    className="w-10 h-10 flex items-center justify-center overflow-hidden rounded-full border-2 border-surface-200 hover:border-primary-400 transition-all shadow-sm"
-                    title={`${firstName} ${lastName} — Settings`}
+            {/* Theme Toggle */}
+            <div className="flex flex-col items-center pb-4">
+                <button
+                    onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                    title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    className="w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-200 cursor-pointer text-surface-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-950 outline-none focus:ring-2 focus:ring-primary-200 group"
                 >
-                    {avatarUrl ? (
-                        <Image src={avatarUrl} alt="Profile" fill className="object-cover" />
-                    ) : (
-                        <span className="text-xs font-black text-surface-600 bg-surface-100 w-full h-full flex items-center justify-center">
-                            {firstName[0]}{lastName[0]}
-                        </span>
-                    )}
-                </Link>
+                    <span className="transition-transform duration-500 group-hover:rotate-12 block">
+                        {isDark
+                            ? <Sun size={18} className="text-amber-400" />
+                            : <Moon size={18} />}
+                    </span>
+                </button>
             </div>
         </div>
     );
@@ -394,6 +395,12 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
 export function Sidebar() {
     const { sidebarCollapsed, sidebarMobileOpen, toggleSidebar, setSidebarMobileOpen } =
         useUiStore();
+    const [collapseKey, setCollapseKey] = useState(0);
+
+    const handleToggleSidebar = () => {
+        toggleSidebar();
+        setCollapseKey((k) => k + 1);
+    };
 
     return (
         <>
@@ -410,7 +417,8 @@ export function Sidebar() {
                 className={cn(
                     'fixed top-0 left-0 h-full bg-white dark:bg-slate-900 z-[200]',
                     // Using flex-row to accommodate the Double Rail
-                    'flex flex-row transition-all duration-300 shadow-xl lg:shadow-none border-r border-surface-200 dark:border-slate-700/60',
+                    'flex flex-row shadow-xl lg:shadow-none border-r border-surface-200 dark:border-slate-700/60',
+                    'transition-[width] duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
                     // Desktop
                     'hidden lg:flex',
                     sidebarCollapsed
@@ -420,8 +428,15 @@ export function Sidebar() {
                     sidebarMobileOpen && '!flex w-[280px] max-w-[85vw]'
                 )}
             >
-                {/* RAIL A: Global Toolbelt (Only visible when expanded or on mobile) */}
-                {!sidebarCollapsed && <GlobalRail />}
+                {/* RAIL A: Global Toolbelt — kept mounted, CSS-animated out when collapsed */}
+                <div className={cn(
+                    'overflow-hidden shrink-0 transition-[max-width,opacity] ease-[cubic-bezier(0.4,0,0.2,1)]',
+                    sidebarCollapsed
+                        ? 'max-w-0 opacity-0 duration-250'
+                        : 'max-w-[48px] opacity-100 duration-300'
+                )}>
+                    <GlobalRail />
+                </div>
 
 
                 {/* RAIL B: Context Navigation */}
@@ -479,23 +494,33 @@ export function Sidebar() {
                     {/* Footer / User / Collapse */}
                     <div className="border-t border-surface-200 p-4">
                         <button
-                            onClick={toggleSidebar}
-                            className={cn(
-                                'flex items-center justify-center w-full py-2.5 rounded-lg group', // Soft
-                                'text-surface-500 hover:text-surface-900 hover:bg-surface-100',
-                                'transition-colors duration-200',
-                                'cursor-pointer'
-                            )}
+                            onClick={handleToggleSidebar}
+                            className="relative flex items-center justify-center w-full py-2.5 rounded-lg cursor-pointer"
+                            style={{ animation: 'collapse-breathe 3s ease-in-out infinite' }}
                             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
                         >
-                            <ChevronLeft
-                                size={18}
-                                className={cn(
-                                    'transition-transform duration-300',
-                                    sidebarCollapsed && 'rotate-180'
-                                )}
-                            />
-                            {!sidebarCollapsed && <span className="ml-2 text-sm font-medium">Collapse View</span>}
+                            {/*
+                              Outer span: handles the 180deg rotation on collapse with a smooth
+                              CSS transition — no keyframe conflict here.
+                              Inner span: runs the double-tap bounce keyframe independently.
+                            */}
+                            <span
+                                className={cn('inline-flex transition-transform duration-300', sidebarCollapsed && 'rotate-180')}
+                                style={{ animation: 'chevron-color 3s ease-in-out infinite' }}
+                            >
+                                <span style={{ animation: 'chevron-tap 3s ease-in-out infinite', display: 'inline-flex' }}>
+                                    <ChevronLeft size={18} />
+                                </span>
+                            </span>
+
+                            {!sidebarCollapsed && (
+                                <span
+                                    className="ml-2 text-sm font-medium"
+                                    style={{ animation: 'chevron-color 3s ease-in-out infinite' }}
+                                >
+                                    Collapse View
+                                </span>
+                            )}
                         </button>
                     </div>
                 </div>
