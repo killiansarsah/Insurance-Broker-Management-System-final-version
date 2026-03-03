@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
     AlertTriangle,
     Plus,
@@ -21,7 +22,10 @@ import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 
-import { NewComplaintModal } from '@/components/complaints/new-complaint-modal';
+const NewComplaintModal = dynamic(
+    () => import('@/components/complaints/new-complaint-modal').then(m => ({ default: m.NewComplaintModal })),
+    { ssr: false }
+);
 import { toast } from 'sonner';
 
 export default function ComplaintsPage() {

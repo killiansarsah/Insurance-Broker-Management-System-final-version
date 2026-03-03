@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import {
     Plus,
     Search,
@@ -20,7 +21,11 @@ import { users } from '@/mock/users';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { UserRole, User } from '@/types';
-import { InviteUserModal } from '@/components/admin/invite-user-modal';
+
+const InviteUserModal = dynamic(
+    () => import('@/components/admin/invite-user-modal').then(m => ({ default: m.InviteUserModal })),
+    { ssr: false }
+);
 import { CustomSelect } from '@/components/ui/select-custom';
 
 const ROLE_COLORS: Record<UserRole, 'primary' | 'success' | 'warning' | 'danger' | 'default' | 'outline'> = {

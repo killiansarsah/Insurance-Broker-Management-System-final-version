@@ -159,6 +159,13 @@ dialog:not([open]) {
   background-color: var(--color-surface-400);
 }
 
+/* --- Samsung One UI origin-expand — used by Modal & ConfirmationModal --- */
+@keyframes modal-origin-expand {
+  0%   { opacity: 0; transform: scale(0.06); }
+  55%  { opacity: 1; }
+  100% { opacity: 1; transform: scale(1); }
+}
+
 /* --- Focus ring --- */
 *:focus-visible {
   outline: 2px solid var(--color-primary-500);

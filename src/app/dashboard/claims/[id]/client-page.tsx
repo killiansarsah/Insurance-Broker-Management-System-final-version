@@ -2,6 +2,7 @@
 
 import { use, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
     FileText,
     Calendar,
@@ -24,7 +25,11 @@ import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Claim } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
-import { ClaimStatusModal } from '@/components/claims/claim-status-modal';
+
+const ClaimStatusModal = dynamic(
+    () => import('@/components/claims/claim-status-modal').then(m => ({ default: m.ClaimStatusModal })),
+    { ssr: false }
+);
 
 function InfoItem({ icon, label, value, className }: { icon: React.ReactNode; label: string; value: React.ReactNode; className?: string }) {
     return (

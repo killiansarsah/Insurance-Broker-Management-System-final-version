@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import {
     FileArchive,
     Search,
@@ -18,8 +19,15 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MOCK_DOCUMENTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
-import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
-import { DocumentPreviewModal } from '@/components/documents/document-preview-modal';
+
+const UploadDocumentModal = dynamic(
+    () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
+    { ssr: false }
+);
+const DocumentPreviewModal = dynamic(
+    () => import('@/components/documents/document-preview-modal').then(m => ({ default: m.DocumentPreviewModal })),
+    { ssr: false }
+);
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
 import type { Document } from '@/types';

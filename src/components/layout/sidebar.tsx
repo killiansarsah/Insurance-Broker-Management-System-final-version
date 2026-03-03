@@ -286,8 +286,9 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
         return (
             <Link
                 href={item.href}
+                aria-current={isActive ? 'page' : undefined}
                 className={cn(
-                    'flex items-center justify-center w-10 h-10 mx-auto rounded-xl', // Premium soft rounded
+                    'flex items-center justify-center w-10 h-10 mx-auto rounded-xl',
                     'transition-all duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]', // Smooth bezier
                     'hover:scale-105 active:scale-95', // Micro-interaction
                     isActive
@@ -337,8 +338,9 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
             ) : (
                 <Link
                     href={item.href}
+                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                        'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl', // Premium rounded
+                        'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl',
                         'transition-all duration-300 ease-out',
                         'text-sm font-medium cursor-pointer group',
                         'hover:translate-x-1', // Lateral movement

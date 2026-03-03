@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getLastClickOrigin } from '@/lib/click-origin';
 
 interface ModalProps {
     isOpen: boolean;
@@ -35,6 +36,7 @@ export function Modal({
     className,
 }: ModalProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
+    const innerRef = useRef<HTMLDivElement>(null);
 
     // Handle clicks on the backdrop (the dialog element itself when using showModal)
     const handleDialogClick = (e: React.MouseEvent<HTMLDialogElement>) => {
@@ -53,12 +55,31 @@ export function Modal({
 
         if (isOpen) {
             if (!dialog.open) {
+                // Capture click position BEFORE showModal repositions the dialog
+                const origin = getLastClickOrigin();
                 dialog.showModal();
+                // After showModal the dialog is positioned — compute origin relative to inner box
+                requestAnimationFrame(() => {
+                    const inner = innerRef.current;
+                    if (!inner) return;
+                    const rect = inner.getBoundingClientRect();
+                    const ox = origin.x - rect.left;
+                    const oy = origin.y - rect.top;
+                    inner.style.transformOrigin = `${ox}px ${oy}px`;
+                    inner.style.animation = 'none';
+                    void inner.offsetHeight; // force reflow to restart animation
+                    inner.style.animation = 'modal-origin-expand 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) forwards';
+                });
             }
             document.body.style.overflow = 'hidden';
         } else {
             if (dialog.open) {
                 dialog.close();
+            }
+            // Reset animation so it re-fires next open
+            if (innerRef.current) {
+                innerRef.current.style.animation = '';
+                innerRef.current.style.transformOrigin = '';
             }
             document.body.style.overflow = '';
         }
@@ -89,7 +110,7 @@ export function Modal({
             style={{ width: 'calc(100vw - 2rem)', maxWidth: sizeMap[size] || sizeMap.md }}
         >
             {isOpen && (
-                <div className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
+                <div ref={innerRef} className="bg-[var(--glass-26-bg)] backdrop-blur-[var(--glass-26-blur)] flex flex-col w-full border border-[var(--glass-26-border)] shadow-[inset_0_1px_0_0_var(--glass-26-highlight),var(--glass-26-shadow)] overflow-hidden text-surface-900 rounded-[var(--radius-2xl)]">
                     {/* Header */}
                     <div className="flex items-center justify-between p-4 md:p-6 border-b border-[var(--glass-26-border)] bg-transparent shrink-0">
                         <div>

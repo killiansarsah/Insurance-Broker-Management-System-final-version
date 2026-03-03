@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import {
     ChevronLeft,
     Shield,
@@ -49,10 +50,17 @@ import { mockPolicies } from '@/mock/policies';
 import { claims as mockClaims } from '@/mock/claims';
 import { carriers } from '@/mock/carriers';
 import { toast } from 'sonner';
-import { RecordPaymentModal } from '@/components/forms/record-payment-modal';
 import { usePaymentStore } from '@/stores/payment-store';
 import { generateReceipt } from '@/lib/generate-receipt';
-import { UploadDocumentModal } from '@/components/documents/upload-document-modal';
+
+const RecordPaymentModal = dynamic(
+    () => import('@/components/forms/record-payment-modal').then(m => ({ default: m.RecordPaymentModal })),
+    { ssr: false }
+);
+const UploadDocumentModal = dynamic(
+    () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
+    { ssr: false }
+);
 
 const TABS = [
     { id: 'overview', label: 'Overview', icon: Eye },

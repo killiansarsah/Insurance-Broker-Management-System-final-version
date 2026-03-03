@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { getLastClickOrigin } from '@/lib/click-origin';
 
 export type ConfirmationVariant = 'danger' | 'warning' | 'info';
 
@@ -50,6 +51,7 @@ export function ConfirmationModal({
     icon,
 }: ConfirmationModalProps) {
     const dialogRef = useRef<HTMLDialogElement>(null);
+    const innerRef = useRef<HTMLDivElement>(null);
     const styles = variantStyles[variant];
 
     // IMPORTANT: The <dialog> must remain in the DOM so useEffect can call
@@ -61,10 +63,28 @@ export function ConfirmationModal({
         if (!dialog) return;
 
         if (isOpen) {
-            if (!dialog.open) dialog.showModal();
+            if (!dialog.open) {
+                const origin = getLastClickOrigin();
+                dialog.showModal();
+                requestAnimationFrame(() => {
+                    const inner = innerRef.current;
+                    if (!inner) return;
+                    const rect = inner.getBoundingClientRect();
+                    const ox = origin.x - rect.left;
+                    const oy = origin.y - rect.top;
+                    inner.style.transformOrigin = `${ox}px ${oy}px`;
+                    inner.style.animation = 'none';
+                    void inner.offsetHeight;
+                    inner.style.animation = 'modal-origin-expand 0.6s cubic-bezier(0.34, 1.45, 0.64, 1) forwards';
+                });
+            }
             document.body.style.overflow = 'hidden';
         } else {
             if (dialog.open) dialog.close();
+            if (innerRef.current) {
+                innerRef.current.style.animation = '';
+                innerRef.current.style.transformOrigin = '';
+            }
             document.body.style.overflow = '';
         }
 
@@ -92,7 +112,7 @@ export function ConfirmationModal({
             style={{ width: 'min(28rem, calc(100vw - 2rem))' }}
         >
             {isOpen && (
-                <div className="bg-white dark:bg-slate-900 flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 dark:border-slate-700 p-8 gap-5">
+                <div ref={innerRef} className="bg-white dark:bg-slate-900 flex flex-col items-center text-center w-full rounded-[var(--radius-2xl)] border border-surface-200 dark:border-slate-700 p-8 gap-5">
                     {/* Icon */}
                     <div className={cn('w-16 h-16 rounded-2xl flex items-center justify-center', styles.iconBg, styles.iconText)}>
                         {icon}

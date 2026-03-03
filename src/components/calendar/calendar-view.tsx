@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import {
     format,
     addMonths,
@@ -25,7 +26,11 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Use
 import { cn } from '@/lib/utils';
 import { mockEvents as initialEvents, CalendarEvent } from '@/mock/calendar-events';
 import { toast } from 'sonner';
-import { NewEventModal } from './new-event-modal';
+
+const NewEventModal = dynamic(
+    () => import('./new-event-modal').then(m => ({ default: m.NewEventModal })),
+    { ssr: false }
+);
 
 export interface CalendarViewHandle {
     openModal: (date?: Date) => void;
