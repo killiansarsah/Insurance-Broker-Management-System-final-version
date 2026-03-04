@@ -9,6 +9,11 @@
         "/^node fix-access-control\\.js$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "npx @nestjs/cli@latest": true,
+        "/^npx --yes @nestjs/cli@latest new ibms-backend --strict --package-manager npm --skip-git$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

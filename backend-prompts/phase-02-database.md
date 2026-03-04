@@ -1,0 +1,1441 @@
+# Phase 2: Database Schema & Migrations
+
+## What This Phase Builds
+- Complete Prisma schema with ALL tables (foundation + domain)
+- PostgreSQL Row-Level Security (RLS) for tenant isolation
+- PrismaService (global module)
+- Seed script with test data (2 tenants, users, carriers, branches)
+- Database migrations
+
+## Prerequisites
+- Phase 1 ✅ (NestJS project scaffold exists)
+
+## Prompt
+
+Using the existing NestJS project at `ibms-backend/`:
+
+1. **Initialize Prisma:** `npx prisma init` (datasource: postgresql)
+
+2. **Create `prisma/schema.prisma`** with the COMPLETE schema below. Every table has `tenantId UUID NOT NULL` (except platform-level tables). All monetary fields use `Decimal @db.Decimal(15,2)`. All major entities have soft delete (`deletedAt DateTime?`).
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ─────────────────────────────────────
+
+enum TenantPlan {
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum UserRole {
+  PLATFORM_SUPER_ADMIN
+  SUPER_ADMIN
+  TENANT_ADMIN
+  ADMIN
+  BRANCH_MANAGER
+  SENIOR_BROKER
+  BROKER
+  SECRETARY
+  DATA_ENTRY
+  VIEWER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum ClientType {
+  INDIVIDUAL
+  CORPORATE
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  BLACKLISTED
+}
+
+enum KycStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+  EXPIRED
+}
+
+enum AmlRiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum PolicyStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+  LAPSED
+  SUSPENDED
+}
+
+enum InsuranceType {
+  MOTOR
+  FIRE
+  MARINE
+  LIFE
+  HEALTH
+  LIABILITY
+  ENGINEERING
+  BONDS
+  TRAVEL
+  AGRICULTURE
+  OIL_GAS
+  AVIATION
+  PROFESSIONAL_INDEMNITY
+  OTHER
+}
+
+enum PolicyType {
+  LIFE
+  NON_LIFE
+}
+
+enum PremiumFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  SINGLE
+}
+
+enum CommissionStatus {
+  PENDING
+  PAID
+  EARNED
+  CLAWED_BACK
+}
+
+enum PaymentMethod {
+  CASH
+  CHEQUE
+  BANK_TRANSFER
+  MOBILE_MONEY
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+  OVERDUE
+  REFUNDED
+}
+
+enum MoMoNetwork {
+  MTN
+  TELECEL
+  AIRTELTIGO
+}
+
+enum ClaimStatus {
+  INTIMATED
+  REGISTERED
+  DOCUMENTS_PENDING
+  UNDER_REVIEW
+  ASSESSED
+  APPROVED
+  REJECTED
+  SETTLED
+  CLOSED
+}
+
+enum ComplaintStatus {
+  REGISTERED
+  ASSIGNED
+  UNDER_INVESTIGATION
+  RESOLVED
+  ESCALATED
+  CLOSED
+}
+
+enum ComplaintPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  QUOTED
+  NEGOTIATION
+  CONVERTED
+  LOST
+  NURTURING
+}
+
+enum LeadPriority {
+  HOT
+  WARM
+  COLD
+}
+
+enum LeadSource {
+  REFERRAL
+  WEBSITE
+  WALK_IN
+  PHONE
+  EMAIL
+  SOCIAL_MEDIA
+  EVENT
+  PARTNER
+  OTHER
+}
+
+enum EndorsementType {
+  NAME_CHANGE
+  COVERAGE_CHANGE
+  SUM_INSURED_CHANGE
+  VEHICLE_CHANGE
+  CANCELLATION
+}
+
+enum EndorsementStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MotorCoverType {
+  COMPREHENSIVE
+  THIRD_PARTY
+  THIRD_PARTY_FIRE_THEFT
+  COMMERCIAL
+}
+
+enum CancellationReason {
+  NON_PAYMENT
+  CLIENT_REQUEST
+  MISREPRESENTATION
+  DUPLICATE_POLICY
+  INSURER_CANCELLATION
+  OTHER
+}
+
+enum CarrierType {
+  NON_LIFE
+  LIFE
+  REINSURER
+}
+
+enum DocumentCategory {
+  CLIENT
+  POLICY
+  CLAIM
+  COMPLIANCE
+  INTERNAL
+  REPORT
+  KYC
+}
+
+enum ChatRoomType {
+  DIRECT
+  GROUP
+  AI
+}
+
+enum ChatMessageType {
+  TEXT
+  FILE
+  IMAGE
+  VOICE
+  LINK
+  SYSTEM
+}
+
+enum ReadStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum NotificationType {
+  RENEWAL
+  CLAIM
+  COMMISSION
+  LEAD
+  FOLLOWUP
+  COMPLIANCE
+  FINANCE
+  SYSTEM
+  DOCUMENT
+  APPROVAL
+}
+
+enum NotificationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TransactionType {
+  PREMIUM
+  COMMISSION
+  REFUND
+  EXPENSE
+}
+
+enum InvoiceStatus {
+  OUTSTANDING
+  PARTIAL
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum ExpenseStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PFStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED
+  ACTIVE
+  COMPLETED
+  DEFAULTED
+  CANCELLED
+}
+
+enum InstallmentStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum ApprovalType {
+  POLICY
+  ENDORSEMENT
+  CLAIM_SETTLEMENT
+  CANCELLATION
+  REFUND
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TaskPriority {
+  HOT
+  WARM
+  COLD
+}
+
+enum TaskStatus {
+  PENDING
+  UNDER_REVIEW
+  REGISTERED
+}
+
+enum CalendarEventType {
+  POLICY
+  MEETING
+  CLAIM
+  TEAM
+  COMPLIANCE
+  PAYMENT
+}
+
+enum CalendarEventStatus {
+  UPCOMING
+  COMPLETED
+  CANCELLED
+}
+
+// ─── MULTI-TENANCY ────────────────────────────────
+
+model Tenant {
+  id           String     @id @default(uuid()) @db.Uuid
+  name         String
+  slug         String     @unique
+  nicLicense   String?
+  plan         TenantPlan @default(BASIC)
+  isActive     Boolean    @default(true)
+  logoUrl      String?
+  primaryColor String?    @default("#1E40AF")
+  address      String?
+  phone        String?
+  email        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  users        User[]
+  invitations  Invitation[]
+  branches     Branch[]
+  auditLogs    AuditLog[]
+  clients      Client[]
+  policies     Policy[]
+  claims       Claim[]
+  complaints   Complaint[]
+  leads        Lead[]
+  documents    Document[]
+  transactions Transaction[]
+  invoices     Invoice[]
+  commissions  Commission[]
+  expenses     Expense[]
+  premiumFinancing PremiumFinancing[]
+  chatRooms    ChatRoom[]
+  chatMessages ChatMessage[]
+  notifications Notification[]
+  calendarEvents CalendarEvent[]
+  tasks        Task[]
+  approvals    Approval[]
+  departments  Department[]
+  carriers     Carrier[]
+
+  @@map("tenants")
+}
+
+model Branch {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  name      String
+  code      String
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users     User[]
+  departments Department[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("branches")
+}
+
+// ─── USERS & AUTH ─────────────────────────────────
+
+model User {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @db.Uuid
+  email            String
+  passwordHash     String
+  firstName        String
+  lastName         String
+  phone            String?
+  role             UserRole  @default(BROKER)
+  branchId         String?   @db.Uuid
+  avatarUrl        String?
+  isActive         Boolean   @default(true)
+  lastLoginAt      DateTime?
+  failedAttempts   Int       @default(0)
+  lockedUntil      DateTime?
+  twoFactorEnabled Boolean   @default(false)
+  twoFactorSecret  String?
+  delegatedTo      String?   @db.Uuid
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  deletedAt        DateTime?
+
+  tenant           Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  branch           Branch?   @relation(fields: [branchId], references: [id])
+  refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
+  sentInvitations  Invitation[] @relation("InvitedBy")
+  assignedClients  Client[]  @relation("AssignedBroker")
+  assignedPolicies Policy[]  @relation("PolicyBroker")
+  assessedClaims   Claim[]   @relation("ClaimAssessor")
+  assignedComplaints Complaint[] @relation("ComplaintAssignee")
+  assignedLeads    Lead[]    @relation("LeadBroker")
+  uploadedDocuments Document[] @relation("DocumentUploader")
+  processedTransactions Transaction[] @relation("TransactionProcessor")
+  approvedExpenses Expense[] @relation("ExpenseApprover")
+  commissions      Commission[] @relation("CommissionBroker")
+  sentMessages     ChatMessage[] @relation("MessageSender")
+  notifications    Notification[]
+  createdTasks     Task[]    @relation("TaskCreator")
+  assignedTasks    Task[]    @relation("TaskAssignee")
+  requestedApprovals Approval[] @relation("ApprovalRequester")
+  processedApprovals Approval[] @relation("ApprovalProcessor")
+  createdEvents    CalendarEvent[] @relation("EventCreator")
+  eventAttendances CalendarAttendee[]
+  headOfDepartments Department[] @relation("DepartmentHead")
+  endorsementRequests PolicyEndorsement[] @relation("EndorsementRequester")
+  endorsementApprovals PolicyEndorsement[] @relation("EndorsementApprover")
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
+}
+
+model Invitation {
+  id          String           @id @default(uuid()) @db.Uuid
+  tenantId    String           @db.Uuid
+  email       String
+  role        UserRole         @default(BROKER)
+  branchId    String?          @db.Uuid
+  token       String           @unique
+  status      InvitationStatus @default(PENDING)
+  invitedById String           @db.Uuid
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime         @default(now())
+
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy   User             @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@index([tenantId])
+  @@index([token])
+  @@index([email, tenantId])
+  @@map("invitations")
+}
+
+model RefreshToken {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  tokenHash  String    @unique
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  revokedAt  DateTime?
+  replacedBy String?   @db.Uuid
+  ipAddress  String?
+  userAgent  String?
+
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+model PasswordReset {
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String
+  tenantId  String    @db.Uuid
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+  @@map("password_resets")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  userId    String?  @db.Uuid
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entity])
+  @@map("audit_logs")
+}
+
+// ─── CARRIERS & PRODUCTS ──────────────────────────
+
+model Carrier {
+  id            String      @id @default(uuid()) @db.Uuid
+  tenantId      String      @db.Uuid
+  name          String
+  shortName     String
+  slug          String
+  type          CarrierType
+  licenseNumber String?
+  status        String      @default("active")
+  website       String?
+  logoUrl       String?
+  brandColor    String?
+  phone         String?
+  email         String?
+  contactPerson String?
+  address       String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  deletedAt     DateTime?
+
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products      Product[]
+  policies      Policy[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("carriers")
+}
+
+model Product {
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String        @db.Uuid
+  carrierId      String        @db.Uuid
+  name           String
+  code           String
+  insuranceType  InsuranceType
+  description    String?
+  commissionRate Decimal       @db.Decimal(5, 2)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  carrier        Carrier       @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+  policies       Policy[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("products")
+}
+
+// ─── CLIENTS ──────────────────────────────────────
+
+model Client {
+  id                String       @id @default(uuid()) @db.Uuid
+  tenantId          String       @db.Uuid
+  clientNumber      String
+  type              ClientType
+  status            ClientStatus @default(ACTIVE)
+  firstName         String?
+  lastName          String?
+  companyName       String?
+  phone             String
+  email             String?
+  region            String?
+  city              String?
+  digitalAddress    String?
+  ghanaCardNumber   String?
+  dateOfBirth       DateTime?
+  gender            Gender?
+  occupation        String?
+  kycStatus         KycStatus    @default(PENDING)
+  amlRiskLevel      AmlRiskLevel @default(LOW)
+  isPep             Boolean      @default(false)
+  eddRequired       Boolean      @default(false)
+  assignedBrokerId  String?      @db.Uuid
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  deletedAt         DateTime?
+
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedBroker    User?        @relation("AssignedBroker", fields: [assignedBrokerId], references: [id])
+  beneficiaries     Beneficiary[]
+  nextOfKin         NextOfKin[]
+  bankDetails       BankDetail[]
+  policies          Policy[]
+  claims            Claim[]
+  leads             Lead[]       @relation("ConvertedClient")
+  transactions      Transaction[]
+  invoices          Invoice[]
+  commissions       Commission[]
+  premiumFinancing  PremiumFinancing[]
+
+  @@unique([tenantId, clientNumber])
+  @@index([tenantId])
+  @@index([tenantId, type])
+  @@index([tenantId, status])
+  @@map("clients")
+}
+
+model Beneficiary {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @db.Uuid
+  clientId        String   @db.Uuid
+  fullName        String
+  relationship    String
+  dateOfBirth     DateTime?
+  ghanaCardNumber String?
+  phone           String?
+  percentage      Decimal  @db.Decimal(5, 2)
+  guardianName    String?
+  createdAt       DateTime @default(now())
+
+  client          Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("beneficiaries")
+}
+
+model NextOfKin {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @db.Uuid
+  clientId     String  @db.Uuid
+  fullName     String
+  relationship String
+  phone        String
+  address      String?
+
+  client       Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("next_of_kin")
+}
+
+model BankDetail {
+  id            String @id @default(uuid()) @db.Uuid
+  tenantId      String @db.Uuid
+  clientId      String @db.Uuid
+  bankName      String
+  accountName   String
+  accountNumber String
+  branch        String
+
+  client        Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("bank_details")
+}
+
+// ─── POLICIES ─────────────────────────────────────
+
+model Policy {
+  id                String          @id @default(uuid()) @db.Uuid
+  tenantId          String          @db.Uuid
+  policyNumber      String
+  status            PolicyStatus    @default(DRAFT)
+  insuranceType     InsuranceType
+  policyType        PolicyType
+  coverageType      String?
+  nicClassOfBusiness String?
+  clientId          String          @db.Uuid
+  carrierId         String          @db.Uuid
+  productId         String?         @db.Uuid
+  brokerId          String          @db.Uuid
+  inceptionDate     DateTime
+  expiryDate        DateTime
+  issueDate         DateTime?
+  sumInsured        Decimal         @db.Decimal(15, 2)
+  premiumAmount     Decimal         @db.Decimal(15, 2)
+  commissionRate    Decimal         @db.Decimal(5, 2)
+  commissionAmount  Decimal         @db.Decimal(15, 2)
+  commissionStatus  CommissionStatus @default(PENDING)
+  currency          String          @default("GHS")
+  premiumFrequency  PremiumFrequency @default(ANNUAL)
+  paymentStatus     PaymentStatus   @default(PENDING)
+  coverageDetails   String?
+  isRenewal         Boolean         @default(false)
+  previousPolicyId  String?         @db.Uuid
+  cancellationReason CancellationReason?
+  cancellationDate  DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  deletedAt         DateTime?
+
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client            Client          @relation(fields: [clientId], references: [id])
+  carrier           Carrier         @relation(fields: [carrierId], references: [id])
+  product           Product?        @relation(fields: [productId], references: [id])
+  broker            User            @relation("PolicyBroker", fields: [brokerId], references: [id])
+  vehicleDetails    VehicleDetail?
+  propertyDetails   PropertyDetail?
+  marineDetails     MarineDetail?
+  endorsements      PolicyEndorsement[]
+  installments      PremiumInstallment[]
+  policyDocuments   PolicyDocument[]
+  claims            Claim[]
+  transactions      Transaction[]
+  invoices          Invoice[]
+  commissions       Commission[]
+  premiumFinancing  PremiumFinancing[]
+
+  @@unique([tenantId, policyNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, insuranceType])
+  @@index([tenantId, clientId])
+  @@index([tenantId, expiryDate])
+  @@map("policies")
+}
+
+model VehicleDetail {
+  id                 String  @id @default(uuid()) @db.Uuid
+  policyId           String  @unique @db.Uuid
+  registrationNumber String?
+  chassisNumber      String?
+  engineNumber       String?
+  make               String?
+  model              String?
+  year               Int?
+  bodyType           String?
+  color              String?
+  engineCapacity     String?
+  seatingCapacity    Int?
+  usageType          String?
+  estimatedValue     Decimal? @db.Decimal(15, 2)
+  motorCoverType     MotorCoverType?
+
+  policy             Policy  @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_details")
+}
+
+model PropertyDetail {
+  id              String  @id @default(uuid()) @db.Uuid
+  policyId        String  @unique @db.Uuid
+  propertyAddress String?
+  propertyType    String?
+  constructionType String?
+  yearBuilt       Int?
+  estimatedValue  Decimal? @db.Decimal(15, 2)
+  occupancyType   String?
+
+  policy          Policy  @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("property_details")
+}
+
+model MarineDetail {
+  id               String  @id @default(uuid()) @db.Uuid
+  policyId         String  @unique @db.Uuid
+  vesselName       String?
+  imoNumber        String?
+  voyageRoute      String?
+  cargoDescription String?
+  cargoValue       Decimal? @db.Decimal(15, 2)
+  conveyanceType   String?
+
+  policy           Policy  @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("marine_details")
+}
+
+model PolicyEndorsement {
+  id                String           @id @default(uuid()) @db.Uuid
+  tenantId          String           @db.Uuid
+  policyId          String           @db.Uuid
+  type              EndorsementType
+  status            EndorsementStatus @default(PENDING)
+  description       String?
+  effectiveDate     DateTime?
+  premiumAdjustment Decimal?         @db.Decimal(15, 2)
+  requestedById     String           @db.Uuid
+  approvedById      String?          @db.Uuid
+  createdAt         DateTime         @default(now())
+
+  policy            Policy           @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  requestedBy       User             @relation("EndorsementRequester", fields: [requestedById], references: [id])
+  approvedBy        User?            @relation("EndorsementApprover", fields: [approvedById], references: [id])
+
+  @@index([tenantId])
+  @@index([policyId])
+  @@map("policy_endorsements")
+}
+
+model PremiumInstallment {
+  id                String           @id @default(uuid()) @db.Uuid
+  tenantId          String           @db.Uuid
+  policyId          String           @db.Uuid
+  installmentNumber Int
+  dueDate           DateTime
+  amount            Decimal          @db.Decimal(15, 2)
+  status            InstallmentStatus @default(PENDING)
+  paidDate          DateTime?
+
+  policy            Policy           @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([policyId])
+  @@map("premium_installments")
+}
+
+model PolicyDocument {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  policyId   String   @db.Uuid
+  name       String
+  type       String
+  url        String?
+  uploadedAt DateTime @default(now())
+
+  policy     Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([policyId])
+  @@map("policy_documents")
+}
+
+// ─── CLAIMS ───────────────────────────────────────
+
+model Claim {
+  id                     String      @id @default(uuid()) @db.Uuid
+  tenantId               String      @db.Uuid
+  claimNumber            String
+  status                 ClaimStatus @default(INTIMATED)
+  policyId               String      @db.Uuid
+  insuranceType          InsuranceType
+  clientId               String      @db.Uuid
+  incidentDate           DateTime
+  incidentDescription    String
+  incidentLocation       String?
+  claimAmount            Decimal     @db.Decimal(15, 2)
+  currency               String      @default("GHS")
+  intimationDate         DateTime    @default(now())
+  registrationDate       DateTime?
+  acknowledgmentDeadline DateTime
+  processingDeadline     DateTime
+  assessedAmount         Decimal?    @db.Decimal(15, 2)
+  settledAmount          Decimal?    @db.Decimal(15, 2)
+  settlementDate         DateTime?
+  rejectionReason        String?
+  isOverdue              Boolean     @default(false)
+  assessorId             String?     @db.Uuid
+  createdAt              DateTime    @default(now())
+  updatedAt              DateTime    @updatedAt
+  deletedAt              DateTime?
+
+  tenant                 Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  policy                 Policy      @relation(fields: [policyId], references: [id])
+  client                 Client      @relation(fields: [clientId], references: [id])
+  assessor               User?       @relation("ClaimAssessor", fields: [assessorId], references: [id])
+  claimDocuments         ClaimDocument[]
+
+  @@unique([tenantId, claimNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, policyId])
+  @@map("claims")
+}
+
+model ClaimDocument {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  claimId    String   @db.Uuid
+  name       String
+  type       String
+  url        String?
+  uploadedAt DateTime @default(now())
+
+  claim      Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@map("claim_documents")
+}
+
+// ─── COMPLAINTS ───────────────────────────────────
+
+model Complaint {
+  id                String           @id @default(uuid()) @db.Uuid
+  tenantId          String           @db.Uuid
+  complaintNumber   String
+  status            ComplaintStatus  @default(REGISTERED)
+  priority          ComplaintPriority @default(MEDIUM)
+  complainantName   String
+  complainantPhone  String?
+  complainantEmail  String?
+  subject           String
+  category          String?
+  description       String
+  escalationLevel   Int              @default(0)
+  assignedToId      String?          @db.Uuid
+  slaDeadline       DateTime
+  isBreached        Boolean          @default(false)
+  resolutionDetails String?
+  resolvedAt        DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  tenant            Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedTo        User?            @relation("ComplaintAssignee", fields: [assignedToId], references: [id])
+
+  @@unique([tenantId, complaintNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("complaints")
+}
+
+// ─── LEADS ────────────────────────────────────────
+
+model Lead {
+  id                  String       @id @default(uuid()) @db.Uuid
+  tenantId            String       @db.Uuid
+  leadNumber          String
+  status              LeadStatus   @default(NEW)
+  priority            LeadPriority @default(WARM)
+  source              LeadSource   @default(OTHER)
+  contactName         String
+  companyName         String?
+  phone               String?
+  email               String?
+  productInterest     String[]
+  estimatedPremium    Decimal?     @db.Decimal(15, 2)
+  estimatedCommission Decimal?     @db.Decimal(15, 2)
+  assignedBrokerId    String?      @db.Uuid
+  score               Int          @default(0)
+  nextFollowUpDate    DateTime?
+  lastContactDate     DateTime?
+  notes               String?
+  convertedClientId   String?      @db.Uuid
+  convertedAt         DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  deletedAt           DateTime?
+
+  tenant              Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedBroker      User?        @relation("LeadBroker", fields: [assignedBrokerId], references: [id])
+  convertedClient     Client?      @relation("ConvertedClient", fields: [convertedClientId], references: [id])
+
+  @@unique([tenantId, leadNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("leads")
+}
+
+// ─── DOCUMENTS ────────────────────────────────────
+
+model Document {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @db.Uuid
+  name             String
+  category         DocumentCategory
+  mimeType         String
+  sizeBytes        Int
+  url              String?
+  storagePath      String?
+  uploadedById     String           @db.Uuid
+  version          Int              @default(1)
+  isExpired        Boolean          @default(false)
+  expiresAt        DateTime?
+  linkedEntityType String?
+  linkedEntityId   String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploadedBy       User             @relation("DocumentUploader", fields: [uploadedById], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, category])
+  @@index([tenantId, linkedEntityType, linkedEntityId])
+  @@map("documents")
+}
+
+// ─── FINANCE ──────────────────────────────────────
+
+model Transaction {
+  id                String        @id @default(uuid()) @db.Uuid
+  tenantId          String        @db.Uuid
+  transactionNumber String
+  type              TransactionType
+  amount            Decimal       @db.Decimal(15, 2)
+  currency          String        @default("GHS")
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus @default(PENDING)
+  momoNetwork       MoMoNetwork?
+  momoPhone         String?
+  reference         String?
+  clientId          String?       @db.Uuid
+  policyId          String?       @db.Uuid
+  invoiceId         String?       @db.Uuid
+  processedById     String?       @db.Uuid
+  processedAt       DateTime?
+  notes             String?
+  createdAt         DateTime      @default(now())
+
+  tenant            Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client            Client?       @relation(fields: [clientId], references: [id])
+  policy            Policy?       @relation(fields: [policyId], references: [id])
+  invoice           Invoice?      @relation(fields: [invoiceId], references: [id])
+  processedBy       User?         @relation("TransactionProcessor", fields: [processedById], references: [id])
+
+  @@unique([tenantId, transactionNumber])
+  @@index([tenantId])
+  @@index([tenantId, type])
+  @@map("transactions")
+}
+
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @db.Uuid
+  invoiceNumber String
+  clientId      String        @db.Uuid
+  policyId      String?       @db.Uuid
+  description   String?
+  amount        Decimal       @db.Decimal(15, 2)
+  amountPaid    Decimal       @default(0) @db.Decimal(15, 2)
+  status        InvoiceStatus @default(OUTSTANDING)
+  currency      String        @default("GHS")
+  dateIssued    DateTime      @default(now())
+  dateDue       DateTime
+  datePaid      DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client        Client        @relation(fields: [clientId], references: [id])
+  policy        Policy?       @relation(fields: [policyId], references: [id])
+  transactions  Transaction[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("invoices")
+}
+
+model Commission {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @db.Uuid
+  policyId         String           @db.Uuid
+  clientId         String           @db.Uuid
+  insurerName      String
+  productType      String?
+  premiumAmount    Decimal          @db.Decimal(15, 2)
+  commissionRate   Decimal          @db.Decimal(5, 2)
+  commissionAmount Decimal          @db.Decimal(15, 2)
+  nicLevy          Decimal?         @db.Decimal(15, 2)
+  netCommission    Decimal?         @db.Decimal(15, 2)
+  status           CommissionStatus @default(PENDING)
+  brokerId         String           @db.Uuid
+  dateEarned       DateTime?
+  datePaid         DateTime?
+  createdAt        DateTime         @default(now())
+
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  policy           Policy           @relation(fields: [policyId], references: [id])
+  client           Client           @relation(fields: [clientId], references: [id])
+  broker           User             @relation("CommissionBroker", fields: [brokerId], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, brokerId])
+  @@map("commissions")
+}
+
+model Expense {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @db.Uuid
+  date          DateTime
+  description   String
+  category      String
+  amount        Decimal       @db.Decimal(15, 2)
+  currency      String        @default("GHS")
+  vendor        String?
+  reference     String?
+  paymentMethod String?
+  status        ExpenseStatus @default(DRAFT)
+  approvedById  String?       @db.Uuid
+  department    String?
+  notes         String?
+  receiptUrl    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  approvedBy    User?         @relation("ExpenseApprover", fields: [approvedById], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("expenses")
+}
+
+model PremiumFinancing {
+  id                   String   @id @default(uuid()) @db.Uuid
+  tenantId             String   @db.Uuid
+  applicationNumber    String
+  clientId             String   @db.Uuid
+  policyId             String   @db.Uuid
+  totalPremium         Decimal  @db.Decimal(15, 2)
+  downPaymentPct       Decimal  @db.Decimal(5, 2)
+  downPayment          Decimal  @db.Decimal(15, 2)
+  financedAmount       Decimal  @db.Decimal(15, 2)
+  interestRateMonthly  Decimal  @db.Decimal(5, 4)
+  totalInterest        Decimal  @db.Decimal(15, 2)
+  totalRepayment       Decimal  @db.Decimal(15, 2)
+  monthlyInstallment   Decimal  @db.Decimal(15, 2)
+  numberOfInstallments Int
+  installmentsPaid     Int      @default(0)
+  amountPaid           Decimal  @default(0) @db.Decimal(15, 2)
+  outstandingBalance   Decimal  @db.Decimal(15, 2)
+  status               PFStatus @default(SUBMITTED)
+  financier            String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client               Client   @relation(fields: [clientId], references: [id])
+  policy               Policy   @relation(fields: [policyId], references: [id])
+  installments         PFInstallment[]
+
+  @@unique([tenantId, applicationNumber])
+  @@index([tenantId])
+  @@map("premium_financing")
+}
+
+model PFInstallment {
+  id         String           @id @default(uuid()) @db.Uuid
+  tenantId   String           @db.Uuid
+  pfId       String           @db.Uuid
+  number     Int
+  dueDate    DateTime
+  amount     Decimal          @db.Decimal(15, 2)
+  status     InstallmentStatus @default(PENDING)
+  paidDate   DateTime?
+
+  application PremiumFinancing @relation(fields: [pfId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([pfId])
+  @@map("pf_installments")
+}
+
+// ─── CHAT ─────────────────────────────────────────
+
+model ChatRoom {
+  id                 String       @id @default(uuid()) @db.Uuid
+  tenantId           String       @db.Uuid
+  name               String?
+  type               ChatRoomType @default(DIRECT)
+  linkedResourceType String?
+  linkedResourceId   String?
+  createdAt          DateTime     @default(now())
+
+  tenant             Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  participants       ChatParticipant[]
+  messages           ChatMessage[]
+
+  @@index([tenantId])
+  @@map("chat_rooms")
+}
+
+model ChatParticipant {
+  id       String   @id @default(uuid()) @db.Uuid
+  roomId   String   @db.Uuid
+  userId   String   @db.Uuid
+  joinedAt DateTime @default(now())
+
+  room     ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@map("chat_participants")
+}
+
+model ChatMessage {
+  id         String          @id @default(uuid()) @db.Uuid
+  tenantId   String          @db.Uuid
+  roomId     String          @db.Uuid
+  senderId   String          @db.Uuid
+  content    String
+  type       ChatMessageType @default(TEXT)
+  readStatus ReadStatus      @default(SENT)
+  createdAt  DateTime        @default(now())
+
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  room       ChatRoom        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender     User            @relation("MessageSender", fields: [senderId], references: [id])
+
+  @@index([tenantId])
+  @@index([roomId, createdAt])
+  @@map("chat_messages")
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────
+
+model Notification {
+  id        String               @id @default(uuid()) @db.Uuid
+  tenantId  String               @db.Uuid
+  userId    String               @db.Uuid
+  title     String
+  message   String
+  type      NotificationType     @default(SYSTEM)
+  priority  NotificationPriority @default(MEDIUM)
+  read      Boolean              @default(false)
+  readAt    DateTime?
+  archived  Boolean              @default(false)
+  link      String?
+  createdAt DateTime             @default(now())
+
+  tenant    Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+// ─── CALENDAR ─────────────────────────────────────
+
+model CalendarEvent {
+  id          String              @id @default(uuid()) @db.Uuid
+  tenantId    String              @db.Uuid
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  type        CalendarEventType   @default(MEETING)
+  priority    String?
+  status      CalendarEventStatus @default(UPCOMING)
+  location    String?
+  createdById String              @db.Uuid
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  tenant      Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy   User                @relation("EventCreator", fields: [createdById], references: [id])
+  attendees   CalendarAttendee[]
+
+  @@index([tenantId])
+  @@index([tenantId, startDate])
+  @@map("calendar_events")
+}
+
+model CalendarAttendee {
+  id      String @id @default(uuid()) @db.Uuid
+  eventId String @db.Uuid
+  userId  String @db.Uuid
+
+  event   CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("calendar_attendees")
+}
+
+// ─── TASKS ────────────────────────────────────────
+
+model Task {
+  id           String       @id @default(uuid()) @db.Uuid
+  tenantId     String       @db.Uuid
+  title        String
+  description  String?
+  priority     TaskPriority @default(WARM)
+  status       TaskStatus   @default(PENDING)
+  dueDate      DateTime?
+  type         String?
+  link         String?
+  isCompleted  Boolean      @default(false)
+  assignedToId String?      @db.Uuid
+  createdById  String       @db.Uuid
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  assignedTo   User?        @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdBy    User         @relation("TaskCreator", fields: [createdById], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("tasks")
+}
+
+// ─── APPROVALS ────────────────────────────────────
+
+model Approval {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @db.Uuid
+  refNumber        String
+  type             ApprovalType
+  status           ApprovalStatus @default(PENDING)
+  priority         String?
+  subject          String
+  clientName       String?
+  amount           Decimal?       @db.Decimal(15, 2)
+  requestedById    String         @db.Uuid
+  approvedById     String?        @db.Uuid
+  dueDate          DateTime?
+  isOverdue        Boolean        @default(false)
+  notes            String?
+  linkedEntityType String?
+  linkedEntityId   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  tenant           Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  requestedBy      User           @relation("ApprovalRequester", fields: [requestedById], references: [id])
+  approvedBy       User?          @relation("ApprovalProcessor", fields: [approvedById], references: [id])
+
+  @@unique([tenantId, refNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("approvals")
+}
+
+// ─── DEPARTMENTS ──────────────────────────────────
+
+model Department {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  name        String
+  code        String
+  description String?
+  headId      String?  @db.Uuid
+  branchId    String?  @db.Uuid
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  head        User?    @relation("DepartmentHead", fields: [headId], references: [id])
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("departments")
+}
+```
+
+3. **Create `src/prisma/prisma.module.ts`** — global module
+4. **Create `src/prisma/prisma.service.ts`** — extends PrismaClient, implements OnModuleInit, logs connection, handles soft-delete middleware (filters out deletedAt != null by default)
+
+5. **Create `prisma/seed.ts`:**
+   - 2 tenants: "SIC Insurance" (slug: sic-insurance, plan: PROFESSIONAL) + "Enterprise Insurance" (slug: enterprise-insurance, plan: BASIC)
+   - 3 branches per tenant: Accra Main (BR-ACC-01), Kumasi (BR-KUM-01), Takoradi (BR-TAK-01)
+   - 1 admin user per tenant: admin@sic.com / admin@enterprise.com (password: Admin@123, hashed with bcrypt cost 12)
+   - 5 carriers per tenant: PRIME, SIC, Enterprise, Glico, Star Assurance (with type, shortName, brandColor)
+   - 3 products per carrier (motor, fire, marine) with commission rates
+
+6. **Add seed script** to `package.json`: `"prisma": { "seed": "ts-node prisma/seed.ts" }`
+
+7. **Create `prisma/rls.sql`** — PostgreSQL Row-Level Security policies for tenant isolation (reference SQL, applied manually or via raw migration)
+
+8. **Run:** `npx prisma migrate dev --name initial_schema`
+
+## Verification Checklist
+- [ ] `npx prisma validate` passes with no errors
+- [ ] `npx prisma migrate dev` creates migration successfully
+- [ ] `npx prisma db seed` populates test data without errors
+- [ ] `SELECT COUNT(*) FROM tenants` returns 2
+- [ ] `SELECT COUNT(*) FROM users` returns 2 (one admin per tenant)
+- [ ] `SELECT COUNT(*) FROM carriers` returns 10 (5 per tenant)
+- [ ] `SELECT COUNT(*) FROM branches` returns 6 (3 per tenant)
+- [ ] `npm run build` still compiles with zero errors
+- [ ] No `any` types in prisma.service.ts or prisma.module.ts
+
+After all checks pass, update `CHECKPOINT.md`: mark Phase 2 `[x]` and append results to Verification Log.

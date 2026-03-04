@@ -52,3 +52,6 @@ next-env.d.ts
 
 #sample system ui
 .ibms-portal-ai-studio
+
+#backend generated prompts
+.backend-prompts
