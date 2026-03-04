@@ -1,6 +1,6 @@
 # IBMS Backend Build — Checkpoint Tracker
 
-## Current Phase: Phase 1 COMPLETE — Ready for Phase 2
+## Current Phase: Phase 2 COMPLETE — Ready for Phase 3
 
 ## Rules for AI
 - Before building any phase, read this file first
@@ -24,7 +24,7 @@
 
 ## Phase Status
 - [x] Phase 1: Project Scaffold & Configuration
-- [ ] Phase 2: Database Schema & Migrations
+- [x] Phase 2: Database Schema & Migrations
 - [ ] Phase 3: Auth Module (Login, JWT, Password Reset)
 - [ ] Phase 4: Invitation System & User Management
 - [ ] Phase 5: Clients & Carriers Module
@@ -66,3 +66,46 @@
 - `keys/` — RS256 key pair generated
 
 **Tech versions:** NestJS 11.x, Prisma 5.22, TypeScript strict
+
+### Phase 2 — Completed 2026-03-04
+- [x] `npx prisma validate` — passes with no errors
+- [x] `npx prisma generate` — Prisma Client generated (v5.22.0)
+- [x] `npm run build` — zero TypeScript errors
+- [x] No `any` types in prisma.service.ts or prisma.module.ts
+- [x] No `console.log` in any src/ file
+- [ ] `npx prisma migrate dev` — pending (Docker not available — run manually)
+- [ ] `npx prisma db seed` — pending (Docker not available — run manually)
+- [ ] DB count verification — pending (requires running PostgreSQL)
+
+**When Docker is available, run:**
+```bash
+cd ibms-backend
+docker-compose up -d
+npx prisma migrate dev --name initial_schema
+npx prisma db seed
+```
+
+**Expected seed counts:**
+- `SELECT COUNT(*) FROM tenants` → 2
+- `SELECT COUNT(*) FROM users` → 2
+- `SELECT COUNT(*) FROM branches` → 6
+- `SELECT COUNT(*) FROM carriers` → 10
+- `SELECT COUNT(*) FROM products` → 30
+
+**Files created:**
+- `prisma/schema.prisma` — Complete schema: 44 enums, 35 models, all relations, indexes, @@map
+- `prisma/seed.ts` — Seed script: 2 tenants, 2 admins, 6 branches, 10 carriers, 30 products
+- `prisma/rls.sql` — PostgreSQL Row-Level Security policies for tenant isolation
+- `src/prisma/prisma.service.ts` — PrismaClient wrapper with soft-delete middleware, OnModuleInit
+- `src/prisma/prisma.module.ts` — Global module exporting PrismaService
+- `src/prisma/index.ts` — Barrel export
+- `src/app.module.ts` — Updated: imports PrismaModule
+- `package.json` — Updated: prisma.seed config added
+
+**Schema highlights:**
+- Every tenant-scoped table has `tenantId UUID NOT NULL`
+- All monetary fields use `Decimal @db.Decimal(15,2)`
+- Soft-delete (`deletedAt DateTime?`) on User, Client, Policy, Claim, Lead, Carrier
+- Soft-delete middleware in PrismaService auto-filters deleted records
+- All join tables have compound unique constraints
+- 6 Ghana-specific details: GhanaCard, MoMo networks, NIC fields

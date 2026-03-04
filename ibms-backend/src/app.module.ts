@@ -4,6 +4,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import configuration from './config/configuration.js';
 import { HealthModule } from './health/health.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
   imports: [
@@ -21,6 +22,9 @@ import { HealthModule } from './health/health.module.js';
         limit: parseInt(process.env['THROTTLE_LIMIT'] || '100', 10),
       },
     ]),
+
+    // Database (global)
+    PrismaModule,
 
     // Health check
     HealthModule,
