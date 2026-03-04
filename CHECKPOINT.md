@@ -26,6 +26,7 @@
 - [x] Phase 1: Project Scaffold & Configuration
 - [x] Phase 2: Database Schema & Migrations
 - [ ] Phase 3: Auth Module (Login, JWT, Password Reset)
+ - [x] Phase 3: Auth Module (Login, JWT, Password Reset)
 - [ ] Phase 4: Invitation System & User Management
 - [ ] Phase 5: Clients & Carriers Module
 - [ ] Phase 6: Policies & Renewals Module
@@ -36,6 +37,18 @@
 - [ ] Phase 11: Frontend Connection (replace mock data with real API calls)
 
 ## Verification Log
+
+### Phase 3 — Completed 2026-03-04
+- [x] `npm run build` — zero TypeScript errors
+- [x] Implemented RS256 JWT strategy reading public key at `JWT_ACCESS_PUBLIC_KEY_PATH`
+- [x] `JwtAuthGuard` — honors `@Public()` and returns 401 on failure
+- [x] `RolesGuard` — role hierarchy implemented
+- [x] `AuthService` — `login`, `issueAccessToken`, `issueRefreshToken`, `refreshTokens` (rotation + reuse detection), `forgotPassword`, `resetPassword`, `logout`
+- [x] `AuthController` — endpoints `/login`, `/refresh`, `/logout`, `/me`, `/forgot-password`, `/reset-password` with cookie handling and throttling
+- [x] `TenantsService` — `findBySlug` and `findById` with 5-min cache
+- [ ] `npx prisma migrate dev` — pending (needs running PostgreSQL)
+- [ ] `npx prisma db seed` — pending (needs running PostgreSQL)
+- Note: runtime endpoint verification (login, refresh, reset, logout) requires a running DB and seed data; those remain to be run during integration testing.
 
 ### Phase 1 — Completed 2026-03-04
 - [x] `npm run build` — zero TypeScript errors

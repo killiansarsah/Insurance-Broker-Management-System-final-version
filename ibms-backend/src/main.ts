@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
 import { AppModule } from './app.module.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
@@ -22,6 +23,9 @@ async function bootstrap(): Promise<void> {
 
   // Security: Helmet
   app.use(helmet());
+
+  // Cookie parsing (for refresh token cookies)
+  app.use(cookieParser());
 
   // CORS
   const corsOrigins = configService.get<string[]>('cors.origins', ['http://localhost:3000']);

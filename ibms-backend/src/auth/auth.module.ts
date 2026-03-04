@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import * as fs from 'fs';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { TenantsModule } from '../tenants/tenants.module.js';
 import { AuthService } from './auth.service.js';
@@ -13,14 +14,19 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: async (config: ConfigService) => ({
-        publicKey: config.get<string>('JWT_ACCESS_PUBLIC_KEY_PATH'),
-        privateKey: config.get<string>('JWT_ACCESS_PRIVATE_KEY_PATH'),
-        signOptions: {
-          algorithm: 'RS256',
-          expiresIn: config.get<string>('JWT_ACCESS_EXPIRY', '15m'),
-        },
-      }),
+      useFactory: (config: ConfigService): JwtModuleOptions => {
+        const privatePath = config.get<string>('JWT_ACCESS_PRIVATE_KEY_PATH');
+        const privateKey = privatePath ? fs.readFileSync(privatePath, 'utf8') : undefined;
+        const expiresIn = config.get<string>('JWT_ACCESS_EXPIRY', '15m');
+
+        return {
+          privateKey,
+          signOptions: {
+            algorithm: 'RS256' as const,
+            expiresIn: expiresIn as unknown as undefined,
+          },
+        } as JwtModuleOptions;
+      },
       inject: [ConfigService],
     }),
     PrismaModule,
@@ -31,4 +37,4 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule { }
