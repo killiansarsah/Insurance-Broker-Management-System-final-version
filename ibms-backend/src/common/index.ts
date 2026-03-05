@@ -9,8 +9,15 @@ export {
   TenantId,
 } from './decorators/index.js';
 export type { AuthenticatedUser } from './decorators/index.js';
-export { createGlobalValidationPipe, globalValidationPipeOptions } from './pipes/validation.pipe.js';
-export { PaginationDto, SortOrder, createPaginatedResponse } from './dto/pagination.dto.js';
+export {
+  createGlobalValidationPipe,
+  globalValidationPipeOptions,
+} from './pipes/validation.pipe.js';
+export {
+  PaginationDto,
+  SortOrder,
+  createPaginatedResponse,
+} from './dto/pagination.dto.js';
 export type { PaginatedResponse } from './dto/pagination.dto.js';
 export type { JwtPayload } from './types/index.js';
 export type { AuthenticatedRequest } from './types/index.js';

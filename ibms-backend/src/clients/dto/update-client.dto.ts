@@ -4,7 +4,7 @@ import { IsEnum, IsOptional } from 'class-validator';
 import { ClientStatus } from '@prisma/client';
 
 export class UpdateClientDto extends PartialType(CreateClientDto) {
-    @IsEnum(ClientStatus)
-    @IsOptional()
-    status?: ClientStatus;
+  @IsEnum(ClientStatus)
+  @IsOptional()
+  status?: ClientStatus;
 }

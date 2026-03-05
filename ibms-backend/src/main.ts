@@ -28,7 +28,9 @@ async function bootstrap(): Promise<void> {
   app.use(cookieParser());
 
   // CORS
-  const corsOrigins = configService.get<string[]>('cors.origins', ['http://localhost:3000']);
+  const corsOrigins = configService.get<string[]>('cors.origins', [
+    'http://localhost:3000',
+  ]);
   app.enableCors({
     origin: corsOrigins,
     credentials: true,
@@ -74,7 +76,9 @@ async function bootstrap(): Promise<void> {
   const port = configService.get<number>('port', 3001);
   await app.listen(port);
   logger.log(`IBMS Backend running on port ${port}`);
-  logger.log(`Environment: ${configService.get<string>('nodeEnv', 'development')}`);
+  logger.log(
+    `Environment: ${configService.get<string>('nodeEnv', 'development')}`,
+  );
 }
 
 void bootstrap();

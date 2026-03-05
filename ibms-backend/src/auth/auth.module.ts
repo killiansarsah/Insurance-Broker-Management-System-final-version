@@ -16,7 +16,9 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
       imports: [ConfigModule],
       useFactory: (config: ConfigService): JwtModuleOptions => {
         const privatePath = config.get<string>('JWT_ACCESS_PRIVATE_KEY_PATH');
-        const privateKey = privatePath ? fs.readFileSync(privatePath, 'utf8') : undefined;
+        const privateKey = privatePath
+          ? fs.readFileSync(privatePath, 'utf8')
+          : undefined;
         const expiresIn = config.get<string>('JWT_ACCESS_EXPIRY', '15m');
 
         return {
@@ -37,4 +39,4 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

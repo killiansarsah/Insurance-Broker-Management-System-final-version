@@ -68,4 +68,4 @@ import { CarriersModule } from './carriers/carriers.module.js';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

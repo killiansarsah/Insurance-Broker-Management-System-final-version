@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Req, Res, Get, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Req,
+  Res,
+  Get,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
@@ -23,13 +31,23 @@ const REFRESH_COOKIE_OPTIONS = {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) { }
+  constructor(private auth: AuthService) {}
 
   @Public()
   @Throttle({ default: { ttl: 900000, limit: 10 } })
   @Post('login')
-  async login(@Body() body: LoginDto, @Res({ passthrough: true }) res: Response, @Req() req: Request) {
-    const result = await this.auth.login(body.email, body.password, body.tenantSlug, req.ip, req.get('user-agent'));
+  async login(
+    @Body() body: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+  ) {
+    const result = await this.auth.login(
+      body.email,
+      body.password,
+      body.tenantSlug,
+      req.ip,
+      req.get('user-agent'),
+    );
     res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
     return { accessToken: result.accessToken, user: result.user };
   }
@@ -37,15 +55,25 @@ export class AuthController {
   @Public()
   @Post('refresh')
   @HttpCode(200)
-  async refresh(@Req() req: CookieRequest, @Res({ passthrough: true }) res: Response) {
+  async refresh(
+    @Req() req: CookieRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const raw = req.cookies['refreshToken'];
-    const result = await this.auth.refreshTokens(raw, req.ip, req.get('user-agent'));
+    const result = await this.auth.refreshTokens(
+      raw,
+      req.ip,
+      req.get('user-agent'),
+    );
     res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
     return { accessToken: result.accessToken };
   }
 
   @Post('logout')
-  async logout(@Req() req: CookieRequest, @Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Req() req: CookieRequest,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const raw = req.cookies['refreshToken'];
     await this.auth.logout(raw);
     res.clearCookie('refreshToken', { path: '/api/v1/auth/refresh' });

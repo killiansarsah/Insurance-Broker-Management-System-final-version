@@ -6,9 +6,9 @@ import { CarrierProductsController } from './products/carrier-products.controlle
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [CarriersController, CarrierProductsController],
-    providers: [CarriersService, CarrierProductsService],
-    exports: [CarriersService, CarrierProductsService],
+  imports: [PrismaModule],
+  controllers: [CarriersController, CarrierProductsController],
+  providers: [CarriersService, CarrierProductsService],
+  exports: [CarriersService, CarrierProductsService],
 })
-export class CarriersModule { }
+export class CarriersModule {}

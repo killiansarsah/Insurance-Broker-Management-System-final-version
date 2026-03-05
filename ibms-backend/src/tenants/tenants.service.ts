@@ -13,7 +13,7 @@ export class TenantsService {
   private cache = new Map<string, CacheEntry>();
   private TTL = 5 * 60 * 1000; // 5 minutes
 
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   private getFromCache(key: string): Tenant | null {
     const entry = this.cache.get(key);

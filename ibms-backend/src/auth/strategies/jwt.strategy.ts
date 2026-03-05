@@ -10,12 +10,18 @@ import * as fs from 'fs';
 export class JwtStrategy extends PassportStrategy(Strategy) {
   private readonly logger = new Logger(JwtStrategy.name);
 
-  constructor(private config: ConfigService, private prisma: PrismaService) {
+  constructor(
+    private config: ConfigService,
+    private prisma: PrismaService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       algorithms: ['RS256'],
       secretOrKey: fs.readFileSync(
-        config.get<string>('JWT_ACCESS_PUBLIC_KEY_PATH', 'keys/jwtRS256.public.pem'),
+        config.get<string>(
+          'JWT_ACCESS_PUBLIC_KEY_PATH',
+          'keys/jwtRS256.public.pem',
+        ),
         'utf8',
       ),
       ignoreExpiration: false,
@@ -33,9 +39,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       if (!user.isActive) return null;
       if (user.lockedUntil && user.lockedUntil > new Date()) return null;
 
-      return { sub: user.id, tenantId: payload.tenantId, role: user.role, email: user.email };
+      return {
+        sub: user.id,
+        tenantId: payload.tenantId,
+        role: user.role,
+        email: user.email,
+      };
     } catch (err: unknown) {
-      this.logger.error('JWT validation error', err instanceof Error ? err.stack : String(err));
+      this.logger.error(
+        'JWT validation error',
+        err instanceof Error ? err.stack : String(err),
+      );
       return null;
     }
   }

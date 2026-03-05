@@ -1,33 +1,41 @@
-import { IsString, IsNotEmpty, IsOptional, IsNumber, Min, Max, IsDateString } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  Min,
+  Max,
+  IsDateString,
+} from 'class-validator';
 
 export class CreateBeneficiaryDto {
-    @IsString()
-    @IsNotEmpty()
-    fullName!: string;
+  @IsString()
+  @IsNotEmpty()
+  fullName!: string;
 
-    @IsString()
-    @IsNotEmpty()
-    relationship!: string;
+  @IsString()
+  @IsNotEmpty()
+  relationship!: string;
 
-    @IsDateString()
-    @IsOptional()
-    dateOfBirth?: string;
+  @IsDateString()
+  @IsOptional()
+  dateOfBirth?: string;
 
-    @IsString()
-    @IsOptional()
-    ghanaCardNumber?: string;
+  @IsString()
+  @IsOptional()
+  ghanaCardNumber?: string;
 
-    @IsString()
-    @IsOptional()
-    phone?: string;
+  @IsString()
+  @IsOptional()
+  phone?: string;
 
-    @IsNumber({ maxDecimalPlaces: 2 })
-    @Min(0)
-    @Max(100)
-    @IsNotEmpty()
-    percentage!: number;
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
+  @Max(100)
+  @IsNotEmpty()
+  percentage!: number;
 
-    @IsString()
-    @IsOptional()
-    guardianName?: string;
+  @IsString()
+  @IsOptional()
+  guardianName?: string;
 }

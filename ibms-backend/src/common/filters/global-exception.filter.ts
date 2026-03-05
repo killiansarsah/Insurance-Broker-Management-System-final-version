@@ -42,7 +42,9 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : String(exception),
       );
     } else {
-      this.logger.warn(`${request.method} ${request.url} → ${statusCode}: ${message}`);
+      this.logger.warn(
+        `${request.method} ${request.url} → ${statusCode}: ${message}`,
+      );
     }
 
     response.status(statusCode).json(body);

@@ -1,8 +1,16 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  OnModuleInit,
+  OnModuleDestroy,
+  Logger,
+} from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends PrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
 
   constructor() {
@@ -26,46 +34,53 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
       ];
 
       if (modelsWithSoftDelete.includes(params.model ?? '')) {
+        const args = (params.args || {}) as {
+          where?: { deletedAt?: Date | null; [key: string]: unknown };
+          data?: { deletedAt?: Date | null; [key: string]: unknown };
+          [key: string]: unknown;
+        };
+
         // Override find queries to exclude soft-deleted records
         if (params.action === 'findUnique' || params.action === 'findFirst') {
           params.action = 'findFirst';
-          params.args = params.args ?? {};
-          if (params.args.where) {
-            if (params.args.where.deletedAt === undefined) {
-              params.args.where.deletedAt = null;
+          if (args.where) {
+            if (args.where.deletedAt === undefined) {
+              args.where.deletedAt = null;
             }
           } else {
-            params.args.where = { deletedAt: null };
+            args.where = { deletedAt: null };
           }
         }
 
         if (params.action === 'findMany') {
-          params.args = params.args ?? {};
-          if (params.args.where) {
-            if (params.args.where.deletedAt === undefined) {
-              params.args.where.deletedAt = null;
+          if (args.where) {
+            if (args.where.deletedAt === undefined) {
+              args.where.deletedAt = null;
             }
           } else {
-            params.args.where = { deletedAt: null };
+            args.where = { deletedAt: null };
           }
         }
 
         // Override delete to soft-delete
         if (params.action === 'delete') {
           params.action = 'update';
-          params.args.data = { deletedAt: new Date() };
+          args.data = { deletedAt: new Date() };
         }
 
         if (params.action === 'deleteMany') {
           params.action = 'updateMany';
-          if (params.args.data) {
-            params.args.data.deletedAt = new Date();
+          if (args.data) {
+            args.data.deletedAt = new Date();
           } else {
-            params.args.data = { deletedAt: new Date() };
+            args.data = { deletedAt: new Date() };
           }
         }
+
+        params.args = args;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
       return next(params);
     });
   }

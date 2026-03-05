@@ -4,16 +4,26 @@ import { Logger } from '@nestjs/common';
 const envSchema = z.object({
   // Required — no defaults
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
-  JWT_ACCESS_PRIVATE_KEY_PATH: z.string().min(1, 'JWT_ACCESS_PRIVATE_KEY_PATH is required'),
-  JWT_ACCESS_PUBLIC_KEY_PATH: z.string().min(1, 'JWT_ACCESS_PUBLIC_KEY_PATH is required'),
-  JWT_REFRESH_SECRET: z.string().min(16, 'JWT_REFRESH_SECRET must be at least 16 characters'),
+  JWT_ACCESS_PRIVATE_KEY_PATH: z
+    .string()
+    .min(1, 'JWT_ACCESS_PRIVATE_KEY_PATH is required'),
+  JWT_ACCESS_PUBLIC_KEY_PATH: z
+    .string()
+    .min(1, 'JWT_ACCESS_PUBLIC_KEY_PATH is required'),
+  JWT_REFRESH_SECRET: z
+    .string()
+    .min(16, 'JWT_REFRESH_SECRET must be at least 16 characters'),
   CORS_ORIGINS: z.string().min(1, 'CORS_ORIGINS is required'),
   FRONTEND_URL: z.string().url('FRONTEND_URL must be a valid URL'),
 
   // Optional — with defaults
   PORT: z.coerce.number().int().positive().default(3001),
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
+  NODE_ENV: z
+    .enum(['development', 'production', 'test'])
+    .default('development'),
+  LOG_LEVEL: z
+    .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace'])
+    .default('info'),
   THROTTLE_TTL: z.coerce.number().int().positive().default(60),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(100),
   JWT_ACCESS_EXPIRY: z.string().default('15m'),

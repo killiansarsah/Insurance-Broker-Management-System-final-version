@@ -6,9 +6,9 @@ import { InvitationsService } from './invitations.service.js';
 import { InvitationsController } from './invitations.controller.js';
 
 @Module({
-    imports: [PrismaModule, ConfigModule, AuthModule],
-    providers: [InvitationsService],
-    controllers: [InvitationsController],
-    exports: [InvitationsService],
+  imports: [PrismaModule, ConfigModule, AuthModule],
+  providers: [InvitationsService],
+  controllers: [InvitationsController],
+  exports: [InvitationsService],
 })
-export class InvitationsModule { }
+export class InvitationsModule {}

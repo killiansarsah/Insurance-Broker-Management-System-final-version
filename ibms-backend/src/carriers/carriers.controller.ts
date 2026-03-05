@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Query, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Query,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { CarriersService } from './carriers.service';
 import { CreateCarrierDto } from './dto/create-carrier.dto';
 import { UpdateCarrierDto } from './dto/update-carrier.dto';
@@ -8,40 +18,72 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
 interface RequestWithUser {
-    user: {
-        tenantId: string;
-        sub: string;
-        role: string;
-    };
+  user: {
+    tenantId: string;
+    sub: string;
+    role: string;
+  };
 }
 
 @Controller('api/v1/carriers')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CarriersController {
-    constructor(private readonly carriersService: CarriersService) { }
+  constructor(private readonly carriersService: CarriersService) {}
 
-    @Post()
-    @Roles('ADMIN', 'TENANT_ADMIN')
-    create(@Request() req: RequestWithUser, @Body() createCarrierDto: CreateCarrierDto) {
-        return this.carriersService.create(req.user.tenantId, req.user.sub, createCarrierDto);
-    }
+  @Post()
+  @Roles('ADMIN', 'TENANT_ADMIN')
+  create(
+    @Request() req: RequestWithUser,
+    @Body() createCarrierDto: CreateCarrierDto,
+  ) {
+    return this.carriersService.create(
+      req.user.tenantId,
+      req.user.sub,
+      createCarrierDto,
+    );
+  }
 
-    @Get()
-    // Any role with dashboard access
-    @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'COMPLIANCE_OFFICER', 'FINANCE_MANAGER', 'AGENT', 'UNDERWRITER')
-    findAll(@Request() req: RequestWithUser, @Query() query: CarrierQueryDto) {
-        return this.carriersService.findAll(req.user.tenantId, query);
-    }
+  @Get()
+  // Any role with dashboard access
+  @Roles(
+    'ADMIN',
+    'TENANT_ADMIN',
+    'BROKER',
+    'COMPLIANCE_OFFICER',
+    'FINANCE_MANAGER',
+    'AGENT',
+    'UNDERWRITER',
+  )
+  findAll(@Request() req: RequestWithUser, @Query() query: CarrierQueryDto) {
+    return this.carriersService.findAll(req.user.tenantId, query);
+  }
 
-    @Get(':id')
-    @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'COMPLIANCE_OFFICER', 'FINANCE_MANAGER', 'AGENT', 'UNDERWRITER')
-    findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-        return this.carriersService.findOne(req.user.tenantId, id);
-    }
+  @Get(':id')
+  @Roles(
+    'ADMIN',
+    'TENANT_ADMIN',
+    'BROKER',
+    'COMPLIANCE_OFFICER',
+    'FINANCE_MANAGER',
+    'AGENT',
+    'UNDERWRITER',
+  )
+  findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.carriersService.findOne(req.user.tenantId, id);
+  }
 
-    @Patch(':id')
-    @Roles('ADMIN', 'TENANT_ADMIN')
-    update(@Request() req: RequestWithUser, @Param('id') id: string, @Body() updateCarrierDto: UpdateCarrierDto) {
-        return this.carriersService.update(req.user.tenantId, req.user.sub, id, updateCarrierDto);
-    }
+  @Patch(':id')
+  @Roles('ADMIN', 'TENANT_ADMIN')
+  update(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() updateCarrierDto: UpdateCarrierDto,
+  ) {
+    return this.carriersService.update(
+      req.user.tenantId,
+      req.user.sub,
+      id,
+      updateCarrierDto,
+    );
+  }
 }
