@@ -335,6 +335,10 @@ export class PoliciesService {
   async bind(id: string, tenantId: string, userId: string) {
     const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
+      include: {
+        carrier: { select: { name: true } },
+        product: { select: { name: true } },
+      },
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
     if (policy.status !== 'DRAFT')
@@ -380,6 +384,32 @@ export class PoliciesService {
 
       await (tx as Prisma.TransactionClient).premiumInstallment.createMany({
         data: installmentsData,
+      });
+
+      // Auto-create commission record (spec: Phase 8, Part C, #3)
+      const premiumAmount = Number(policy.premiumAmount);
+      const commissionRate = Number(policy.commissionRate);
+      const commissionAmount = Number(policy.commissionAmount);
+      const nicLevyRate = 0.03; // NIC 3% levy
+      const nicLevy = commissionAmount * nicLevyRate;
+      const netCommission = commissionAmount - nicLevy;
+
+      await (tx as Prisma.TransactionClient).commission.create({
+        data: {
+          tenantId,
+          policyId: id,
+          clientId: policy.clientId,
+          insurerName: policy.carrier?.name ?? 'Unknown',
+          productType: policy.product?.name,
+          premiumAmount,
+          commissionRate,
+          commissionAmount,
+          nicLevy,
+          netCommission,
+          status: 'PENDING',
+          brokerId: policy.brokerId,
+          dateEarned: new Date(),
+        },
       });
 
       await tx.auditLog.create({

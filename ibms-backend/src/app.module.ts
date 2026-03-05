@@ -16,6 +16,21 @@ import { ClientsModule } from './clients/clients.module';
 import { CarriersModule } from './carriers/carriers.module';
 import { PoliciesModule } from './policies/policies.module';
 import { RenewalsModule } from './renewals/renewals.module';
+import { ClaimsModule } from './claims/claims.module';
+import { ComplaintsModule } from './complaints/complaints.module';
+import { FinanceModule } from './finance/finance.module';
+import { LeadsModule } from './leads/leads.module';
+import { DocumentsModule } from './documents/documents.module';
+import { TasksModule } from './tasks/tasks.module';
+import { CalendarModule } from './calendar/calendar.module';
+import { ApprovalsModule } from './approvals/approvals.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { ChatModule } from './chat/chat.module';
+import { ReportsModule } from './reports/reports.module';
+import { ComplianceModule } from './compliance/compliance.module';
+import { AuditModule } from './audit/audit.module';
+import { DepartmentsModule } from './departments/departments.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -54,8 +69,32 @@ import { RenewalsModule } from './renewals/renewals.module';
     // Health check
     HealthModule,
 
+    // Phase 6: Policies & Renewals
     PoliciesModule,
     RenewalsModule,
+
+    // Phase 7: Claims & Complaints
+    ClaimsModule,
+    ComplaintsModule,
+
+    // Phase 8: Finance
+    FinanceModule,
+
+    // Phase 9: Leads, Documents, Tasks, Calendar, Approvals, Notifications
+    LeadsModule,
+    DocumentsModule,
+    TasksModule,
+    CalendarModule,
+    ApprovalsModule,
+    NotificationsModule,
+
+    // Phase 10: Chat, Reports, Compliance, Audit, Departments, Settings
+    ChatModule,
+    ReportsModule,
+    ComplianceModule,
+    AuditModule,
+    DepartmentsModule,
+    SettingsModule,
   ],
   providers: [
     // Apply rate limiting globally
@@ -77,4 +116,4 @@ import { RenewalsModule } from './renewals/renewals.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }
