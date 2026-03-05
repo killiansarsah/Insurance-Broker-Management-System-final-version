@@ -1,6 +1,6 @@
 # IBMS Backend Build — Checkpoint Tracker
 
-## Current Phase: Phase 2 COMPLETE — Ready for Phase 3
+## Current Phase: Phase 4 COMPLETE — Ready for Phase 5
 
 ## Rules for AI
 - Before building any phase, read this file first
@@ -25,9 +25,8 @@
 ## Phase Status
 - [x] Phase 1: Project Scaffold & Configuration
 - [x] Phase 2: Database Schema & Migrations
-- [ ] Phase 3: Auth Module (Login, JWT, Password Reset)
- - [x] Phase 3: Auth Module (Login, JWT, Password Reset)
-- [ ] Phase 4: Invitation System & User Management
+- [x] Phase 3: Auth Module (Login, JWT, Password Reset)
+- [x] Phase 4: Invitation System & User Management
 - [ ] Phase 5: Clients & Carriers Module
 - [ ] Phase 6: Policies & Renewals Module
 - [ ] Phase 7: Claims, Complaints & Escalations Module
@@ -38,17 +37,37 @@
 
 ## Verification Log
 
+### Phase 4 — Completed 2026-03-04
+- [x] `npm run build` — zero TypeScript errors
+- [x] No `any` types — zero matches in `src/`
+- [x] No `console.log` — zero matches in `src/`
+- [x] `InvitationsModule` — service and DTOs created with 5 endpoints. Added token generation, duplicate checking, audit logging, and `ROLE_LEVEL` hierarchy enforcement.
+- [x] `UsersModule` — service and DTOs created with 6 endpoints. Added searchable listing, role-restricted field updates, soft-deletes, token revoking, and audit logging.
+
+
 ### Phase 3 — Completed 2026-03-04
 - [x] `npm run build` — zero TypeScript errors
 - [x] Implemented RS256 JWT strategy reading public key at `JWT_ACCESS_PUBLIC_KEY_PATH`
 - [x] `JwtAuthGuard` — honors `@Public()` and returns 401 on failure
 - [x] `RolesGuard` — role hierarchy implemented
-- [x] `AuthService` — `login`, `issueAccessToken`, `issueRefreshToken`, `refreshTokens` (rotation + reuse detection), `forgotPassword`, `resetPassword`, `logout`
+- [x] `AuthService` — `login`, `issueAccessToken`, `issueRefreshToken`, `refreshTokens` (rotation + reuse detection), `forgotPassword`, `resetPassword`, `logout`, `getProfile`
 - [x] `AuthController` — endpoints `/login`, `/refresh`, `/logout`, `/me`, `/forgot-password`, `/reset-password` with cookie handling and throttling
 - [x] `TenantsService` — `findBySlug` and `findById` with 5-min cache
+- [x] No `any` types — zero matches in `src/`
+- [x] No `console.log` — zero matches in `src/`
 - [ ] `npx prisma migrate dev` — pending (needs running PostgreSQL)
 - [ ] `npx prisma db seed` — pending (needs running PostgreSQL)
-- Note: runtime endpoint verification (login, refresh, reset, logout) requires a running DB and seed data; those remain to be run during integration testing.
+- Note: runtime endpoint verification requires a running DB; pending integration testing.
+
+**Post-audit fixes applied (2026-03-04, AI switch from Claude → Antigravity):**
+- Fixed: `AuthModule` was not imported in `app.module.ts` — auth endpoints would not register
+- Fixed: `tenant.status` → `tenant.isActive` — Tenant model has `isActive`, not `status`
+- Fixed: Route prefix doubled `/api/v1/api/v1/auth` → `@Controller('auth')` (global prefix handles `/api/v1`)
+- Fixed: `cookie-parser` missing — installed and applied in `main.ts`
+- Fixed: Refresh token reuse detection was dead code — now scans including revoked tokens
+- Fixed: `GET /me` returned JWT payload — now queries full user profile via `getProfile()`
+- Fixed: 15 `any` type violations across 7 files — all replaced with explicit typed interfaces
+- Installed: `cookie-parser` + `@types/cookie-parser`
 
 ### Phase 1 — Completed 2026-03-04
 - [x] `npm run build` — zero TypeScript errors

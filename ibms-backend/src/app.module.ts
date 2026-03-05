@@ -9,6 +9,10 @@ import configuration from './config/configuration.js';
 import { HealthModule } from './health/health.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AuthModule } from './auth/auth.module.js';
+import { InvitationsModule } from './invitations/invitations.module.js';
+import { UsersModule } from './users/users.module.js';
+import { ClientsModule } from './clients/clients.module.js';
+import { CarriersModule } from './carriers/carriers.module.js';
 
 @Module({
   imports: [
@@ -32,6 +36,14 @@ import { AuthModule } from './auth/auth.module.js';
 
     // Auth
     AuthModule,
+
+    // Phase 4: Invitations & Users
+    InvitationsModule,
+    UsersModule,
+
+    // Phase 5: Clients & Carriers
+    ClientsModule,
+    CarriersModule,
 
     // Health check
     HealthModule,

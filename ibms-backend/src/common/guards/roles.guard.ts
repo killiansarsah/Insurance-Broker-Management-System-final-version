@@ -1,22 +1,10 @@
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-
-const ROLE_LEVEL: Record<string, number> = {
-  platform_super_admin: 8,
-  super_admin: 7,
-  tenant_admin: 6,
-  admin: 6,
-  branch_manager: 5,
-  senior_broker: 4,
-  broker: 3,
-  secretary: 2,
-  data_entry: 2,
-  viewer: 1,
-};
+import { ROLE_LEVEL } from '../constants/role-hierarchy.js';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private reflector: Reflector) {}
+  constructor(private reflector: Reflector) { }
 
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.getAllAndOverride<string[]>('roles', [
