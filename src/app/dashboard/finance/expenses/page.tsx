@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import * as XLSX from 'xlsx';
 import {
@@ -398,24 +398,25 @@ export default function ExpensesPage() {
 
     // ─── Export customization ───
     const [showCustomize, setShowCustomize] = useState(false);
-    const [customCompany, setCustomCompany] = useState(DEFAULT_COMPANY);
-    const [customHeaders, setCustomHeaders] = useState<string[]>(DEFAULT_COL_HEADERS);
-    // draft state inside modal
-    const [draftCompany, setDraftCompany] = useState(DEFAULT_COMPANY);
-    const [draftHeaders, setDraftHeaders] = useState<string[]>(DEFAULT_COL_HEADERS);
-
-    useEffect(() => {
-        const co = localStorage.getItem(LS_COMPANY_KEY);
+    const [customCompany, setCustomCompany] = useState(() => {
+        if (typeof window === 'undefined') return DEFAULT_COMPANY;
+        return localStorage.getItem(LS_COMPANY_KEY) || DEFAULT_COMPANY;
+    });
+    const [customHeaders, setCustomHeaders] = useState<string[]>(() => {
+        if (typeof window === 'undefined') return DEFAULT_COL_HEADERS;
         const hd = localStorage.getItem(LS_HEADERS_KEY);
-        if (co) setCustomCompany(co);
         if (hd) {
             try {
                 const parsed = JSON.parse(hd) as string[];
                 if (Array.isArray(parsed) && parsed.length === DEFAULT_COL_HEADERS.length)
-                    setCustomHeaders(parsed);
+                    return parsed;
             } catch { /* ignore */ }
         }
-    }, []);
+        return DEFAULT_COL_HEADERS;
+    });
+    // draft state inside modal
+    const [draftCompany, setDraftCompany] = useState(DEFAULT_COMPANY);
+    const [draftHeaders, setDraftHeaders] = useState<string[]>(DEFAULT_COL_HEADERS);
 
     const openCustomize = () => {
         setDraftCompany(customCompany);

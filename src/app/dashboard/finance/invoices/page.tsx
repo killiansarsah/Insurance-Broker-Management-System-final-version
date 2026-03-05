@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -84,12 +84,6 @@ export default function InvoicesPage() {
     const newParam = searchParams.get('new');
     const [statusFilter, setStatusFilter] = useState<string>(statusParam || 'all');
     const [showNewInvoice, setShowNewInvoice] = useState(newParam === '1');
-
-    useEffect(() => {
-        if (statusParam && statusParam !== statusFilter) {
-            setStatusFilter(statusParam);
-        }
-    }, [statusParam]);
 
     const filtered = statusFilter === 'all'
         ? invoices

@@ -22,23 +22,21 @@ export default function ProductsPage() {
     const allCategories = useMemo(() => getAllCategories(), []);
     const compulsoryCount = getCompulsoryProducts().length;
 
-    const filtered = useMemo(() => {
-        return carrierProducts.filter(p => {
-            if (selectedCarrier !== 'all' && p.carrierId !== selectedCarrier) return false;
-            if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
-            if (compulsoryOnly && !p.compulsory) return false;
-            if (search) {
-                const q = search.toLowerCase();
-                const c = carriers.find(c => c.id === p.carrierId);
-                return (
-                    p.name.toLowerCase().includes(q) ||
-                    p.description.toLowerCase().includes(q) ||
-                    c?.shortName.toLowerCase().includes(q)
-                );
-            }
-            return true;
-        });
-    }, [search, selectedCarrier, selectedCategory, compulsoryOnly]);
+    const filtered = carrierProducts.filter(p => {
+        if (selectedCarrier !== 'all' && p.carrierId !== selectedCarrier) return false;
+        if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
+        if (compulsoryOnly && !p.compulsory) return false;
+        if (search) {
+            const q = search.toLowerCase();
+            const c = carriers.find(c => c.id === p.carrierId);
+            return (
+                p.name.toLowerCase().includes(q) ||
+                p.description.toLowerCase().includes(q) ||
+                c?.shortName.toLowerCase().includes(q)
+            );
+        }
+        return true;
+    });
 
     const kpis = [
         { label: 'Total Products', value: carrierProducts.length, color: 'text-primary-600' },
