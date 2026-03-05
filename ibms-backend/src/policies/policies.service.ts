@@ -9,6 +9,8 @@ import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { PolicyQueryDto } from './dto/policy-query.dto';
 import { CancelPolicyDto } from './dto/cancel-policy.dto';
 import { ReinstatePolicyDto } from './dto/reinstate-policy.dto';
+import { CreateEndorsementDto } from './dto/endorsements/create-endorsement.dto';
+import { PayInstallmentDto } from './dto/installments/pay-installment.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -44,6 +46,7 @@ export class PoliciesService {
     });
   }
 
+  // ─── CREATE ─────────────────────────────────────────
   async create(tenantId: string, userId: string, dto: CreatePolicyDto) {
     if (dto.insuranceType === 'MOTOR' && !dto.vehicleDetails) {
       throw new BadRequestException(
@@ -152,10 +155,12 @@ export class PoliciesService {
     });
   }
 
+  // ─── FIND ALL (with search, totalPremium) ───────────
   async findAll(tenantId: string, query: PolicyQueryDto) {
     const {
       page = 1,
       limit = 10,
+      search,
       status,
       insuranceType,
       carrierId,
@@ -178,6 +183,21 @@ export class PoliciesService {
       ...(carrierId && { carrierId }),
       ...(clientId && { clientId }),
       ...(premiumFrequency && { premiumFrequency }),
+      ...(search && {
+        OR: [
+          { policyNumber: { contains: search, mode: 'insensitive' as const } },
+          {
+            client: {
+              firstName: { contains: search, mode: 'insensitive' as const },
+            },
+          },
+          {
+            client: {
+              lastName: { contains: search, mode: 'insensitive' as const },
+            },
+          },
+        ],
+      }),
       ...((startDateFrom || startDateTo) && {
         inceptionDate: {
           ...(startDateFrom && { gte: new Date(startDateFrom) }),
@@ -192,15 +212,24 @@ export class PoliciesService {
       }),
     };
 
-    const [total, items] = await Promise.all([
+    const allowedSortFields = [
+      'policyNumber',
+      'premiumAmount',
+      'inceptionDate',
+      'expiryDate',
+      'createdAt',
+    ];
+    const safeSortBy = allowedSortFields.includes(sortBy)
+      ? sortBy
+      : 'createdAt';
+
+    const [total, items, totalPremiumAgg] = await Promise.all([
       this.prisma.policy.count({ where }),
       this.prisma.policy.findMany({
         where,
         skip,
         take: limit,
-        orderBy: {
-          [sortBy as keyof Prisma.PolicyOrderByWithRelationInput]: sortOrder,
-        },
+        orderBy: { [safeSortBy]: sortOrder },
         include: {
           client: {
             select: {
@@ -214,6 +243,10 @@ export class PoliciesService {
           product: { select: { id: true, name: true } },
         },
       }),
+      this.prisma.policy.aggregate({
+        where,
+        _sum: { premiumAmount: true },
+      }),
     ]);
 
     return {
@@ -223,10 +256,12 @@ export class PoliciesService {
         page,
         limit,
         totalPages: Math.ceil(total / limit),
+        totalPremium: totalPremiumAgg._sum.premiumAmount || 0,
       },
     };
   }
 
+  // ─── FIND ONE ───────────────────────────────────────
   async findOne(id: string, tenantId: string) {
     const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
@@ -259,6 +294,7 @@ export class PoliciesService {
     return policy;
   }
 
+  // ─── UPDATE ─────────────────────────────────────────
   async update(
     id: string,
     tenantId: string,
@@ -295,6 +331,7 @@ export class PoliciesService {
     });
   }
 
+  // ─── BIND (DRAFT → ACTIVE) ─────────────────────────
   async bind(id: string, tenantId: string, userId: string) {
     const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
@@ -306,7 +343,9 @@ export class PoliciesService {
     return await this.prisma.$transaction(async (tx) => {
       const bound = await tx.policy.update({
         where: { id },
-        data: { status: 'ACTIVE' },
+        data: {
+          status: 'ACTIVE',
+        },
       });
 
       const installmentsData: Prisma.PremiumInstallmentCreateManyInput[] = [];
@@ -357,6 +396,7 @@ export class PoliciesService {
     });
   }
 
+  // ─── CANCEL (ACTIVE → CANCELLED) ───────────────────
   async cancel(
     id: string,
     tenantId: string,
@@ -394,9 +434,17 @@ export class PoliciesService {
     });
   }
 
+  // ─── LAPSE (ACTIVE → LAPSED) ───────────────────────
   async lapse(id: string, tenantId: string, userId: string) {
-    const lapsed = await this.prisma.policy.update({
+    const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
+    });
+    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    if (policy.status !== 'ACTIVE')
+      throw new BadRequestException('Only ACTIVE policies can be lapsed');
+
+    const lapsed = await this.prisma.policy.update({
+      where: { id },
       data: { status: 'LAPSED' },
     });
 
@@ -404,14 +452,22 @@ export class PoliciesService {
     return lapsed;
   }
 
+  // ─── REINSTATE (LAPSED → ACTIVE) ───────────────────
   async reinstate(
     id: string,
     tenantId: string,
     userId: string,
     dto: ReinstatePolicyDto,
   ) {
-    const reinstated = await this.prisma.policy.update({
+    const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
+    });
+    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    if (policy.status !== 'LAPSED')
+      throw new BadRequestException('Only LAPSED policies can be reinstated');
+
+    const reinstated = await this.prisma.policy.update({
+      where: { id },
       data: { status: 'ACTIVE' },
     });
 
@@ -420,5 +476,174 @@ export class PoliciesService {
     } as Prisma.InputJsonObject);
 
     return reinstated;
+  }
+
+  // ─── ENDORSEMENTS ──────────────────────────────────
+  async createEndorsement(
+    policyId: string,
+    tenantId: string,
+    userId: string,
+    dto: CreateEndorsementDto,
+  ) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id: policyId, tenantId },
+    });
+    if (!policy) throw new NotFoundException('Policy not found');
+
+    const endorsement = await this.prisma.policyEndorsement.create({
+      data: {
+        tenantId,
+        policyId,
+        type: dto.type,
+        description: dto.description,
+        effectiveDate: new Date(dto.effectiveDate),
+        premiumAdjustment: dto.premiumAdjustment,
+        status: 'PENDING',
+        requestedById: userId,
+      },
+    });
+
+    await this.logAudit(
+      tenantId,
+      userId,
+      'endorsement.created',
+      endorsement.id,
+    );
+
+    return endorsement;
+  }
+
+  async approveEndorsement(
+    policyId: string,
+    endorsementId: string,
+    tenantId: string,
+    userId: string,
+  ) {
+    const endorsement = await this.prisma.policyEndorsement.findFirst({
+      where: { id: endorsementId, policyId, tenantId },
+    });
+    if (!endorsement) throw new NotFoundException('Endorsement not found');
+    if (endorsement.status !== 'PENDING')
+      throw new BadRequestException(
+        'Only PENDING endorsements can be approved',
+      );
+
+    return await this.prisma.$transaction(async (tx) => {
+      const approved = await tx.policyEndorsement.update({
+        where: { id: endorsementId },
+        data: { status: 'APPROVED', approvedById: userId },
+      });
+
+      if (endorsement.premiumAdjustment) {
+        const policy = await tx.policy.findUnique({
+          where: { id: policyId },
+        });
+        if (policy) {
+          const newPremium =
+            Number(policy.premiumAmount) +
+            Number(endorsement.premiumAdjustment);
+          await tx.policy.update({
+            where: { id: policyId },
+            data: { premiumAmount: newPremium },
+          });
+        }
+      }
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'endorsement.approved',
+          entity: 'PolicyEndorsement',
+          entityId: endorsementId,
+        },
+      });
+
+      return approved;
+    });
+  }
+
+  async rejectEndorsement(
+    policyId: string,
+    endorsementId: string,
+    tenantId: string,
+    userId: string,
+    reason: string,
+  ) {
+    const endorsement = await this.prisma.policyEndorsement.findFirst({
+      where: { id: endorsementId, policyId, tenantId },
+    });
+    if (!endorsement) throw new NotFoundException('Endorsement not found');
+    if (endorsement.status !== 'PENDING')
+      throw new BadRequestException(
+        'Only PENDING endorsements can be rejected',
+      );
+
+    const rejected = await this.prisma.policyEndorsement.update({
+      where: { id: endorsementId },
+      data: { status: 'REJECTED' },
+    });
+
+    await this.logAudit(
+      tenantId,
+      userId,
+      'endorsement.rejected',
+      endorsementId,
+      null,
+      { reason } as Record<string, unknown>,
+    );
+
+    return rejected;
+  }
+
+  // ─── INSTALLMENTS ──────────────────────────────────
+  async listInstallments(policyId: string, tenantId: string) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id: policyId, tenantId },
+    });
+    if (!policy) throw new NotFoundException('Policy not found');
+
+    return this.prisma.premiumInstallment.findMany({
+      where: { policyId, tenantId },
+      orderBy: { installmentNumber: 'asc' },
+    });
+  }
+
+  async payInstallment(
+    policyId: string,
+    installmentId: string,
+    tenantId: string,
+    userId: string,
+    dto: PayInstallmentDto,
+  ) {
+    const installment = await this.prisma.premiumInstallment.findFirst({
+      where: { id: installmentId, policyId, tenantId },
+    });
+    if (!installment) throw new NotFoundException('Installment not found');
+    if (installment.status === 'PAID')
+      throw new BadRequestException('Installment is already paid');
+
+    const paid = await this.prisma.premiumInstallment.update({
+      where: { id: installmentId },
+      data: {
+        status: 'PAID',
+        paidDate: new Date(dto.paidDate),
+      },
+    });
+
+    await this.logAudit(
+      tenantId,
+      userId,
+      'installment.paid',
+      installmentId,
+      null,
+      {
+        paidAmount: dto.paidAmount,
+        paymentMethod: dto.paymentMethod,
+        reference: dto.reference,
+      } as Record<string, unknown>,
+    );
+
+    return paid;
   }
 }

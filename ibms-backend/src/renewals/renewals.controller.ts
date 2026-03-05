@@ -3,10 +3,13 @@ import {
   Get,
   Post,
   Param,
+  Query,
+  Body,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { RenewalsService } from './renewals.service';
+import { RenewPolicyDto } from './dto/renew-policy.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -19,24 +22,38 @@ interface RequestWithUser {
   };
 }
 
-@Controller('api/v1/renewals')
+@Controller('api/v1')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RenewalsController {
   constructor(private readonly renewalsService: RenewalsService) {}
 
-  @Get('upcoming')
+  @Get('renewals')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
-  getUpcoming(@Request() req: RequestWithUser) {
-    return this.renewalsService.getUpcomingRenewals(req.user.tenantId);
+  getUpcoming(
+    @Request() req: RequestWithUser,
+    @Query('daysAhead') daysAhead?: string,
+    @Query('insuranceType') insuranceType?: string,
+    @Query('carrierId') carrierId?: string,
+  ) {
+    return this.renewalsService.getUpcomingRenewals(
+      req.user.tenantId,
+      daysAhead ? parseInt(daysAhead, 10) : 90,
+      { insuranceType, carrierId },
+    );
   }
 
-  @Post(':id/renew')
+  @Post('policies/:id/renew')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
-  renew(@Request() req: RequestWithUser, @Param('id') id: string) {
+  renew(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: RenewPolicyDto,
+  ) {
     return this.renewalsService.renewPolicy(
       id,
       req.user.tenantId,
       req.user.sub,
+      dto,
     );
   }
 }
