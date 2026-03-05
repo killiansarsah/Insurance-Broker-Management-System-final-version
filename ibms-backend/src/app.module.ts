@@ -2,20 +2,26 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD, APP_FILTER } from '@nestjs/core';
-import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
-import { RolesGuard } from './common/guards/roles.guard.js';
-import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
-import configuration from './config/configuration.js';
-import { HealthModule } from './health/health.module.js';
-import { PrismaModule } from './prisma/prisma.module.js';
-import { AuthModule } from './auth/auth.module.js';
-import { InvitationsModule } from './invitations/invitations.module.js';
-import { UsersModule } from './users/users.module.js';
-import { ClientsModule } from './clients/clients.module.js';
-import { CarriersModule } from './carriers/carriers.module.js';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { RolesGuard } from './common/guards/roles.guard';
+import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import configuration from './config/configuration';
+import { ScheduleModule } from '@nestjs/schedule';
+import { HealthModule } from './health/health.module';
+import { PrismaModule } from './prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { InvitationsModule } from './invitations/invitations.module';
+import { UsersModule } from './users/users.module';
+import { ClientsModule } from './clients/clients.module';
+import { CarriersModule } from './carriers/carriers.module';
+import { PoliciesModule } from './policies/policies.module';
+import { RenewalsModule } from './renewals/renewals.module';
 
 @Module({
   imports: [
+    // Task Scheduling
+    ScheduleModule.forRoot(),
+
     // Config — loads and validates env vars
     ConfigModule.forRoot({
       isGlobal: true,
@@ -47,6 +53,9 @@ import { CarriersModule } from './carriers/carriers.module.js';
 
     // Health check
     HealthModule,
+
+    PoliciesModule,
+    RenewalsModule,
   ],
   providers: [
     // Apply rate limiting globally

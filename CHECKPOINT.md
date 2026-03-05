@@ -1,6 +1,6 @@
 # IBMS Backend Build — Checkpoint Tracker
 
-## Current Phase: Phase 5 COMPLETE — Ready for Phase 6
+## Current Phase: Phase 6 COMPLETE — Ready for Phase 7
 
 ## Rules for AI
 - Before building any phase, read this file first
@@ -28,7 +28,7 @@
 - [x] Phase 3: Auth Module (Login, JWT, Password Reset)
 - [x] Phase 4: Invitation System & User Management
 - [x] Phase 5: Clients & Carriers Module
-- [ ] Phase 6: Policies & Renewals Module
+- [x] Phase 6: Policies & Renewals Module
 - [ ] Phase 7: Claims, Complaints & Escalations Module
 - [ ] Phase 8: Finance Module (Invoices, Payments, Commissions, Expenses, Premium Financing)
 - [ ] Phase 9: Leads, Documents, Tasks, Calendar, Approvals, Notifications
@@ -128,3 +128,12 @@ npx prisma db seed
 - [x] Zero `any` types across the entire codebase
 - [x] Implemented Invitations, Users, Clients, Carriers, and CarrierProducts modules
 - [x] Verified build processes locally
+### Phase 6 — Completed 2026-03-05
+- [x] `npm run build` — zero TypeScript errors
+- [x] `npm run lint` — zero ESLint errors
+- [x] Zero `any` types across Policies and Renewals modules
+- [x] `PoliciesModule`: Implemented CRUD, Bind, Cancel, Lapse, Reinstate with audit logging
+- [x] `RenewalsModule`: Implemented upcoming renewals list, policy duplication for renewal
+- [x] `ScheduleModule`: Integrated for automated nightly policy expiration (ACTIVE -> LAPSED)
+- [x] DTOs: Aligned with Prisma schema (handled PremiumFrequency, sub-details String vs Enum)
+- [x] Build verified: `npm run build && npm run lint` exit code 0
