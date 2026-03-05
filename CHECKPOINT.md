@@ -1,6 +1,6 @@
 # IBMS Backend Build — Checkpoint Tracker
 
-## Current Phase: Phase 9 COMPLETE — Ready for Phase 10
+## Current Phase: Phase 10 COMPLETE — Ready for Phase 11
 
 ## Rules for AI
 - Before building any phase, read this file first
@@ -32,7 +32,7 @@
 - [x] Phase 7: Claims, Complaints & Escalations Module
 - [x] Phase 8: Finance Module (Invoices, Payments, Commissions, Expenses, Premium Financing)
 - [x] Phase 9: Leads, Documents, Tasks, Calendar, Approvals, Notifications
-- [ ] Phase 10: Chat (WebSocket), Reports, Compliance, Audit, Dashboard Aggregations
+- [x] Phase 10: Chat (WebSocket), Reports, Compliance, Audit, Departments, Settings
 - [ ] Phase 11: Frontend Connection (replace mock data with real API calls)
 
 ## Verification Log
@@ -176,6 +176,20 @@ npx prisma db seed
 - [x] **Calendar** (`src/calendar/`): Create (attendee management, endDate validation), List (90-day max, creator OR attendee filter), Detail, Update (creator-only), Delete (soft via CANCELLED status) (5 endpoints)
 - [x] **Approvals** (`src/approvals/`): Create (auto-ref number), List, My Requests, Approve (PENDING→APPROVED), Reject (PENDING→REJECTED) (5 endpoints)
 - [x] **Notifications** (`src/notifications/`): Create (internal), List (unread first), Unread Count, Mark Read, Mark All Read, Delete (archived) (5 endpoints)
+- [x] All 6 modules registered in `AppModule`
+- [x] Tenant isolation on all endpoints
+- [x] Zero `any` types, zero `console.log`
+
+### Phase 10 — Completed 2026-03-05
+- [x] `npm run build` — zero TypeScript errors
+- [x] `npx eslint --fix` — zero ESLint errors
+- [x] **Chat** (`src/chat/`): REST (POST /rooms, GET /rooms, GET /rooms/:id/messages, POST /rooms/:id/participants, DELETE /rooms/:id/participants/:userId) + WebSocket gateway (`/chat` namespace) with JWT auth on connect, join_room, send_message, typing, mark_read events, user_online/user_offline presence
+- [x] **Reports** (`src/reports/`): dashboard (overview + claimsOverview + topCarriers + recentActivity), production (broker/carrier/insuranceType breakdown), claims (byStatus), renewals (due/renewed/declined + rate), financial (revenue/expenses/netIncome/outstanding), compliance (NIC deadlines + KYC pending)
+- [x] **Compliance** (`src/compliance/`): kyc-queue (PENDING/EXPIRED clients, daysPending), aml-screening (HIGH/CRITICAL amlRiskLevel), nic-deadlines (acknowledgmentDeadline/processingDeadline), summary (KYC/AML/NIC/SLA counts)
+- [x] **Audit** (`src/audit/`): GET /audit (paginated, filterable by action/userId/entity/dateRange/search), GET /audit/entity/:entityType/:entityId — READ-ONLY, ADMIN/TENANT_ADMIN only
+- [x] **Departments** (`src/departments/`): POST, GET, PATCH :id, DELETE :id (TENANT_ADMIN only for mutations, unique code per tenant)
+- [x] **Settings** (`src/settings/`): GET/PATCH tenant settings, GET/PATCH profile, POST change-password (bcrypt verify + hash + revoke all refresh tokens)
+- [x] Installed `@nestjs/websockets`, `@nestjs/platform-socket.io`, `socket.io`, `@types/cookie-parser`
 - [x] All 6 modules registered in `AppModule`
 - [x] Tenant isolation on all endpoints
 - [x] Zero `any` types, zero `console.log`

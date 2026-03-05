@@ -7,6 +7,8 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { useClaims } from '@/hooks/api/use-claims';
+// Mock data as fallback until backend DB is seeded
 import { claims } from '@/mock/claims';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Card } from '@/components/ui/card';

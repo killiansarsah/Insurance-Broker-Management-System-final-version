@@ -101,15 +101,34 @@ export class ChatService {
             sender: { select: { id: true, firstName: true, lastName: true } },
           },
         },
+        _count: {
+          select: {
+            messages: true,
+          },
+        },
       },
     });
 
-    return rooms.map((room) => ({
+    // For each room, count unread messages (not READ, not sent by current user)
+    const unreadCounts = await Promise.all(
+      rooms.map((room) =>
+        this.prisma.chatMessage.count({
+          where: {
+            roomId: room.id,
+            senderId: { not: userId },
+            readStatus: { not: 'READ' },
+          },
+        }),
+      ),
+    );
+
+    return rooms.map((room, i) => ({
       id: room.id,
       name: room.name,
       type: room.type,
       participants: room.participants.map((p) => p.user),
       lastMessage: room.messages[0] ?? null,
+      unreadCount: unreadCounts[i],
       createdAt: room.createdAt,
     }));
   }

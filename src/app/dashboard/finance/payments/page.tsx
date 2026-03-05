@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { BackButton } from '@/components/ui/back-button';
+import { useTransactions } from '@/hooks/api/use-finance';
 import { receipts } from '@/mock/finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';

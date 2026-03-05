@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useDashboardReport } from '@/hooks/api/use-reports';
 import { kpistats } from '@/mock/reports';
 import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';

@@ -21,6 +21,9 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
+import { useCreatePolicy } from '@/hooks/api/use-policies';
+import { useClients } from '@/hooks/api/use-clients';
+import { useCarriers } from '@/hooks/api/use-carriers';
 import { mockClients } from '@/mock/clients';
 import { carriers } from '@/mock/carriers';
 import type { InsuranceType, PremiumFrequency } from '@/types';
@@ -670,7 +673,7 @@ export default function NewPolicyPage() {
                                         {formatCurrency(
                                             Math.round(form.premiumAmount / (
                                                 form.premiumFrequency === 'monthly' ? 12 :
-                                                form.premiumFrequency === 'quarterly' ? 4 : 2
+                                                    form.premiumFrequency === 'quarterly' ? 4 : 2
                                             )),
                                             form.currency
                                         )}

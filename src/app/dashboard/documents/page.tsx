@@ -17,6 +17,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useDocuments } from '@/hooks/api/use-documents';
 import { MOCK_DOCUMENTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
 
@@ -111,42 +112,42 @@ export default function DocumentsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filteredDocs.map((doc) => (
                     <div key={doc.id} onClick={() => setPreviewDoc(doc)} className="cursor-pointer">
-                    <Card
-                        hover
-                        className="group flex flex-col p-4 h-full relative border-surface-200"
-                    >
-                        <div className="flex items-start justify-between">
-                            <div className="w-10 h-10 rounded-lg bg-surface-50 flex items-center justify-center p-2 mb-3">
-                                {getIcon(doc.mimeType)}
+                        <Card
+                            hover
+                            className="group flex flex-col p-4 h-full relative border-surface-200"
+                        >
+                            <div className="flex items-start justify-between">
+                                <div className="w-10 h-10 rounded-lg bg-surface-50 flex items-center justify-center p-2 mb-3">
+                                    {getIcon(doc.mimeType)}
+                                </div>
+                                <button
+                                    className="text-surface-400 hover:text-surface-900"
+                                    onClick={(e) => { e.stopPropagation(); setPreviewDoc(doc); }}
+                                >
+                                    <MoreVertical size={16} />
+                                </button>
                             </div>
-                            <button
-                                className="text-surface-400 hover:text-surface-900"
-                                onClick={(e) => { e.stopPropagation(); setPreviewDoc(doc); }}
-                            >
-                                <MoreVertical size={16} />
-                            </button>
-                        </div>
 
-                        <h3 className="text-sm font-bold text-surface-900 truncate mb-1" title={doc.name}>
-                            {doc.name}
-                        </h3>
-                        <p className="text-[10px] text-surface-500 font-medium uppercase tracking-tight mb-4">
-                            {doc.category} • {(doc.sizeBytes / (1024 * 1024)).toFixed(2)} MB
-                        </p>
+                            <h3 className="text-sm font-bold text-surface-900 truncate mb-1" title={doc.name}>
+                                {doc.name}
+                            </h3>
+                            <p className="text-[10px] text-surface-500 font-medium uppercase tracking-tight mb-4">
+                                {doc.category} • {(doc.sizeBytes / (1024 * 1024)).toFixed(2)} MB
+                            </p>
 
-                        <div className="mt-auto pt-3 border-t border-surface-100 flex items-center justify-between">
-                            <span className="text-[10px] text-surface-400">{formatDate(doc.createdAt)}</span>
-                            <button
-                                className="p-1.5 rounded-full hover:bg-surface-50 text-primary-600 transition-colors"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    toast.success('Download started', { description: doc.name });
-                                }}
-                            >
-                                <Download size={16} />
-                            </button>
-                        </div>
-                    </Card>
+                            <div className="mt-auto pt-3 border-t border-surface-100 flex items-center justify-between">
+                                <span className="text-[10px] text-surface-400">{formatDate(doc.createdAt)}</span>
+                                <button
+                                    className="p-1.5 rounded-full hover:bg-surface-50 text-primary-600 transition-colors"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toast.success('Download started', { description: doc.name });
+                                    }}
+                                >
+                                    <Download size={16} />
+                                </button>
+                            </div>
+                        </Card>
                     </div>
                 ))}
             </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { useClaim } from '@/hooks/api/use-claims';
 import { claims } from '@/mock/claims';
 import ClaimDetailClient from './client-page';
 

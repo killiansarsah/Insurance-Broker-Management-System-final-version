@@ -3,33 +3,19 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, UserRole } from '@/types';
+import { apiClient } from '@/lib/api-client';
 
 interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string) => Promise<void>;
-    logout: () => void;
+    login: (email: string, password: string, tenantSlug?: string) => Promise<void>;
+    logout: () => Promise<void>;
+    checkAuth: () => Promise<void>;
     hasRole: (roles: UserRole[]) => boolean;
     hasPermission: (module: string, action: string) => boolean;
 }
 
-// Mock user for development
-const MOCK_USER: User = {
-    id: '1',
-    email: 'admin@ibms.com',
-    firstName: 'Kwame',
-    lastName: 'Asante',
-    role: 'admin',
-    phone: '+233241234567',
-    branchId: 'branch-1',
-    avatarUrl: undefined,
-    isActive: true,
-    lastLogin: new Date().toISOString(),
-    createdAt: '2025-01-01T00:00:00Z',
-};
-
-// Role hierarchy for permission checks
 const ROLE_HIERARCHY: Record<UserRole, number> = {
     platform_super_admin: 8,
     super_admin: 7,
@@ -43,7 +29,6 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
     viewer: 1,
 };
 
-// Module permissions by role
 const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
     platform_super_admin: { '*': ['*'] },
     super_admin: { '*': ['*'] },
@@ -133,22 +118,53 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             isLoading: false,
 
-            login: async (email, password) => {
+            login: async (email, password, tenantSlug) => {
                 set({ isLoading: true });
-                // Simulate API call
-                void email; void password;
-                await new Promise((resolve) => setTimeout(resolve, 800));
-                set({ user: MOCK_USER, isAuthenticated: true, isLoading: false });
+                try {
+                    const res = await apiClient.post<{ accessToken: string; user: User }>(
+                        '/auth/login',
+                        { email, password, tenantSlug },
+                    );
+                    apiClient.setAccessToken(res.accessToken);
+                    set({ user: res.user, isAuthenticated: true, isLoading: false });
+                } catch {
+                    set({ isLoading: false });
+                    throw new Error('Invalid credentials');
+                }
             },
 
-            logout: () => {
+            logout: async () => {
+                try {
+                    await apiClient.post('/auth/logout');
+                } catch {
+                    // ignore logout failures
+                }
+                apiClient.clearAccessToken();
                 set({ user: null, isAuthenticated: false });
+                if (typeof window !== 'undefined') {
+                    window.location.href = '/login';
+                }
+            },
+
+            checkAuth: async () => {
+                if (get().isLoading) return;
+                set({ isLoading: true });
+                try {
+                    const res = await apiClient.post<{ accessToken: string; user: User }>(
+                        '/auth/refresh',
+                    );
+                    apiClient.setAccessToken(res.accessToken);
+                    set({ user: res.user, isAuthenticated: true, isLoading: false });
+                } catch {
+                    apiClient.clearAccessToken();
+                    set({ user: null, isAuthenticated: false, isLoading: false });
+                }
             },
 
             hasRole: (roles: UserRole[]) => {
                 const user = get().user;
                 if (!user) return false;
-                if (user.role === 'super_admin') return true;
+                if (user.role === 'super_admin' || user.role === 'platform_super_admin') return true;
                 return roles.includes(user.role);
             },
 
@@ -159,7 +175,6 @@ export const useAuthStore = create<AuthState>()(
                 const rolePerms = PERMISSIONS[user.role];
                 if (!rolePerms) return false;
 
-                // Super admin wildcard
                 if (rolePerms['*']?.includes('*')) return true;
 
                 const modulePerms = rolePerms[module];
@@ -174,6 +189,8 @@ export const useAuthStore = create<AuthState>()(
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
             }),
-        }
-    )
+        },
+    ),
 );
+
+export { ROLE_HIERARCHY };

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Search, Building2, Shield, RefreshCw, Globe, Trophy, ArrowRight, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCarriers } from '@/hooks/api/use-carriers';
 import { carriers, getCarriersByType, type CarrierType, type Carrier } from '@/mock/carriers';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';

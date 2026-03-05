@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { usePolicy } from '@/hooks/api/use-policies';
 import { mockPolicies } from '@/mock/policies';
 import PolicyDetailClient from './policy-detail-page';
 

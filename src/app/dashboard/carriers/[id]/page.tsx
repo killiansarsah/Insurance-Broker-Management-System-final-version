@@ -1,5 +1,6 @@
 
 import type { Metadata } from 'next';
+import { useCarrier } from '@/hooks/api/use-carriers';
 import { carriers } from '@/mock/carriers';
 import { carrierProducts } from '@/mock/carrier-products';
 import CarrierDetailClient from './client-page';

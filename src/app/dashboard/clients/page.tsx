@@ -27,6 +27,8 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { useClients } from '@/hooks/api/use-clients';
+// Mock data as fallback until backend DB is seeded
 import { mockClients, getClientDisplayName } from '@/mock/clients';
 import { formatCurrency, formatPhone, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';

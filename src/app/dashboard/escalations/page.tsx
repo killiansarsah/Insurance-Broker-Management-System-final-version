@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useClaims } from '@/hooks/api/use-claims';
+import { useComplaints } from '@/hooks/api/use-complaints';
 import { claims } from '@/mock/claims';
 import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';

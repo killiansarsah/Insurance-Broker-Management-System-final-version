@@ -6,14 +6,16 @@ import { useAuthStore } from '@/stores/auth-store';
 import { PageLoader } from '@/components/ui';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-    const { isAuthenticated, isLoading } = useAuthStore();
+    const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
         setMounted(true);
+        // On mount: try silent token refresh (Step 9 spec)
+        checkAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {

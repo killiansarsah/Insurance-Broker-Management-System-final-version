@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Caveat } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/layout/theme-provider';
+import { QueryProvider } from '@/lib/query-provider';
 import './globals.css';
 
 const inter = Inter({
@@ -43,7 +44,6 @@ export default function RootLayout({
     return (
         <html lang="en" className={`${inter.variable} ${caveat.variable}`}>
             <head>
-                {/* Material Symbols — display=swap in URL prevents render-blocking text */}
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
                 <link
@@ -53,7 +53,9 @@ export default function RootLayout({
             </head>
             <body className="antialiased">
                 <ThemeProvider />
-                {children}
+                <QueryProvider>
+                    {children}
+                </QueryProvider>
                 <Toaster
                     position="top-right"
                     richColors

@@ -46,6 +46,7 @@ import {
     type ExpenseStatus,
     type PaymentMethod,
 } from '@/mock/expenses';
+import { useExpenses } from '@/hooks/api/use-finance';
 import { mockCommissions } from '@/mock/commissions';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
@@ -67,29 +68,29 @@ const STATUS_LABEL: Record<ExpenseStatus, string> = {
 
 const MONTH_NAMES: Record<string, string> = {
     '01': 'JANUARY', '02': 'FEBRUARY', '03': 'MARCH',
-    '04': 'APRIL',   '05': 'MAY',      '06': 'JUNE',
-    '07': 'JULY',    '08': 'AUGUST',   '09': 'SEPTEMBER',
+    '04': 'APRIL', '05': 'MAY', '06': 'JUNE',
+    '07': 'JULY', '08': 'AUGUST', '09': 'SEPTEMBER',
     '10': 'OCTOBER', '11': 'NOVEMBER', '12': 'DECEMBER',
 };
 
 // Exact 16 columns matching the real DEZAG Excel file (in order)
 const EXCEL_COLUMNS: { key: ExpenseCategory; header: string }[] = [
-    { key: 'fuel_car_maintenance',  header: 'FUEL/CAR MAINTENANCE' },
-    { key: 'printing_stationery',   header: 'PRINTING & STATIONERY' },
-    { key: 'tele_post',             header: 'TELE & POST' },
-    { key: 'utilities',             header: 'UTILITIES(WATER & ECG)' },
-    { key: 'levies_licenses',       header: 'LEVIES & LICENSES' },
-    { key: 'transport',             header: 'TRANSPORT' },
+    { key: 'fuel_car_maintenance', header: 'FUEL/CAR MAINTENANCE' },
+    { key: 'printing_stationery', header: 'PRINTING & STATIONERY' },
+    { key: 'tele_post', header: 'TELE & POST' },
+    { key: 'utilities', header: 'UTILITIES(WATER & ECG)' },
+    { key: 'levies_licenses', header: 'LEVIES & LICENSES' },
+    { key: 'transport', header: 'TRANSPORT' },
     { key: 'provisions_toiletries', header: 'PROVISIONS & TOILETRIES' },
-    { key: 'allowances',            header: 'ALLOWANCES' },
-    { key: 'training',              header: 'COURSES AND TRAINING' },
-    { key: 'subscriptions',         header: 'SUBCRIPTIONS' },
-    { key: 'miscellaneous',         header: 'MISCELLANEOUS' },
-    { key: 'food',                  header: 'FOOD' },
-    { key: 'salaries',              header: 'SALARIES AND WAGES' },
-    { key: 'ssnit',                 header: 'SSNIT' },
-    { key: 'insurance',             header: 'INSURANCE' },
-    { key: 'business_prospecting',  header: 'BUSINESS PROSPECTING' },
+    { key: 'allowances', header: 'ALLOWANCES' },
+    { key: 'training', header: 'COURSES AND TRAINING' },
+    { key: 'subscriptions', header: 'SUBCRIPTIONS' },
+    { key: 'miscellaneous', header: 'MISCELLANEOUS' },
+    { key: 'food', header: 'FOOD' },
+    { key: 'salaries', header: 'SALARIES AND WAGES' },
+    { key: 'ssnit', header: 'SSNIT' },
+    { key: 'insurance', header: 'INSURANCE' },
+    { key: 'business_prospecting', header: 'BUSINESS PROSPECTING' },
 ];
 
 const DEFAULT_COMPANY = 'DEZAG INSURANCE BROKERS';
@@ -154,9 +155,9 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
 
         // Blank row then STAFF / DIRECTOR / SSNIT footer labels
         rows.push(new Array(EXCEL_TOTAL_COLS).fill(''));
-        rows.push(['STAFF',    ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
+        rows.push(['STAFF', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
         rows.push(['DIRECTOR', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
-        rows.push(['SSNIT',    ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
+        rows.push(['SSNIT', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
 
         const ws = XLSX.utils.aoa_to_sheet(rows);
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: EXCEL_TOTAL_COLS - 1 } }];
@@ -168,8 +169,8 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
         const commRows: (string | number)[][] = [
             [`${company} - COMMISSIONS`],
             ['DATE', 'CLIENT', 'POLICY NO', 'PRODUCT TYPE', 'INSURER',
-             'PREMIUM (GHS)', 'RATE %', 'GROSS COMMISSION (GHS)',
-             'NIC LEVY', 'NET COMMISSION (GHS)', 'STATUS'],
+                'PREMIUM (GHS)', 'RATE %', 'GROSS COMMISSION (GHS)',
+                'NIC LEVY', 'NET COMMISSION (GHS)', 'STATUS'],
         ];
         mockCommissions.forEach(c => {
             commRows.push([
@@ -180,8 +181,8 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
             ]);
         });
         const totalGross = mockCommissions.reduce((s, c) => s + c.commissionAmount, 0);
-        const totalNic   = mockCommissions.reduce((s, c) => s + c.nicLevy, 0);
-        const totalNet   = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
+        const totalNic = mockCommissions.reduce((s, c) => s + c.nicLevy, 0);
+        const totalNet = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
         commRows.push(['', '', '', '', 'TOTAL', '', '', totalGross, totalNic, totalNet, '']);
         const ws = XLSX.utils.aoa_to_sheet(commRows);
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
@@ -195,7 +196,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
             const cur = insurerMap.get(c.insurerName) || { gross: 0, net: 0 };
             insurerMap.set(c.insurerName, {
                 gross: cur.gross + c.commissionAmount,
-                net:   cur.net   + c.netCommission,
+                net: cur.net + c.netCommission,
             });
         });
         const orRows: (string | number)[][] = [
@@ -204,7 +205,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
         ];
         insurerMap.forEach((v, insurer) => orRows.push([insurer, v.gross, v.net]));
         const totalGross = [...insurerMap.values()].reduce((s, v) => s + v.gross, 0);
-        const totalNet   = [...insurerMap.values()].reduce((s, v) => s + v.net, 0);
+        const totalNet = [...insurerMap.values()].reduce((s, v) => s + v.net, 0);
         orRows.push(['TOTAL', totalGross, totalNet]);
         const ws = XLSX.utils.aoa_to_sheet(orRows);
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
@@ -213,14 +214,14 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
 
     // ACCOUNT sheet
     {
-        const totalExp  = data.reduce((s, e) => s + e.amount, 0);
+        const totalExp = data.reduce((s, e) => s + e.amount, 0);
         const totalComm = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
         const acRows: (string | number)[][] = [
             [`${company} - ACCOUNT SUMMARY`],
             ['', ''],
             ['Total Commission Earned (GHS)', totalComm],
-            ['Total Expenses (GHS)',          totalExp],
-            ['Net Balance (GHS)',             totalComm - totalExp],
+            ['Total Expenses (GHS)', totalExp],
+            ['Net Balance (GHS)', totalComm - totalExp],
             ['', ''],
             ['Generated', new Date().toLocaleDateString('en-GB')],
         ];
@@ -235,8 +236,8 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
         mockCommissions.forEach(c => {
             const cur = btMap.get(c.productType) || { count: 0, premium: 0, commission: 0 };
             btMap.set(c.productType, {
-                count:      cur.count + 1,
-                premium:    cur.premium    + c.premiumAmount,
+                count: cur.count + 1,
+                premium: cur.premium + c.premiumAmount,
                 commission: cur.commission + c.netCommission,
             });
         });
@@ -456,7 +457,7 @@ export default function ExpensesPage() {
 
     const summaryGrandTotal = useMemo(() =>
         summaryData.reduce((s, r) => s + r.total, 0)
-    , [summaryData]);
+        , [summaryData]);
 
     // ─── KPI data ───
     const KPIS = useMemo(() => {
@@ -822,263 +823,263 @@ export default function ExpensesPage() {
 
             {/* Spreadsheet Table */}
             {!showSummary && (
-            <Card padding="none" className="overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead>
-                            <tr className="bg-surface-50 border-b border-surface-200">
-                                <th className="w-10 px-3 py-3">
-                                    <input
-                                        type="checkbox"
-                                        checked={filtered.length > 0 && selectedIds.size === filtered.length}
-                                        onChange={toggleSelectAll}
-                                        className="rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                                    />
-                                </th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[100px]">Date</th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider min-w-[240px]">Description</th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[150px]">Category</th>
-                                <th className="px-3 py-3 text-right text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[110px]">Amount</th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider min-w-[150px]">Vendor</th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[130px]">Reference</th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[120px]">Payment</th>
-                                <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[110px]">Department</th>
-                                <th className="px-3 py-3 text-center text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[80px]">Status</th>
-                                <th className="px-3 py-3 text-center text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[50px]">
-                                    <Paperclip size={12} className="mx-auto text-surface-400" />
-                                </th>
-                                <th className="px-3 py-3 text-center text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[80px]">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-surface-100">
-                            {filtered.length === 0 && (
-                                <tr>
-                                    <td colSpan={12} className="px-6 py-16 text-center">
-                                        <FileSpreadsheet size={36} className="mx-auto text-surface-300 mb-3" />
-                                        <p className="text-sm font-medium text-surface-500">No expenses found</p>
-                                        <p className="text-xs text-surface-400 mt-1">Add a new expense or import from CSV.</p>
-                                    </td>
+                <Card padding="none" className="overflow-hidden">
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-surface-50 border-b border-surface-200">
+                                    <th className="w-10 px-3 py-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                                            onChange={toggleSelectAll}
+                                            className="rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                                        />
+                                    </th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[100px]">Date</th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider min-w-[240px]">Description</th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[150px]">Category</th>
+                                    <th className="px-3 py-3 text-right text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[110px]">Amount</th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider min-w-[150px]">Vendor</th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[130px]">Reference</th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[120px]">Payment</th>
+                                    <th className="px-3 py-3 text-left text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[110px]">Department</th>
+                                    <th className="px-3 py-3 text-center text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[80px]">Status</th>
+                                    <th className="px-3 py-3 text-center text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[50px]">
+                                        <Paperclip size={12} className="mx-auto text-surface-400" />
+                                    </th>
+                                    <th className="px-3 py-3 text-center text-[10px] font-bold text-surface-500 uppercase tracking-wider w-[80px]">Actions</th>
                                 </tr>
-                            )}
-
-                            {filtered.map(exp => {
-                                const isEditing = editingId === exp.id;
-                                const isSelected = selectedIds.has(exp.id);
-
-                                return (
-                                    <tr
-                                        key={exp.id}
-                                        className={cn(
-                                            'transition-colors group',
-                                            isEditing
-                                                ? 'bg-primary-50/40'
-                                                : isSelected
-                                                    ? 'bg-primary-50/30'
-                                                    : 'hover:bg-surface-50/80',
-                                        )}
-                                    >
-                                        {/* Checkbox */}
-                                        <td className="px-3 py-2.5">
-                                            <input
-                                                type="checkbox"
-                                                checked={isSelected}
-                                                onChange={() => toggleSelect(exp.id)}
-                                                className="rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
-                                            />
-                                        </td>
-
-                                        {/* Date */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellInput
-                                                    type="date"
-                                                    value={editRow.date || ''}
-                                                    onChange={v => setEditRow(r => ({ ...r, date: v }))}
-                                                />
-                                            ) : (
-                                                <span className="text-xs text-surface-700 tabular-nums">{formatDate(exp.date)}</span>
-                                            )}
-                                        </td>
-
-                                        {/* Description */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellInput
-                                                    value={editRow.description || ''}
-                                                    onChange={v => setEditRow(r => ({ ...r, description: v }))}
-                                                />
-                                            ) : (
-                                                <span className="text-xs font-medium text-surface-800 line-clamp-1">{exp.description}</span>
-                                            )}
-                                        </td>
-
-                                        {/* Category */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellSelect
-                                                    value={editRow.category || 'miscellaneous'}
-                                                    onChange={v => setEditRow(r => ({ ...r, category: v as ExpenseCategory }))}
-                                                    options={EXPENSE_CATEGORIES}
-                                                />
-                                            ) : (
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-100 text-[10px] font-semibold text-surface-600 whitespace-nowrap">
-                                                    {CATEGORY_LABEL[exp.category]}
-                                                </span>
-                                            )}
-                                        </td>
-
-                                        {/* Amount */}
-                                        <td className="px-3 py-2.5 text-right">
-                                            {isEditing ? (
-                                                <CellInput
-                                                    type="number"
-                                                    value={String(editRow.amount || 0)}
-                                                    onChange={v => setEditRow(r => ({ ...r, amount: parseFloat(v) || 0 }))}
-                                                    className="text-right"
-                                                />
-                                            ) : (
-                                                <span className="text-xs font-bold text-surface-900 tabular-nums">
-                                                    {formatCurrency(exp.amount, exp.currency)}
-                                                </span>
-                                            )}
-                                        </td>
-
-                                        {/* Vendor */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellInput
-                                                    value={editRow.vendor || ''}
-                                                    onChange={v => setEditRow(r => ({ ...r, vendor: v }))}
-                                                />
-                                            ) : (
-                                                <span className="text-xs text-surface-700 line-clamp-1">{exp.vendor}</span>
-                                            )}
-                                        </td>
-
-                                        {/* Reference */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellInput
-                                                    value={editRow.reference || ''}
-                                                    onChange={v => setEditRow(r => ({ ...r, reference: v }))}
-                                                />
-                                            ) : (
-                                                <span className="text-xs font-mono text-primary-600">{exp.reference}</span>
-                                            )}
-                                        </td>
-
-                                        {/* Payment Method */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellSelect
-                                                    value={editRow.paymentMethod || 'cash'}
-                                                    onChange={v => setEditRow(r => ({ ...r, paymentMethod: v as PaymentMethod }))}
-                                                    options={Object.entries(PAYMENT_METHOD_LABEL).map(([v, l]) => ({ value: v, label: l }))}
-                                                />
-                                            ) : (
-                                                <span className="text-xs text-surface-600">{PAYMENT_METHOD_LABEL[exp.paymentMethod]}</span>
-                                            )}
-                                        </td>
-
-                                        {/* Department */}
-                                        <td className="px-3 py-2.5">
-                                            {isEditing ? (
-                                                <CellSelect
-                                                    value={editRow.department || 'Administration'}
-                                                    onChange={v => setEditRow(r => ({ ...r, department: v }))}
-                                                    options={DEPARTMENTS.map(d => ({ value: d, label: d }))}
-                                                />
-                                            ) : (
-                                                <span className="text-xs text-surface-600">{exp.department}</span>
-                                            )}
-                                        </td>
-
-                                        {/* Status */}
-                                        <td className="px-3 py-2.5 text-center">
-                                            {isEditing ? (
-                                                <CellSelect
-                                                    value={editRow.status || 'draft'}
-                                                    onChange={v => setEditRow(r => ({ ...r, status: v as ExpenseStatus }))}
-                                                    options={Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))}
-                                                />
-                                            ) : (
-                                                <StatusBadge status={exp.status} />
-                                            )}
-                                        </td>
-
-                                        {/* Receipt */}
-                                        <td className="px-3 py-2.5 text-center">
-                                            {exp.receiptAttached ? (
-                                                <Paperclip size={14} className="mx-auto text-success-500" />
-                                            ) : (
-                                                <span className="text-surface-300">—</span>
-                                            )}
-                                        </td>
-
-                                        {/* Actions */}
-                                        <td className="px-3 py-2.5 text-center">
-                                            {isEditing ? (
-                                                <div className="flex items-center justify-center gap-1">
-                                                    <button
-                                                        onClick={saveEdit}
-                                                        className="p-1.5 rounded-md bg-success-50 text-success-600 hover:bg-success-100 transition-colors cursor-pointer"
-                                                        title="Save"
-                                                    >
-                                                        <Save size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={cancelEdit}
-                                                        className="p-1.5 rounded-md bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors cursor-pointer"
-                                                        title="Cancel"
-                                                    >
-                                                        <X size={14} />
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() => startEdit(exp)}
-                                                        className="p-1.5 rounded-md hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-colors cursor-pointer"
-                                                        title="Edit"
-                                                    >
-                                                        <Pencil size={14} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setExpDeleteTarget({ type: 'single', id: exp.id })}
-                                                        className="p-1.5 rounded-md hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors cursor-pointer"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </div>
-                                            )}
+                            </thead>
+                            <tbody className="divide-y divide-surface-100">
+                                {filtered.length === 0 && (
+                                    <tr>
+                                        <td colSpan={12} className="px-6 py-16 text-center">
+                                            <FileSpreadsheet size={36} className="mx-auto text-surface-300 mb-3" />
+                                            <p className="text-sm font-medium text-surface-500">No expenses found</p>
+                                            <p className="text-xs text-surface-400 mt-1">Add a new expense or import from CSV.</p>
                                         </td>
                                     </tr>
-                                );
-                            })}
-                        </tbody>
+                                )}
 
-                        {/* Footer total */}
-                        {filtered.length > 0 && (
-                            <tfoot>
-                                <tr className="bg-surface-50 border-t border-surface-200">
-                                    <td colSpan={4} className="px-3 py-3 text-right">
-                                        <span className="text-xs font-bold text-surface-500 uppercase tracking-wider">
-                                            Total ({filtered.length} entries)
-                                        </span>
-                                    </td>
-                                    <td className="px-3 py-3 text-right">
-                                        <span className="text-sm font-bold text-surface-900 tabular-nums">
-                                            {formatCurrency(filteredTotal)}
-                                        </span>
-                                    </td>
-                                    <td colSpan={7} />
-                                </tr>
-                            </tfoot>
-                        )}
-                    </table>
-                </div>
-            </Card>
+                                {filtered.map(exp => {
+                                    const isEditing = editingId === exp.id;
+                                    const isSelected = selectedIds.has(exp.id);
+
+                                    return (
+                                        <tr
+                                            key={exp.id}
+                                            className={cn(
+                                                'transition-colors group',
+                                                isEditing
+                                                    ? 'bg-primary-50/40'
+                                                    : isSelected
+                                                        ? 'bg-primary-50/30'
+                                                        : 'hover:bg-surface-50/80',
+                                            )}
+                                        >
+                                            {/* Checkbox */}
+                                            <td className="px-3 py-2.5">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => toggleSelect(exp.id)}
+                                                    className="rounded border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                                                />
+                                            </td>
+
+                                            {/* Date */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellInput
+                                                        type="date"
+                                                        value={editRow.date || ''}
+                                                        onChange={v => setEditRow(r => ({ ...r, date: v }))}
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs text-surface-700 tabular-nums">{formatDate(exp.date)}</span>
+                                                )}
+                                            </td>
+
+                                            {/* Description */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellInput
+                                                        value={editRow.description || ''}
+                                                        onChange={v => setEditRow(r => ({ ...r, description: v }))}
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs font-medium text-surface-800 line-clamp-1">{exp.description}</span>
+                                                )}
+                                            </td>
+
+                                            {/* Category */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellSelect
+                                                        value={editRow.category || 'miscellaneous'}
+                                                        onChange={v => setEditRow(r => ({ ...r, category: v as ExpenseCategory }))}
+                                                        options={EXPENSE_CATEGORIES}
+                                                    />
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-100 text-[10px] font-semibold text-surface-600 whitespace-nowrap">
+                                                        {CATEGORY_LABEL[exp.category]}
+                                                    </span>
+                                                )}
+                                            </td>
+
+                                            {/* Amount */}
+                                            <td className="px-3 py-2.5 text-right">
+                                                {isEditing ? (
+                                                    <CellInput
+                                                        type="number"
+                                                        value={String(editRow.amount || 0)}
+                                                        onChange={v => setEditRow(r => ({ ...r, amount: parseFloat(v) || 0 }))}
+                                                        className="text-right"
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs font-bold text-surface-900 tabular-nums">
+                                                        {formatCurrency(exp.amount, exp.currency)}
+                                                    </span>
+                                                )}
+                                            </td>
+
+                                            {/* Vendor */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellInput
+                                                        value={editRow.vendor || ''}
+                                                        onChange={v => setEditRow(r => ({ ...r, vendor: v }))}
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs text-surface-700 line-clamp-1">{exp.vendor}</span>
+                                                )}
+                                            </td>
+
+                                            {/* Reference */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellInput
+                                                        value={editRow.reference || ''}
+                                                        onChange={v => setEditRow(r => ({ ...r, reference: v }))}
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs font-mono text-primary-600">{exp.reference}</span>
+                                                )}
+                                            </td>
+
+                                            {/* Payment Method */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellSelect
+                                                        value={editRow.paymentMethod || 'cash'}
+                                                        onChange={v => setEditRow(r => ({ ...r, paymentMethod: v as PaymentMethod }))}
+                                                        options={Object.entries(PAYMENT_METHOD_LABEL).map(([v, l]) => ({ value: v, label: l }))}
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs text-surface-600">{PAYMENT_METHOD_LABEL[exp.paymentMethod]}</span>
+                                                )}
+                                            </td>
+
+                                            {/* Department */}
+                                            <td className="px-3 py-2.5">
+                                                {isEditing ? (
+                                                    <CellSelect
+                                                        value={editRow.department || 'Administration'}
+                                                        onChange={v => setEditRow(r => ({ ...r, department: v }))}
+                                                        options={DEPARTMENTS.map(d => ({ value: d, label: d }))}
+                                                    />
+                                                ) : (
+                                                    <span className="text-xs text-surface-600">{exp.department}</span>
+                                                )}
+                                            </td>
+
+                                            {/* Status */}
+                                            <td className="px-3 py-2.5 text-center">
+                                                {isEditing ? (
+                                                    <CellSelect
+                                                        value={editRow.status || 'draft'}
+                                                        onChange={v => setEditRow(r => ({ ...r, status: v as ExpenseStatus }))}
+                                                        options={Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))}
+                                                    />
+                                                ) : (
+                                                    <StatusBadge status={exp.status} />
+                                                )}
+                                            </td>
+
+                                            {/* Receipt */}
+                                            <td className="px-3 py-2.5 text-center">
+                                                {exp.receiptAttached ? (
+                                                    <Paperclip size={14} className="mx-auto text-success-500" />
+                                                ) : (
+                                                    <span className="text-surface-300">—</span>
+                                                )}
+                                            </td>
+
+                                            {/* Actions */}
+                                            <td className="px-3 py-2.5 text-center">
+                                                {isEditing ? (
+                                                    <div className="flex items-center justify-center gap-1">
+                                                        <button
+                                                            onClick={saveEdit}
+                                                            className="p-1.5 rounded-md bg-success-50 text-success-600 hover:bg-success-100 transition-colors cursor-pointer"
+                                                            title="Save"
+                                                        >
+                                                            <Save size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={cancelEdit}
+                                                            className="p-1.5 rounded-md bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors cursor-pointer"
+                                                            title="Cancel"
+                                                        >
+                                                            <X size={14} />
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button
+                                                            onClick={() => startEdit(exp)}
+                                                            className="p-1.5 rounded-md hover:bg-primary-50 text-surface-400 hover:text-primary-600 transition-colors cursor-pointer"
+                                                            title="Edit"
+                                                        >
+                                                            <Pencil size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => setExpDeleteTarget({ type: 'single', id: exp.id })}
+                                                            className="p-1.5 rounded-md hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors cursor-pointer"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+
+                            {/* Footer total */}
+                            {filtered.length > 0 && (
+                                <tfoot>
+                                    <tr className="bg-surface-50 border-t border-surface-200">
+                                        <td colSpan={4} className="px-3 py-3 text-right">
+                                            <span className="text-xs font-bold text-surface-500 uppercase tracking-wider">
+                                                Total ({filtered.length} entries)
+                                            </span>
+                                        </td>
+                                        <td className="px-3 py-3 text-right">
+                                            <span className="text-sm font-bold text-surface-900 tabular-nums">
+                                                {formatCurrency(filteredTotal)}
+                                            </span>
+                                        </td>
+                                        <td colSpan={7} />
+                                    </tr>
+                                </tfoot>
+                            )}
+                        </table>
+                    </div>
+                </Card>
             )}
 
             {/* Category Breakdown */}

@@ -28,7 +28,7 @@ interface UserRecord {
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private toResponseDto(user: UserRecord) {
     return {
@@ -340,5 +340,44 @@ export class UsersService {
     });
 
     return { success: true };
+  }
+
+  async assignDepartment(
+    id: string,
+    tenantId: string,
+    currentUserId: string,
+    departmentId: string | null,
+  ) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    // If assigning, verify department exists in tenant
+    if (departmentId) {
+      const dept = await this.prisma.department.findFirst({
+        where: { id: departmentId, tenantId },
+      });
+      if (!dept)
+        throw new HttpException('Department not found', HttpStatus.NOT_FOUND);
+    }
+
+    await this.prisma.user.update({
+      where: { id },
+      data: { departmentId },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        tenantId,
+        userId: currentUserId,
+        action: departmentId ? 'user.department.assigned' : 'user.department.removed',
+        entity: 'user',
+        entityId: id,
+        after: { departmentId } as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    return { success: true, departmentId };
   }
 }

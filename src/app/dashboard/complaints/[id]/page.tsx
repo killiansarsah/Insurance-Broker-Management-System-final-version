@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { useComplaint } from '@/hooks/api/use-complaints';
 import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
 import ComplaintDetailPage from './client-page';
 

@@ -30,6 +30,8 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
+import { useDashboardReport } from '@/hooks/api/use-reports';
+// Mock data as fallback until backend DB is seeded
 import { policies } from '@/mock/policies';
 import { mockClients as clients } from '@/mock/clients';
 import { claims } from '@/mock/claims';
@@ -861,10 +863,10 @@ export default function DashboardPage() {
                         const days = Math.ceil((new Date(p.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                         return days > 0 && days <= 30;
                     }).length === 0 && (
-                        <div className="px-6 py-8 text-center">
-                            <p className="text-sm text-surface-400">No upcoming renewals in the next 30 days</p>
-                        </div>
-                    )}
+                            <div className="px-6 py-8 text-center">
+                                <p className="text-sm text-surface-400">No upcoming renewals in the next 30 days</p>
+                            </div>
+                        )}
                 </div>
             </Card>
 

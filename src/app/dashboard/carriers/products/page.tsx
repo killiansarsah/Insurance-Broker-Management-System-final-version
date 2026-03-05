@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Search, Shield, CheckCircle, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCarriers } from '@/hooks/api/use-carriers';
 import { carriers } from '@/mock/carriers';
 import {
     carrierProducts, CATEGORY_LABELS, CATEGORY_COLORS,

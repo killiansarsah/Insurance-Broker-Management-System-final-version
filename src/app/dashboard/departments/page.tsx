@@ -20,6 +20,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useUsers } from '@/hooks/api/use-users';
 import { users } from '@/mock/users';
 import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';

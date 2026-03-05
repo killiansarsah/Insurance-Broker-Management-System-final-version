@@ -58,7 +58,7 @@ export class DepartmentsService {
   }
 
   async findAll(tenantId: string) {
-    return this.prisma.department.findMany({
+    const depts = await this.prisma.department.findMany({
       where: { tenantId },
       orderBy: { name: 'asc' },
       include: {
@@ -70,6 +70,17 @@ export class DepartmentsService {
         },
       },
     });
+
+    // Attach member count per department
+    const counts = await Promise.all(
+      depts.map((d) =>
+        this.prisma.user.count({
+          where: { tenantId, departmentId: d.id, deletedAt: null },
+        }),
+      ),
+    );
+
+    return depts.map((d, i) => ({ ...d, memberCount: counts[i] }));
   }
 
   async update(
@@ -103,6 +114,16 @@ export class DepartmentsService {
       where: { id, tenantId },
     });
     if (!dept) throw new NotFoundException(`Department ${id} not found`);
+
+    // Spec: only delete if no users assigned
+    const memberCount = await this.prisma.user.count({
+      where: { tenantId, departmentId: id, deletedAt: null },
+    });
+    if (memberCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete department with ${memberCount} assigned member(s). Reassign users first.`,
+      );
+    }
 
     await this.prisma.department.delete({ where: { id } });
     await this.logAudit(tenantId, userId, 'department.deleted', id);

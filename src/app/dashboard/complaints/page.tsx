@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { DataTable } from '@/components/data-display/data-table';
+import { useComplaints } from '@/hooks/api/use-complaints';
+// Mock data as fallback until backend DB is seeded
 import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';

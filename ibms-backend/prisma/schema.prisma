@@ -438,6 +438,7 @@ model User {
   phone            String?
   role             UserRole  @default(BROKER)
   branchId         String?   @db.Uuid
+  departmentId     String?   @db.Uuid
   avatarUrl        String?
   isActive         Boolean   @default(true)
   lastLoginAt      DateTime?
@@ -452,6 +453,7 @@ model User {
 
   tenant                 Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   branch                 Branch?             @relation(fields: [branchId], references: [id])
+  department             Department?         @relation("DepartmentMember", fields: [departmentId], references: [id])
   refreshTokens          RefreshToken[]
   auditLogs              AuditLog[]
   sentInvitations        Invitation[]        @relation("InvitedBy")
@@ -1386,9 +1388,10 @@ model Department {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  tenant Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  head   User?   @relation("DepartmentHead", fields: [headId], references: [id])
-  branch Branch? @relation(fields: [branchId], references: [id])
+  tenant  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  head    User?    @relation("DepartmentHead", fields: [headId], references: [id])
+  branch  Branch?  @relation(fields: [branchId], references: [id])
+  members User[]   @relation("DepartmentMember")
 
   @@unique([tenantId, code])
   @@index([tenantId])

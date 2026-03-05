@@ -19,6 +19,7 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
+import { useFinanceDashboard, useInvoices } from '@/hooks/api/use-finance';
 import { invoices, receipts, financeSummary } from '@/mock/finance';
 import { commissionSummary } from '@/mock/commissions';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';

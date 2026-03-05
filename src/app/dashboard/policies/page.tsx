@@ -23,6 +23,8 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { usePolicies } from '@/hooks/api/use-policies';
+// Mock data as fallback until backend DB is seeded
 import { mockPolicies } from '@/mock/policies';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';

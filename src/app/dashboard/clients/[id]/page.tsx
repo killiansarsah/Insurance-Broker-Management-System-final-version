@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { useClient } from '@/hooks/api/use-clients';
 import { mockClients, getClientDisplayName } from '@/mock/clients';
 import ClientProfilePage from './client-page';
 

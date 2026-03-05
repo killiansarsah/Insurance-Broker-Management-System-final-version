@@ -1,3 +1,4 @@
+import { useClient } from '@/hooks/api/use-clients';
 import { mockClients } from '@/mock/clients';
 import EditClientPage from './edit-client-page';
 

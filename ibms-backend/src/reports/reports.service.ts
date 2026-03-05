@@ -24,6 +24,8 @@ export class ReportsService {
       claimsByStatus,
       topCarriers,
       recentActivity,
+      policyMixData,
+      overdueNIC,
     ] = await Promise.all([
       this.prisma.client.count({ where: { tenantId, deletedAt: null } }),
       this.prisma.policy.count({ where: { tenantId, deletedAt: null } }),
@@ -82,6 +84,30 @@ export class ReportsService {
           user: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
+      // policyMix: breakdown by insuranceType
+      this.prisma.policy.groupBy({
+        by: ['insuranceType'],
+        where: { tenantId, deletedAt: null },
+        _count: { id: true },
+        _sum: { premiumAmount: true },
+        orderBy: { _count: { id: 'desc' } },
+      }),
+      // overdueNIC: open claims past processing deadline
+      this.prisma.claim.count({
+        where: {
+          tenantId,
+          deletedAt: null,
+          status: {
+            in: [
+              'INTIMATED',
+              'REGISTERED',
+              'DOCUMENTS_PENDING',
+              'UNDER_REVIEW',
+            ],
+          },
+          processingDeadline: { lt: new Date() },
+        },
+      }),
     ]);
 
     const totalPremium = totalPremiumAgg._sum.premiumAmount ?? 0;
@@ -94,12 +120,95 @@ export class ReportsService {
       claimsStatusMap[s.status] = s._count.id;
     }
 
+    // Fetch carrier names for topCarriers
     const carrierIds = topCarriers.map((c) => c.carrierId);
     const carriers = await this.prisma.carrier.findMany({
       where: { id: { in: carrierIds } },
       select: { id: true, name: true },
     });
     const carrierMap = new Map(carriers.map((c) => [c.id, c.name]));
+
+    // policyMix with percentages
+    const totalPolicyCount = policyMixData.reduce(
+      (sum, p) => sum + p._count.id,
+      0,
+    );
+    const policyMix = policyMixData.map((p) => ({
+      insuranceType: p.insuranceType ?? 'Unknown',
+      count: p._count.id,
+      premium: p._sum.premiumAmount ?? 0,
+      percentage:
+        totalPolicyCount > 0
+          ? Number(((p._count.id / totalPolicyCount) * 100).toFixed(2))
+          : 0,
+    }));
+
+    // monthlyTrend: last 12 months — computed from policies created grouped by month
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+    twelveMonthsAgo.setDate(1);
+    twelveMonthsAgo.setHours(0, 0, 0, 0);
+
+    const [monthlyPolicies, monthlyCancellations] = await Promise.all([
+      this.prisma.policy.findMany({
+        where: {
+          tenantId,
+          deletedAt: null,
+          createdAt: { gte: twelveMonthsAgo },
+        },
+        select: { createdAt: true, status: true, premiumAmount: true },
+      }),
+      this.prisma.policy.findMany({
+        where: {
+          tenantId,
+          deletedAt: null,
+          status: 'CANCELLED',
+          createdAt: { gte: twelveMonthsAgo },
+        },
+        select: { createdAt: true },
+      }),
+    ]);
+
+    const monthMap = new Map<
+      string,
+      {
+        newPolicies: number;
+        renewals: number;
+        cancellations: number;
+        premium: number;
+      }
+    >();
+
+    // Build last 12 months keys
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthMap.set(key, {
+        newPolicies: 0,
+        renewals: 0,
+        cancellations: 0,
+        premium: 0,
+      });
+    }
+
+    for (const p of monthlyPolicies) {
+      const key = `${p.createdAt.getFullYear()}-${String(p.createdAt.getMonth() + 1).padStart(2, '0')}`;
+      const entry = monthMap.get(key);
+      if (entry) {
+        entry.newPolicies++;
+        entry.premium += Number(p.premiumAmount ?? 0);
+      }
+    }
+    for (const c of monthlyCancellations) {
+      const key = `${c.createdAt.getFullYear()}-${String(c.createdAt.getMonth() + 1).padStart(2, '0')}`;
+      const entry = monthMap.get(key);
+      if (entry) entry.cancellations++;
+    }
+
+    const monthlyTrend = Array.from(monthMap.entries()).map(
+      ([month, data]) => ({ month, ...data }),
+    );
 
     return {
       overview: {
@@ -115,6 +224,8 @@ export class ReportsService {
             : 0,
         totalCommissions,
       },
+      policyMix,
+      monthlyTrend,
       claimsOverview: {
         intimated: claimsStatusMap['INTIMATED'] ?? 0,
         registered: claimsStatusMap['REGISTERED'] ?? 0,
@@ -127,6 +238,7 @@ export class ReportsService {
         closed: claimsStatusMap['CLOSED'] ?? 0,
         totalClaimAmount,
         totalSettledAmount: totalSettled,
+        overdueNIC,
       },
       topCarriers: topCarriers.map((c) => ({
         carrierId: c.carrierId,

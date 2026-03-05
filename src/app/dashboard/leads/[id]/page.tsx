@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { useLead } from '@/hooks/api/use-leads';
 import { mockLeads } from '@/mock/leads';
 import LeadDetailClient from './client-page';
 

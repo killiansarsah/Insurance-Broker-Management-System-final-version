@@ -20,7 +20,7 @@ import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 @Controller('users')
 export class UsersController {
-  constructor(private users: UsersService) {}
+  constructor(private users: UsersService) { }
 
   @Get()
   @Roles('TENANT_ADMIN', 'ADMIN')
@@ -87,5 +87,20 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     return this.users.softDelete(id, user.tenantId, user.sub);
+  }
+
+  @Patch(':id/department')
+  @Roles('TENANT_ADMIN', 'ADMIN')
+  async assignDepartment(
+    @Param('id') id: string,
+    @Body() body: { departmentId: string | null },
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    return this.users.assignDepartment(
+      id,
+      user.tenantId,
+      user.sub,
+      body.departmentId ?? null,
+    );
   }
 }

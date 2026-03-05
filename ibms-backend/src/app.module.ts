@@ -116,4 +116,4 @@ import { SettingsModule } from './settings/settings.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

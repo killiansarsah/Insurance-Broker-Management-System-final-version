@@ -23,6 +23,8 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { useLeads } from '@/hooks/api/use-leads';
+// Mock data as fallback until backend DB is seeded
 import { mockLeads, LEAD_STAGES } from '@/mock/leads';
 import { formatCurrency, formatDate, cn, getInitials } from '@/lib/utils';
 import type { Lead, LeadStatus, LeadPriority } from '@/types';

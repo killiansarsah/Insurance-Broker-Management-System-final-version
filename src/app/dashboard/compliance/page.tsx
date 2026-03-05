@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useComplianceReport } from '@/hooks/api/use-reports';
 import { mockClients } from '@/mock/clients';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
