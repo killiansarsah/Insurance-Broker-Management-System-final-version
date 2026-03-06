@@ -47,3 +47,12 @@ export function useRemoveChatParticipant() {
         onSuccess: () => qc.invalidateQueries({ queryKey: ['chat'] }),
     });
 }
+
+export function useSendChatMessage() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ roomId, data }: { roomId: string; data: Record<string, unknown> }) =>
+            apiClient.post<ChatMessage>(`/chat/rooms/${roomId}/messages`, data),
+        onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['chat', 'messages', vars.roomId] }),
+    });
+}

@@ -46,8 +46,6 @@ const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
     { label: 'Other', value: 'other' },
 ];
 
-const BROKERS = Array.from(new Set(mockPolicies.map(p => p.brokerName))).sort().map(b => ({ label: b, value: b }));
-
 function exportToCsv(policies: Policy[]) {
     const headers = ['Policy #', 'Client', 'Type', 'Coverage', 'Status', 'Insurer', 'Premium (GHS)', 'Sum Insured (GHS)', 'Inception', 'Expiry', 'Broker', 'Commission Rate', 'Commission Amt', 'Payment Status'];
     const rows = policies.map(p => [
@@ -72,7 +70,12 @@ export default function PoliciesPage() {
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type') as 'motor' | 'non-motor' | null;
     const { data: policiesData, isLoading } = usePolicies();
-    const mockPolicies = policiesData?.data || [];
+    const policies = policiesData?.data || [];
+    
+    const BROKERS = useMemo(() => 
+        Array.from(new Set(policies.map((p: Policy) => p.brokerName))).sort().map(b => ({ label: b, value: b })),
+        [policies]
+    );
 
     const [filterStatus, setFilterStatus] = useState<PolicyStatus | ''>('');
     const [filterType, setFilterType] = useState<InsuranceType | ''>('');
@@ -81,7 +84,7 @@ export default function PoliciesPage() {
     const [filterDateTo, setFilterDateTo] = useState('');
 
     // base filtering on 'type' query param
-    const baseData = useMemo(() => mockPolicies.filter((p) => {
+    const baseData = useMemo(() => policies.filter((p) => {
         if (!typeParam) return true;
         if (typeParam === 'motor') return p.insuranceType === 'motor';
         if (typeParam === 'non-motor') return p.insuranceType !== 'motor';

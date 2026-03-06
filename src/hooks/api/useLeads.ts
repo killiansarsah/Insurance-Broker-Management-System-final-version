@@ -5,14 +5,14 @@ import type { Lead } from '@/types';
 export function useLeads(params?: { stage?: string; search?: string }) {
   return useQuery({
     queryKey: ['leads', params],
-    queryFn: () => apiClient.get<{ data: Lead[]; total: number }>('/api/v1/leads', params),
+    queryFn: () => apiClient.get<{ data: Lead[]; total: number }>('/leads', params),
   });
 }
 
 export function useLead(id: string) {
   return useQuery({
     queryKey: ['leads', id],
-    queryFn: () => apiClient.get<Lead>(`/api/v1/leads/${id}`),
+    queryFn: () => apiClient.get<Lead>(`/leads/${id}`),
     enabled: !!id,
   });
 }
@@ -20,7 +20,7 @@ export function useLead(id: string) {
 export function useCreateLead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: Partial<Lead>) => apiClient.post<Lead>('/api/v1/leads', data),
+    mutationFn: (data: Partial<Lead>) => apiClient.post<Lead>('/leads', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
     },
@@ -31,7 +31,7 @@ export function useUpdateLead() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Lead> }) =>
-      apiClient.patch<Lead>(`/api/v1/leads/${id}`, data),
+      apiClient.patch<Lead>(`/leads/${id}`, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['leads', variables.id] });
@@ -42,7 +42,7 @@ export function useUpdateLead() {
 export function useConvertLead() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => apiClient.post(`/api/v1/leads/${id}/convert`),
+    mutationFn: (id: string) => apiClient.post(`/leads/${id}/convert`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       queryClient.invalidateQueries({ queryKey: ['clients'] });

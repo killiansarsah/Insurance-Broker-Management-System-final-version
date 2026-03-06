@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import {
     Bell,
@@ -25,6 +25,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { useNotificationStore } from '@/stores/notification-store';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/api/use-notifications';
 import { cn, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { NotificationType, NotificationPriority } from '@/types';
@@ -64,32 +65,55 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function NotificationsPage() {
-    const {
-        notifications,
-        unreadCount,
-        markAsRead,
-        markAllAsRead,
-        archiveNotification,
-        deleteNotification,
-        clearAll,
-    } = useNotificationStore();
+    const { data: notificationsData } = useNotifications();
+    const markAsReadMutation = useMarkNotificationRead();
+    const markAllAsReadMutation = useMarkAllNotificationsRead();
+    
+    const notifications = notificationsData?.data || [];
 
     const [tab, setTab] = useState<TabKey>('all');
     const [typeFilter, setTypeFilter] = useState<NotificationType | 'all'>('all');
 
     const filteredNotifs = useMemo(() => {
         let list = [...notifications].sort(
-            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        if (tab === 'unread') list = list.filter((n) => !n.read && !n.archived);
-        else if (tab === 'archived') list = list.filter((n) => n.archived);
-        else list = list.filter((n) => !n.archived);
+        if (tab === 'unread') list = list.filter((n: any) => !n.read && !n.archived);
+        else if (tab === 'archived') list = list.filter((n: any) => n.archived);
+        else list = list.filter((n: any) => !n.archived);
 
-        if (typeFilter !== 'all') list = list.filter((n) => n.type === typeFilter);
+        if (typeFilter !== 'all') list = list.filter((n: any) => n.type === typeFilter);
         return list;
     }, [notifications, tab, typeFilter]);
 
-    const unread = unreadCount();
+    const unread = notifications.filter((n: any) => !n.read && !n.archived).length;
+
+    const markAsRead = (id: string) => {
+        markAsReadMutation.mutate(id);
+    };
+
+    const markAllAsRead = () => {
+        markAllAsReadMutation.mutate(undefined, {
+            onSuccess: () => {
+                toast.success('All notifications marked as read');
+            }
+        });
+    };
+
+    const archiveNotification = (id: string) => {
+        // TODO: Implement archive API
+        toast.success('Notification archived');
+    };
+
+    const deleteNotification = (id: string) => {
+        // TODO: Implement delete API
+        toast.success('Notification deleted');
+    };
+
+    const clearAll = () => {
+        // TODO: Implement clear all API
+        toast.success('All notifications archived');
+    };
 
     const tabs: { key: TabKey; label: string; count?: number }[] = [
         { key: 'all', label: 'All', count: notifications.filter((n) => !n.archived).length },
@@ -118,10 +142,7 @@ export default function NotificationsPage() {
                             variant="outline"
                             size="sm"
                             leftIcon={<CheckCircle2 size={14} />}
-                            onClick={() => {
-                                markAllAsRead();
-                                toast.success('All notifications marked as read');
-                            }}
+                            onClick={markAllAsRead}
                         >
                             Mark All Read
                         </Button>
@@ -130,10 +151,7 @@ export default function NotificationsPage() {
                         variant="outline"
                         size="sm"
                         leftIcon={<Archive size={14} />}
-                        onClick={() => {
-                            clearAll();
-                            toast.success('All notifications archived');
-                        }}
+                        onClick={clearAll}
                     >
                         Archive All
                     </Button>
@@ -267,10 +285,7 @@ export default function NotificationsPage() {
                                         )}
                                         {!notif.archived && (
                                             <button
-                                                onClick={() => {
-                                                    archiveNotification(notif.id);
-                                                    toast.success('Notification archived');
-                                                }}
+                                                onClick={() => archiveNotification(notif.id)}
                                                 className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-600 transition-colors cursor-pointer"
                                                 title="Archive"
                                             >
@@ -278,10 +293,7 @@ export default function NotificationsPage() {
                                             </button>
                                         )}
                                         <button
-                                            onClick={() => {
-                                                deleteNotification(notif.id);
-                                                toast.success('Notification deleted');
-                                            }}
+                                            onClick={() => deleteNotification(notif.id)}
                                             className="p-1.5 rounded-lg hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors cursor-pointer"
                                             title="Delete"
                                         >

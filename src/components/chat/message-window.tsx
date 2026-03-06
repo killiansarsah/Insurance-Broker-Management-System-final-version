@@ -7,20 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { ChatConversation, ChatMessage } from '@/types';
-import { MOCK_MESSAGES } from '@/hooks/api';
+import { useChatMessages, useSendChatMessage } from '@/hooks/api/use-chat';
+import { toast } from 'sonner';
 
 interface MessageWindowProps {
     conversation: ChatConversation;
 }
 
 export function MessageWindow({ conversation }: MessageWindowProps) {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [inputValue, setInputValue] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        setMessages(MOCK_MESSAGES[conversation.id] || []);
-    }, [conversation.id]);
+    
+    const { data: messagesData } = useChatMessages(conversation.id);
+    const sendMessage = useSendChatMessage();
+    
+    const messages = messagesData?.data || [];
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -32,30 +33,23 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
         e.preventDefault();
         if (!inputValue.trim()) return;
 
-        const newMessage: ChatMessage = {
-            id: Date.now().toString(),
-            content: inputValue,
-            senderId: '1', // current user
-            timestamp: new Date().toISOString(),
-            status: 'sent'
-        };
-
-        setMessages([...messages, newMessage]);
-        setInputValue('');
-
-        // Mock AI response if speaking to Kojo
-        if (conversation.type === 'ai') {
-            setTimeout(() => {
-                const aiResponse: ChatMessage = {
-                    id: (Date.now() + 1).toString(),
-                    content: "I'm processing that for you. As your IBMS assistant, I recommend checking Section 12 of the NIC guidelines regarding this specific policy type.",
-                    senderId: 'kojo',
-                    timestamp: new Date().toISOString(),
-                    status: 'read'
-                };
-                setMessages(prev => [...prev, aiResponse]);
-            }, 1000);
-        }
+        sendMessage.mutate(
+            { 
+                roomId: conversation.id, 
+                data: { 
+                    content: inputValue,
+                    senderId: '1' // current user
+                } 
+            },
+            {
+                onSuccess: () => {
+                    setInputValue('');
+                },
+                onError: () => {
+                    toast.error('Failed to send message');
+                }
+            }
+        );
     };
 
     return (

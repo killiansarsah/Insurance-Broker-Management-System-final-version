@@ -5,14 +5,20 @@ import { format, isAfter, startOfToday } from 'date-fns';
 import { Calendar, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { mockEvents } from '@/hooks/api';
+import { useCalendarEvents } from '@/hooks/api/use-calendar';
 
 export function CalendarWidget() {
     const today = startOfToday();
-    const upcomingEvents = mockEvents
-        .filter(event => isAfter(event.start, today) || format(event.start, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
-        .sort((a, b) => a.start.getTime() - b.start.getTime())
-        .slice(0, 4);
+    const { data: eventsData } = useCalendarEvents();
+    
+    const upcomingEvents = React.useMemo(() => {
+        if (!eventsData?.data) return [];
+        return eventsData.data
+            .map((e: any) => ({ ...e, start: new Date(e.start), end: new Date(e.end) }))
+            .filter(event => isAfter(event.start, today) || format(event.start, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
+            .sort((a, b) => a.start.getTime() - b.start.getTime())
+            .slice(0, 4);
+    }, [eventsData, today]);
 
     return (
         <div className="bg-[var(--bg-card)] backdrop-blur-[var(--glass-blur)] rounded-[var(--radius-xl)] shadow-[var(--glass-shadow)] border-0 border-[var(--glass-border)] overflow-hidden flex flex-col h-full">

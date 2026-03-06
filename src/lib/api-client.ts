@@ -29,6 +29,11 @@ class ApiClient {
         this.client.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
+                // Suppress 404 errors in console for development
+                if (error.response?.status === 404 && process.env.NODE_ENV === 'development') {
+                    return Promise.reject(error);
+                }
+                
                 const originalRequest = error.config as RetryableRequest;
                 if (error.response?.status === 401 && !originalRequest._retry) {
                     originalRequest._retry = true;

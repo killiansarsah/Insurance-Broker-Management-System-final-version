@@ -5,7 +5,7 @@ import { apiClient } from '@/lib/api-client';
 export function useRenewals() {
   return useQuery({
     queryKey: ['renewals'],
-    queryFn: () => apiClient.get('/api/v1/renewals'),
+    queryFn: () => apiClient.get('/renewals'),
   });
 }
 
@@ -13,14 +13,14 @@ export function useRenewals() {
 export function useComplaints() {
   return useQuery({
     queryKey: ['complaints'],
-    queryFn: () => apiClient.get('/api/v1/complaints'),
+    queryFn: () => apiClient.get('/complaints'),
   });
 }
 
 export function useComplaint(id: string) {
   return useQuery({
     queryKey: ['complaints', id],
-    queryFn: () => apiClient.get(`/api/v1/complaints/${id}`),
+    queryFn: () => apiClient.get(`/complaints/${id}`),
     enabled: !!id,
   });
 }
@@ -29,7 +29,7 @@ export function useComplaint(id: string) {
 export function useDocuments() {
   return useQuery({
     queryKey: ['documents'],
-    queryFn: () => apiClient.get('/api/v1/documents'),
+    queryFn: () => apiClient.get('/documents'),
   });
 }
 
@@ -37,7 +37,7 @@ export function useDocuments() {
 export function useTasks() {
   return useQuery({
     queryKey: ['tasks'],
-    queryFn: () => apiClient.get('/api/v1/tasks'),
+    queryFn: () => apiClient.get('/tasks'),
   });
 }
 
@@ -45,7 +45,7 @@ export function useTasks() {
 export function useCalendarEvents(params?: { start?: string; end?: string }) {
   return useQuery({
     queryKey: ['calendar', params],
-    queryFn: () => apiClient.get('/api/v1/calendar/events', params),
+    queryFn: () => apiClient.get('/calendar/events', params),
   });
 }
 
@@ -53,7 +53,7 @@ export function useCalendarEvents(params?: { start?: string; end?: string }) {
 export function useNotifications() {
   return useQuery({
     queryKey: ['notifications'],
-    queryFn: () => apiClient.get('/api/v1/notifications'),
+    queryFn: () => apiClient.get('/notifications'),
   });
 }
 
@@ -61,7 +61,7 @@ export function useNotifications() {
 export function useComplianceSummary() {
   return useQuery({
     queryKey: ['compliance', 'summary'],
-    queryFn: () => apiClient.get('/api/v1/compliance/summary'),
+    queryFn: () => apiClient.get('/compliance/summary'),
   });
 }
 
@@ -69,7 +69,7 @@ export function useComplianceSummary() {
 export function useDepartments() {
   return useQuery({
     queryKey: ['departments'],
-    queryFn: () => apiClient.get('/api/v1/departments'),
+    queryFn: () => apiClient.get('/departments'),
   });
 }
 
@@ -77,6 +77,6 @@ export function useDepartments() {
 export function useApprovals() {
   return useQuery({
     queryKey: ['approvals'],
-    queryFn: () => apiClient.get('/api/v1/approvals'),
+    queryFn: () => apiClient.get('/approvals'),
   });
 }

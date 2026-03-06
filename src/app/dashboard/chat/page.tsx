@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChatList } from '@/components/chat/chat-list';
 import { MessageWindow } from '@/components/chat/message-window';
-import { MOCK_CHATS } from '@/hooks/api';
+import { useChatRooms } from '@/hooks/api/use-chat';
 import { Card } from '@/components/ui/card';
 import { MessageSquareOff, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -12,16 +12,19 @@ export default function ChatPage() {
     const searchParams = useSearchParams();
     const linkedId = searchParams.get('linkedId');
     const linkedType = searchParams.get('linkedType');
+    
+    const { data: roomsData } = useChatRooms();
+    const rooms = roomsData?.data || [];
 
     // Find a chat that matches the linked resource
-    const initialChat = MOCK_CHATS.find((c) =>
+    const initialChat = rooms.find((c: any) =>
         c.linkedResourceId?.toLowerCase() === linkedId?.toLowerCase() &&
         c.linkedResourceType === linkedType
-    ) || MOCK_CHATS[0];
+    ) || rooms[0];
 
-    const [activeChatId, setActiveChatId] = useState<string>(initialChat.id);
+    const [activeChatId, setActiveChatId] = useState<string>(initialChat?.id || '');
 
-    const activeChat = MOCK_CHATS.find((c) => c.id === activeChatId) || MOCK_CHATS[0];
+    const activeChat = rooms.find((c: any) => c.id === activeChatId) || rooms[0];
 
     return (
         <div className="flex flex-col h-[calc(100vh-140px)] animate-fade-in">

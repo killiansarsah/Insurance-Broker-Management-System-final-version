@@ -4,8 +4,13 @@ export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             staleTime: 5 * 60 * 1000,
-            retry: 1,
+            retry: false,
             refetchOnWindowFocus: false,
         },
+    },
+    logger: {
+        log: () => {},
+        warn: () => {},
+        error: () => {},
     },
 });

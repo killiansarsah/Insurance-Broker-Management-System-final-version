@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { users as initialUsers } from '@/hooks/api';
+import { useUsers } from '@/hooks/api/use-users';
 import { User } from '@/types';
 import { TeamFilters } from '@/components/features/team/team-filters';
 import { PermissionsMatrix } from '@/components/features/team/permissions-matrix';
@@ -19,7 +19,9 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 export function SettingsUsers() {
-    const [users, setUsers] = useState<User[]>(initialUsers);
+    const { data: usersData } = useUsers();
+    const apiUsers = usersData?.data || [];
+    
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string | null>(null);
     const [branchFilter, setBranchFilter] = useState<string | null>(null);
@@ -27,29 +29,28 @@ export function SettingsUsers() {
     const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
     const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
 
-    const stats = [
-        { label: 'Total Staff', value: users.length, icon: 'group', color: 'text-primary' },
-        { label: 'Active Brokers', value: users.filter(u => u.role.includes('broker')).length, icon: 'badge', color: 'text-blue-600' },
-        { label: 'Active Proxies', value: users.filter(u => u.delegatedTo).length, icon: 'shield_person', color: 'text-emerald-600' },
+    const stats = useMemo(() => [
+        { label: 'Total Staff', value: apiUsers.length, icon: 'group', color: 'text-primary' },
+        { label: 'Active Brokers', value: apiUsers.filter((u: User) => u.role.includes('broker')).length, icon: 'badge', color: 'text-blue-600' },
+        { label: 'Active Proxies', value: apiUsers.filter((u: User) => u.delegatedTo).length, icon: 'shield_person', color: 'text-emerald-600' },
         { label: 'Branches', value: 2, icon: 'corporate_fare', color: 'text-amber-600' },
-    ];
+    ], [apiUsers]);
 
-    const filteredUsers = users.filter(u => {
+    const filteredUsers = useMemo(() => apiUsers.filter((u: User) => {
         const matchesSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRole = !roleFilter || u.role === roleFilter;
         const matchesBranch = !branchFilter || u.branchId === branchFilter;
         return matchesSearch && matchesRole && matchesBranch;
-    });
+    }), [apiUsers, searchQuery, roleFilter, branchFilter]);
 
     const handleUpdateDelegation = (staffId: string, backupId: string | null) => {
-        setUsers(prev => prev.map(u => {
-            if (u.id === staffId) return { ...u, delegatedTo: backupId || undefined };
-            return u;
-        }));
+        // TODO: Call API to update delegation
+        console.log('Update delegation:', staffId, backupId);
     };
 
     const handleAddStaff = (newStaff: User) => {
-        setUsers(prev => [newStaff, ...prev]);
+        // TODO: Call API to add staff
+        console.log('Add staff:', newStaff);
     };
 
     return (
@@ -228,7 +229,7 @@ export function SettingsUsers() {
                 isOpen={isDelegationModalOpen}
                 onClose={() => setIsDelegationModalOpen(false)}
                 staffMember={selectedStaff}
-                allStaff={users}
+                allStaff={apiUsers}
                 onSave={handleUpdateDelegation}
             />
             <AddStaffModal

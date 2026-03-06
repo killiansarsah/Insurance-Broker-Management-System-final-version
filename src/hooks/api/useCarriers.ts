@@ -4,14 +4,14 @@ import { apiClient } from '@/lib/api-client';
 export function useCarriers() {
   return useQuery({
     queryKey: ['carriers'],
-    queryFn: () => apiClient.get('/api/v1/carriers'),
+    queryFn: () => apiClient.get('/carriers'),
   });
 }
 
 export function useCarrier(id: string) {
   return useQuery({
     queryKey: ['carriers', id],
-    queryFn: () => apiClient.get(`/api/v1/carriers/${id}`),
+    queryFn: () => apiClient.get(`/carriers/${id}`),
     enabled: !!id,
   });
 }
@@ -19,7 +19,7 @@ export function useCarrier(id: string) {
 export function useCarrierProducts(carrierId: string) {
   return useQuery({
     queryKey: ['carriers', carrierId, 'products'],
-    queryFn: () => apiClient.get(`/api/v1/carriers/${carrierId}/products`),
+    queryFn: () => apiClient.get(`/carriers/${carrierId}/products`),
     enabled: !!carrierId,
   });
 }
@@ -27,7 +27,7 @@ export function useCarrierProducts(carrierId: string) {
 export function useCreateCarrier() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: any) => apiClient.post('/api/v1/carriers', data),
+    mutationFn: (data: any) => apiClient.post('/carriers', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carriers'] });
     },

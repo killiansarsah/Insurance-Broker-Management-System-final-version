@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { toast } from 'sonner';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import {
@@ -17,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { users } from '@/hooks/api';
+import { useUsers } from '@/hooks/api/use-users';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { UserRole, User } from '@/types';
@@ -58,22 +59,100 @@ export default function UsersPage() {
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+    
+    const { data: usersData } = useUsers();
+    const users = usersData?.data || [];
 
     const filteredUsers = roleFilter === 'all'
         ? users
-        : users.filter(u => u.role === roleFilter);
+        : users.filter((u: any) => u.role === roleFilter);
 
     const handleAction = (action: string, userName: string) => {
         setOpenMenuId(null);
-        // Simulate action
-        import('sonner').then(({ toast }) => {
-            if (action === 'password') {
-                toast.success('Password Reset Sent', { description: `Reset link sent to ${userName}` });
-            } else if (action === 'deactivate') {
-                toast.warning('User Deactivated', { description: `${userName} is now inactive.` });
-            }
-        });
+        if (action === 'password') {
+            toast.success('Password Reset Sent', { description: `Reset link sent to ${userName}` });
+        } else if (action === 'deactivate') {
+            toast.warning('User Deactivated', { description: `${userName} is now inactive.` });
+        }
     };
+
+    const columns = useMemo(() => [
+        {
+            key: 'firstName',
+            label: 'User',
+            sortable: true,
+            render: (row: any) => (
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-surface-500 font-medium text-xs overflow-hidden">
+                        {row.avatarUrl ? (
+                            <Image src={row.avatarUrl} alt="" width={32} height={32} className="w-full h-full object-cover" />
+                        ) : (
+                            <span>{row.firstName[0]}{row.lastName[0]}</span>
+                        )}
+                    </div>
+                    <div>
+                        <p className="font-medium text-surface-900">{row.firstName} {row.lastName}</p>
+                        <p className="text-xs text-surface-500">{row.email}</p>
+                    </div>
+                </div>
+            )
+        },
+        {
+            key: 'role',
+            label: 'Role',
+            sortable: true,
+            render: (row: any) => <Badge variant={ROLE_COLORS[row.role]}>{ROLE_LABELS[row.role]}</Badge>
+        },
+        { key: 'branchId', label: 'Branch', sortable: true },
+        {
+            key: 'isActive',
+            label: 'Status',
+            sortable: true,
+            render: (row: any) => <StatusBadge status={row.isActive ? 'active' : 'inactive'} />
+        },
+        { key: 'lastLogin', label: 'Last Login', sortable: true, render: (row: any) => row.lastLogin ? formatDate(String(row.lastLogin)) : 'Never' },
+        {
+            key: 'id',
+            label: 'Actions',
+            render: (row: any) => (
+                <div className="relative flex justify-end">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(openMenuId === row.id ? null : row.id);
+                        }}
+                        className="p-1 text-surface-400 hover:text-primary-600 transition-colors rounded hover:bg-surface-100 cursor-pointer"
+                    >
+                        <MoreVertical size={16} />
+                    </button>
+
+                    {openMenuId === row.id && (
+                        <div className="absolute right-0 top-full mt-1 w-48 bg-background rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] border border-surface-200 z-20 animate-scale-in origin-top-right overflow-hidden">
+                            <button
+                                className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
+                                onClick={(e) => { e.stopPropagation(); handleAction('edit', row.firstName); }}
+                            >
+                                <UserIcon size={14} /> Edit Profile
+                            </button>
+                            <button
+                                className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
+                                onClick={(e) => { e.stopPropagation(); handleAction('password', row.firstName); }}
+                            >
+                                <Lock size={14} /> Reset Password
+                            </button>
+                            <div className="h-px bg-surface-100 my-1" />
+                            <button
+                                className="w-full text-left px-4 py-2 text-sm text-danger-600 hover:bg-danger-50 transition-colors flex items-center gap-2 font-medium"
+                                onClick={(e) => { e.stopPropagation(); handleAction('deactivate', row.firstName); }}
+                            >
+                                <Unlock size={14} /> Deactivate User
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )
+        }
+    ], [openMenuId]);
 
     return (
         <div className="space-y-6 animate-fade-in" onClick={() => setOpenMenuId(null)}>
@@ -98,85 +177,9 @@ export default function UsersPage() {
             />
 
             {/* List */}
-            <DataTable<User>
+            <DataTable<any>
                 data={filteredUsers}
-                columns={[
-                    {
-                        key: 'firstName',
-                        label: 'User',
-                        sortable: true,
-                        render: (row) => (
-                            <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-surface-500 font-medium text-xs overflow-hidden">
-                                    {row.avatarUrl ? (
-                                        <Image src={row.avatarUrl} alt="" width={32} height={32} className="w-full h-full object-cover" />
-                                    ) : (
-                                        <span>{row.firstName[0]}{row.lastName[0]}</span>
-                                    )}
-                                </div>
-                                <div>
-                                    <p className="font-medium text-surface-900">{row.firstName} {row.lastName}</p>
-                                    <p className="text-xs text-surface-500">{row.email}</p>
-                                </div>
-                            </div>
-                        )
-                    },
-                    {
-                        key: 'role',
-                        label: 'Role',
-                        sortable: true,
-                        render: (row) => <Badge variant={ROLE_COLORS[row.role]}>{ROLE_LABELS[row.role]}</Badge>
-                    },
-                    { key: 'branchId', label: 'Branch', sortable: true },
-                    {
-                        key: 'isActive',
-                        label: 'Status',
-                        sortable: true,
-                        render: (row) => <StatusBadge status={row.isActive ? 'active' : 'inactive'} />
-                    },
-                    { key: 'lastLogin', label: 'Last Login', sortable: true, render: (row) => row.lastLogin ? formatDate(String(row.lastLogin)) : 'Never' },
-                    {
-                        key: 'id',
-                        label: 'Actions',
-                        render: (row) => (
-                            <div className="relative flex justify-end">
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setOpenMenuId(openMenuId === row.id ? null : row.id);
-                                    }}
-                                    className="p-1 text-surface-400 hover:text-primary-600 transition-colors rounded hover:bg-surface-100 cursor-pointer"
-                                >
-                                    <MoreVertical size={16} />
-                                </button>
-
-                                {openMenuId === row.id && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 bg-background rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] border border-surface-200 z-20 animate-scale-in origin-top-right overflow-hidden">
-                                        <button
-                                            className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
-                                            onClick={(e) => { e.stopPropagation(); handleAction('edit', row.firstName); }}
-                                        >
-                                            <UserIcon size={14} /> Edit Profile
-                                        </button>
-                                        <button
-                                            className="w-full text-left px-4 py-2 text-sm text-surface-700 hover:bg-surface-50 transition-colors flex items-center gap-2"
-                                            onClick={(e) => { e.stopPropagation(); handleAction('password', row.firstName); }}
-                                        >
-                                            <Lock size={14} /> Reset Password
-                                        </button>
-                                        <div className="h-px bg-surface-100 my-1" />
-                                        <button
-                                            className="w-full text-left px-4 py-2 text-sm text-danger-600 hover:bg-danger-50 transition-colors flex items-center gap-2 font-medium"
-                                            onClick={(e) => { e.stopPropagation(); handleAction('deactivate', row.firstName); }}
-                                        >
-                                            <Unlock size={14} /> Deactivate User
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    }
-                ]}
+                columns={columns}
                 searchKeys={['firstName', 'lastName', 'email', 'role']}
                 emptyMessage="No team members found."
                 headerActions={
