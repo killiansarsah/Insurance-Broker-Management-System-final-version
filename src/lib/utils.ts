@@ -81,3 +81,8 @@ export function generateId(): string {
 export function sleep(ms: number): Promise<void> {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export function getClientDisplayName(client: { type: string; companyName?: string; firstName?: string; lastName?: string }): string {
+    if (client.type === 'corporate') return client.companyName || '';
+    return `${client.firstName || ''} ${client.lastName || ''}`.trim();
+}

@@ -23,9 +23,8 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { useLeads } from '@/hooks/api/use-leads';
-// Mock data as fallback until backend DB is seeded
-import { mockLeads, LEAD_STAGES } from '@/mock/leads';
+import { useLeads } from '@/hooks/api';
+import { LEAD_STAGES } from '@/hooks/api';
 import { formatCurrency, formatDate, cn, getInitials } from '@/lib/utils';
 import type { Lead, LeadStatus, LeadPriority } from '@/types';
 import Link from 'next/link';
@@ -36,7 +35,15 @@ const COLUMN_IDS = LEAD_STAGES.map(s => s.key);
 export default function LeadsPage() {
     const router = useRouter();
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-    const [leads, setLeads] = useState<Lead[]>(mockLeads);
+    const { data: leadsData, isLoading } = useLeads();
+    const mockLeads = leadsData?.data || [];
+    const [leads, setLeads] = useState<Lead[]>([]);
+    
+    useEffect(() => {
+        if (mockLeads.length > 0) {
+            setLeads(mockLeads);
+        }
+    }, [mockLeads]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterPriority, setFilterPriority] = useState<LeadPriority | ''>('');
     const [searchWidth, setSearchWidth] = useState(160);
@@ -84,6 +91,17 @@ export default function LeadsPage() {
             setLeads(newLeads);
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading leads...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-140px)] flex flex-col space-y-6 animate-fade-in-up">

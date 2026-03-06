@@ -40,7 +40,7 @@ import {
     type Renewal,
     type RenewalWorkflowStatus,
     type UrgencyLevel,
-} from '@/mock/renewals';
+} from '@/hooks/api';
 
 // ─── Pipeline Tab Types ───
 type PipelineTab = 'all' | 'overdue' | '0-30' | '31-60' | '61-90' | 'renewed' | 'lost';
@@ -48,6 +48,18 @@ type PipelineTab = 'all' | 'overdue' | '0-30' | '31-60' | '61-90' | 'renewed' | 
 // ─── Urgency Badge Component ───
 function UrgencyBadge({ level }: { level: UrgencyLevel }) {
     const config = URGENCY_CONFIG[level];
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-bold rounded-full border ${config.bg} ${config.color} ${config.border}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />

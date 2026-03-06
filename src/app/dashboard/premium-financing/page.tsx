@@ -42,7 +42,7 @@ import {
     FINANCIERS,
     type PFApplication,
     type PFStatus,
-} from '@/mock/premium-financing';
+} from '@/hooks/api';
 
 import { motion, AnimatePresence } from 'framer-motion';
 

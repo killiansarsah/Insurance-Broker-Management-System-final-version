@@ -7,9 +7,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { useClaims } from '@/hooks/api/use-claims';
-// Mock data as fallback until backend DB is seeded
-import { claims } from '@/mock/claims';
+import { useClaims } from '@/hooks/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 
@@ -18,6 +16,8 @@ export default function ClaimsPage() {
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type') as 'motor' | 'non-motor' | null;
     const [statusFilter, setStatusFilter] = useState<string>('all');
+    const { data: claimsData, isLoading } = useClaims();
+    const claims = claimsData?.data || [];
 
     // 1. Base Filter (Motor vs Non-Motor)
     const baseData = useMemo(() => {
@@ -66,6 +66,17 @@ export default function ClaimsPage() {
         if (typeParam === 'non-motor') return 'Non-Motor Claims';
         return 'All Claims';
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading claims...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">

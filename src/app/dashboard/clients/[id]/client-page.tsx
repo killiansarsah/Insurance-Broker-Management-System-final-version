@@ -33,12 +33,12 @@ import {
     User,
     ChevronDown,
 } from 'lucide-react';
-import { getClientById, getClientDisplayName } from '@/mock/clients';
-import { getPoliciesByClientId } from '@/mock/policies';
-import { invoices, receipts } from '@/mock/finance';
-import { commissions } from '@/mock/commissions';
-import { claims } from '@/mock/claims';
-import { MOCK_DOCUMENTS } from '@/mock/documents-complaints';
+import { getClientById, getClientDisplayName } from '@/hooks/api';
+import { getPoliciesByClientId } from '@/hooks/api';
+import { invoices, receipts } from '@/hooks/api';
+import { commissions } from '@/hooks/api';
+import { claims } from '@/hooks/api';
+import { MOCK_DOCUMENTS } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { StatusBadge } from '@/components/data-display/status-badge';

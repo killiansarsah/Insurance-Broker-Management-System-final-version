@@ -5,7 +5,7 @@ import { format, isAfter, startOfToday } from 'date-fns';
 import { Calendar, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { mockEvents } from '@/mock/calendar-events';
+import { mockEvents } from '@/hooks/api';
 
 export function CalendarWidget() {
     const today = startOfToday();

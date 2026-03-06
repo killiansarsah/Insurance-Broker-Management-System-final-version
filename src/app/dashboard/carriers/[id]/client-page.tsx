@@ -5,8 +5,8 @@ import { ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { type Carrier } from '@/mock/carriers';
-import { type CarrierProduct } from '@/mock/carrier-products';
+import { type Carrier } from '@/hooks/api';
+import { type CarrierProduct } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';

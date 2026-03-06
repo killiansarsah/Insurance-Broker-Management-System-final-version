@@ -27,28 +27,87 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { useClients } from '@/hooks/api/use-clients';
-// Mock data as fallback until backend DB is seeded
-import { mockClients, getClientDisplayName } from '@/mock/clients';
-import { formatCurrency, formatPhone, formatDate, cn } from '@/lib/utils';
+import { useClients } from '@/hooks/api';
+import { formatCurrency, formatPhone, formatDate, cn, getClientDisplayName } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { Client, ClientStatus, KycStatus, AmlRiskLevel, ClientType } from '@/types';
 import Link from 'next/link';
 
-const totalClients = mockClients.length;
-const kycVerified = mockClients.filter((c) => c.kycStatus === 'verified').length;
-const highRisk = mockClients.filter((c) => c.amlRiskLevel === 'high' || c.amlRiskLevel === 'critical').length;
-const newThisMonth = mockClients.filter((c) => {
-    const d = new Date(c.createdAt);
-    const now = new Date();
-    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-}).length;
+export default function ClientsPage() {
+    const router = useRouter();
+    const { data: clientsData, isLoading } = useClients();
+    const clients = clientsData?.data || [];
+    
+    const totalClients = clients.length;
+    const kycVerified = clients.filter((c) => c.kycStatus === 'verified').length;
+    const highRisk = clients.filter((c) => c.amlRiskLevel === 'high' || c.amlRiskLevel === 'critical').length;
+    const newThisMonth = clients.filter((c) => {
+        const d = new Date(c.createdAt);
+        const now = new Date();
+        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+    const uniqueBrokers = [...new Set(clients.map(c => c.assignedBrokerName).filter(Boolean))] as string[];
+    const [showFilters, setShowFilters] = useState(false);
+    const [filterStatus, setFilterStatus] = useState<ClientStatus | ''>('');
+    const [filterKyc, setFilterKyc] = useState<KycStatus | ''>('');
+    const [filterRisk, setFilterRisk] = useState<AmlRiskLevel | ''>('');
+    const [filterType, setFilterType] = useState<ClientType | ''>('');
+    const [filterBroker, setFilterBroker] = useState('');
+    const [filterDateFrom, setFilterDateFrom] = useState('');
+    const [filterDateTo, setFilterDateTo] = useState('');
 
-const kpis = [
+    const filteredClients = clients.filter((c) => {
+        if (filterStatus && c.status !== filterStatus) return false;
+        if (filterKyc && c.kycStatus !== filterKyc) return false;
+        if (filterRisk && c.amlRiskLevel !== filterRisk) return false;
+        if (filterType && c.type !== filterType) return false;
+        if (filterBroker && c.assignedBrokerName !== filterBroker) return false;
+        if (filterDateFrom) {
+            const from = new Date(filterDateFrom);
+            if (new Date(c.createdAt) < from) return false;
+        }
+        if (filterDateTo) {
+            const to = new Date(filterDateTo);
+            to.setHours(23, 59, 59);
+            if (new Date(c.createdAt) > to) return false;
+        }
+        return true;
+    });
+
+    const activeFilterCount = [filterStatus, filterKyc, filterRisk, filterType, filterBroker, filterDateFrom, filterDateTo].filter(Boolean).length;
+
+    function handleExport() {
+        const headers = ['Client #', 'Name', 'Type', 'Status', 'KYC', 'Risk', 'Phone', 'Email', 'Active Policies', 'Total Premium', 'Broker', 'Created'];
+        const rows = filteredClients.map(c => [
+            c.clientNumber,
+            getClientDisplayName(c),
+            c.type,
+            c.status,
+            c.kycStatus,
+            c.amlRiskLevel,
+            c.phone,
+            c.email || '',
+            String(c.activePolicies),
+            String(c.totalPremium),
+            c.assignedBrokerName || '',
+            formatDate(c.createdAt),
+        ]);
+        const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `clients-export-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success(`Exported ${filteredClients.length} clients to CSV`);
+    }
+
+    const kpis = totalClients > 0 ? [
     {
         label: 'Total Clients',
         value: totalClients,
-        description: `${mockClients.filter(c => c.status === 'active').length} active`,
+        description: `${clients.filter(c => c.status === 'active').length} active`,
         icon: <Users size={22} strokeWidth={1.8} />,
         trend: '+12%',
         trendUp: true,
@@ -97,68 +156,7 @@ const kpis = [
         barColor: 'bg-gradient-to-r from-accent-400 to-accent-600',
         barPercent: Math.round((newThisMonth / totalClients) * 100) || 5,
     },
-];
-
-// Unique brokers for filter
-const uniqueBrokers = [...new Set(mockClients.map(c => c.assignedBrokerName).filter(Boolean))] as string[];
-
-export default function ClientsPage() {
-    const router = useRouter();
-    const [showFilters, setShowFilters] = useState(false);
-    const [filterStatus, setFilterStatus] = useState<ClientStatus | ''>('');
-    const [filterKyc, setFilterKyc] = useState<KycStatus | ''>('');
-    const [filterRisk, setFilterRisk] = useState<AmlRiskLevel | ''>('');
-    const [filterType, setFilterType] = useState<ClientType | ''>('');
-    const [filterBroker, setFilterBroker] = useState('');
-    const [filterDateFrom, setFilterDateFrom] = useState('');
-    const [filterDateTo, setFilterDateTo] = useState('');
-
-    const filteredClients = mockClients.filter((c) => {
-        if (filterStatus && c.status !== filterStatus) return false;
-        if (filterKyc && c.kycStatus !== filterKyc) return false;
-        if (filterRisk && c.amlRiskLevel !== filterRisk) return false;
-        if (filterType && c.type !== filterType) return false;
-        if (filterBroker && c.assignedBrokerName !== filterBroker) return false;
-        if (filterDateFrom) {
-            const from = new Date(filterDateFrom);
-            if (new Date(c.createdAt) < from) return false;
-        }
-        if (filterDateTo) {
-            const to = new Date(filterDateTo);
-            to.setHours(23, 59, 59);
-            if (new Date(c.createdAt) > to) return false;
-        }
-        return true;
-    });
-
-    const activeFilterCount = [filterStatus, filterKyc, filterRisk, filterType, filterBroker, filterDateFrom, filterDateTo].filter(Boolean).length;
-
-    function handleExport() {
-        const headers = ['Client #', 'Name', 'Type', 'Status', 'KYC', 'Risk', 'Phone', 'Email', 'Active Policies', 'Total Premium', 'Broker', 'Created'];
-        const rows = filteredClients.map(c => [
-            c.clientNumber,
-            getClientDisplayName(c),
-            c.type,
-            c.status,
-            c.kycStatus,
-            c.amlRiskLevel,
-            c.phone,
-            c.email || '',
-            String(c.activePolicies),
-            String(c.totalPremium),
-            c.assignedBrokerName || '',
-            formatDate(c.createdAt),
-        ]);
-        const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `clients-export-${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success(`Exported ${filteredClients.length} clients to CSV`);
-    }
+    ] : [];
 
     const columns = [
         {
@@ -337,6 +335,17 @@ export default function ClientsPage() {
             ),
         },
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading clients...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-fade-in">

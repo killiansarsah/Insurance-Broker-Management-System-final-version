@@ -18,7 +18,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDocuments } from '@/hooks/api/use-documents';
-import { MOCK_DOCUMENTS } from '@/mock/documents-complaints';
+import { MOCK_DOCUMENTS } from '@/hooks/api';
 import { formatDate, cn } from '@/lib/utils';
 
 const UploadDocumentModal = dynamic(
@@ -51,6 +51,18 @@ export default function DocumentsPage() {
         if (mimeType.includes('zip')) return <Archive className="text-accent-500" size={24} />;
         return <FileText className="text-surface-400" size={24} />;
     };
+
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">

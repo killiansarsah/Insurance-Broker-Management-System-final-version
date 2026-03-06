@@ -14,8 +14,8 @@ import {
     AlignLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { mockClients } from '@/mock/clients';
-import { mockPolicies } from '@/mock/policies';
+import { mockClients } from '@/hooks/api';
+import { mockPolicies } from '@/hooks/api';
 
 interface NewInvoiceModalProps {
     isOpen: boolean;

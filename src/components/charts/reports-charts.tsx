@@ -16,7 +16,7 @@ import {
     Line
 } from 'recharts';
 import { Card, CardHeader } from '@/components/ui/card';
-import { monthlyData, portfolioMix } from '@/mock/reports';
+import { monthlyData, portfolioMix } from '@/hooks/api';
 
 export function ReportsCharts() {
     return (

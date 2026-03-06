@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { useLead } from '@/hooks/api/use-leads';
-import { mockLeads } from '@/mock/leads';
+import { mockLeads } from '@/hooks/api';
 import LeadDetailClient from './client-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ChatList } from '@/components/chat/chat-list';
 import { MessageWindow } from '@/components/chat/message-window';
-import { MOCK_CHATS } from '@/mock/chat';
+import { MOCK_CHATS } from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { MessageSquareOff, ArrowLeft } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';

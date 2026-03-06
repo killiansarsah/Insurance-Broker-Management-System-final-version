@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type { Notification, NotificationType } from '@/types';
-import { MOCK_NOTIFICATIONS } from '@/mock/notifications';
 
 interface NotificationStore {
     notifications: Notification[];
@@ -20,7 +19,7 @@ interface NotificationStore {
 }
 
 export const useNotificationStore = create<NotificationStore>((set, get) => ({
-    notifications: MOCK_NOTIFICATIONS,
+    notifications: [],
 
     unreadCount: () => get().notifications.filter((n) => !n.read && !n.archived).length,
 

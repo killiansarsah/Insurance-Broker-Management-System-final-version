@@ -5,11 +5,11 @@ import { Search, Shield, CheckCircle, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCarriers } from '@/hooks/api/use-carriers';
-import { carriers } from '@/mock/carriers';
+import { carriers } from '@/hooks/api';
 import {
     carrierProducts, CATEGORY_LABELS, CATEGORY_COLORS,
     getAllCategories, getCompulsoryProducts, type ProductCategory
-} from '@/mock/carrier-products';
+} from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
@@ -29,7 +29,19 @@ export default function ProductsPage() {
         if (search) {
             const q = search.toLowerCase();
             const c = carriers.find(c => c.id === p.carrierId);
-            return (
+            
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
+    return (
                 p.name.toLowerCase().includes(q) ||
                 p.description.toLowerCase().includes(q) ||
                 c?.shortName.toLowerCase().includes(q)

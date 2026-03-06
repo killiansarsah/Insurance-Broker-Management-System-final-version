@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { useClient } from '@/hooks/api/use-clients';
-import { mockClients, getClientDisplayName } from '@/mock/clients';
+import { mockClients, getClientDisplayName } from '@/hooks/api';
 import ClientProfilePage from './client-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

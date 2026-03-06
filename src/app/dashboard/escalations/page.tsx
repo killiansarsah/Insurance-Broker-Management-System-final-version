@@ -20,8 +20,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useClaims } from '@/hooks/api/use-claims';
 import { useComplaints } from '@/hooks/api/use-complaints';
-import { claims } from '@/mock/claims';
-import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
+import { claims } from '@/hooks/api';
+import { MOCK_COMPLAINTS } from '@/hooks/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 

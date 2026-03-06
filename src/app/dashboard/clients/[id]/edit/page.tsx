@@ -1,5 +1,5 @@
 import { useClient } from '@/hooks/api/use-clients';
-import { mockClients } from '@/mock/clients';
+import { mockClients } from '@/hooks/api';
 import EditClientPage from './edit-client-page';
 
 export async function generateStaticParams() {

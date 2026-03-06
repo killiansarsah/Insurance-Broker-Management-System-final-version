@@ -1,4 +1,10 @@
-import { PrismaClient, TenantPlan, UserRole, CarrierType, InsuranceType } from '@prisma/client';
+import {
+  PrismaClient,
+  TenantPlan,
+  UserRole,
+  CarrierType,
+  InsuranceType,
+} from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -44,9 +50,17 @@ async function main(): Promise<void> {
 
   // ─── BRANCHES ─────────────────────────────────
   const branchData = [
-    { name: 'Accra Main Branch', code: 'BR-ACC-01', address: 'Ring Road East, Osu, Accra' },
+    {
+      name: 'Accra Main Branch',
+      code: 'BR-ACC-01',
+      address: 'Ring Road East, Osu, Accra',
+    },
     { name: 'Kumasi Branch', code: 'BR-KUM-01', address: 'Adum, Kumasi' },
-    { name: 'Takoradi Branch', code: 'BR-TAK-01', address: 'Market Circle, Takoradi' },
+    {
+      name: 'Takoradi Branch',
+      code: 'BR-TAK-01',
+      address: 'Market Circle, Takoradi',
+    },
   ];
 
   for (const tenant of [sicTenant, enterpriseTenant]) {
@@ -97,7 +111,10 @@ async function main(): Promise<void> {
 
   await prisma.user.upsert({
     where: {
-      tenantId_email: { tenantId: enterpriseTenant.id, email: 'admin@enterprise.com' },
+      tenantId_email: {
+        tenantId: enterpriseTenant.id,
+        email: 'admin@enterprise.com',
+      },
     },
     update: {},
     create: {
@@ -113,7 +130,9 @@ async function main(): Promise<void> {
     },
   });
 
-  console.log('✅ Admin users: admin@sic.com, admin@enterprise.com (password: Admin@123)');
+  console.log(
+    '✅ Admin users: admin@sic.com, admin@enterprise.com (password: Admin@123)',
+  );
 
   // ─── CARRIERS ─────────────────────────────────
   const carrierData: Array<{
@@ -179,14 +198,16 @@ async function main(): Promise<void> {
       codeSuffix: 'MOT-COMP',
       insuranceType: InsuranceType.MOTOR,
       commissionRate: 15.0,
-      description: 'Full comprehensive motor vehicle cover including third party, fire and theft',
+      description:
+        'Full comprehensive motor vehicle cover including third party, fire and theft',
     },
     {
       name: 'Fire & Allied Perils',
       codeSuffix: 'FIRE-AP',
       insuranceType: InsuranceType.FIRE,
       commissionRate: 20.0,
-      description: 'Protection against fire, lightning, explosion and allied perils',
+      description:
+        'Protection against fire, lightning, explosion and allied perils',
     },
     {
       name: 'Marine Cargo Insurance',

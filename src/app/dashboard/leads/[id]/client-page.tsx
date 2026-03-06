@@ -14,7 +14,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { getLeadById, LEAD_STAGES } from '@/mock/leads';
+import { getLeadById, LEAD_STAGES } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';

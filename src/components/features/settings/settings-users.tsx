@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { users as initialUsers } from '@/mock/users';
+import { users as initialUsers } from '@/hooks/api';
 import { User } from '@/types';
 import { TeamFilters } from '@/components/features/team/team-filters';
 import { PermissionsMatrix } from '@/components/features/team/permissions-matrix';

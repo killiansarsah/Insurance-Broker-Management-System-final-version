@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { useClaim } from '@/hooks/api/use-claims';
-import { claims } from '@/mock/claims';
+import { claims } from '@/hooks/api';
 import ClaimDetailClient from './client-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

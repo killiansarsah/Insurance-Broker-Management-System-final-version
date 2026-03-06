@@ -19,7 +19,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { mockPolicies } from '@/mock/policies';
+import { mockPolicies } from '@/hooks/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -178,6 +178,18 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 
 function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApprove: (id: string) => void; onReject: (id: string) => void }) {
     const router = useRouter();
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <Card padding="none" className={cn('overflow-hidden transition-shadow hover:shadow-md', item.isOverdue && item.status === 'pending' && 'border-danger-200')}>
             <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-4">

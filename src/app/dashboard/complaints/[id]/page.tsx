@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { useComplaint } from '@/hooks/api/use-complaints';
-import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
+import { MOCK_COMPLAINTS } from '@/hooks/api';
 import ComplaintDetailPage from './client-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

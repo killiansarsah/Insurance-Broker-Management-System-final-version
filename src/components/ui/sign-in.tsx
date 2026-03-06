@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff, Shield, Mail, Lock, Info, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Shield, Mail, Lock, Info, Loader2, Building2 } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────
    Insurance-industry stats for the left-side collage
@@ -25,8 +25,8 @@ const IMAGES = [
    Props — the parent is responsible for actual auth logic
    ────────────────────────────────────────────────────────── */
 export interface AnimatedSignInProps {
-    /** Called with email & password when the form submits */
-    onSubmit: (email: string, password: string) => void | Promise<void>;
+    /** Called with email, password, and tenant slug when the form submits */
+    onSubmit: (email: string, password: string, tenantSlug: string) => void | Promise<void>;
     /** External loading state (e.g. from auth store) */
     isLoading?: boolean;
     /** External error message to display */
@@ -41,6 +41,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [tenantSlug, setTenantSlug] = useState('sic-insurance');
     const [mounted, setMounted] = useState(false);
     const [formVisible, setFormVisible] = useState(false);
 
@@ -52,7 +53,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSubmit(email, password);
+        await onSubmit(email, password, tenantSlug);
     };
 
     if (!mounted) return null;
@@ -60,9 +61,8 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
     return (
         <div className="min-h-screen w-full bg-[#edf1f8] dark:bg-slate-950 flex items-center justify-center p-4 md:p-0">
             <div
-                className={`w-full overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl shadow-surface-200 transition-all duration-500 max-w-6xl ${
-                    formVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-                }`}
+                className={`w-full overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-xl shadow-surface-200 transition-all duration-500 max-w-6xl ${formVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                    }`}
             >
                 <div className="flex flex-col md:flex-row">
                     {/* ─── Left Collage Panel ──────────────────────────────── */}
@@ -164,6 +164,27 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
 
                         {/* Form */}
                         <form onSubmit={handleSignIn} className="space-y-5">
+                            {/* Tenant */}
+                            <div className="space-y-1.5">
+                                <label htmlFor="signin-tenant" className="block text-sm font-semibold text-surface-700">
+                                    Organization
+                                </label>
+                                <div className="relative">
+                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none">
+                                        <Building2 size={18} />
+                                    </div>
+                                    <select
+                                        id="signin-tenant"
+                                        value={tenantSlug}
+                                        onChange={(e) => setTenantSlug(e.target.value)}
+                                        className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 appearance-none cursor-pointer"
+                                    >
+                                        <option value="sic-insurance">SIC Insurance</option>
+                                        <option value="enterprise-insurance">Enterprise Insurance</option>
+                                    </select>
+                                </div>
+                            </div>
+
                             {/* Email */}
                             <div className="space-y-1.5">
                                 <label htmlFor="signin-email" className="block text-sm font-semibold text-surface-700">
@@ -247,11 +268,10 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className={`flex w-full justify-center items-center gap-2 rounded-xl py-3.5 px-4 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all duration-200 cursor-pointer ${
-                                    isLoading
-                                        ? 'bg-primary-400 cursor-not-allowed'
-                                        : 'bg-primary-600 hover:bg-primary-700 active:scale-[0.98]'
-                                }`}
+                                className={`flex w-full justify-center items-center gap-2 rounded-xl py-3.5 px-4 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all duration-200 cursor-pointer ${isLoading
+                                    ? 'bg-primary-400 cursor-not-allowed'
+                                    : 'bg-primary-600 hover:bg-primary-700 active:scale-[0.98]'
+                                    }`}
                             >
                                 {isLoading ? (
                                     <>

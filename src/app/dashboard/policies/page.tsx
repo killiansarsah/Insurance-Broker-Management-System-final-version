@@ -23,9 +23,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { usePolicies } from '@/hooks/api/use-policies';
-// Mock data as fallback until backend DB is seeded
-import { mockPolicies } from '@/mock/policies';
+import { usePolicies } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
@@ -73,6 +71,8 @@ export default function PoliciesPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type') as 'motor' | 'non-motor' | null;
+    const { data: policiesData, isLoading } = usePolicies();
+    const mockPolicies = policiesData?.data || [];
 
     const [filterStatus, setFilterStatus] = useState<PolicyStatus | ''>('');
     const [filterType, setFilterType] = useState<InsuranceType | ''>('');
@@ -289,6 +289,17 @@ export default function PoliciesPage() {
         if (typeParam === 'non-motor') return 'Non-Motor Policies';
         return 'All Policies';
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading policies...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">

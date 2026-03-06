@@ -27,8 +27,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatCurrency } from '@/lib/utils';
-import { mockClients, getClientDisplayName } from '@/mock/clients';
-import { mockPolicies } from '@/mock/policies';
+import { mockClients, getClientDisplayName } from '@/hooks/api';
+import { mockPolicies } from '@/hooks/api';
 
 // --- Static Data ---
 

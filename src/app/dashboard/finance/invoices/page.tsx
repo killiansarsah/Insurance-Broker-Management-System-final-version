@@ -18,7 +18,7 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { BackButton } from '@/components/ui/back-button';
 import { useInvoices } from '@/hooks/api/use-finance';
-import { invoices, financeSummary, Invoice } from '@/mock/finance';
+import { invoices, financeSummary, Invoice } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 const NewInvoiceModal = dynamic(

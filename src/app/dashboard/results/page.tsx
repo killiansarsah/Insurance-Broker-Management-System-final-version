@@ -22,14 +22,14 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import type { ClientStatus, PolicyStatus, ClaimStatus, LeadStatus, ComplaintStatus } from '@/types';
 
 type AnyStatus = ClientStatus | PolicyStatus | ClaimStatus | LeadStatus | ComplaintStatus | 'active' | 'inactive';
-import { mockClients } from '@/mock/clients';
-import { mockPolicies } from '@/mock/policies';
-import { claims } from '@/mock/claims';
-import { mockLeads } from '@/mock/leads';
-import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
-import { nonLifeCarriers, lifeCarriers } from '@/mock/carriers';
+import { mockClients } from '@/hooks/api';
+import { mockPolicies } from '@/hooks/api';
+import { claims } from '@/hooks/api';
+import { mockLeads } from '@/hooks/api';
+import { MOCK_COMPLAINTS } from '@/hooks/api';
+import { nonLifeCarriers, lifeCarriers } from '@/hooks/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
-import { getClientDisplayName } from '@/mock/clients';
+import { getClientDisplayName } from '@/hooks/api';
 
 type ResultCategory = 'clients' | 'policies' | 'claims' | 'leads' | 'carriers' | 'complaints';
 

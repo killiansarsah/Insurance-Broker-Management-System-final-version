@@ -24,8 +24,8 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { useCreatePolicy } from '@/hooks/api/use-policies';
 import { useClients } from '@/hooks/api/use-clients';
 import { useCarriers } from '@/hooks/api/use-carriers';
-import { mockClients } from '@/mock/clients';
-import { carriers } from '@/mock/carriers';
+import { mockClients } from '@/hooks/api';
+import { carriers } from '@/hooks/api';
 import type { InsuranceType, PremiumFrequency } from '@/types';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
@@ -246,6 +246,18 @@ export default function NewPolicyPage() {
     const isMotor = form.insuranceType === 'motor';
     const isProperty = form.insuranceType === 'fire';
     const isMarine = form.insuranceType === 'marine';
+
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full space-y-6 animate-fade-in pb-10 max-w-4xl mx-auto">

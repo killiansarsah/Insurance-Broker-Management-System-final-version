@@ -10,10 +10,10 @@ export default function LoginPage() {
     const { login, isLoading } = useAuthStore();
     const router = useRouter();
 
-    const handleSubmit = async (email: string, password: string) => {
+    const handleSubmit = async (email: string, password: string, tenantSlug: string) => {
         setError(null);
         try {
-            await login(email, password);
+            await login(email, password, tenantSlug);
             router.push('/dashboard');
         } catch {
             setError('Invalid email or password. Please try again.');

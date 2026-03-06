@@ -45,9 +45,9 @@ import {
     type ExpenseCategory,
     type ExpenseStatus,
     type PaymentMethod,
-} from '@/mock/expenses';
+} from '@/hooks/api';
 import { useExpenses } from '@/hooks/api/use-finance';
-import { mockCommissions } from '@/mock/commissions';
+import { mockCommissions } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 // ─── Helpers ─────────────────────────────────────────────────

@@ -6,7 +6,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { ChatConversation } from '@/types';
-import { MOCK_CHATS } from '@/mock/chat';
+import { MOCK_CHATS } from '@/hooks/api';
 
 interface ChatListProps {
     activeId: string;

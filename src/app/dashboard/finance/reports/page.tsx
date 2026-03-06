@@ -20,7 +20,7 @@ import {
     topClients,
     productBreakdown,
     reportSummary,
-} from '@/mock/finance-reports';
+} from '@/hooks/api';
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';
 

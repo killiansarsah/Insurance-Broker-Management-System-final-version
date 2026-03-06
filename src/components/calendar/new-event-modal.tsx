@@ -5,7 +5,7 @@ import { Calendar as CalendarIcon, Clock, Tag, AlignLeft, CheckCircle2, MapPin, 
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { CalendarEventType, CalendarEventPriority } from '@/mock/calendar-events';
+import { CalendarEventType, CalendarEventPriority } from '@/hooks/api';
 import { Modal } from '@/components/ui/modal';
 import { CustomSelect } from '@/components/ui/select-custom';
 
@@ -77,11 +77,6 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
         };
 
         onSave(newEvent);
-        toast.success('Event Created', {
-            description: `"${title}" has been added to your calendar.`,
-            icon: <CheckCircle2 className="text-success-500" size={18} />,
-        });
-
         onClose();
     };
 

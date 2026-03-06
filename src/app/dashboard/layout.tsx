@@ -4,6 +4,7 @@ import { Sidebar } from '@/components/layout/sidebar';
 import { Header } from '@/components/layout/header';
 import { useUiStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
+import { BackendStatus } from '@/components/dev/backend-status';
 
 import { ProtectedRoute } from '@/components/auth/protected-route';
 
@@ -34,6 +35,7 @@ export default function DashboardLayout({
                 >
                     <div className="p-4 lg:p-6">{children}</div>
                 </main>
+                <BackendStatus />
                 {/* Accessible live region for toast/status announcements */}
                 <div
                     id="aria-live-region"

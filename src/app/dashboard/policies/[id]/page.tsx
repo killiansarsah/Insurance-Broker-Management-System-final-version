@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { usePolicy } from '@/hooks/api/use-policies';
-import { mockPolicies } from '@/mock/policies';
+import { mockPolicies } from '@/hooks/api';
 import PolicyDetailClient from './policy-detail-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {

@@ -1,8 +1,8 @@
 
 import type { Metadata } from 'next';
 import { useCarrier } from '@/hooks/api/use-carriers';
-import { carriers } from '@/mock/carriers';
-import { carrierProducts } from '@/mock/carrier-products';
+import { carriers } from '@/hooks/api';
+import { carrierProducts } from '@/hooks/api';
 import CarrierDetailClient from './client-page';
 import { notFound } from 'next/navigation';
 

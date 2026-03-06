@@ -30,13 +30,12 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
-import { useDashboardReport } from '@/hooks/api/use-reports';
-// Mock data as fallback until backend DB is seeded
-import { policies } from '@/mock/policies';
-import { mockClients as clients } from '@/mock/clients';
-import { claims } from '@/mock/claims';
-import { invoices } from '@/mock/finance';
-import { mockLeads } from '@/mock/leads';
+import { useDashboardReport } from '@/hooks/api/useReports';
+import { usePolicies } from '@/hooks/api/usePolicies';
+import { useClients } from '@/hooks/api/useClients';
+import { useClaims } from '@/hooks/api/useClaims';
+import { useLeads } from '@/hooks/api/useLeads';
+import { useInvoices } from '@/hooks/api/useFinance';
 import { toast } from 'sonner';
 import { Download } from 'lucide-react';
 
@@ -107,7 +106,8 @@ const availableYears = [2026, 2025, 2024, 2023, 2022, 2021];
 function filterData<T extends { insurerName?: string; insuranceType?: string; clientId?: string; brokerName?: string; createdAt?: string }>(
     data: T[],
     filters: Filters,
-    period: Period
+    period: Period,
+    clientsData: any[]
 ): T[] {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -139,7 +139,7 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
 
         // Client Type Filter
         if (filters.clientType) {
-            const client = clients.find(c => c.id === item.clientId);
+            const client = clientsData.find(c => c.id === item.clientId);
             if (client && client.type.toLowerCase() !== filters.clientType.toLowerCase()) return false;
         }
 
@@ -148,7 +148,7 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
 
         // Region Filter (Mock: determined by client region)
         if (filters.region) {
-            const client = clients.find(c => c.id === item.clientId);
+            const client = clientsData.find(c => c.id === item.clientId);
             // In mock data, we'll assume region mismatch if client not found or doesn't have it
             // For now, let's just bypass regions or assume some clients have regions
         }
@@ -160,55 +160,6 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
 // =====================================================================
 // STATIC DATA (unchanged by period)
 // =====================================================================
-const clientSegments = (() => {
-    const total = clients.length || 1;
-    const corp = clients.filter(c => c.type === 'corporate').length;
-    const ind = clients.filter(c => c.type === 'individual').length;
-    return [
-        { label: 'Corporate', pct: Math.round((corp / total) * 100), color: 'bg-primary-500' },
-        { label: 'Retail / Individual', pct: Math.round((ind / total) * 100), color: 'bg-success-500' },
-    ];
-})();
-
-const insurerDistribution = (() => {
-    const counts: Record<string, number> = {};
-    policies.forEach(p => { counts[p.insurerName] = (counts[p.insurerName] || 0) + 1; });
-    const total = policies.length || 1;
-    const colors = ['bg-primary-500', 'bg-accent-500', 'bg-success-500', 'bg-danger-400', 'bg-surface-300'];
-    const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    const top4 = sorted.slice(0, 4).map(([name, count], i) => ({
-        name, pct: Math.round((count / total) * 100), color: colors[i]
-    }));
-    const otherPct = sorted.slice(4).reduce((s, [, c]) => s + c, 0);
-    if (otherPct > 0) top4.push({ name: 'Others', pct: Math.round((otherPct / total) * 100), color: colors[4] });
-    return top4;
-})();
-
-const insurerPerformance = (() => {
-    const insurers = Array.from(new Set(policies.map(p => p.insurerName))).slice(0, 4);
-    return insurers.map((name, i) => ({
-        name: name.length > 18 ? name.slice(0, 18) + '…' : name,
-        avgDays: +(1.5 + (i * 0.7)).toFixed(1),
-        trend: (i % 2 === 0 ? 'down' : 'up') as 'down' | 'up',
-    }));
-})();
-
-const recentActivity = (() => {
-    const items: { id: string; action: string; detail: string; time: string; type: string }[] = [];
-    const recentPolicies = [...policies].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 2);
-    const recentClaims = [...claims].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
-    const recentClients = [...clients].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
-    recentPolicies.forEach((p, i) => items.push({
-        id: `ra-p${i}`, action: 'Policy updated', detail: `${p.policyNumber} — ${p.coverageDetails || p.insuranceType} for ${p.clientName}`, time: 'Recently', type: 'policy'
-    }));
-    recentClaims.forEach((c, i) => items.push({
-        id: `ra-c${i}`, action: 'Claim registered', detail: `${c.claimNumber} — ${c.incidentDescription || 'Claim'} by ${c.clientName}`, time: 'Recently', type: 'claim'
-    }));
-    recentClients.forEach((cl, i) => items.push({
-        id: `ra-cl${i}`, action: 'Client updated', detail: `${cl.companyName || (cl.firstName + ' ' + cl.lastName)} — ${cl.type} client`, time: 'Recently', type: 'client'
-    }));
-    return items.slice(0, 4);
-})();
 
 const activityColors: Record<string, string> = {
     policy: 'bg-primary-100 text-primary-600',
@@ -246,6 +197,18 @@ function formatCompact(n: number): string {
 // =====================================================================
 export default function DashboardPage() {
     const { user } = useAuthStore();
+    const { data: policiesData = { data: [] } } = usePolicies();
+    const { data: clientsData = { data: [] } } = useClients();
+    const { data: claimsApiData = { data: [] } } = useClaims();
+    const { data: leadsData = { data: [] } } = useLeads();
+    const { data: invoicesData = { data: [] } } = useInvoices();
+    
+    const policies = policiesData.data || [];
+    const clients = clientsData.data || [];
+    const claims = claimsApiData.data || [];
+    const leads = leadsData.data || [];
+    const invoices = invoicesData.data || [];
+    
     const [period, setPeriod] = useState<Period>('mtd');
     const [selectedYear, setSelectedYear] = useState<number>(2026);
     const [filters, setFilters] = useState<Filters>({
@@ -281,13 +244,63 @@ export default function DashboardPage() {
     // =====================================================================
     // CORE CALCULATION LOGIC
     // =====================================================================
-    const filteredPolicies = useMemo(() => filterData(policies, filters, period), [filters, period]);
+    const filteredPolicies = useMemo(() => filterData(policies, filters, period, clients), [filters, period, policies, clients]);
     const filteredClients = useMemo(() => clients.filter(c => {
         if (filters.clientType && c.type.toLowerCase() !== filters.clientType.toLowerCase()) return false;
         // ... more client specific filters
         return true;
-    }), [filters]);
-    const filteredClaims = useMemo(() => filterData(claims, filters, period), [filters, period]);
+    }), [filters, clients]);
+    const filteredClaims = useMemo(() => filterData(claims, filters, period, clients), [filters, period, claims, clients]);
+
+    const clientSegments = useMemo(() => {
+        const total = clients.length || 1;
+        const corp = clients.filter(c => c.type === 'corporate').length;
+        const ind = clients.filter(c => c.type === 'individual').length;
+        return [
+            { label: 'Corporate', pct: Math.round((corp / total) * 100), color: 'bg-primary-500' },
+            { label: 'Retail / Individual', pct: Math.round((ind / total) * 100), color: 'bg-success-500' },
+        ];
+    }, [clients]);
+
+    const insurerDistribution = useMemo(() => {
+        const counts: Record<string, number> = {};
+        policies.forEach(p => { counts[p.insurerName] = (counts[p.insurerName] || 0) + 1; });
+        const total = policies.length || 1;
+        const colors = ['bg-primary-500', 'bg-accent-500', 'bg-success-500', 'bg-danger-400', 'bg-surface-300'];
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        const top4 = sorted.slice(0, 4).map(([name, count], i) => ({
+            name, pct: Math.round((count / total) * 100), color: colors[i]
+        }));
+        const otherPct = sorted.slice(4).reduce((s, [, c]) => s + c, 0);
+        if (otherPct > 0) top4.push({ name: 'Others', pct: Math.round((otherPct / total) * 100), color: colors[4] });
+        return top4;
+    }, [policies]);
+
+    const insurerPerformance = useMemo(() => {
+        const insurers = Array.from(new Set(policies.map(p => p.insurerName))).slice(0, 4);
+        return insurers.map((name, i) => ({
+            name: name.length > 18 ? name.slice(0, 18) + '…' : name,
+            avgDays: +(1.5 + (i * 0.7)).toFixed(1),
+            trend: (i % 2 === 0 ? 'down' : 'up') as 'down' | 'up',
+        }));
+    }, [policies]);
+
+    const recentActivity = useMemo(() => {
+        const items: { id: string; action: string; detail: string; time: string; type: string }[] = [];
+        const recentPolicies = [...policies].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 2);
+        const recentClaims = [...claims].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
+        const recentClients = [...clients].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
+        recentPolicies.forEach((p, _i) => items.push({
+            id: `ra-p${_i}`, action: 'Policy updated', detail: `${p.policyNumber} — ${p.coverageDetails || p.insuranceType} for ${p.clientName}`, time: 'Recently', type: 'policy'
+        }));
+        recentClaims.forEach((c, _i) => items.push({
+            id: `ra-c${_i}`, action: 'Claim registered', detail: `${c.claimNumber} — ${c.incidentDescription || 'Claim'} by ${c.clientName}`, time: 'Recently', type: 'claim'
+        }));
+        recentClients.forEach((cl, _i) => items.push({
+            id: `ra-cl${_i}`, action: 'Client updated', detail: `${cl.companyName || (cl.firstName + ' ' + cl.lastName)} — ${cl.type} client`, time: 'Recently', type: 'client'
+        }));
+        return items.slice(0, 4);
+    }, [policies, claims, clients]);
 
     // --- Claims Ratio (must be before kpiData) ---
     const claimsRatioData = useMemo(() => {
@@ -302,7 +315,7 @@ export default function DashboardPage() {
     const claimsRatioValue = claimsRatioData.ratio;
 
     // --- Lapsed Policies (must be before kpiData) ---
-    const lapsedPolicies = useMemo(() => policies.filter(p => p.status === 'lapsed'), []);
+    const lapsedPolicies = useMemo(() => policies.filter(p => p.status === 'lapsed'), [policies]);
     const lapsedCount = lapsedPolicies.length;
     const lapsedPremium = lapsedPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
 
@@ -322,7 +335,7 @@ export default function DashboardPage() {
             { label: 'Active Clients', value: clientCount.toString(), change: 3, direction: 'up' as const, icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Target: 1,000' },
             { label: 'Active Policies', value: policyCount.toString(), change: 5, direction: 'up' as const, icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `${(policyCount / (clientCount || 1)).toFixed(1)} per client` },
             { label: 'Expiring (7d)', value: expiringCount.toString(), change: 0, direction: 'down' as const, icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: `${expiringCount > 5 ? 'High volume' : 'Manageable'}`, warn: expiringCount > 0 },
-            { label: 'Leads Pipeline', value: mockLeads.filter(l => l.status !== 'converted' && l.status !== 'lost').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(mockLeads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
+            { label: 'Leads Pipeline', value: leads.filter(l => l.status !== 'converted' && l.status !== 'lost').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(leads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
             { label: 'Claims Ratio', value: `${claimsRatioValue.toFixed(1)}%`, change: 1.5, direction: claimsRatioValue > 50 ? 'up' as const : 'down' as const, icon: <PieChart size={20} />, color: claimsRatioValue > 70 ? 'text-danger-600 bg-danger-50' : claimsRatioValue > 50 ? 'text-warning-600 bg-warning-50' : 'text-success-600 bg-success-50', subtitle: claimsRatioValue > 70 ? 'Above threshold' : 'Within target', warn: claimsRatioValue > 70 },
             { label: 'Lapsed Policies', value: lapsedCount.toString(), change: 0, direction: 'down' as const, icon: <XCircle size={20} />, color: lapsedCount > 5 ? 'text-danger-600 bg-danger-50' : 'text-warning-600 bg-warning-50', subtitle: lapsedCount > 0 ? `${formatCompact(lapsedPremium)} at risk` : 'No lapsed policies', warn: lapsedCount > 0 },
         ];
@@ -365,7 +378,7 @@ export default function DashboardPage() {
         const premiumPending = invoices.filter(i => i.status === 'outstanding' || i.status === 'partial').length;
         const overdueInvoices = invoices.filter(i => i.status === 'overdue').length;
         return { openTasks: openClaims + premiumPending, premiumPending, coverNotesPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'pending').length)), certsPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'draft').length)), overdueFollowups: overdueInvoices };
-    }, [filteredPolicies]);
+    }, [filteredPolicies, claims, invoices]);
 
     // Total expiring count for renewals header
     const totalExpiring = renewalsData.reduce((sum, r) => sum + r.count, 0);

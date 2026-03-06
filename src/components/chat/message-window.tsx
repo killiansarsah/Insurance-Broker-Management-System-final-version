@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { ChatConversation, ChatMessage } from '@/types';
-import { MOCK_MESSAGES } from '@/mock/chat';
+import { MOCK_MESSAGES } from '@/hooks/api';
 
 interface MessageWindowProps {
     conversation: ChatConversation;

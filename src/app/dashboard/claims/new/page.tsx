@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
 import { cn, formatCurrency } from '@/lib/utils';
-import { policies } from '@/mock/policies';
+import { policies } from '@/hooks/api';
 import { Policy } from '@/types';
 const UploadDocumentModal = dynamic(
     () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
@@ -67,6 +67,18 @@ export default function NewClaimPage() {
     function handleSubmit() {
         toast.success('Claim Submitted', { description: 'Your FNOL claim has been submitted and is now pending review.' });
         router.push('/dashboard/claims');
+    }
+
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
     }
 
     return (

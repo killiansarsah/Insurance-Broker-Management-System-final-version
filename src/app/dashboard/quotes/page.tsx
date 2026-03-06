@@ -38,7 +38,7 @@ import {
     QUOTE_STATUS_CONFIG,
     type Quote,
     type QuoteStatus,
-} from '@/mock/quotes';
+} from '@/hooks/api';
 
 // ─── Pipeline Tab ───
 type PipelineTab = 'all' | QuoteStatus;

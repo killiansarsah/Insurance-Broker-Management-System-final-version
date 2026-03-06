@@ -2,7 +2,6 @@
 
 import { create } from 'zustand';
 import { Transaction, PaymentStatus } from '../types';
-import { MOCK_TRANSACTIONS } from '../mock/payments';
 
 interface PaymentState {
     transactions: Transaction[];
@@ -16,7 +15,7 @@ interface PaymentState {
 }
 
 export const usePaymentStore = create<PaymentState>((set, get) => ({
-    transactions: MOCK_TRANSACTIONS,
+    transactions: [],
     isProcessing: false,
 
     addTransaction: (transaction: Transaction) =>

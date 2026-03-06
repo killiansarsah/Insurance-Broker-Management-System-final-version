@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
-import { getClientById, getClientDisplayName } from '@/mock/clients';
+import { getClientById, getClientDisplayName } from '@/hooks/api';
 import { toast } from 'sonner';
 
 const STEPS = [

@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { users } from '@/mock/users';
+import { users } from '@/hooks/api';
 import { formatDate } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import type { UserRole, User } from '@/types';

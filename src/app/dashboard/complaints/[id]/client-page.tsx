@@ -22,7 +22,7 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { MOCK_COMPLAINTS } from '@/mock/documents-complaints';
+import { MOCK_COMPLAINTS } from '@/hooks/api';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 import { BackButton } from '@/components/ui/back-button';

@@ -6,7 +6,7 @@ import { Search, Building2, Shield, RefreshCw, Globe, Trophy, ArrowRight, Extern
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCarriers } from '@/hooks/api/use-carriers';
-import { carriers, getCarriersByType, type CarrierType, type Carrier } from '@/mock/carriers';
+import { carriers, getCarriersByType, type CarrierType, type Carrier } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +33,18 @@ const TYPE_LABEL: Record<CarrierType, string> = {
 
 function CarrierLogo({ carrier }: { carrier: Carrier }) {
     const [imgError, setImgError] = useState(false);
+
+    
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative group/logo">

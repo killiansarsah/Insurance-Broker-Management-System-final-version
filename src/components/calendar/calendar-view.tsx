@@ -24,8 +24,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, MapPin, Users, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { mockEvents as initialEvents, CalendarEvent } from '@/mock/calendar-events';
 import { toast } from 'sonner';
+import { useCalendarEvents, useCreateCalendarEvent } from '@/hooks/api/use-calendar';
 
 const NewEventModal = dynamic(
     () => import('./new-event-modal').then(m => ({ default: m.NewEventModal })),
@@ -40,9 +40,21 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     const [currentDate, setCurrentDate] = useState(new Date());
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-    const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalInitialDate, setModalInitialDate] = useState<Date | undefined>(undefined);
+
+    // Fetch events from API
+    const { data: eventsData } = useCalendarEvents();
+    const createEvent = useCreateCalendarEvent();
+    
+    const events = useMemo(() => {
+        if (!eventsData?.data) return [];
+        return eventsData.data.map((e: any) => ({
+            ...e,
+            start: new Date(e.start),
+            end: new Date(e.end)
+        }));
+    }, [eventsData]);
 
     React.useImperativeHandle(ref, () => ({
         openModal: (date?: Date) => {
@@ -75,8 +87,19 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     };
 
     const handleSaveEvent = (newEvent: any) => {
-        setEvents([...events, newEvent]);
-        setIsModalOpen(false);
+        createEvent.mutate(newEvent, {
+            onSuccess: () => {
+                toast.success('Event Created', {
+                    description: `"${newEvent.title}" has been added to your calendar.`,
+                });
+                setIsModalOpen(false);
+            },
+            onError: () => {
+                toast.error('Failed to create event', {
+                    description: 'Please try again or check your connection.',
+                });
+            }
+        });
     };
 
     const renderHeader = () => {
