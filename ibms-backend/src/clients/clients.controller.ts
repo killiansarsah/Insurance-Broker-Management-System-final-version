@@ -32,10 +32,18 @@ interface RequestWithUser {
   };
 }
 
+interface RequestWithUser {
+  user: {
+    tenantId: string;
+    sub: string;
+    role: string;
+  };
+}
+
 @Controller('api/v1/clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(private readonly clientsService: ClientsService) { }
 
   @Post()
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT')

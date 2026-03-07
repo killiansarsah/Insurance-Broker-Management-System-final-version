@@ -29,18 +29,6 @@ export default function ProductsPage() {
         if (search) {
             const q = search.toLowerCase();
             const c = carriers.find(c => c.id === p.carrierId);
-            
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
                 p.name.toLowerCase().includes(q) ||
                 p.description.toLowerCase().includes(q) ||

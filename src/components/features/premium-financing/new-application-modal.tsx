@@ -27,8 +27,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn, formatCurrency } from '@/lib/utils';
-import { mockClients, getClientDisplayName } from '@/hooks/api';
-import { mockPolicies } from '@/hooks/api';
+import { useClients } from '@/hooks/api/use-clients';
+import { usePolicies } from '@/hooks/api/use-policies';
+
+function getClientDisplayName(c: any): string {
+    return c.companyName || `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.clientNumber || c.id;
+}
 
 // --- Static Data ---
 
@@ -79,17 +83,28 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
     const [selectedPolicy, setSelectedPolicy] = useState<any>(null);
     const [installments, setInstallments] = useState('full');
 
+    const { data: clientsData } = useClients();
+    const { data: policiesData } = usePolicies();
+    const clients = useMemo(() => {
+        const raw = Array.isArray(clientsData) ? clientsData : (clientsData as any)?.data ?? [];
+        return raw;
+    }, [clientsData]);
+    const allPolicies = useMemo(() => {
+        const raw = Array.isArray(policiesData) ? policiesData : (policiesData as any)?.data ?? [];
+        return raw;
+    }, [policiesData]);
+
     const filteredClients = useMemo(() => {
-        return mockClients.filter(c => {
+        return clients.filter((c: any) => {
             const displayName = getClientDisplayName(c);
             return displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                c.clientNumber.toLowerCase().includes(searchTerm.toLowerCase());
+                (c.clientNumber || '').toLowerCase().includes(searchTerm.toLowerCase());
         });
-    }, [searchTerm]);
+    }, [searchTerm, clients]);
 
     const clientPolicies = useMemo(() => {
-        return selectedClient ? mockPolicies.filter(p => p.clientId === selectedClient.id) : [];
-    }, [selectedClient]);
+        return selectedClient ? allPolicies.filter((p: any) => p.clientId === selectedClient.id) : [];
+    }, [selectedClient, allPolicies]);
 
     const selectedOption = useMemo(() =>
         INSTALLMENT_OPTIONS.find(o => o.id === installments) || INSTALLMENT_OPTIONS[0]

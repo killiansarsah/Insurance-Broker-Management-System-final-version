@@ -28,7 +28,7 @@ interface RequestWithUser {
 @Controller('api/v1/carriers')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CarriersController {
-  constructor(private readonly carriersService: CarriersService) {}
+  constructor(private readonly carriersService: CarriersService) { }
 
   @Post()
   @Roles('ADMIN', 'TENANT_ADMIN')

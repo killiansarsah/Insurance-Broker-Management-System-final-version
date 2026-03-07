@@ -31,35 +31,103 @@ import { DataTable } from '@/components/data-display/data-table';
 import { Card } from '@/components/ui/card';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import {
-    mockRenewals,
-    renewalSummary,
-    URGENCY_CONFIG,
-    WORKFLOW_STATUS_CONFIG,
-    LOST_REASON_LABEL,
-    type Renewal,
-    type RenewalWorkflowStatus,
-    type UrgencyLevel,
-} from '@/hooks/api';
+import { useRenewals } from '@/hooks/api/use-renewals';
+
+// ─── Local Types & Config ───
+type UrgencyLevel = 'critical' | 'urgent' | 'important' | 'upcoming';
+type RenewalWorkflowStatus = 'pending' | 'contacted' | 'quoted' | 'renewed' | 'lost';
+
+interface Renewal {
+    id: string;
+    policyNumber: string;
+    insuranceType: string;
+    policyType: string;
+    clientName: string;
+    clientPhone: string;
+    clientEmail: string;
+    insurerName: string;
+    currentPremium: number;
+    proposedPremium: number;
+    sumInsured: number;
+    commissionRate: number;
+    expiryDate: string;
+    daysToExpiry: number;
+    urgencyLevel: UrgencyLevel;
+    renewalStatus: RenewalWorkflowStatus;
+    assignedAgent: string;
+    contactAttempts: number;
+    coverageType?: string;
+    lastContactDate?: string;
+    lostReason?: string;
+    lostNotes?: string;
+    reminders: { id: string; type: string; channel: string; scheduledDate: string; status: string }[];
+    notes: { id: string; type: string; author: string; date: string; content: string }[];
+}
+
+const URGENCY_CONFIG: Record<UrgencyLevel, { label: string; bg: string; color: string; border: string; dot: string }> = {
+    critical: { label: 'Critical', bg: 'bg-danger-50', color: 'text-danger-700', border: 'border-danger-200', dot: 'bg-danger-500' },
+    urgent: { label: 'Urgent', bg: 'bg-warning-50', color: 'text-warning-700', border: 'border-warning-200', dot: 'bg-warning-500' },
+    important: { label: 'Important', bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
+    upcoming: { label: 'Upcoming', bg: 'bg-blue-50', color: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' },
+};
+
+const WORKFLOW_STATUS_CONFIG: Record<RenewalWorkflowStatus, { label: string; bg: string; color: string }> = {
+    pending: { label: 'Pending', bg: 'bg-surface-100', color: 'text-surface-700' },
+    contacted: { label: 'Contacted', bg: 'bg-blue-50', color: 'text-blue-700' },
+    quoted: { label: 'Quoted', bg: 'bg-amber-50', color: 'text-amber-700' },
+    renewed: { label: 'Renewed', bg: 'bg-success-50', color: 'text-success-700' },
+    lost: { label: 'Lost', bg: 'bg-danger-50', color: 'text-danger-700' },
+};
+
+const LOST_REASON_LABEL: Record<string, string> = {
+    price: 'Price too high',
+    competitor: 'Went to competitor',
+    no_response: 'No response from client',
+    coverage: 'Coverage not suitable',
+    other: 'Other reason',
+};
+
+function getUrgencyLevel(daysToExpiry: number): UrgencyLevel {
+    if (daysToExpiry < 0 || daysToExpiry <= 7) return 'critical';
+    if (daysToExpiry <= 30) return 'urgent';
+    if (daysToExpiry <= 60) return 'important';
+    return 'upcoming';
+}
+
+function mapApiToRenewal(r: any): Renewal {
+    const clientName = r.client?.companyName || `${r.client?.firstName || ''} ${r.client?.lastName || ''}`.trim() || 'Unknown';
+    const days = r.daysUntilExpiry ?? 0;
+    return {
+        id: r.id,
+        policyNumber: r.policyNumber || '',
+        insuranceType: (r.insuranceType || 'general').toLowerCase(),
+        policyType: (r.policyType || 'non-life').toLowerCase(),
+        clientName,
+        clientPhone: r.client?.phone || '',
+        clientEmail: r.client?.email || '',
+        insurerName: r.carrier?.name || 'Unknown Carrier',
+        currentPremium: r.premiumAmount || 0,
+        proposedPremium: r.premiumAmount || 0,
+        sumInsured: r.sumInsured || 0,
+        commissionRate: r.commissionRate || 0,
+        expiryDate: r.expiryDate,
+        daysToExpiry: days,
+        urgencyLevel: getUrgencyLevel(days),
+        renewalStatus: 'pending',
+        assignedAgent: r.broker ? `${r.broker.firstName} ${r.broker.lastName}` : 'Unassigned',
+        contactAttempts: 0,
+        coverageType: r.product?.name || r.insuranceType,
+        reminders: [],
+        notes: [],
+    };
+}
 
 // ─── Pipeline Tab Types ───
-type PipelineTab = 'all' | 'overdue' | '0-30' | '31-60' | '61-90' | 'renewed' | 'lost';
+type PipelineTab = 'all' | 'overdue' | '0-30' | '31-60' | '61-90';
 
 // ─── Urgency Badge Component ───
 function UrgencyBadge({ level }: { level: UrgencyLevel }) {
     const config = URGENCY_CONFIG[level];
-    
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-bold rounded-full border ${config.bg} ${config.color} ${config.border}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
@@ -274,16 +342,15 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                             <div className="absolute left-[11px] top-6 w-0.5 h-[calc(100%-12px)] bg-surface-200" />
                                         )}
                                         {/* Dot */}
-                                        <div className={`mt-1 w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 ${
-                                            note.type === 'contact' ? 'bg-blue-100 text-blue-600' :
+                                        <div className={`mt-1 w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 ${note.type === 'contact' ? 'bg-blue-100 text-blue-600' :
                                             note.type === 'escalation' ? 'bg-danger-100 text-danger-600' :
-                                            note.type === 'system' ? 'bg-surface-100 text-surface-500' :
-                                            'bg-primary-100 text-primary-600'
-                                        }`}>
+                                                note.type === 'system' ? 'bg-surface-100 text-surface-500' :
+                                                    'bg-primary-100 text-primary-600'
+                                            }`}>
                                             {note.type === 'contact' ? <Phone size={11} /> :
-                                             note.type === 'escalation' ? <AlertCircle size={11} /> :
-                                             note.type === 'system' ? <Zap size={11} /> :
-                                             <MessageSquare size={11} />}
+                                                note.type === 'escalation' ? <AlertCircle size={11} /> :
+                                                    note.type === 'system' ? <Zap size={11} /> :
+                                                        <MessageSquare size={11} />}
                                         </div>
                                         {/* Content */}
                                         <div className="flex-1 min-w-0">
@@ -358,6 +425,12 @@ function InfoCard({ label, value, icon }: { label: string; value: string; icon: 
 export default function RenewalsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const { data: renewalsApiData, isLoading } = useRenewals({ daysAhead: 90 });
+
+    const allRenewals: Renewal[] = useMemo(() => {
+        const raw = Array.isArray(renewalsApiData) ? renewalsApiData : (renewalsApiData as any)?.data ?? [];
+        return raw.map(mapApiToRenewal);
+    }, [renewalsApiData]);
 
     // Pipeline tab
     const tabParam = (searchParams.get('tab') as PipelineTab) || 'all';
@@ -372,62 +445,54 @@ export default function RenewalsPage() {
 
     // Unique agents list
     const agents = useMemo(() => {
-        const set = new Set(mockRenewals.map(r => r.assignedAgent));
+        const set = new Set(allRenewals.map(r => r.assignedAgent));
         return Array.from(set).sort();
-    }, []);
+    }, [allRenewals]);
+
+    const renewalSummary = useMemo(() => {
+        const overdue = allRenewals.filter(r => r.daysToExpiry < 0);
+        const next30 = allRenewals.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30);
+        const next60 = allRenewals.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60);
+        const next90 = allRenewals.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90);
+        const totalPremium = allRenewals.reduce((s, r) => s + r.currentPremium, 0);
+        return {
+            total: allRenewals.length, active: allRenewals.length,
+            overdue: overdue.length, overdueAmount: overdue.reduce((s, r) => s + r.currentPremium, 0),
+            next30: next30.length, next30Amount: next30.reduce((s, r) => s + r.currentPremium, 0),
+            next60: next60.length, next60Amount: next60.reduce((s, r) => s + r.currentPremium, 0),
+            next90: next90.length, next90Amount: next90.reduce((s, r) => s + r.currentPremium, 0),
+            totalPremiumAtRisk: totalPremium, renewedCount: 0, renewedPremium: 0,
+            lostCount: 0, lostPremium: 0, renewalRate: 0,
+            critical: allRenewals.filter(r => r.urgencyLevel === 'critical').length,
+            urgent: allRenewals.filter(r => r.urgencyLevel === 'urgent').length,
+            important: allRenewals.filter(r => r.urgencyLevel === 'important').length,
+            upcoming: allRenewals.filter(r => r.urgencyLevel === 'upcoming').length,
+        };
+    }, [allRenewals]);
 
     // Pipeline tabs configuration
     const pipelineTabs: { id: PipelineTab; label: string; count: number; color: string; amount?: number }[] = useMemo(() => [
         { id: 'all', label: 'All', count: renewalSummary.total, color: 'text-surface-700' },
         { id: 'overdue', label: 'Overdue', count: renewalSummary.overdue, color: 'text-danger-600', amount: renewalSummary.overdueAmount },
-        { id: '0-30', label: '0–30 Days', count: renewalSummary.next30, color: 'text-warning-600', amount: renewalSummary.next30Amount },
-        { id: '31-60', label: '31–60 Days', count: renewalSummary.next60, color: 'text-amber-600', amount: renewalSummary.next60Amount },
-        { id: '61-90', label: '61–90 Days', count: renewalSummary.next90, color: 'text-blue-600', amount: renewalSummary.next90Amount },
-        { id: 'renewed', label: 'Renewed', count: renewalSummary.renewedCount, color: 'text-success-600' },
-        { id: 'lost', label: 'Lost', count: renewalSummary.lostCount, color: 'text-danger-600' },
-    ], []);
+        { id: '0-30', label: '0\u201330 Days', count: renewalSummary.next30, color: 'text-warning-600', amount: renewalSummary.next30Amount },
+        { id: '31-60', label: '31\u201360 Days', count: renewalSummary.next60, color: 'text-amber-600', amount: renewalSummary.next60Amount },
+        { id: '61-90', label: '61\u201390 Days', count: renewalSummary.next90, color: 'text-blue-600', amount: renewalSummary.next90Amount },
+    ], [renewalSummary]);
 
     // Filtered data
     const filteredRenewals = useMemo(() => {
-        let data = [...mockRenewals];
-
-        // Pipeline filter
+        let data = [...allRenewals];
         switch (activeTab) {
-            case 'overdue':
-                data = data.filter(r => r.daysToExpiry < 0 && r.renewalStatus !== 'renewed' && r.renewalStatus !== 'lost');
-                break;
-            case '0-30':
-                data = data.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30 && r.renewalStatus !== 'renewed' && r.renewalStatus !== 'lost');
-                break;
-            case '31-60':
-                data = data.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60 && r.renewalStatus !== 'renewed' && r.renewalStatus !== 'lost');
-                break;
-            case '61-90':
-                data = data.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90 && r.renewalStatus !== 'renewed' && r.renewalStatus !== 'lost');
-                break;
-            case 'renewed':
-                data = data.filter(r => r.renewalStatus === 'renewed');
-                break;
-            case 'lost':
-                data = data.filter(r => r.renewalStatus === 'lost');
-                break;
+            case 'overdue': data = data.filter(r => r.daysToExpiry < 0); break;
+            case '0-30': data = data.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30); break;
+            case '31-60': data = data.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60); break;
+            case '61-90': data = data.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90); break;
         }
-
-        // Workflow status filter
-        if (workflowFilter !== 'all') {
-            data = data.filter(r => r.renewalStatus === workflowFilter);
-        }
-
-        // Agent filter
-        if (agentFilter !== 'all') {
-            data = data.filter(r => r.assignedAgent === agentFilter);
-        }
-
-        // Sort: most urgent first (lowest daysToExpiry)
+        if (workflowFilter !== 'all') data = data.filter(r => r.renewalStatus === workflowFilter);
+        if (agentFilter !== 'all') data = data.filter(r => r.assignedAgent === agentFilter);
         data.sort((a, b) => a.daysToExpiry - b.daysToExpiry);
-
         return data;
-    }, [activeTab, workflowFilter, agentFilter]);
+    }, [activeTab, workflowFilter, agentFilter, allRenewals]);
 
     const handleTabChange = (tab: PipelineTab) => {
         setActiveTab(tab);
@@ -528,18 +593,16 @@ export default function RenewalsPage() {
                         <button
                             key={tab.id}
                             onClick={() => handleTabChange(tab.id)}
-                            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-                                activeTab === tab.id
-                                    ? 'bg-primary-600 text-white shadow-sm'
-                                    : 'text-surface-600 hover:bg-surface-50'
-                            }`}
+                            className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${activeTab === tab.id
+                                ? 'bg-primary-600 text-white shadow-sm'
+                                : 'text-surface-600 hover:bg-surface-50'
+                                }`}
                         >
                             <span>{tab.label}</span>
-                            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${
-                                activeTab === tab.id
-                                    ? 'bg-white/20 text-white'
-                                    : `bg-surface-100 ${tab.color}`
-                            }`}>
+                            <span className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold rounded-full ${activeTab === tab.id
+                                ? 'bg-white/20 text-white'
+                                : `bg-surface-100 ${tab.color}`
+                                }`}>
                                 {tab.count}
                             </span>
                         </button>
@@ -670,11 +733,10 @@ export default function RenewalsPage() {
                         sortable: true,
                         render: (r) => (
                             <div className="text-center">
-                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                                    r.contactAttempts === 0 ? 'bg-surface-100 text-surface-500' :
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${r.contactAttempts === 0 ? 'bg-surface-100 text-surface-500' :
                                     r.contactAttempts >= 3 ? 'bg-success-100 text-success-700' :
-                                    'bg-blue-100 text-blue-700'
-                                }`}>
+                                        'bg-blue-100 text-blue-700'
+                                    }`}>
                                     {r.contactAttempts}
                                 </span>
                             </div>

@@ -220,7 +220,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             </div>
 
                             <div className="grid grid-cols-1 gap-4">
-                                {motorProducts.map((product) => (
+                                {motorProducts.map((product: CarrierProduct) => (
                                     <ProductCard key={product.id} product={product} />
                                 ))}
                             </div>
@@ -237,7 +237,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             </div>
 
                             <div className="grid grid-cols-1 gap-4">
-                                {otherProducts.map((product) => (
+                                {otherProducts.map((product: CarrierProduct) => (
                                     <ProductCard key={product.id} product={product} />
                                 ))}
                             </div>

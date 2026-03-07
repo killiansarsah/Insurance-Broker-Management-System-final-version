@@ -15,7 +15,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class PoliciesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async generatePolicyNumber(): Promise<string> {
     const today = new Date();
@@ -40,8 +40,8 @@ export class PoliciesService {
         action,
         entity: 'Policy',
         entityId,
-        before: before ? (before as Prisma.InputJsonObject) : undefined,
-        after: after ? (after as Prisma.InputJsonObject) : undefined,
+        before: before ? (before as Prisma.InputJsonObject) : Prisma.JsonNull,
+        after: after ? (after as Prisma.InputJsonObject) : Prisma.JsonNull,
       },
     });
   }
@@ -121,21 +121,21 @@ export class PoliciesService {
           coverageDetails: dto.coverageDetails,
           vehicleDetails: dto.vehicleDetails
             ? {
-                create:
-                  dto.vehicleDetails as unknown as Prisma.VehicleDetailCreateWithoutPolicyInput,
-              }
+              create:
+                dto.vehicleDetails as unknown as Prisma.VehicleDetailCreateWithoutPolicyInput,
+            }
             : undefined,
           propertyDetails: dto.propertyDetails
             ? {
-                create:
-                  dto.propertyDetails as unknown as Prisma.PropertyDetailCreateWithoutPolicyInput,
-              }
+              create:
+                dto.propertyDetails as unknown as Prisma.PropertyDetailCreateWithoutPolicyInput,
+            }
             : undefined,
           marineDetails: dto.marineDetails
             ? {
-                create:
-                  dto.marineDetails as unknown as Prisma.MarineDetailCreateWithoutPolicyInput,
-              }
+              create:
+                dto.marineDetails as unknown as Prisma.MarineDetailCreateWithoutPolicyInput,
+            }
             : undefined,
         },
       });

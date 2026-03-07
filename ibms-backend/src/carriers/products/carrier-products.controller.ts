@@ -25,10 +25,18 @@ interface RequestWithUser {
   };
 }
 
+interface RequestWithUser {
+  user: {
+    tenantId: string;
+    sub: string;
+    role: string;
+  };
+}
+
 @Controller('api/v1/carriers/:carrierId/products')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CarrierProductsController {
-  constructor(private readonly productsService: CarrierProductsService) {}
+  constructor(private readonly productsService: CarrierProductsService) { }
 
   @Post()
   @Roles('ADMIN', 'TENANT_ADMIN')

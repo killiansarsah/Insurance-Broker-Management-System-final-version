@@ -33,19 +33,6 @@ const TYPE_LABEL: Record<CarrierType, string> = {
 
 function CarrierLogo({ carrier }: { carrier: Carrier }) {
     const [imgError, setImgError] = useState(false);
-
-    
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="relative group/logo">
             {/* Glow effect behind logo */}
@@ -70,7 +57,7 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
                         className="w-full h-full rounded-2xl flex items-center justify-center text-white font-black text-2xl"
                         style={{ backgroundColor: carrier.brandColor }}
                     >
-                        {carrier.shortName.split(' ').map(w => w[0]).slice(0, 2).join('')}
+                        {carrier.shortName.split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
                     </div>
                 )}
             </div>

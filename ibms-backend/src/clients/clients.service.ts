@@ -17,7 +17,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ClientsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async generateClientNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.client.count({ where: { tenantId } });
@@ -40,8 +40,8 @@ export class ClientsService {
         action,
         entity: 'Client',
         entityId,
-        before: before ? (before as Prisma.InputJsonObject) : undefined,
-        after: after ? (after as Prisma.InputJsonObject) : undefined,
+        before: before ? (before as Prisma.InputJsonObject) : Prisma.JsonNull,
+        after: after ? (after as Prisma.InputJsonObject) : Prisma.JsonNull,
       },
     });
   }

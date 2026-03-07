@@ -14,8 +14,8 @@ import {
     AlignLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { mockClients } from '@/hooks/api';
-import { mockPolicies } from '@/hooks/api';
+import { useClients } from '@/hooks/api/use-clients';
+import { usePolicies } from '@/hooks/api/use-policies';
 
 interface NewInvoiceModalProps {
     isOpen: boolean;
@@ -37,37 +37,42 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
     const [dueDate, setDueDate] = useState('');
     const [description, setDescription] = useState('');
 
+    const { data: clientsData } = useClients();
+    const { data: policiesData } = usePolicies();
+    const clients = Array.isArray(clientsData) ? clientsData : (clientsData as any)?.data ?? [];
+    const policies = Array.isArray(policiesData) ? policiesData : (policiesData as any)?.data ?? [];
+
     // Build client options from mock data
     const clientOptions = useMemo(
         () =>
-            mockClients
-                .filter(c => c.status === 'active')
+            clients
+                .filter((c: any) => c.status === 'active' || c.isActive)
                 .slice(0, 50)
-                .map(c => ({
-                    label: c.companyName || `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.clientNumber,
+                .map((c: any) => ({
+                    label: c.companyName || `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.clientNumber || c.id,
                     value: c.id,
                 })),
-        []
+        [clients]
     );
 
     // Build policy options filtered by selected client
     const policyOptions = useMemo(() => {
         if (!clientId) return [];
-        return mockPolicies
-            .filter(p => p.clientId === clientId && (p.status === 'active' || p.status === 'pending'))
-            .map(p => ({
+        return policies
+            .filter((p: any) => p.clientId === clientId && (p.status === 'ACTIVE' || p.status === 'active' || p.status === 'DRAFT'))
+            .map((p: any) => ({
                 label: `${p.policyNumber} — ${p.insuranceType}`,
                 value: p.id,
             }));
-    }, [clientId]);
+    }, [clientId, policies]);
 
     const selectedClient = useMemo(
-        () => mockClients.find(c => c.id === clientId),
-        [clientId]
+        () => clients.find((c: any) => c.id === clientId),
+        [clientId, clients]
     );
     const selectedPolicy = useMemo(
-        () => mockPolicies.find(p => p.id === policyId),
-        [policyId]
+        () => policies.find((p: any) => p.id === policyId),
+        [policyId, policies]
     );
 
     const resetForm = () => {

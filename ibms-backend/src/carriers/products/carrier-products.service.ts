@@ -11,7 +11,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CarrierProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   private async logAudit(
     tenantId: string,
@@ -28,8 +28,8 @@ export class CarrierProductsService {
         action,
         entity: 'Product',
         entityId,
-        before: before ? (before as Prisma.InputJsonObject) : undefined,
-        after: after ? (after as Prisma.InputJsonObject) : undefined,
+        before: before ? (before as Prisma.InputJsonObject) : Prisma.JsonNull,
+        after: after ? (after as Prisma.InputJsonObject) : Prisma.JsonNull,
       },
     });
   }

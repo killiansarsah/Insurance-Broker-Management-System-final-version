@@ -111,20 +111,6 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
     },
 };
 
-// ─── Mock user for fallback when backend is unavailable ──────
-const MOCK_USER: User = {
-    id: 'mock-user-001',
-    tenantId: 'mock-tenant-001',
-    email: 'admin@dezag.com',
-    firstName: 'Alex',
-    lastName: 'Johnson',
-    phone: '+233244000001',
-    role: 'tenant_admin' as UserRole,
-    isActive: true,
-    branchId: '',
-    createdAt: new Date().toISOString(),
-};
-
 function isNetworkError(err: unknown): boolean {
     if (err instanceof Error) {
         const msg = err.message.toLowerCase();
@@ -151,18 +137,11 @@ export const useAuthStore = create<AuthState>()(
                     apiClient.setAccessToken(res.accessToken);
                     set({ user: res.user, isAuthenticated: true, isLoading: false });
                 } catch (err: unknown) {
-                    // If backend is unreachable, fall back to mock auth
-                    if (isNetworkError(err)) {
-                        const mockUser: User = {
-                            ...MOCK_USER,
-                            email,
-                            firstName: email.split('@')[0].charAt(0).toUpperCase() + email.split('@')[0].slice(1),
-                        };
-                        set({ user: mockUser, isAuthenticated: true, isLoading: false });
-                        return;
-                    }
                     set({ isLoading: false });
-                    throw new Error('Invalid credentials');
+                    if (isNetworkError(err)) {
+                        throw new Error('Cannot reach the server. Please ensure the backend is running and try again.');
+                    }
+                    throw new Error('Invalid email or password');
                 }
             },
 
@@ -174,7 +153,7 @@ export const useAuthStore = create<AuthState>()(
                 }
                 apiClient.clearAccessToken();
                 set({ user: null, isAuthenticated: false });
-                
+
                 // Clear persisted storage
                 if (typeof window !== 'undefined') {
                     localStorage.removeItem('ibms-auth');

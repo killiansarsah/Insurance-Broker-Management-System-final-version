@@ -59,7 +59,7 @@ export default function UsersPage() {
     const [roleFilter, setRoleFilter] = useState<string>('all');
     const [isInviteOpen, setIsInviteOpen] = useState(false);
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-    
+
     const { data: usersData } = useUsers();
     const users = usersData?.data || [];
 
@@ -101,7 +101,7 @@ export default function UsersPage() {
             key: 'role',
             label: 'Role',
             sortable: true,
-            render: (row: any) => <Badge variant={ROLE_COLORS[row.role]}>{ROLE_LABELS[row.role]}</Badge>
+            render: (row: any) => <Badge variant={ROLE_COLORS[row.role as UserRole]}>{ROLE_LABELS[row.role as UserRole]}</Badge>
         },
         { key: 'branchId', label: 'Branch', sortable: true },
         {

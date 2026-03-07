@@ -126,18 +126,6 @@ function InputField({
     required?: boolean;
     error?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
-    
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div>
             <label className="block text-xs font-semibold text-surface-600 mb-1.5">

@@ -178,17 +178,6 @@ const PRIORITY_COLORS: Record<Priority, string> = {
 
 function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApprove: (id: string) => void; onReject: (id: string) => void }) {
     const router = useRouter();
-    
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading...</p>
-                </div>
-            </div>
-        );
-    }
 
     return (
         <Card padding="none" className={cn('overflow-hidden transition-shadow hover:shadow-md', item.isOverdue && item.status === 'pending' && 'border-danger-200')}>
@@ -196,10 +185,10 @@ function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApp
                 {/* Left: icon */}
                 <div className={cn('shrink-0 p-2.5 rounded-lg', TYPE_COLORS[item.type])}>
                     {item.type === 'policy' ? <FileText size={18} /> :
-                     item.type === 'claim_settlement' ? <DollarSign size={18} /> :
-                     item.type === 'endorsement' ? <Shield size={18} /> :
-                     item.type === 'cancellation' ? <XCircle size={18} /> :
-                     <DollarSign size={18} />}
+                        item.type === 'claim_settlement' ? <DollarSign size={18} /> :
+                            item.type === 'endorsement' ? <Shield size={18} /> :
+                                item.type === 'cancellation' ? <XCircle size={18} /> :
+                                    <DollarSign size={18} />}
                 </div>
 
                 {/* Middle: info */}

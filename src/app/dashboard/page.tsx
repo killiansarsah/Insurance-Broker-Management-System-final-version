@@ -202,13 +202,13 @@ export default function DashboardPage() {
     const { data: claimsApiData = { data: [] } } = useClaims();
     const { data: leadsData = { data: [] } } = useLeads();
     const { data: invoicesData = { data: [] } } = useInvoices();
-    
+
     const policies = policiesData.data || [];
     const clients = clientsData.data || [];
     const claims = claimsApiData.data || [];
     const leads = leadsData.data || [];
     const invoices = invoicesData.data || [];
-    
+
     const [period, setPeriod] = useState<Period>('mtd');
     const [selectedYear, setSelectedYear] = useState<number>(2026);
     const [filters, setFilters] = useState<Filters>({
