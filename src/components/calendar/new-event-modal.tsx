@@ -64,15 +64,11 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
         const endDateTime = new Date(`${date}T${endTime}:00`);
 
         const newEvent = {
-            id: Math.random().toString(36).substr(2, 9),
             title,
-            participant,
             description,
-            start: startDateTime,
-            end: endDateTime,
-            type,
-            priority,
-            status: 'upcoming' as const,
+            startDate: startDateTime.toISOString(),
+            endDate: endDateTime.toISOString(),
+            type: (type as string).toUpperCase(),
             ...(location.trim() && { location: location.trim() }),
         };
 

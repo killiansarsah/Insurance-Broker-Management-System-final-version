@@ -14,7 +14,7 @@ export function CalendarWidget() {
     const upcomingEvents = React.useMemo(() => {
         if (!eventsData) return [];
         return eventsData
-            .map((e: any) => ({ ...e, start: new Date(e.start), end: new Date(e.end) }))
+            .map((e: any) => ({ ...e, start: new Date(e.startDate || e.start), end: new Date(e.endDate || e.end), type: (e.type || '').toLowerCase() }))
             .filter(event => isAfter(event.start, today) || format(event.start, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
             .sort((a: any, b: any) => a.start.getTime() - b.start.getTime())
             .slice(0, 4);

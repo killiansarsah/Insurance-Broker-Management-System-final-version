@@ -15,8 +15,8 @@ export function useTasks(params?: Record<string, unknown>) {
 
 export function useMyTasks(params?: Record<string, unknown>) {
     return useQuery({
-        queryKey: ['tasks', 'mine', params],
-        queryFn: () => apiClient.get<PaginatedResponse<TaskData>>('/tasks/mine', params),
+        queryKey: ['tasks', 'my', params],
+        queryFn: () => apiClient.get<TaskData[]>('/tasks/my', params),
     });
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import {
     Briefcase,
@@ -15,6 +15,7 @@ import {
     Tag,
     Trash2,
     ChevronDown,
+    Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
@@ -23,6 +24,7 @@ import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
 import { StickyNoteTask } from '@/components/features/tasks/sticky-note-task';
 import { RecycleBin } from '@/components/features/tasks/recycle-bin';
+import { useTasks, useCreateTask, useChangeTaskStatus, useUpdateTask } from '@/hooks/api/use-tasks';
 const ArchiveModal = dynamic(
     () => import('@/components/features/tasks/archive-modal').then(m => ({ default: m.ArchiveModal })),
     { ssr: false }
@@ -34,7 +36,7 @@ const ConfirmationModal = dynamic(
 
 import { AnimatePresence, motion } from 'framer-motion';
 
-// Enhanced Mock Data including Priorities
+// ─── Task shape expected by UI components ───
 interface Task {
     id: string;
     title: string;
@@ -47,73 +49,34 @@ interface Task {
     isCompleted?: boolean;
 }
 
-const INITIAL_TASKS: Task[] = [
-    { id: 'task-1', title: 'Renewal: Acme Corp Policy #9882', priority: 'hot', status: 'pending', due: 'Today', type: 'General Insurance', description: 'Client needs renewal confirmation by COP to avoid gap in coverage.', link: '/dashboard/policies/pol-001' },
-    { id: 'task-2', title: 'Claim Review: John Doe - Auto Incident', priority: 'warm', status: 'under_review', due: 'Tomorrow', type: 'Motor Insurance', description: 'Verify documents uploaded by the client matches NIC requirements.', link: '/dashboard/claims/clm-001' },
-    { id: 'task-3', title: 'Follow-up: New Lead - TechStart Inc.', priority: 'cold', status: 'registered', due: 'Feb 18', type: 'Professional Liability', description: 'Initial intake completed. Waiting for risk assessment results.', link: '/dashboard/leads/ld-001' },
-    { id: 'task-4', title: 'Endorsement: Goldfields Mining - Add Equipment', priority: 'hot', status: 'pending', due: 'Today', type: 'Engineering Insurance', description: 'Client purchased new excavation equipment worth GHS 2.4M. Needs immediate cover.', link: '/dashboard/policies/pol-002' },
-    { id: 'task-5', title: 'Premium Collection: Sunrise Hotels Overdue', priority: 'hot', status: 'pending', due: 'Today', type: 'Fire Insurance', description: 'Premium 45 days overdue. Risk of policy cancellation per NIC guidelines.', link: '/dashboard/finance' },
-    { id: 'task-6', title: 'Claim: Kwame Asante - Flood Damage', priority: 'hot', status: 'under_review', due: 'Today', type: 'Property Insurance', description: 'Heavy rainfall caused warehouse flooding. Loss adjuster report pending.', link: '/dashboard/claims/clm-002' },
-    { id: 'task-7', title: 'KYC Update: Mensah Brothers Ltd', priority: 'warm', status: 'pending', due: 'Tomorrow', type: 'Compliance', description: 'Annual KYC refresh due. Request updated company registration documents.', link: '/dashboard/clients/CL-003' },
-    { id: 'task-8', title: 'Quote: Ghana Ports Authority - Marine Cargo', priority: 'warm', status: 'under_review', due: 'Tomorrow', type: 'Marine Insurance', description: 'Prepare competitive quote for annual marine cargo coverage. GHS 15M sum insured.', link: '/dashboard/quotes' },
-    { id: 'task-9', title: 'Renewal: Volta Aluminum Co. - Group Life', priority: 'hot', status: 'pending', due: 'Today', type: 'Life Insurance', description: 'Group life policy for 340 employees expires in 3 days. Urgent renewal needed.', link: '/dashboard/policies/pol-003' },
-    { id: 'task-10', title: 'Document Upload: Adjei Transport Fleet', priority: 'cold', status: 'registered', due: 'Mar 2', type: 'Motor Insurance', description: 'Client submitted 12 new vehicle registration cards. Upload to system.', link: '/dashboard/documents' },
-    { id: 'task-11', title: 'Commission Reconciliation: Q4 2025', priority: 'warm', status: 'under_review', due: 'Feb 28', type: 'Finance', description: 'Reconcile commission statements from SIC, Enterprise, and Star Assurance.', link: '/dashboard/commissions' },
-    { id: 'task-12', title: 'Claim Settlement: Osei Farms - Crop Damage', priority: 'hot', status: 'under_review', due: 'Today', type: 'Agricultural Insurance', description: 'Loss adjuster approved GHS 180K settlement. Awaiting insurer transfer.', link: '/dashboard/claims/clm-003' },
-    { id: 'task-13', title: 'New Client Onboarding: Tema Steel Works', priority: 'warm', status: 'registered', due: 'Feb 27', type: 'Industrial Insurance', description: 'Complete risk survey and proposal form for multi-peril industrial cover.', link: '/dashboard/clients/CL-004' },
-    { id: 'task-14', title: 'Policy Delivery: Accra Mall - All Risks', priority: 'cold', status: 'registered', due: 'Mar 1', type: 'Property Insurance', description: 'Policy document ready. Schedule delivery to client management office.', link: '/dashboard/policies/pol-004' },
-    { id: 'task-15', title: 'Renewal Notice: Ecobank Branch Network', priority: 'warm', status: 'pending', due: 'Feb 28', type: 'Bankers Blanket Bond', description: 'Send 30-day renewal notice for BBB covering 85 branches nationwide.', link: '/dashboard/renewals' },
-    { id: 'task-16', title: 'Claim: Nana Ama - Motor Accident Kumasi', priority: 'hot', status: 'pending', due: 'Today', type: 'Motor Insurance', description: 'Client involved in accident on Kumasi-Accra highway. Police report obtained.', link: '/dashboard/claims/clm-004' },
-    { id: 'task-17', title: 'Risk Survey: Takoradi Oil Refinery', priority: 'warm', status: 'under_review', due: 'Mar 3', type: 'Energy Insurance', description: 'Joint survey with loss control engineer. Prepare inspection checklist.', link: '/dashboard/leads/ld-002' },
-    { id: 'task-18', title: 'Premium Financing: AngloGold Ashanti', priority: 'cold', status: 'registered', due: 'Mar 5', type: 'Premium Finance', description: 'Structure quarterly payment plan for GHS 4.2M annual premium.', link: '/dashboard/premium-financing' },
-    { id: 'task-19', title: 'Complaint: Delayed Claim - Mrs. Boateng', priority: 'hot', status: 'pending', due: 'Today', type: 'Customer Service', description: 'Client escalated to NIC. Claim pending 60+ days. Immediate resolution required.', link: '/dashboard/complaints' },
-    { id: 'task-20', title: 'Reinsurance Placement: Cocoa Board', priority: 'warm', status: 'under_review', due: 'Mar 4', type: 'Treaty Reinsurance', description: 'Facultative placement for excess layer. Approach Munich Re and Swiss Re.', link: '/dashboard/policies/pol-005' },
-    { id: 'task-21', title: 'Staff Training: NIC Regulatory Update', priority: 'cold', status: 'registered', due: 'Mar 10', type: 'Internal', description: 'Prepare training materials on new NIC market conduct guidelines.', link: '/dashboard/team' },
-    { id: 'task-22', title: 'Quote: University of Ghana - Group PA', priority: 'warm', status: 'pending', due: 'Feb 28', type: 'Personal Accident', description: 'Group personal accident cover for 2,500 students. Compare 4 insurer quotes.', link: '/dashboard/quotes' },
-    { id: 'task-23', title: 'Renewal: MTN Ghana - Cyber Liability', priority: 'hot', status: 'pending', due: 'Tomorrow', type: 'Cyber Insurance', description: 'Annual cyber liability renewal. GHS 50M limit. Broker market for best terms.', link: '/dashboard/renewals' },
-    { id: 'task-24', title: 'Claim Documents: Adom Logistics Fleet', priority: 'warm', status: 'under_review', due: 'Mar 1', type: 'Motor Insurance', description: 'Collate repair invoices and photos for 3 vehicle claims submitted this month.', link: '/dashboard/claims/clm-005' },
-    { id: 'task-25', title: 'Client Meeting: Stanbic Bank Treasury', priority: 'cold', status: 'registered', due: 'Mar 6', type: 'Financial Lines', description: 'Presentation on Directors & Officers liability coverage options.', link: '/dashboard/calendar' },
-    { id: 'task-26', title: 'Policy Amendment: GNPC - Increase Limit', priority: 'hot', status: 'pending', due: 'Today', type: 'Energy Insurance', description: 'Client acquired new offshore platform. Increase liability limit to USD 200M.', link: '/dashboard/policies/pol-006' },
-    { id: 'task-27', title: 'Debit Note: Newmont Mining - Q1 2026', priority: 'warm', status: 'pending', due: 'Feb 28', type: 'Finance', description: 'Issue debit note for Q1 premium installment. GHS 890K due.', link: '/dashboard/finance' },
-    { id: 'task-28', title: 'Lead Follow-up: Zipline Ghana Drones', priority: 'cold', status: 'registered', due: 'Mar 7', type: 'Aviation Insurance', description: 'Interested in drone fleet insurance. Prepare hull and liability proposal.', link: '/dashboard/leads/ld-003' },
-    { id: 'task-29', title: 'Claim: Cape Coast Stadium Roof Collapse', priority: 'hot', status: 'under_review', due: 'Today', type: 'Contractors All Risk', description: 'Major loss event. Coordinate with loss adjusters and reinsurers immediately.', link: '/dashboard/claims/clm-006' },
-    { id: 'task-30', title: 'Compliance: AML Report Submission', priority: 'hot', status: 'pending', due: 'Tomorrow', type: 'Compliance', description: 'Quarterly anti-money laundering report due to Financial Intelligence Centre.', link: '/dashboard/compliance' },
-    { id: 'task-31', title: 'Renewal Pack: Vodafone Ghana - All Lines', priority: 'warm', status: 'under_review', due: 'Mar 2', type: 'Multi-Line', description: 'Prepare comprehensive renewal pack covering property, liability, motor, and marine.', link: '/dashboard/renewals' },
-    { id: 'task-32', title: 'Quote: ECG - Public Liability', priority: 'cold', status: 'registered', due: 'Mar 8', type: 'Liability Insurance', description: 'Public liability cover for electrical infrastructure. High-risk exposure.', link: '/dashboard/quotes' },
-    { id: 'task-33', title: 'Premium Reminder: Melcom Group 2nd Installment', priority: 'warm', status: 'pending', due: 'Mar 1', type: 'Property Insurance', description: 'Second quarterly installment due. Send friendly reminder to CFO.', link: '/dashboard/finance' },
-    { id: 'task-34', title: 'Claim Rejection Appeal: Kumasi Brewery', priority: 'hot', status: 'under_review', due: 'Tomorrow', type: 'Business Interruption', description: 'Insurer rejected BI claim. Prepare appeal with supporting documentation.', link: '/dashboard/claims/clm-007' },
-    { id: 'task-35', title: 'New Product: Parametric Weather Insurance', priority: 'cold', status: 'registered', due: 'Mar 12', type: 'Agricultural Insurance', description: 'Develop parametric product proposal for smallholder farmers program.', link: '/dashboard/leads/ld-004' },
-    { id: 'task-36', title: 'Broker Agreement: Allianz Partnership', priority: 'warm', status: 'under_review', due: 'Mar 3', type: 'Business Development', description: 'Review and sign updated brokerage agreement with Allianz Insurance.', link: '/dashboard/documents' },
-    { id: 'task-37', title: 'Renewal: Tullow Oil Ghana - Offshore', priority: 'hot', status: 'pending', due: 'Today', type: 'Energy Insurance', description: 'USD 500M offshore energy program. London market placement required.', link: '/dashboard/renewals' },
-    { id: 'task-38', title: 'Client Visit: Tema Harbour Authority', priority: 'cold', status: 'registered', due: 'Mar 9', type: 'Marine Insurance', description: 'Annual portfolio review meeting. Prepare loss history and market update.', link: '/dashboard/calendar' },
-    { id: 'task-39', title: 'Certificate Request: Dangote Cement Ghana', priority: 'warm', status: 'pending', due: 'Feb 28', type: 'Property Insurance', description: 'Client needs insurance certificate for bank loan application. Urgent.', link: '/dashboard/documents' },
-    { id: 'task-40', title: 'Claim: GRIDCo Transformer Explosion', priority: 'hot', status: 'pending', due: 'Today', type: 'Engineering Insurance', description: 'Major transformer failure at Aboadze substation. Estimated loss GHS 8M.', link: '/dashboard/claims/clm-008' },
-    { id: 'task-41', title: 'Underwriting Info: Kasapreko Expansion', priority: 'warm', status: 'under_review', due: 'Mar 2', type: 'Property Insurance', description: 'New bottling plant construction. Gather fire protection and building specs.', link: '/dashboard/leads/ld-005' },
-    { id: 'task-42', title: 'Commission Follow-up: Enterprise Insurance', priority: 'cold', status: 'registered', due: 'Mar 5', type: 'Finance', description: 'Outstanding commission of GHS 45K for 3 months. Escalate to management.', link: '/dashboard/commissions' },
-    { id: 'task-43', title: 'Policy Wording Review: Fidelity Bond', priority: 'warm', status: 'under_review', due: 'Mar 1', type: 'Financial Lines', description: 'Review updated fidelity guarantee wording from Hollard Insurance.', link: '/dashboard/documents' },
-    { id: 'task-44', title: 'Renewal: Ghana Cocobod - Warehouse Stock', priority: 'hot', status: 'pending', due: 'Tomorrow', type: 'Stock Insurance', description: 'Warehouse stock cover for 600K metric tons of cocoa beans. High season.', link: '/dashboard/renewals' },
-    { id: 'task-45', title: 'Lead: Jospong Group - Waste Management', priority: 'cold', status: 'registered', due: 'Mar 11', type: 'Environmental Liability', description: 'Environmental liability and fleet cover for waste management operations.', link: '/dashboard/leads/ld-006' },
-    { id: 'task-46', title: 'Claim Update: Hotel Kempinski Accra', priority: 'warm', status: 'under_review', due: 'Mar 3', type: 'Property Insurance', description: 'Water damage claim. Specialist restoration company engaged. Update client.', link: '/dashboard/claims/clm-009' },
-    { id: 'task-47', title: 'Quote Comparison: Ghana Airport Co.', priority: 'hot', status: 'pending', due: 'Tomorrow', type: 'Aviation Insurance', description: 'Compare quotes from 5 insurers for airport operators liability cover.', link: '/dashboard/quotes' },
-    { id: 'task-48', title: 'NIC Returns: Monthly Statistical Report', priority: 'warm', status: 'pending', due: 'Mar 1', type: 'Compliance', description: 'Compile and submit monthly production statistics to NIC portal.', link: '/dashboard/compliance' },
-    { id: 'task-49', title: 'Renewal: GOIL Filling Stations Network', priority: 'warm', status: 'under_review', due: 'Mar 4', type: 'Fire Insurance', description: 'Property and BI cover for 350+ filling stations. Negotiate improved terms.', link: '/dashboard/renewals' },
-    { id: 'task-50', title: 'Client Complaint: Slow Response - Adom Group', priority: 'hot', status: 'pending', due: 'Today', type: 'Customer Service', description: 'Client unhappy with claim handling turnaround. Schedule urgent meeting.', link: '/dashboard/complaints' },
-    { id: 'task-51', title: 'Travel Insurance: Parliament Delegation', priority: 'cold', status: 'registered', due: 'Mar 8', type: 'Travel Insurance', description: 'Group travel cover for 15-member delegation to Brussels. Depart in 2 weeks.', link: '/dashboard/policies/pol-007' },
-    { id: 'task-52', title: 'Loss Control: Accra Brewery Fire Safety', priority: 'warm', status: 'under_review', due: 'Mar 3', type: 'Risk Management', description: 'Annual fire safety audit and loss control recommendations report.', link: '/dashboard/documents' },
-    { id: 'task-53', title: 'Renewal: Standard Chartered - BBB & PI', priority: 'hot', status: 'pending', due: 'Tomorrow', type: 'Financial Lines', description: "Bankers Blanket Bond and Professional Indemnity. Combined limit USD 25M.", link: '/dashboard/renewals' },
-    { id: 'task-54', title: 'New Vehicle Addition: Bolt Ghana Fleet', priority: 'cold', status: 'registered', due: 'Mar 6', type: 'Motor Insurance', description: 'Add 50 new vehicles to existing fleet policy. Process endorsement.', link: '/dashboard/policies/pol-008' },
-    { id: 'task-55', title: 'Reinsurance Treaty: Proportional Review', priority: 'warm', status: 'under_review', due: 'Mar 5', type: 'Treaty Reinsurance', description: 'Annual proportional treaty review with reinsurance brokers in London.', link: '/dashboard/policies/pol-009' },
-    { id: 'task-56', title: 'Claim: Shoprite Accra Mall Theft', priority: 'hot', status: 'pending', due: 'Today', type: 'All Risks Insurance', description: 'Armed robbery incident. Stock and cash loss estimated at GHS 320K.', link: '/dashboard/claims/clm-010' },
-    { id: 'task-57', title: 'Proposal: Ghana Water Company', priority: 'cold', status: 'registered', due: 'Mar 10', type: 'Public Liability', description: 'Comprehensive public liability and asset cover for water infrastructure.', link: '/dashboard/leads/ld-007' },
-    { id: 'task-58', title: 'Premium Allocation: Multi-Line Package', priority: 'warm', status: 'pending', due: 'Mar 1', type: 'Finance', description: 'Allocate premiums across property, motor, and liability for Unilever Ghana.', link: '/dashboard/finance' },
-    { id: 'task-59', title: 'Claim Follow-up: Maxmart Warehouse Fire', priority: 'hot', status: 'under_review', due: 'Today', type: 'Fire Insurance', description: 'Major fire loss. Loss adjuster interim report expected this week.', link: '/dashboard/claims/clm-011' },
-    { id: 'task-60', title: 'Client Retention: Nestle Ghana Lapsing', priority: 'hot', status: 'pending', due: 'Tomorrow', type: 'Corporate Account', description: 'Client considering switching brokers. Schedule executive-level meeting.', link: '/dashboard/clients/CL-010' },
-    { id: 'task-61', title: 'Quote: Meridian Port Services - Liability', priority: 'warm', status: 'under_review', due: 'Mar 4', type: 'Marine Insurance', description: 'Port operators liability and stevedoring cover. High-value exposure.', link: '/dashboard/quotes' },
-    { id: 'task-62', title: 'Document Archival: 2025 Expired Policies', priority: 'cold', status: 'registered', due: 'Mar 15', type: 'Administration', description: 'Archive expired 2025 policy documents per NIC record retention rules.', link: '/dashboard/documents' },
-    { id: 'task-63', title: 'Renewal: Ghana Armed Forces - Group Life', priority: 'hot', status: 'pending', due: 'Today', type: 'Life Insurance', description: 'Group life and PA cover for 15,000 personnel. Sensitive government account.', link: '/dashboard/renewals' },
-    { id: 'task-64', title: 'Market Intelligence: Motor Tariff Changes', priority: 'cold', status: 'registered', due: 'Mar 12', type: 'Research', description: 'NIC proposing revised motor tariff structure. Analyze impact on portfolio.', link: '/dashboard/reports' },
-    { id: 'task-65', title: 'Endorsement: Calbank - Add New Branch', priority: 'warm', status: 'pending', due: 'Mar 2', type: 'Property Insurance', description: 'New Takoradi branch opened. Add to existing property schedule.', link: '/dashboard/policies/pol-010' },
-];
+// ─── Map backend record → UI Task ───
+function mapApiTask(raw: Record<string, any>): Task {
+    const priorityMap: Record<string, 'hot' | 'warm' | 'cold'> = { HOT: 'hot', WARM: 'warm', COLD: 'cold' };
+    const statusMap: Record<string, 'pending' | 'under_review' | 'registered'> = { PENDING: 'pending', UNDER_REVIEW: 'under_review', REGISTERED: 'registered' };
+
+    let due = '';
+    if (raw.dueDate) {
+        const d = new Date(raw.dueDate);
+        const now = new Date();
+        const todayStr = now.toDateString();
+        const tomorrowStr = new Date(now.getTime() + 86400000).toDateString();
+        if (d.toDateString() === todayStr) due = 'Today';
+        else if (d.toDateString() === tomorrowStr) due = 'Tomorrow';
+        else due = d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+    }
+
+    return {
+        id: raw.id,
+        title: raw.title ?? '',
+        priority: priorityMap[raw.priority] ?? 'warm',
+        status: statusMap[raw.status] ?? 'pending',
+        due,
+        type: raw.type ?? 'General',
+        description: raw.description ?? '',
+        link: raw.link ?? '/dashboard/tasks',
+        isCompleted: raw.isCompleted ?? false,
+    };
+}
 
 function MetricCard({ label, value, icon, colorClass, status, trend }: { label: string; value: string; icon: React.ReactNode; colorClass: string; status: string; trend?: string }) {
     return (
@@ -136,9 +99,23 @@ function MetricCard({ label, value, icon, colorClass, status, trend }: { label: 
 }
 
 export default function TasksPage() {
-    const [taskList, setTaskList] = useState<Task[]>(INITIAL_TASKS);
-    const [archivedTasks, setArchivedTasks] = useState<Task[]>([]);
-    const [completedCount, setCompletedCount] = useState(28);
+    // ─── Fetch tasks from backend API ───
+    const { data: tasksResponse, isLoading, isError } = useTasks({ limit: 100 });
+    const createTask = useCreateTask();
+    const changeStatus = useChangeTaskStatus();
+    const updateTask = useUpdateTask();
+
+    // Map API data into UI shape; separate active vs completed
+    const allTasks = useMemo(() => {
+        const raw = tasksResponse?.data ?? tasksResponse ?? [];
+        if (!Array.isArray(raw)) return [];
+        return (raw as Record<string, any>[]).map(mapApiTask);
+    }, [tasksResponse]);
+
+    const taskList = useMemo(() => allTasks.filter(t => !t.isCompleted), [allTasks]);
+    const archivedTasks = useMemo(() => allTasks.filter(t => t.isCompleted), [allTasks]);
+    const completedCount = archivedTasks.length;
+
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
@@ -202,23 +179,22 @@ export default function TasksPage() {
 
     const handleComplete = (taskId: string) => {
         const task = taskList.find(t => t.id === taskId);
-        if (task) {
-            setTaskList(prev => prev.filter(t => t.id !== taskId));
-            setArchivedTasks(prev => [{ ...task, isCompleted: true }, ...prev]);
-            setCompletedCount(prev => prev + 1);
-
-            // Remove from selection if it was selected
-            if (selectedTaskIds.has(taskId)) {
-                const newSelection = new Set(selectedTaskIds);
-                newSelection.delete(taskId);
-                setSelectedTaskIds(newSelection);
+        updateTask.mutate(
+            { id: taskId, data: { isCompleted: true } },
+            {
+                onSuccess: () => {
+                    if (selectedTaskIds.has(taskId)) {
+                        const newSelection = new Set(selectedTaskIds);
+                        newSelection.delete(taskId);
+                        setSelectedTaskIds(newSelection);
+                    }
+                    toast.success('Task Archived', {
+                        description: task?.title,
+                        icon: <CheckCircle2 className="text-success-500" />
+                    });
+                },
             }
-
-            toast.success('Task Archived', {
-                description: task.title,
-                icon: <CheckCircle2 className="text-success-500" />
-            });
-        }
+        );
     };
 
     const handleDelete = (taskId: string) => {
@@ -229,28 +205,32 @@ export default function TasksPage() {
         if (!deleteTarget) return;
         if (deleteTarget.type === 'single' && deleteTarget.id) {
             const task = taskList.find(t => t.id === deleteTarget.id);
-            if (task) {
-                setTaskList(prev => prev.filter(t => t.id !== deleteTarget.id));
-                if (selectedTaskIds.has(deleteTarget.id)) {
-                    const newSelection = new Set(selectedTaskIds);
-                    newSelection.delete(deleteTarget.id);
-                    setSelectedTaskIds(newSelection);
+            updateTask.mutate(
+                { id: deleteTarget.id, data: { isCompleted: true } },
+                {
+                    onSuccess: () => {
+                        if (deleteTarget.id && selectedTaskIds.has(deleteTarget.id)) {
+                            const newSelection = new Set(selectedTaskIds);
+                            newSelection.delete(deleteTarget.id);
+                            setSelectedTaskIds(newSelection);
+                        }
+                        toast.error('Task Deleted', {
+                            description: task?.title,
+                            icon: <Trash2 className="text-danger-500" />
+                        });
+                    },
                 }
-                toast.error('Task Deleted', {
-                    description: task.title,
-                    icon: <Trash2 className="text-danger-500" />
-                });
-            }
+            );
         } else if (deleteTarget.type === 'bulk') {
             const count = selectedTaskIds.size;
-            setTaskList(prev => prev.filter(t => !selectedTaskIds.has(t.id)));
-            setSelectedTaskIds(new Set());
-            toast.error(`Deleted ${count} tasks`);
+            const ids = Array.from(selectedTaskIds);
+            Promise.all(ids.map(id => updateTask.mutateAsync({ id, data: { isCompleted: true } })))
+                .then(() => {
+                    setSelectedTaskIds(new Set());
+                    toast.error(`Deleted ${count} tasks`);
+                });
         } else if (deleteTarget.type === 'empty-bin') {
-            setArchivedTasks([]);
-            toast.error('Bin Emptied', {
-                description: 'All archived records have been permanently removed.'
-            });
+            toast.info('Empty bin is not supported on the server yet.');
         }
         setDeleteTarget(null);
     };
@@ -276,12 +256,13 @@ export default function TasksPage() {
     };
 
     const handleBulkArchive = () => {
-        const selectedTasks = taskList.filter(t => selectedTaskIds.has(t.id));
-        setTaskList(prev => prev.filter(t => !selectedTaskIds.has(t.id)));
-        setArchivedTasks(prev => [...selectedTasks.map(t => ({ ...t, isCompleted: true })), ...prev]);
-        setCompletedCount(prev => prev + selectedTasks.length);
-        setSelectedTaskIds(new Set());
-        toast.success(`Archived ${selectedTasks.length} tasks`);
+        const ids = Array.from(selectedTaskIds);
+        const count = ids.length;
+        Promise.all(ids.map(id => updateTask.mutateAsync({ id, data: { isCompleted: true } })))
+            .then(() => {
+                setSelectedTaskIds(new Set());
+                toast.success(`Archived ${count} tasks`);
+            });
     };
 
     const handleBulkDelete = () => {
@@ -290,16 +271,17 @@ export default function TasksPage() {
 
     const handleRestore = (taskId: string) => {
         const task = archivedTasks.find(t => t.id === taskId);
-        if (task) {
-            setArchivedTasks(prev => prev.filter(t => t.id !== taskId));
-            setTaskList(prev => [{ ...task, isCompleted: false }, ...prev]);
-            setCompletedCount(prev => Math.max(0, prev - 1));
-
-            toast.success('Task Restored', {
-                description: task.title,
-                icon: <Plus className="text-primary-500" />
-            });
-        }
+        updateTask.mutate(
+            { id: taskId, data: { isCompleted: false } },
+            {
+                onSuccess: () => {
+                    toast.success('Task Restored', {
+                        description: task?.title,
+                        icon: <Plus className="text-primary-500" />
+                    });
+                },
+            }
+        );
     };
 
     const handleEmptyBin = () => {
@@ -375,24 +357,22 @@ export default function TasksPage() {
 
     const handleAddTask = (e: React.FormEvent) => {
         e.preventDefault();
-        const entry: Task = {
-            id: `task-${Date.now()}`,
-            title: newTask.title || 'Untitled Task',
-            priority: newTask.priority,
-            status: 'pending',
-            due: newTask.due,
-            type: newTask.type || 'General',
-            description: newTask.description,
-            link: '/dashboard/tasks',
-            isCompleted: false
-        };
-
-        setTaskList([entry, ...taskList]);
-        setIsCreateModalOpen(false);
-        setNewTask({ title: '', priority: 'warm', type: '', description: '', due: 'Next Week' });
-        toast.success('New task created', {
-            description: entry.title
-        });
+        createTask.mutate(
+            {
+                title: newTask.title || 'Untitled Task',
+                priority: newTask.priority.toUpperCase(),
+                type: newTask.type || 'General',
+                description: newTask.description,
+                dueDate: newTask.due ? new Date(newTask.due).toISOString() : undefined,
+            },
+            {
+                onSuccess: () => {
+                    setIsCreateModalOpen(false);
+                    setNewTask({ title: '', priority: 'warm', type: '', description: '', due: 'Next Week' });
+                    toast.success('New task created', { description: newTask.title });
+                },
+            }
+        );
     };
 
     const resetFilters = () => {
@@ -402,6 +382,14 @@ export default function TasksPage() {
             description: 'Showing all active workflow tasks.'
         });
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in w-full max-w-6xl mx-auto">

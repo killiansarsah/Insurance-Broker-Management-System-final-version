@@ -51,8 +51,9 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         if (!eventsData) return [];
         return eventsData.map((e: any) => ({
             ...e,
-            start: new Date(e.start),
-            end: new Date(e.end)
+            start: new Date(e.startDate || e.start),
+            end: new Date(e.endDate || e.end),
+            type: (e.type || '').toLowerCase(),
         }));
     }, [eventsData]);
 

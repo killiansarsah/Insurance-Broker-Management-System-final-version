@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { apiClient } from '@/lib/api-client';
 import { CheckCircle, XCircle, Loader2, Database, Wifi, WifiOff } from 'lucide-react';
 
-const POLL_INTERVAL = 1_000; // 1 second
+const POLL_INTERVAL_CONNECTED = 15_000; // 15 seconds when connected
+const POLL_INTERVAL_DISCONNECTED = 10_000; // 10 seconds when disconnected
 
 interface HealthDetail {
     dbStatus: 'up' | 'down' | 'unknown';
@@ -45,11 +46,18 @@ export function BackendStatus() {
 
     useEffect(() => {
         checkBackend();
-        timerRef.current = setInterval(checkBackend, POLL_INTERVAL);
+    }, [checkBackend]);
+
+    // Adjust poll interval based on connection status
+    useEffect(() => {
+        const interval = status === 'disconnected' || status === 'checking'
+            ? POLL_INTERVAL_DISCONNECTED
+            : POLL_INTERVAL_CONNECTED;
+        timerRef.current = setInterval(checkBackend, interval);
         return () => {
             if (timerRef.current) clearInterval(timerRef.current);
         };
-    }, [checkBackend]);
+    }, [status, checkBackend]);
 
     // Re-show the indicator when status changes from connected to something else
     const prevStatusRef = useRef(status);
