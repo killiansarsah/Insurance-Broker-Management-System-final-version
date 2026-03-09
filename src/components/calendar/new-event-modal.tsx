@@ -73,7 +73,6 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
         };
 
         onSave(newEvent);
-        onClose();
     };
 
     return (

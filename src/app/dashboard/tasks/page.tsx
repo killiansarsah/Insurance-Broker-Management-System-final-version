@@ -107,7 +107,7 @@ export default function TasksPage() {
 
     // Map API data into UI shape; separate active vs completed
     const allTasks = useMemo(() => {
-        const raw = tasksResponse?.data ?? tasksResponse ?? [];
+        const raw = tasksResponse?.items ?? tasksResponse?.data ?? tasksResponse ?? [];
         if (!Array.isArray(raw)) return [];
         return (raw as Record<string, any>[]).map(mapApiTask);
     }, [tasksResponse]);
@@ -149,7 +149,7 @@ export default function TasksPage() {
         priority: 'warm',
         type: '',
         description: '',
-        due: 'Next Week'
+        due: ''
     });
 
     const filteredTasks = taskList.filter(task => {
@@ -357,19 +357,30 @@ export default function TasksPage() {
 
     const handleAddTask = (e: React.FormEvent) => {
         e.preventDefault();
+        // Build dueDate only if a valid date string is provided
+        let dueDate: string | undefined;
+        if (newTask.due) {
+            const parsed = new Date(newTask.due);
+            if (!isNaN(parsed.getTime())) {
+                dueDate = parsed.toISOString();
+            }
+        }
         createTask.mutate(
             {
                 title: newTask.title || 'Untitled Task',
                 priority: newTask.priority.toUpperCase(),
                 type: newTask.type || 'General',
                 description: newTask.description,
-                dueDate: newTask.due ? new Date(newTask.due).toISOString() : undefined,
+                ...(dueDate && { dueDate }),
             },
             {
                 onSuccess: () => {
                     setIsCreateModalOpen(false);
-                    setNewTask({ title: '', priority: 'warm', type: '', description: '', due: 'Next Week' });
+                    setNewTask({ title: '', priority: 'warm', type: '', description: '', due: '' });
                     toast.success('New task created', { description: newTask.title });
+                },
+                onError: () => {
+                    toast.error('Failed to create task', { description: 'Please try again or check your connection.' });
                 },
             }
         );
@@ -828,7 +839,7 @@ export default function TasksPage() {
                                 Due Date
                             </label>
                             <input
-                                placeholder="e.g., Today, Feb 20"
+                                type="date"
                                 value={newTask.due}
                                 onChange={(e) => setNewTask({ ...newTask, due: e.target.value })}
                                 className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
