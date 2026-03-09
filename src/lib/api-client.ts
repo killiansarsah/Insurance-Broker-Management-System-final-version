@@ -35,7 +35,8 @@ class ApiClient {
                 }
                 
                 const originalRequest = error.config as RetryableRequest;
-                if (error.response?.status === 401 && !originalRequest._retry) {
+                const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
+                if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
                     originalRequest._retry = true;
                     try {
                         const newToken = await this.refreshAccessToken();

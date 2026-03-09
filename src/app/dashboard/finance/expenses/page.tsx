@@ -1088,7 +1088,7 @@ export default function ExpensesPage() {
                 <Card padding="lg">
                     <h3 className="text-sm font-bold text-surface-900 mb-4">By Category</h3>
                     <div className="space-y-3">
-                        {expenseSummary.byCategory.map((cat: any) => {
+                        {(expenseSummary.byCategory ?? []).map((cat: any) => {
                             const pct = Math.round((cat.amount / expenseSummary.totalExpenses) * 100);
                             return (
                                 <div key={cat.category}>
@@ -1115,7 +1115,7 @@ export default function ExpensesPage() {
                 <Card padding="lg">
                     <h3 className="text-sm font-bold text-surface-900 mb-4">By Department</h3>
                     <div className="space-y-3">
-                        {expenseSummary.byDepartment.map((dept: any) => {
+                        {(expenseSummary.byDepartment ?? []).map((dept: any) => {
                             const pct = Math.round((dept.amount / expenseSummary.totalExpenses) * 100);
                             return (
                                 <div key={dept.department}>

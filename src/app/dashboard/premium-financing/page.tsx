@@ -533,7 +533,7 @@ export default function PremiumFinancingPage() {
     };
 
     // ─── KPI data (no longer a uniform grid — hero + compact blocks) ───
-    const collectionPct = pfSummary.collectionRate;
+    const collectionPct = pfSummary.collectionRate ?? 0;
     const circumference = 2 * Math.PI * 40; // radius 40
     const strokeDash = (collectionPct / 100) * circumference;
 
@@ -607,7 +607,7 @@ export default function PremiumFinancingPage() {
                             <p className="text-[11px] font-extrabold text-white/90 uppercase tracking-[0.25em] mb-1">Total Financed</p>
                             <p className="text-3xl font-black text-white tracking-tighter">{formatCurrency(pfSummary.totalFinanced)}</p>
                             <div className="flex items-center gap-4 mt-3">
-                                <span className="text-xs font-bold text-white/80">{pfSummary.active + pfSummary.completed} agreements</span>
+                                <span className="text-xs font-bold text-white/80">{(pfSummary.active ?? 0) + (pfSummary.completed ?? 0)} agreements</span>
                                 <span className="text-[11px] font-bold text-success-300 bg-success-500/20 px-2.5 py-0.5 rounded-full">
                                     {collectionPct.toFixed(1)}% collection
                                 </span>
