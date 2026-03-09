@@ -41,7 +41,7 @@ export function useLogin() {
     const { login } = useAuthStore.getState();
     return useMutation({
         mutationFn: async (payload: LoginPayload) => {
-            await login(payload.email, payload.password, payload.tenantSlug ?? '');
+            await login(payload.email, payload.password, payload.tenantSlug);
         },
     });
 }

@@ -53,6 +53,11 @@ export class AuthController {
       req.get('user-agent'),
     );
 
+    // If tenant selection is required, return tenant list (no tokens)
+    if ('requiresTenantSelection' in result) {
+      return { requiresTenantSelection: true, tenants: result.tenants };
+    }
+
     // If 2FA is required, return challenge (no tokens)
     if ('requiresTwoFactor' in result) {
       return { requiresTwoFactor: true, userId: result.userId, tenantId: result.tenantId };

@@ -5,11 +5,16 @@ import { persist } from 'zustand/middleware';
 import type { User, UserRole } from '@/types';
 import { apiClient } from '@/lib/api-client';
 
+interface TenantOption {
+    slug: string;
+    name: string;
+}
+
 interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string, tenantSlug: string) => Promise<void>;
+    login: (email: string, password: string, tenantSlug?: string) => Promise<TenantOption[] | void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     hasRole: (roles: UserRole[]) => boolean;
@@ -159,16 +164,27 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             isLoading: false,
 
-            login: async (email, password, tenantSlug) => {
+            login: async (email, password, tenantSlug?) => {
                 set({ isLoading: true });
                 try {
-                    // Try real API first
-                    const res = await apiClient.post<{ accessToken: string; user: User }>(
+                    const res = await apiClient.post<{
+                        accessToken?: string;
+                        user?: User;
+                        requiresTenantSelection?: boolean;
+                        tenants?: TenantOption[];
+                    }>(
                         '/auth/login',
-                        { email, password, tenantSlug },
+                        { email, password, ...(tenantSlug ? { tenantSlug } : {}) },
                     );
-                    apiClient.setAccessToken(res.accessToken);
-                    set({ user: res.user, isAuthenticated: true, isLoading: false });
+
+                    // Multiple tenants found — return list for selection
+                    if (res.requiresTenantSelection && res.tenants) {
+                        set({ isLoading: false });
+                        return res.tenants;
+                    }
+
+                    apiClient.setAccessToken(res.accessToken!);
+                    set({ user: res.user!, isAuthenticated: true, isLoading: false });
                 } catch (err: unknown) {
                     set({ isLoading: false });
                     if (isNetworkError(err)) {

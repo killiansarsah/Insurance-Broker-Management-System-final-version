@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Eye, EyeOff, Shield, Mail, Lock, Info, Loader2, Building2 } from 'lucide-react';
+import { Eye, EyeOff, Shield, Mail, Lock, Info, Loader2, Building2, ArrowLeft } from 'lucide-react';
 
 /* ──────────────────────────────────────────────────────────
    Insurance-industry stats for the left-side collage
@@ -24,9 +24,14 @@ const IMAGES = [
 /* ──────────────────────────────────────────────────────────
    Props — the parent is responsible for actual auth logic
    ────────────────────────────────────────────────────────── */
+export interface TenantOption {
+    slug: string;
+    name: string;
+}
+
 export interface AnimatedSignInProps {
-    /** Called with email, password, and tenant slug when the form submits */
-    onSubmit: (email: string, password: string, tenantSlug: string) => void | Promise<void>;
+    /** Called with email, password, and optional tenant slug when the form submits */
+    onSubmit: (email: string, password: string, tenantSlug?: string) => Promise<TenantOption[] | void>;
     /** External loading state (e.g. from auth store) */
     isLoading?: boolean;
     /** External error message to display */
@@ -41,9 +46,12 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [tenantSlug, setTenantSlug] = useState('');
     const [mounted, setMounted] = useState(false);
     const [formVisible, setFormVisible] = useState(false);
+
+    // Multi-tenant step
+    const [tenantOptions, setTenantOptions] = useState<TenantOption[] | null>(null);
+    const [selectedTenant, setSelectedTenant] = useState('');
 
     useEffect(() => {
         setMounted(true);
@@ -53,7 +61,21 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
 
     const handleSignIn = async (e: React.FormEvent) => {
         e.preventDefault();
-        await onSubmit(email, password, tenantSlug);
+        const result = await onSubmit(email, password);
+        if (result && result.length > 0) {
+            setTenantOptions(result);
+            setSelectedTenant(result[0].slug);
+        }
+    };
+
+    const handleTenantSelect = async (e: React.FormEvent) => {
+        e.preventDefault();
+        await onSubmit(email, password, selectedTenant);
+    };
+
+    const handleBackToLogin = () => {
+        setTenantOptions(null);
+        setSelectedTenant('');
     };
 
     if (!mounted) return null;
@@ -163,31 +185,61 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                         </div>
 
                         {/* Form */}
-                        <form onSubmit={handleSignIn} className="space-y-5">
-                            {/* Tenant */}
-                            <div className="space-y-1.5">
-                                <label htmlFor="signin-tenant" className="block text-sm font-semibold text-surface-700">
-                                    Organization
-                                </label>
-                                <div className="relative">
-                                    <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none">
-                                        <Building2 size={18} />
-                                    </div>
-                                    <select
-                                        id="signin-tenant"
-                                        value={tenantSlug}
-                                        onChange={(e) => setTenantSlug(e.target.value)}
-                                        required
-                                        className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 appearance-none cursor-pointer"
+                        {tenantOptions ? (
+                            /* ─── Tenant Selection Step ──────────────── */
+                            <form onSubmit={handleTenantSelect} className="space-y-5">
+                                <div className="space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleBackToLogin}
+                                        className="flex items-center gap-1.5 text-sm text-primary-600 hover:text-primary-700 transition-colors cursor-pointer"
                                     >
-                                        <option value="" disabled>Select your organization</option>
-                                        <option value="sic-insurance">SIC Insurance</option>
-                                        <option value="enterprise-insurance">Enterprise Insurance</option>
-                                    </select>
+                                        <ArrowLeft size={16} />
+                                        Back to login
+                                    </button>
+                                    <p className="text-sm text-surface-500">
+                                        Your email is linked to multiple organizations. Please select one to continue.
+                                    </p>
                                 </div>
-                            </div>
 
-                            {/* Email */}
+                                <div className="space-y-1.5">
+                                    <label htmlFor="signin-tenant" className="block text-sm font-semibold text-surface-700">
+                                        Organization
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-surface-400 pointer-events-none">
+                                            <Building2 size={18} />
+                                        </div>
+                                        <select
+                                            id="signin-tenant"
+                                            value={selectedTenant}
+                                            onChange={(e) => setSelectedTenant(e.target.value)}
+                                            required
+                                            className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 appearance-none cursor-pointer"
+                                        >
+                                            {tenantOptions.map((t) => (
+                                                <option key={t.slug} value={t.slug}>{t.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                {/* Error */}
+                                {error && (
+                                    <div className="p-3.5 rounded-xl bg-danger-50 border border-danger-200 flex items-start gap-3 text-danger-700 text-sm animate-fade-in">
+                                        <Info size={18} className="shrink-0 text-danger-500 mt-0.5" />
+                                        <p className="font-medium leading-relaxed">{error}</p>
+                                    </div>
+                                )}
+
+                                <button type="submit" disabled={isLoading}
+                                    className={`flex w-full justify-center items-center gap-2 rounded-xl py-3.5 px-4 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-all duration-200 cursor-pointer ${isLoading ? 'bg-primary-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 active:scale-[0.98]'}`}>
+                                    {isLoading ? (<><Loader2 size={18} className="animate-spin" />Signing in…</>) : (<><Shield size={18} />Continue</>)}
+                                </button>
+                            </form>
+                        ) : (
+                            /* ─── Main Login Form ────────────────────── */
+                        <form onSubmit={handleSignIn} className="space-y-5">
                             <div className="space-y-1.5">
                                 <label htmlFor="signin-email" className="block text-sm font-semibold text-surface-700">
                                     Work Email
@@ -309,8 +361,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                 Sign in with Google
                             </button>
                         </form>
-
-
+                        )}
 
                         {/* Footer */}
                         <p className="mt-6 text-center text-[11px] text-surface-400 font-medium tracking-wide">

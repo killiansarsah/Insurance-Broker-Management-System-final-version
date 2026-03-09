@@ -140,18 +140,50 @@ export class AuthService {
   async login(
     email: string,
     password: string,
-    tenantSlug: string,
+    tenantSlug: string | undefined,
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const tenant = await this.tenants.findBySlug(tenantSlug);
-    if (!tenant || !tenant.isActive) {
-      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    let user: UserRecord | null = null;
+    let tenantId: string;
+
+    if (tenantSlug) {
+      // Explicit tenant provided — use direct lookup
+      const tenant = await this.tenants.findBySlug(tenantSlug);
+      if (!tenant || !tenant.isActive) {
+        throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      }
+      tenantId = tenant.id;
+      user = (await this.prisma.user.findFirst({
+        where: { tenantId: tenant.id, email },
+      })) as UserRecord | null;
+    } else {
+      // No tenant slug — auto-resolve by looking up email across all tenants
+      const candidates = (await this.prisma.user.findMany({
+        where: { email, deletedAt: null, isActive: true },
+        include: { tenant: { select: { id: true, name: true, slug: true, isActive: true } } },
+      })) as (UserRecord & { tenant: { id: string; name: string; slug: string; isActive: boolean } })[];
+
+      // Filter to active tenants only
+      const active = candidates.filter(c => c.tenant.isActive);
+
+      if (active.length === 0) {
+        throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+      }
+
+      if (active.length > 1) {
+        // Multiple tenants — return list for user to choose
+        return {
+          requiresTenantSelection: true,
+          tenants: active.map(c => ({ slug: c.tenant.slug, name: c.tenant.name })),
+        };
+      }
+
+      // Exactly one tenant — auto-resolve
+      user = active[0];
+      tenantId = active[0].tenant.id;
     }
 
-    const user = (await this.prisma.user.findFirst({
-      where: { tenantId: tenant.id, email },
-    })) as UserRecord | null;
     if (!user || user.deletedAt || !user.isActive) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
@@ -176,7 +208,7 @@ export class AuthService {
       });
       await this.prisma.auditLog.create({
         data: {
-          tenantId: tenant.id,
+          tenantId,
           userId: user.id,
           action: 'login.failed',
           entity: 'user',
@@ -195,7 +227,7 @@ export class AuthService {
     });
     await this.prisma.auditLog.create({
       data: {
-        tenantId: tenant.id,
+        tenantId,
         userId: user.id,
         action: 'login.success',
         entity: 'user',
@@ -210,13 +242,13 @@ export class AuthService {
       return {
         requiresTwoFactor: true,
         userId: user.id,
-        tenantId: tenant.id,
+        tenantId,
       };
     }
 
     const accessToken = await this.issueAccessToken({
       id: user.id,
-      tenantId: tenant.id,
+      tenantId,
       role: user.role,
     });
     const created = await this.issueRefreshToken(user.id, ipAddress, userAgent);

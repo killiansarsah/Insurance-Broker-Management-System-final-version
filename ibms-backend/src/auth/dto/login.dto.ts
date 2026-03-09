@@ -1,4 +1,4 @@
-import { IsEmail, IsString, IsNotEmpty, Matches } from 'class-validator';
+import { IsEmail, IsString, IsNotEmpty, IsOptional, Matches } from 'class-validator';
 
 export class LoginDto {
   @IsEmail()
@@ -8,7 +8,8 @@ export class LoginDto {
   @IsNotEmpty()
   password!: string;
 
+  @IsOptional()
   @IsString()
   @Matches(/^[a-z0-9-]+$/)
-  tenantSlug!: string;
+  tenantSlug?: string;
 }

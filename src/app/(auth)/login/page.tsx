@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { AnimatedSignIn } from '@/components/ui/sign-in';
+import type { TenantOption } from '@/components/ui/sign-in';
 
 function LoginContent() {
     const [error, setError] = useState<string | null>(null);
@@ -11,12 +12,16 @@ function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    const handleSubmit = async (email: string, password: string, tenantSlug: string) => {
+    const handleSubmit = async (email: string, password: string, tenantSlug?: string): Promise<TenantOption[] | void> => {
         setError(null);
         try {
-            await login(email, password, tenantSlug);
+            const result = await login(email, password, tenantSlug);
+            if (result && result.length > 0) {
+                // Multiple tenants — return them for the UI to show
+                return result;
+            }
+            // Login succeeded
             const returnUrl = searchParams.get('returnUrl');
-            // Only allow relative paths to prevent open-redirect
             const destination = returnUrl?.startsWith('/') ? returnUrl : '/dashboard';
             router.push(destination);
         } catch {

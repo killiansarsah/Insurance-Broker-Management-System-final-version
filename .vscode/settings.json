@@ -19,5 +19,7 @@
             "approve": true,
             "matchCommandLine": true
         }
-    }
+    },
+    "workbench.browser.openLocalhostLinks": true,
+    "workbench.browser.enableChatTools": true
 }
