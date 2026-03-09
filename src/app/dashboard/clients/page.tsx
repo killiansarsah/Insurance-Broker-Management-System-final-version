@@ -42,7 +42,7 @@ export default function ClientsPage() {
     const kycVerified = clients.filter((c) => c.kycStatus === 'verified').length;
     const highRisk = clients.filter((c) => c.amlRiskLevel === 'high' || c.amlRiskLevel === 'critical').length;
     const newThisMonth = clients.filter((c) => {
-        const d = new Date(c.createdAt);
+        const d = new Date(c.createdAt as string);
         const now = new Date();
         return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     }).length;
@@ -64,12 +64,12 @@ export default function ClientsPage() {
         if (filterBroker && c.assignedBrokerName !== filterBroker) return false;
         if (filterDateFrom) {
             const from = new Date(filterDateFrom);
-            if (new Date(c.createdAt) < from) return false;
+            if (new Date(c.createdAt as string) < from) return false;
         }
         if (filterDateTo) {
             const to = new Date(filterDateTo);
             to.setHours(23, 59, 59);
-            if (new Date(c.createdAt) > to) return false;
+            if (new Date(c.createdAt as string) > to) return false;
         }
         return true;
     });
@@ -90,7 +90,7 @@ export default function ClientsPage() {
             String(c.activePolicies),
             String(c.totalPremium),
             c.assignedBrokerName || '',
-            formatDate(c.createdAt),
+            formatDate(c.createdAt as string),
         ]);
         const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -590,7 +590,7 @@ export default function ClientsPage() {
             )}
 
             {/* Data Table */}
-            <DataTable<Client>
+            <DataTable<any>
                 data={filteredClients}
                 columns={columns}
                 searchPlaceholder="Search by name, client number, phone, email…"

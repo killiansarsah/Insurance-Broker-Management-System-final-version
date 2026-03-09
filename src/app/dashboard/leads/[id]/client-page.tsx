@@ -120,7 +120,7 @@ export default function LeadDetailPage() {
                             <div className="col-span-1 md:col-span-2">
                                 <p className="text-xs text-surface-400 uppercase tracking-wider font-semibold mb-2">Product Interest</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {lead.productInterest?.map((p) => (
+                                    {lead.productInterest?.map((p: any) => (
                                         <Badge key={p} variant="outline" className="capitalize">{p.replace(/_/g, ' ')}</Badge>
                                     ))}
                                 </div>

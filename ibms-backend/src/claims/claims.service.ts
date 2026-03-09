@@ -17,15 +17,18 @@ import {
   CreateClaimDocumentDto,
 } from './dto/claim-actions.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ClaimsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generateClaimNumber(): Promise<string> {
+  private async generateClaimNumber(tenantId: string, client?: { claim: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
+    const db = client ?? this.prisma;
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.claim.count();
-    return `CLM-${dateStr}-${String(count + 1).padStart(5, '0')}`;
+    const count = await db.claim.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `CLM-${dateStr}-${String(count + 1).padStart(5, '0')}-${hex}`;
   }
 
   private addBusinessDays(date: Date, days: number): Date {
@@ -71,28 +74,31 @@ export class ClaimsService {
     }
 
     const now = new Date();
-    const claimNumber = await this.generateClaimNumber();
 
-    const claim = await this.prisma.claim.create({
-      data: {
-        tenantId,
-        claimNumber,
-        status: 'INTIMATED',
-        policyId: dto.policyId,
-        clientId: policy.clientId,
-        insuranceType: policy.insuranceType,
-        incidentDate: new Date(dto.incidentDate),
-        incidentDescription: dto.description,
-        incidentLocation: dto.location,
-        claimAmount: dto.claimAmount ?? 0,
-        intimationDate: now,
-        acknowledgmentDeadline: this.addBusinessDays(now, 5),
-        processingDeadline: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-      },
+    return await this.prisma.$transaction(async (tx) => {
+      const claimNumber = await this.generateClaimNumber(tenantId, tx);
+
+      const claim = await tx.claim.create({
+        data: {
+          tenantId,
+          claimNumber,
+          status: 'INTIMATED',
+          policyId: dto.policyId,
+          clientId: policy.clientId,
+          insuranceType: policy.insuranceType,
+          incidentDate: new Date(dto.incidentDate),
+          incidentDescription: dto.description,
+          incidentLocation: dto.location,
+          claimAmount: dto.claimAmount ?? 0,
+          intimationDate: now,
+          acknowledgmentDeadline: this.addBusinessDays(now, 5),
+          processingDeadline: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+        },
+      });
+
+      await this.logAudit(tenantId, userId, 'claim.created', claim.id);
+      return claim;
     });
-
-    await this.logAudit(tenantId, userId, 'claim.created', claim.id);
-    return claim;
   }
 
   // ─── FIND ALL ───────────────────────────────────────
@@ -267,14 +273,17 @@ export class ClaimsService {
     userId: string,
     dto: UpdateClaimDto,
   ) {
+    const updateData: Record<string, unknown> = {};
+    if (dto.claimAmount !== undefined) updateData.claimAmount = dto.claimAmount;
+    if (dto.description !== undefined) updateData.incidentDescription = dto.description;
+    if (dto.location !== undefined) updateData.incidentLocation = dto.location;
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException('No fields to update');
+    }
     await this.findOne(id, tenantId);
     const updated = await this.prisma.claim.update({
       where: { id },
-      data: {
-        claimAmount: dto.claimAmount,
-        incidentDescription: dto.description,
-        incidentLocation: dto.location,
-      },
+      data: updateData,
     });
     await this.logAudit(tenantId, userId, 'claim.updated', id);
     return updated;

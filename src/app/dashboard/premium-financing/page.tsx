@@ -312,11 +312,11 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                 </div>
                                 Installment Schedule
                                 <span className="ml-auto text-[10px] font-bold text-surface-400 uppercase tracking-wider">
-                                    {app.installments.filter(i => i.status === 'paid').length}/{app.installments.length} paid
+                                    {app.installments.filter((i: any) => i.status === 'paid').length}/{app.installments.length} paid
                                 </span>
                             </h3>
                             <div className="space-y-2">
-                                {app.installments.map((inst, idx) => (
+                                {app.installments.map((inst: any, idx: number) => (
                                     <div
                                         key={inst.id}
                                         className="pf-installment-row flex items-center justify-between py-2.5 px-4 rounded-xl text-sm transition-all hover:bg-surface-50/80 border border-transparent hover:border-surface-200/60 group"

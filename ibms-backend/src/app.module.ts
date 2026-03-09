@@ -1,10 +1,13 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD, APP_FILTER } from '@nestjs/core';
+import { LoggerModule } from 'nestjs-pino';
+import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
+import { CsrfMiddleware } from './common/middleware/csrf.middleware';
+import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 import configuration from './config/configuration';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
@@ -31,6 +34,7 @@ import { ComplianceModule } from './compliance/compliance.module';
 import { AuditModule } from './audit/audit.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { SettingsModule } from './settings/settings.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -52,8 +56,29 @@ import { SettingsModule } from './settings/settings.module';
       },
     ]),
 
+    // Structured logging (JSON in production, pretty in development)
+    LoggerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const isProduction = config.get<string>('nodeEnv') === 'production';
+        return {
+          pinoHttp: {
+            level: config.get<string>('logLevel', 'info'),
+            transport: isProduction
+              ? undefined
+              : { target: 'pino-pretty', options: { colorize: true, singleLine: true } },
+            autoLogging: { ignore: (req: { url?: string }) => req.url === '/api/v1/health' },
+          },
+        };
+      },
+    }),
+
     // Database (global)
     PrismaModule,
+
+    // Email (global)
+    EmailModule,
 
     // Auth
     AuthModule,
@@ -114,6 +139,14 @@ import { SettingsModule } from './settings/settings.module';
       provide: APP_FILTER,
       useClass: GlobalExceptionFilter,
     },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: RequestIdInterceptor,
+    },
   ],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(CsrfMiddleware).forRoutes('*');
+  }
+}

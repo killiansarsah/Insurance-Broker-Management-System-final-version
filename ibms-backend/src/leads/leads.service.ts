@@ -8,15 +8,17 @@ import { CreateLeadDto } from './dto/create-lead.dto';
 import { LeadQueryDto, UpdateLeadStageDto } from './dto/lead-query.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { Prisma, LeadStatus } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class LeadsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generateLeadNumber(): Promise<string> {
+  private async generateLeadNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.lead.count();
-    return `LEAD-${dateStr}-${String(count + 1).padStart(5, '0')}`;
+    const count = await this.prisma.lead.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `LEAD-${dateStr}-${String(count + 1).padStart(5, '0')}-${hex}`;
   }
 
   private async logAudit(
@@ -40,7 +42,7 @@ export class LeadsService {
 
   // ─── CREATE ─────────────────────────────────────────
   async create(tenantId: string, userId: string, dto: CreateLeadDto) {
-    const leadNumber = await this.generateLeadNumber();
+    const leadNumber = await this.generateLeadNumber(tenantId);
 
     const lead = await this.prisma.lead.create({
       data: {
@@ -301,7 +303,7 @@ export class LeadsService {
       // Generate client number
       const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const clientCount = await tx.client.count();
-      const clientNumber = `CLT-${dateStr}-${String(clientCount + 1).padStart(5, '0')}`;
+      const clientNumber = `CLT-${dateStr}-${String(clientCount + 1).padStart(5, '0')}-${randomBytes(3).toString('hex').toUpperCase()}`;
 
       // Create client from lead data
       const client = await tx.client.create({

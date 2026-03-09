@@ -120,7 +120,7 @@ export default function PaymentsPage() {
             <Card padding="lg">
                 <p className="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Payment Method Breakdown</p>
                 <div className="flex flex-wrap gap-3">
-                    {Object.entries(methodBreakdown).map(([method, total]) => {
+                    {Object.entries(methodBreakdown).map(([method, total]: [string, any]) => {
                         const pct = Math.round((total / totalCollected) * 100);
                         return (
                             <div
@@ -132,7 +132,7 @@ export default function PaymentsPage() {
                                     {METHOD_ICONS[method]}
                                     {METHOD_LABELS[method]}
                                 </span>
-                                <span className="text-sm font-bold text-surface-900 tabular-nums">{formatCurrency(total)}</span>
+                                <span className="text-sm font-bold text-surface-900 tabular-nums">{formatCurrency(total as number)}</span>
                                 <span className="text-xs text-surface-400">{pct}%</span>
                             </div>
                         );

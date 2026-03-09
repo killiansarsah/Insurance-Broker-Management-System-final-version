@@ -27,16 +27,16 @@ export function SettingsUsers() {
     const [branchFilter, setBranchFilter] = useState<string | null>(null);
     const [isDelegationModalOpen, setIsDelegationModalOpen] = useState(false);
     const [isAddStaffModalOpen, setIsAddStaffModalOpen] = useState(false);
-    const [selectedStaff, setSelectedStaff] = useState<User | null>(null);
+    const [selectedStaff, setSelectedStaff] = useState<any>(null);
 
     const stats = useMemo(() => [
         { label: 'Total Staff', value: apiUsers.length, icon: 'group', color: 'text-primary' },
-        { label: 'Active Brokers', value: apiUsers.filter((u: User) => u.role.includes('broker')).length, icon: 'badge', color: 'text-blue-600' },
-        { label: 'Active Proxies', value: apiUsers.filter((u: User) => u.delegatedTo).length, icon: 'shield_person', color: 'text-emerald-600' },
+        { label: 'Active Brokers', value: apiUsers.filter((u: any) => u.role.includes('broker')).length, icon: 'badge', color: 'text-blue-600' },
+        { label: 'Active Proxies', value: apiUsers.filter((u: any) => u.delegatedTo).length, icon: 'shield_person', color: 'text-emerald-600' },
         { label: 'Branches', value: 2, icon: 'corporate_fare', color: 'text-amber-600' },
     ], [apiUsers]);
 
-    const filteredUsers = useMemo(() => apiUsers.filter((u: User) => {
+    const filteredUsers = useMemo(() => apiUsers.filter((u: any) => {
         const matchesSearch = `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesRole = !roleFilter || u.role === roleFilter;
         const matchesBranch = !branchFilter || u.branchId === branchFilter;
@@ -45,12 +45,10 @@ export function SettingsUsers() {
 
     const handleUpdateDelegation = (staffId: string, backupId: string | null) => {
         // TODO: Call API to update delegation
-        console.log('Update delegation:', staffId, backupId);
     };
 
     const handleAddStaff = (newStaff: User) => {
         // TODO: Call API to add staff
-        console.log('Add staff:', newStaff);
     };
 
     return (
@@ -159,9 +157,9 @@ export function SettingsUsers() {
                                         <td className="px-10 py-6">
                                             <Badge variant="surface" className={cn(
                                                 "px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest",
-                                                member.role === 'platform_super_admin' ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800/30" :
-                                                    member.role === 'tenant_admin' ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30" :
-                                                        member.role.includes('broker') ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30" :
+                                                member.role === 'PLATFORM_SUPER_ADMIN' ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800/30" :
+                                                    member.role === 'TENANT_ADMIN' ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30" :
+                                                        member.role.includes('BROKER') ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30" :
                                                             "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
                                             )}>
                                                 {member.role.replace(/_/g, ' ')}
@@ -170,7 +168,7 @@ export function SettingsUsers() {
                                         <td className="px-10 py-6">
                                             <div className="flex items-center gap-2">
                                                 <span className="material-symbols-outlined text-slate-300 text-lg">location_on</span>
-                                                <span className="text-xs font-black text-slate-600 uppercase tracking-wider">{member.branchId}</span>
+                                                <span className="text-xs font-black text-slate-600 uppercase tracking-wider">{String(member.branchId)}</span>
                                             </div>
                                         </td>
                                         <td className="px-10 py-6">
@@ -229,7 +227,7 @@ export function SettingsUsers() {
                 isOpen={isDelegationModalOpen}
                 onClose={() => setIsDelegationModalOpen(false)}
                 staffMember={selectedStaff}
-                allStaff={apiUsers}
+                allStaff={apiUsers as any}
                 onSave={handleUpdateDelegation}
             />
             <AddStaffModal

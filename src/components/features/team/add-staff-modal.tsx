@@ -58,7 +58,7 @@ export function AddStaffModal({ isOpen, onClose, onAdd }: AddStaffModalProps) {
             lastName: '',
             email: '',
             phone: '',
-            role: 'broker',
+            role: 'BROKER',
             branchId: 'BR-ACC-01',
         });
     };

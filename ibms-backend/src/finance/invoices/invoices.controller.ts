@@ -17,11 +17,9 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 
-interface RequestWithUser {
-  user: { tenantId: string; sub: string; role: string };
-}
+import type { RequestWithUser } from '../../common/types/request.types.js';
 
-@Controller('api/v1/invoices')
+@Controller('invoices')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}

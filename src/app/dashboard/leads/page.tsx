@@ -37,7 +37,7 @@ export default function LeadsPage() {
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const { data: leadsData, isLoading } = useLeads();
     const mockLeads = leadsData?.data || [];
-    const [leads, setLeads] = useState<Lead[]>([]);
+    const [leads, setLeads] = useState<any[]>([]);
     
     useEffect(() => {
         if (mockLeads.length > 0) {

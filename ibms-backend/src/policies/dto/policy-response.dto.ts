@@ -19,14 +19,22 @@ export class PolicyResponseDto {
 }
 
 export class PolicyDetailResponseDto extends PolicyResponseDto {
-  client?: any;
-  carrier?: any;
-  product?: any;
-  vehicleDetails?: any[];
-  propertyDetails?: any[];
-  marineDetails?: any[];
-  endorsements?: any[];
-  installments?: any[];
-  documents?: any[];
-  claims?: any[];
+  client?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    companyName?: string | null;
+    phone?: string | null;
+    email?: string | null;
+    type?: string;
+  };
+  carrier?: { id: string; name: string; shortName?: string };
+  product?: { id: string; name: string; code?: string };
+  vehicleDetails?: Record<string, unknown>[];
+  propertyDetails?: Record<string, unknown>[];
+  marineDetails?: Record<string, unknown>[];
+  endorsements?: Record<string, unknown>[];
+  installments?: Record<string, unknown>[];
+  documents?: Record<string, unknown>[];
+  claims?: { id: string; claimNumber: string; status: string; claimAmount: number }[];
 }

@@ -9,7 +9,7 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
-    login: (email: string, password: string, tenantSlug?: string) => Promise<void>;
+    login: (email: string, password: string, tenantSlug: string) => Promise<void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     hasRole: (roles: UserRole[]) => boolean;
@@ -17,22 +17,26 @@ interface AuthState {
 }
 
 const ROLE_HIERARCHY: Record<UserRole, number> = {
-    platform_super_admin: 8,
-    super_admin: 7,
-    tenant_admin: 6,
-    admin: 6,
-    branch_manager: 5,
-    senior_broker: 4,
-    broker: 3,
-    secretary: 2,
-    data_entry: 2,
-    viewer: 1,
+    PLATFORM_SUPER_ADMIN: 8,
+    SUPER_ADMIN: 7,
+    TENANT_ADMIN: 6,
+    ADMIN: 6,
+    BRANCH_MANAGER: 5,
+    COMPLIANCE_OFFICER: 4,
+    FINANCE_MANAGER: 4,
+    SENIOR_BROKER: 4,
+    BROKER: 3,
+    UNDERWRITER: 3,
+    AGENT: 2,
+    SECRETARY: 2,
+    DATA_ENTRY: 2,
+    VIEWER: 1,
 };
 
 const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
-    platform_super_admin: { '*': ['*'] },
-    super_admin: { '*': ['*'] },
-    tenant_admin: {
+    PLATFORM_SUPER_ADMIN: { '*': ['*'] },
+    SUPER_ADMIN: { '*': ['*'] },
+    TENANT_ADMIN: {
         clients: ['view', 'create', 'edit', 'delete'],
         policies: ['view', 'create', 'edit', 'delete'],
         claims: ['view', 'create', 'edit', 'approve'],
@@ -45,7 +49,7 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
         documents: ['view', 'upload', 'delete'],
         compliance: ['view', 'edit'],
     },
-    admin: {
+    ADMIN: {
         clients: ['view', 'create', 'edit', 'delete'],
         policies: ['view', 'create', 'edit', 'delete'],
         claims: ['view', 'create', 'edit', 'approve'],
@@ -58,7 +62,7 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
         documents: ['view', 'upload', 'delete'],
         compliance: ['view', 'edit'],
     },
-    branch_manager: {
+    BRANCH_MANAGER: {
         clients: ['view', 'create', 'edit'],
         policies: ['view', 'create', 'edit'],
         claims: ['view', 'create', 'edit'],
@@ -70,7 +74,23 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
         documents: ['view', 'upload'],
         compliance: ['view'],
     },
-    senior_broker: {
+    COMPLIANCE_OFFICER: {
+        clients: ['view'],
+        policies: ['view'],
+        claims: ['view'],
+        complaints: ['view', 'create', 'edit'],
+        compliance: ['view', 'edit'],
+        reports: ['view', 'export'],
+        documents: ['view', 'upload'],
+    },
+    FINANCE_MANAGER: {
+        clients: ['view'],
+        policies: ['view'],
+        claims: ['view', 'create', 'edit'],
+        reports: ['view', 'export'],
+        documents: ['view', 'upload'],
+    },
+    SENIOR_BROKER: {
         clients: ['view', 'create', 'edit'],
         policies: ['view', 'create', 'edit'],
         claims: ['view', 'create'],
@@ -80,7 +100,7 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
         chat: ['view', 'send'],
         documents: ['view', 'upload'],
     },
-    broker: {
+    BROKER: {
         clients: ['view', 'create', 'edit'],
         policies: ['view', 'create'],
         claims: ['view', 'create'],
@@ -89,20 +109,33 @@ const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
         chat: ['view', 'send'],
         documents: ['view', 'upload'],
     },
-    secretary: {
+    UNDERWRITER: {
+        policies: ['view', 'create', 'edit'],
+        claims: ['view'],
+        reports: ['view'],
+        documents: ['view', 'upload'],
+    },
+    AGENT: {
+        clients: ['view', 'create'],
+        policies: ['view'],
+        leads: ['view', 'create'],
+        chat: ['view', 'send'],
+        documents: ['view'],
+    },
+    SECRETARY: {
         clients: ['view', 'create', 'edit'],
         policies: ['view', 'create'],
         leads: ['view', 'create'],
         chat: ['view', 'send'],
         documents: ['view', 'upload'],
     },
-    data_entry: {
+    DATA_ENTRY: {
         clients: ['view', 'create', 'edit'],
         policies: ['view', 'create'],
         leads: ['view', 'create'],
         documents: ['view', 'upload'],
     },
-    viewer: {
+    VIEWER: {
         clients: ['view'],
         policies: ['view'],
         claims: ['view'],
@@ -126,7 +159,7 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: false,
             isLoading: false,
 
-            login: async (email, password, tenantSlug = 'sic-insurance') => {
+            login: async (email, password, tenantSlug) => {
                 set({ isLoading: true });
                 try {
                     // Try real API first
@@ -156,7 +189,7 @@ export const useAuthStore = create<AuthState>()(
 
                 // Clear persisted storage
                 if (typeof window !== 'undefined') {
-                    localStorage.removeItem('ibms-auth');
+                    sessionStorage.removeItem('ibms-auth');
                     window.location.href = '/login';
                 }
             },
@@ -190,7 +223,7 @@ export const useAuthStore = create<AuthState>()(
             hasRole: (roles: UserRole[]) => {
                 const user = get().user;
                 if (!user) return false;
-                if (user.role === 'super_admin' || user.role === 'platform_super_admin') return true;
+                if (user.role === 'SUPER_ADMIN' || user.role === 'PLATFORM_SUPER_ADMIN') return true;
                 return roles.includes(user.role);
             },
 
@@ -215,8 +248,33 @@ export const useAuthStore = create<AuthState>()(
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
             }),
+            storage: {
+                getItem: (name) => {
+                    if (typeof window === 'undefined') return null;
+                    const value = sessionStorage.getItem(name);
+                    return value ? JSON.parse(value) : null;
+                },
+                setItem: (name, value) => {
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.setItem(name, JSON.stringify(value));
+                    }
+                },
+                removeItem: (name) => {
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem(name);
+                    }
+                },
+            },
         },
     ),
 );
 
 export { ROLE_HIERARCHY };
+
+// Listen for session-expired events from the API client
+if (typeof window !== 'undefined') {
+    window.addEventListener('auth:session-expired', () => {
+        const { logout } = useAuthStore.getState();
+        void logout();
+    });
+}

@@ -8,3 +8,7 @@ export interface AuthenticatedRequest extends Request {
     email: string;
   };
 }
+
+export interface RequestWithUser {
+  user: { tenantId: string; sub: string; role: string };
+}

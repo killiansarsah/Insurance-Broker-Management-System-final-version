@@ -59,8 +59,8 @@ export function useBindPolicy() {
 export function useCancelPolicy() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-            apiClient.post(`/policies/${id}/cancel`, { reason }),
+        mutationFn: ({ id, reason, effectiveDate }: { id: string; reason: string; effectiveDate: string }) =>
+            apiClient.post(`/policies/${id}/cancel`, { reason, effectiveDate }),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['policies'] }),
     });
 }

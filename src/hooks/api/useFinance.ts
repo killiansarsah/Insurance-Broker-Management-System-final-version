@@ -4,7 +4,7 @@ import { apiClient } from '@/lib/api-client';
 export function useInvoices(params?: { status?: string }) {
   return useQuery({
     queryKey: ['invoices', params],
-    queryFn: () => apiClient.get('/invoices', params),
+    queryFn: () => apiClient.get<any>('/invoices', params),
   });
 }
 

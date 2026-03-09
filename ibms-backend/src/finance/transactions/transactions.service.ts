@@ -9,6 +9,7 @@ import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { VoidTransactionDto } from './dto/void-transaction.dto';
 import { InvoicesService } from '../invoices/invoices.service';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class TransactionsService {
@@ -17,10 +18,12 @@ export class TransactionsService {
     private readonly invoicesService: InvoicesService,
   ) {}
 
-  private async generateTransactionNumber(): Promise<string> {
+  private async generateTransactionNumber(tenantId: string, client?: { transaction: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
+    const db = client ?? this.prisma;
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.transaction.count();
-    return `TXN-${dateStr}-${String(count + 1).padStart(6, '0')}`;
+    const count = await db.transaction.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `TXN-${dateStr}-${String(count + 1).padStart(6, '0')}-${hex}`;
   }
 
   private async logAudit(
@@ -51,61 +54,63 @@ export class TransactionsService {
       );
     }
 
-    const transactionNumber = await this.generateTransactionNumber();
+    return await this.prisma.$transaction(async (tx) => {
+      const transactionNumber = await this.generateTransactionNumber(tenantId, tx);
 
-    const transaction = await this.prisma.transaction.create({
-      data: {
-        tenantId,
-        transactionNumber,
-        type: dto.type,
-        amount: dto.amount,
-        currency: 'GHS',
-        paymentMethod: dto.paymentMethod,
-        paymentStatus: 'PAID',
-        momoNetwork: dto.momoNetwork,
-        momoPhone: dto.momoPhone,
-        reference: dto.reference,
-        clientId: dto.clientId,
-        policyId: dto.policyId,
-        invoiceId: dto.invoiceId,
-        processedById: userId,
-        processedAt: new Date(),
-        notes: dto.notes ?? dto.description,
-      },
-    });
-
-    // If linked to invoice, update invoice paidAmount
-    if (dto.invoiceId) {
-      await this.invoicesService.recordPayment(dto.invoiceId, dto.amount);
-    }
-
-    // If PREMIUM payment linked to policy, try to mark matching installment as PAID
-    if (dto.policyId && dto.type === 'PREMIUM') {
-      const installment = await this.prisma.premiumInstallment.findFirst({
-        where: {
+      const transaction = await tx.transaction.create({
+        data: {
+          tenantId,
+          transactionNumber,
+          type: dto.type,
+          amount: dto.amount,
+          currency: 'GHS',
+          paymentMethod: dto.paymentMethod,
+          paymentStatus: 'PAID',
+          momoNetwork: dto.momoNetwork,
+          momoPhone: dto.momoPhone,
+          reference: dto.reference,
+          clientId: dto.clientId,
           policyId: dto.policyId,
-          status: 'PENDING',
+          invoiceId: dto.invoiceId,
+          processedById: userId,
+          processedAt: new Date(),
+          notes: dto.notes ?? dto.description,
         },
-        orderBy: { dueDate: 'asc' },
       });
-      if (installment) {
-        await this.prisma.premiumInstallment.update({
-          where: { id: installment.id },
-          data: {
-            status: 'PAID',
-            paidDate: new Date(),
-          },
-        });
-      }
-    }
 
-    await this.logAudit(
-      tenantId,
-      userId,
-      'transaction.created',
-      transaction.id,
-    );
-    return transaction;
+      // If linked to invoice, update invoice paidAmount
+      if (dto.invoiceId) {
+        await this.invoicesService.recordPayment(dto.invoiceId, dto.amount);
+      }
+
+      // If PREMIUM payment linked to policy, try to mark matching installment as PAID
+      if (dto.policyId && dto.type === 'PREMIUM') {
+        const installment = await tx.premiumInstallment.findFirst({
+          where: {
+            policyId: dto.policyId,
+            status: 'PENDING',
+          },
+          orderBy: { dueDate: 'asc' },
+        });
+        if (installment) {
+          await tx.premiumInstallment.update({
+            where: { id: installment.id },
+            data: {
+              status: 'PAID',
+              paidDate: new Date(),
+            },
+          });
+        }
+      }
+
+      await this.logAudit(
+        tenantId,
+        userId,
+        'transaction.created',
+        transaction.id,
+      );
+      return transaction;
+    });
   }
 
   // ─── FIND ALL ───────────────────────────────────────

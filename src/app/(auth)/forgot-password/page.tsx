@@ -6,9 +6,11 @@ import { Mail, ArrowLeft, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
+import { apiClient } from '@/lib/api-client';
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState('');
+    const [tenantSlug, setTenantSlug] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState('');
@@ -27,10 +29,14 @@ export default function ForgotPasswordPage() {
         }
 
         setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setIsSubmitted(true);
+        try {
+            await apiClient.post('/auth/forgot-password', { email, tenantSlug });
+        } catch {
+            // Always show success to prevent email enumeration
+        } finally {
+            setIsLoading(false);
+            setIsSubmitted(true);
+        }
     };
 
     return (

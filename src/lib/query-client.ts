@@ -8,9 +8,4 @@ export const queryClient = new QueryClient({
             refetchOnWindowFocus: false,
         },
     },
-    logger: {
-        log: () => {},
-        warn: () => {},
-        error: () => {},
-    },
 });

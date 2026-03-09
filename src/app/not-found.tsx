@@ -3,8 +3,7 @@ import { Search, Home, ArrowLeft } from 'lucide-react';
 
 export default function NotFound() {
     return (
-        <html lang="en">
-            <body className="min-h-screen bg-surface-50 flex items-center justify-center px-4">
+            <div className="min-h-screen bg-surface-50 flex items-center justify-center px-4">
                 <div className="max-w-md w-full text-center space-y-8">
                     {/* Large 404 */}
                     <div>
@@ -37,7 +36,6 @@ export default function NotFound() {
 
                     <p className="text-xs text-surface-400">IBMS · Insurance Broking Management System</p>
                 </div>
-            </body>
-        </html>
+            </div>
     );
 }

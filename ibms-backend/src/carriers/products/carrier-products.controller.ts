@@ -16,24 +16,9 @@ import { ProductQueryDto } from './dto/product-query.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import type { AuthenticatedRequest as RequestWithUser } from '../../common/types/request.types.js';
 
-interface RequestWithUser {
-  user: {
-    tenantId: string;
-    sub: string;
-    role: string;
-  };
-}
-
-interface RequestWithUser {
-  user: {
-    tenantId: string;
-    sub: string;
-    role: string;
-  };
-}
-
-@Controller('api/v1/carriers/:carrierId/products')
+@Controller('carriers/:carrierId/products')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CarrierProductsController {
   constructor(private readonly productsService: CarrierProductsService) { }

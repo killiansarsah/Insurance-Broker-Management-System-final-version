@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { TenantsService } from '../tenants/tenants.service.js';
+import { EmailService } from '../email/email.service.js';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 
@@ -33,12 +34,15 @@ interface UserRecord {
   lockedUntil: Date | null;
   deletedAt: Date | null;
   createdAt: Date;
+  twoFactorEnabled: boolean;
+  twoFactorSecret: string | null;
 }
 
 interface RefreshTokenRecord {
   id: string;
   userId: string;
   tokenHash: string;
+  tokenFamily: string | null;
   expiresAt: Date;
   revokedAt: Date | null;
   replacedBy: string | null;
@@ -52,6 +56,7 @@ interface PasswordResetRecord {
   email: string;
   tenantId: string;
   token: string;
+  tokenFamily: string | null;
   expiresAt: Date;
   usedAt: Date | null;
   createdAt: Date;
@@ -64,7 +69,8 @@ export class AuthService {
     private jwt: JwtService,
     private config: ConfigService,
     private tenants: TenantsService,
-  ) {}
+    private email: EmailService,
+  ) { }
   private readonly logger = new Logger(AuthService.name);
 
   private userToDto(user: UserRecord) {
@@ -89,6 +95,8 @@ export class AuthService {
     return this.jwt.signAsync(payload);
   }
 
+  private readonly MAX_SESSIONS_PER_USER = 5;
+
   async issueRefreshToken(
     userId: string,
     ipAddress?: string,
@@ -96,13 +104,30 @@ export class AuthService {
   ) {
     const raw = crypto.randomBytes(REFRESH_TOKEN_BYTES).toString('hex');
     const tokenHash = await bcrypt.hash(raw, REFRESH_TOKEN_HASH_COST);
+    const tokenFamily = raw.substring(0, 16);
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+    // Enforce concurrent session limit: keep only the newest N-1 tokens
+    const activeTokens = await this.prisma.refreshToken.findMany({
+      where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    });
+
+    if (activeTokens.length >= this.MAX_SESSIONS_PER_USER) {
+      const toRevoke = activeTokens.slice(this.MAX_SESSIONS_PER_USER - 1).map(t => t.id);
+      await this.prisma.refreshToken.updateMany({
+        where: { id: { in: toRevoke } },
+        data: { revokedAt: new Date() },
+      });
+    }
 
     const created = await this.prisma.refreshToken.create({
       data: {
         userId,
         tokenHash,
+        tokenFamily,
         expiresAt,
         ipAddress: ipAddress ?? null,
         userAgent: userAgent ?? null,
@@ -124,8 +149,8 @@ export class AuthService {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
-    const user = (await this.prisma.user.findUnique({
-      where: { tenantId_email: { tenantId: tenant.id, email } },
+    const user = (await this.prisma.user.findFirst({
+      where: { tenantId: tenant.id, email },
     })) as UserRecord | null;
     if (!user || user.deletedAt || !user.isActive) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -180,9 +205,42 @@ export class AuthService {
       },
     });
 
+    // If 2FA is enabled, return a challenge instead of full tokens
+    if (user.twoFactorEnabled) {
+      return {
+        requiresTwoFactor: true,
+        userId: user.id,
+        tenantId: tenant.id,
+      };
+    }
+
     const accessToken = await this.issueAccessToken({
       id: user.id,
       tenantId: tenant.id,
+      role: user.role,
+    });
+    const created = await this.issueRefreshToken(user.id, ipAddress, userAgent);
+
+    return { accessToken, user: this.userToDto(user), refreshRaw: created.raw };
+  }
+
+  /**
+   * Complete login after successful 2FA verification.
+   */
+  async completeTwoFactorLogin(
+    userId: string,
+    tenantId: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
+    }
+
+    const accessToken = await this.issueAccessToken({
+      id: user.id,
+      tenantId,
       role: user.role,
     });
     const created = await this.issueRefreshToken(user.id, ipAddress, userAgent);
@@ -199,9 +257,10 @@ export class AuthService {
       throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
     }
 
-    // Find ALL tokens (including revoked) to detect reuse attacks
+    // Use tokenFamily prefix to narrow candidates before expensive bcrypt
+    const tokenFamily = rawRefreshToken.substring(0, 16);
     const candidates = (await this.prisma.refreshToken.findMany({
-      where: {},
+      where: { tokenFamily },
       orderBy: { createdAt: 'desc' },
     })) as RefreshTokenRecord[];
 
@@ -264,7 +323,7 @@ export class AuthService {
       role: user.role,
     });
 
-    return { accessToken, refreshRaw: newCreated.raw };
+    return { accessToken, user: this.userToDto(user), refreshRaw: newCreated.raw };
   }
 
   async forgotPassword(email: string, tenantSlug: string) {
@@ -274,13 +333,14 @@ export class AuthService {
     };
     if (!tenant) return generic;
 
-    const user = (await this.prisma.user.findUnique({
-      where: { tenantId_email: { tenantId: tenant.id, email } },
+    const user = (await this.prisma.user.findFirst({
+      where: { tenantId: tenant.id, email },
     })) as UserRecord | null;
     if (!user) return generic;
 
     const raw = crypto.randomBytes(32).toString('hex');
     const tokenHash = await bcrypt.hash(raw, PASSWORD_HASH_COST);
+    const tokenFamily = raw.substring(0, 16);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
 
     await this.prisma.passwordReset.create({
@@ -288,19 +348,28 @@ export class AuthService {
         tenantId: tenant.id,
         email: user.email,
         token: tokenHash,
+        tokenFamily,
         expiresAt,
       },
     });
-    this.logger.log(
-      `Password reset URL: ${this.config.get<string>('FRONTEND_URL')}/reset-password?token=${raw}`,
-    );
+
+    const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    await this.email.sendPasswordReset(user.email, raw, frontendUrl);
 
     return generic;
   }
 
   async resetPassword(rawToken: string, newPassword: string) {
+    if (newPassword.length < 8) {
+      throw new HttpException(
+        'Password must be at least 8 characters',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const tokenFamily = rawToken.substring(0, 16);
     const candidates = (await this.prisma.passwordReset.findMany({
-      where: { usedAt: null },
+      where: { usedAt: null, tokenFamily },
       orderBy: { createdAt: 'desc' },
     })) as PasswordResetRecord[];
 
@@ -366,8 +435,9 @@ export class AuthService {
   async logout(rawRefreshToken: string | undefined) {
     if (!rawRefreshToken) return { success: true };
 
+    const tokenFamily = rawRefreshToken.substring(0, 16);
     const tokens = (await this.prisma.refreshToken.findMany({
-      where: {},
+      where: { tokenFamily },
     })) as RefreshTokenRecord[];
     for (const t of tokens) {
       const ok = await bcrypt.compare(rawRefreshToken, t.tokenHash);

@@ -26,8 +26,12 @@ enum UserRole {
   TENANT_ADMIN
   ADMIN
   BRANCH_MANAGER
+  COMPLIANCE_OFFICER
+  FINANCE_MANAGER
   SENIOR_BROKER
   BROKER
+  UNDERWRITER
+  AGENT
   SECRETARY
   DATA_ENTRY
   VIEWER
@@ -446,6 +450,7 @@ model User {
   lockedUntil      DateTime?
   twoFactorEnabled Boolean   @default(false)
   twoFactorSecret  String?
+  mustChangePassword Boolean @default(false)
   delegatedTo      String?   @db.Uuid
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
@@ -492,6 +497,7 @@ model Invitation {
   role        UserRole         @default(BROKER)
   branchId    String?          @db.Uuid
   token       String           @unique
+  tokenFamily String?
   status      InvitationStatus @default(PENDING)
   invitedById String           @db.Uuid
   expiresAt   DateTime
@@ -503,37 +509,42 @@ model Invitation {
 
   @@index([tenantId])
   @@index([token])
+  @@index([tokenFamily])
   @@index([email, tenantId])
   @@map("invitations")
 }
 
 model RefreshToken {
-  id         String    @id @default(uuid()) @db.Uuid
-  userId     String    @db.Uuid
-  tokenHash  String    @unique
-  expiresAt  DateTime
-  createdAt  DateTime  @default(now())
-  revokedAt  DateTime?
-  replacedBy String?   @db.Uuid
-  ipAddress  String?
-  userAgent  String?
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  tokenHash   String    @unique
+  tokenFamily String?
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  replacedBy  String?   @db.Uuid
+  ipAddress   String?
+  userAgent   String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([tokenFamily])
   @@map("refresh_tokens")
 }
 
 model PasswordReset {
-  id        String    @id @default(uuid()) @db.Uuid
-  email     String
-  tenantId  String    @db.Uuid
-  token     String    @unique
-  expiresAt DateTime
-  usedAt    DateTime?
-  createdAt DateTime  @default(now())
+  id          String    @id @default(uuid()) @db.Uuid
+  email       String
+  tenantId    String    @db.Uuid
+  token       String    @unique
+  tokenFamily String?
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
 
   @@index([token])
+  @@index([tokenFamily])
   @@map("password_resets")
 }
 

@@ -41,7 +41,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [tenantSlug, setTenantSlug] = useState('sic-insurance');
+    const [tenantSlug, setTenantSlug] = useState('');
     const [mounted, setMounted] = useState(false);
     const [formVisible, setFormVisible] = useState(false);
 
@@ -177,8 +177,10 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         id="signin-tenant"
                                         value={tenantSlug}
                                         onChange={(e) => setTenantSlug(e.target.value)}
+                                        required
                                         className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 appearance-none cursor-pointer"
                                     >
+                                        <option value="" disabled>Select your organization</option>
                                         <option value="sic-insurance">SIC Insurance</option>
                                         <option value="enterprise-insurance">Enterprise Insurance</option>
                                     </select>

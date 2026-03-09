@@ -5,16 +5,20 @@
 // --- Enums ---
 
 export type UserRole =
-    | 'platform_super_admin'
-    | 'super_admin'
-    | 'tenant_admin'
-    | 'admin'
-    | 'branch_manager'
-    | 'senior_broker'
-    | 'broker'
-    | 'secretary'
-    | 'data_entry'
-    | 'viewer';
+    | 'PLATFORM_SUPER_ADMIN'
+    | 'SUPER_ADMIN'
+    | 'TENANT_ADMIN'
+    | 'ADMIN'
+    | 'BRANCH_MANAGER'
+    | 'COMPLIANCE_OFFICER'
+    | 'FINANCE_MANAGER'
+    | 'SENIOR_BROKER'
+    | 'BROKER'
+    | 'UNDERWRITER'
+    | 'AGENT'
+    | 'SECRETARY'
+    | 'DATA_ENTRY'
+    | 'VIEWER';
 
 export type ClientType = 'individual' | 'corporate';
 export type ClientStatus = 'active' | 'inactive' | 'suspended' | 'blacklisted';

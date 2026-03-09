@@ -14,6 +14,7 @@ import {
   ReopenComplaintDto,
 } from './dto/complaint-actions.dto';
 import { Prisma, ComplaintPriority } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 const SLA_DAYS: Record<string, number> = {
   LOW: 10,
@@ -33,10 +34,11 @@ const PRIORITY_ORDER: ComplaintPriority[] = [
 export class ComplaintsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generateComplaintNumber(): Promise<string> {
+  private async generateComplaintNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.complaint.count();
-    return `CMP-${dateStr}-${String(count + 1).padStart(4, '0')}`;
+    const count = await this.prisma.complaint.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `CMP-${dateStr}-${String(count + 1).padStart(4, '0')}-${hex}`;
   }
 
   private calculateSlaDeadline(priority: string): Date {
@@ -80,7 +82,7 @@ export class ComplaintsService {
     });
     if (!client) throw new NotFoundException('Client not found');
 
-    const complaintNumber = await this.generateComplaintNumber();
+    const complaintNumber = await this.generateComplaintNumber(tenantId);
     const slaDeadline = this.calculateSlaDeadline(dto.priority);
 
     const complaint = await this.prisma.complaint.create({

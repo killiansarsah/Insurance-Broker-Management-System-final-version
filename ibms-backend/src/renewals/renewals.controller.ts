@@ -13,16 +13,10 @@ import { RenewPolicyDto } from './dto/renew-policy.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import type { RequestWithUser } from '../common/types/request.types.js';
 
-interface RequestWithUser {
-  user: {
-    tenantId: string;
-    sub: string;
-    role: string;
-  };
-}
 
-@Controller('api/v1')
+@Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RenewalsController {
   constructor(private readonly renewalsService: RenewalsService) {}

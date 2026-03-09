@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/header';
 import { useUiStore } from '@/stores/ui-store';
 import { cn } from '@/lib/utils';
 import { BackendStatus } from '@/components/dev/backend-status';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
 
 import { ProtectedRoute } from '@/components/auth/protected-route';
 
@@ -33,7 +34,9 @@ export default function DashboardLayout({
                             : 'lg:pl-[var(--sidebar-width)]'
                     )}
                 >
-                    <div className="p-4 lg:p-6">{children}</div>
+                    <div className="p-4 lg:p-6">
+                        <ErrorBoundary>{children}</ErrorBoundary>
+                    </div>
                 </main>
                 <BackendStatus />
                 {/* Accessible live region for toast/status announcements */}

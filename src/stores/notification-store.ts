@@ -1,8 +1,10 @@
 import { create } from 'zustand';
-import type { Notification, NotificationType } from '@/types';
+import type { Notification } from '@/types';
+import { apiClient } from '@/lib/api-client';
 
 interface NotificationStore {
     notifications: Notification[];
+    loading: boolean;
 
     // Computed-like getters
     unreadCount: () => number;
@@ -10,16 +12,15 @@ interface NotificationStore {
     activeNotifications: () => Notification[];
 
     // Actions
-    addNotification: (notif: Omit<Notification, 'id' | 'read' | 'archived' | 'createdAt'>) => void;
-    markAsRead: (id: string) => void;
-    markAllAsRead: () => void;
-    archiveNotification: (id: string) => void;
-    deleteNotification: (id: string) => void;
-    clearAll: () => void;
+    fetchNotifications: () => Promise<void>;
+    markAsRead: (id: string) => Promise<void>;
+    markAllAsRead: () => Promise<void>;
+    deleteNotification: (id: string) => Promise<void>;
 }
 
 export const useNotificationStore = create<NotificationStore>((set, get) => ({
     notifications: [],
+    loading: false,
 
     unreadCount: () => get().notifications.filter((n) => !n.read && !n.archived).length,
 
@@ -33,45 +34,54 @@ export const useNotificationStore = create<NotificationStore>((set, get) => ({
             .notifications.filter((n) => !n.archived)
             .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
 
-    addNotification: (notif) => {
-        const newNotif: Notification = {
-            ...notif,
-            id: `notif-${Date.now().toString(36)}`,
-            read: false,
-            archived: false,
-            createdAt: new Date().toISOString(),
-        };
-        set((state) => ({ notifications: [newNotif, ...state.notifications] }));
+    fetchNotifications: async () => {
+        set({ loading: true });
+        try {
+            const res = await apiClient.get<any>('/notifications?limit=50');
+            set({ notifications: res.data?.items ?? res.data ?? [] });
+        } catch {
+            // Silently fail — notifications are non-critical
+        } finally {
+            set({ loading: false });
+        }
     },
 
-    markAsRead: (id) =>
+    markAsRead: async (id) => {
         set((state) => ({
             notifications: state.notifications.map((n) =>
                 n.id === id ? { ...n, read: true, readAt: new Date().toISOString() } : n
             ),
-        })),
+        }));
+        try {
+            await apiClient.patch(`/notifications/${id}/read`);
+        } catch {
+            // Revert on failure
+            get().fetchNotifications();
+        }
+    },
 
-    markAllAsRead: () =>
+    markAllAsRead: async () => {
         set((state) => ({
             notifications: state.notifications.map((n) =>
                 !n.read ? { ...n, read: true, readAt: new Date().toISOString() } : n
             ),
-        })),
+        }));
+        try {
+            await apiClient.post('/notifications/mark-all-read');
+        } catch {
+            get().fetchNotifications();
+        }
+    },
 
-    archiveNotification: (id) =>
-        set((state) => ({
-            notifications: state.notifications.map((n) =>
-                n.id === id ? { ...n, archived: true } : n
-            ),
-        })),
-
-    deleteNotification: (id) =>
+    deleteNotification: async (id) => {
+        const prev = get().notifications;
         set((state) => ({
             notifications: state.notifications.filter((n) => n.id !== id),
-        })),
-
-    clearAll: () =>
-        set((state) => ({
-            notifications: state.notifications.map((n) => ({ ...n, read: true, archived: true })),
-        })),
+        }));
+        try {
+            await apiClient.delete(`/notifications/${id}`);
+        } catch {
+            set({ notifications: prev });
+        }
+    },
 }));

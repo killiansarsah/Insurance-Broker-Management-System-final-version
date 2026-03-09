@@ -6,20 +6,21 @@
  * button the user tapped.
  */
 
+let lastClick = { x: 0, y: 0 };
+
 if (typeof window !== 'undefined') {
     window.addEventListener(
         'mousedown',
         (e: MouseEvent) => {
-            (window as any).__ibmsLastClick = { x: e.clientX, y: e.clientY }
+            lastClick = { x: e.clientX, y: e.clientY };
         },
         { capture: true, passive: true }
     )
 }
 
 export function getLastClickOrigin(): { x: number; y: number } {
-    if (typeof window === 'undefined') return { x: 0, y: 0 }
-    return (window as any).__ibmsLastClick ?? {
-        x: typeof window !== 'undefined' ? window.innerWidth / 2 : 0,
-        y: typeof window !== 'undefined' ? window.innerHeight / 2 : 0,
-    }
+    if (typeof window === 'undefined') return { x: 0, y: 0 };
+    return lastClick.x === 0 && lastClick.y === 0
+        ? { x: window.innerWidth / 2, y: window.innerHeight / 2 }
+        : lastClick;
 }

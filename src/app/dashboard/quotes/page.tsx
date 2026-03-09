@@ -31,7 +31,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
 import {
     mockQuotes,
     quoteSummary,
@@ -68,14 +68,14 @@ function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
 function exportToCsv(quotes: Quote[]) {
     const headers = ['Quote #', 'Client', 'Type', 'Coverage', 'Status', 'Sum Insured Req.', 'Best Premium', 'Best Carrier', 'Commission', 'Request Date', 'Valid Until', 'Prepared By'];
     const rows = quotes.map(q => {
-        const best = q.options.find(o => o.isRecommended) || q.options[0];
+        const best = q.options.find((o: any) => o.isRecommended) || q.options[0];
         return [
             q.quoteNumber, q.clientName, q.insuranceType, q.coverageType, q.status,
             q.sumInsuredRequested.toFixed(2), best?.premium?.toFixed(2) ?? '—', best?.carrierName ?? '—',
             best?.commissionAmount?.toFixed(2) ?? '—', q.requestDate, q.validUntil, q.preparedBy,
         ];
     });
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(c => safeCsvCell(c)).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -88,7 +88,7 @@ function exportToCsv(quotes: Quote[]) {
 
 // ─── Quote Detail Modal ───
 function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => void }) {
-    const selectedOption = quote.options.find(o => o.isSelected) || quote.options.find(o => o.isRecommended) || quote.options[0];
+    const selectedOption = quote.options.find((o: any) => o.isSelected) || quote.options.find((o: any) => o.isRecommended) || quote.options[0];
     const isValid = new Date(quote.validUntil) >= new Date();
 
     useEffect(() => {
@@ -161,7 +161,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                             <p className="text-sm text-surface-400 italic">No carrier options added yet (draft quote).</p>
                         ) : (
                             <div className="space-y-3">
-                                {quote.options.map((opt) => (
+                                {quote.options.map((opt: any) => (
                                     <div
                                         key={opt.id}
                                         className={cn(
@@ -424,10 +424,10 @@ export default function QuotesPage() {
             label: 'Carriers',
             render: (row: Quote) => {
                 if (row.options.length === 0) return <span className="text-xs text-surface-400 italic">No options</span>;
-                const names = row.options.map(o => o.carrierName);
+                const names = row.options.map((o: any) => o.carrierName);
                 return (
                     <div className="flex flex-wrap gap-1">
-                        {names.map(n => (
+                        {names.map((n: any) => (
                             <span key={n} className="text-[11px] font-medium text-surface-600 bg-surface-100 px-2 py-0.5 rounded-full">
                                 {n}
                             </span>
@@ -441,7 +441,7 @@ export default function QuotesPage() {
             label: 'Best Premium',
             sortable: true,
             render: (row: Quote) => {
-                const best = row.options.find(o => o.isRecommended) || row.options[0];
+                const best = row.options.find((o: any) => o.isRecommended) || row.options[0];
                 return best ? (
                     <span className="text-sm font-semibold text-surface-700">{formatCurrency(best.premium)}</span>
                 ) : (
@@ -610,7 +610,7 @@ export default function QuotesPage() {
             {/* Data Table */}
             <DataTable<Quote>
                 data={filtered}
-                columns={columns}
+                columns={columns as any}
                 searchPlaceholder="Search by quote #, client, type, carrier…"
                 searchKeys={['quoteNumber', 'clientName', 'insuranceType', 'coverageType']}
                 onRowClick={(row) => setSelectedQuote(row)}

@@ -26,7 +26,7 @@ import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn, formatCurrency } from '@/lib/utils';
+import { cn, formatCurrency, safeCsvCell } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
@@ -375,8 +375,8 @@ export default function DashboardPage() {
 
     const operationsData = useMemo(() => {
         const openClaims = claims.filter(c => c.status !== 'settled' && c.status !== 'rejected').length;
-        const premiumPending = invoices.filter(i => i.status === 'outstanding' || i.status === 'partial').length;
-        const overdueInvoices = invoices.filter(i => i.status === 'overdue').length;
+        const premiumPending = invoices.filter((i: any) => i.status === 'outstanding' || i.status === 'partial').length;
+        const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue').length;
         return { openTasks: openClaims + premiumPending, premiumPending, coverNotesPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'pending').length)), certsPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'draft').length)), overdueFollowups: overdueInvoices };
     }, [filteredPolicies, claims, invoices]);
 
@@ -406,7 +406,7 @@ export default function DashboardPage() {
             ['Count', lapsedCount.toString()],
             ['Premium at Risk', `GHS ${lapsedPremium.toFixed(2)}`],
         ];
-        const csvContent = rows.map(r => r.join(',')).join('\n');
+        const csvContent = rows.map(r => r.map(safeCsvCell).join(',')).join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');

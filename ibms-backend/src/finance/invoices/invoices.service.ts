@@ -10,6 +10,7 @@ import { InvoiceQueryDto } from './dto/invoice-query.dto';
 import { UpdateInvoiceDto, CancelInvoiceDto } from './dto/invoice-actions.dto';
 import { Prisma } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class InvoicesService {
@@ -17,10 +18,11 @@ export class InvoicesService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generateInvoiceNumber(): Promise<string> {
+  private async generateInvoiceNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.invoice.count();
-    return `INV-${dateStr}-${String(count + 1).padStart(5, '0')}`;
+    const count = await this.prisma.invoice.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `INV-${dateStr}-${String(count + 1).padStart(5, '0')}-${hex}`;
   }
 
   private async logAudit(
@@ -56,7 +58,7 @@ export class InvoicesService {
       if (!policy) throw new NotFoundException('Policy not found');
     }
 
-    const invoiceNumber = await this.generateInvoiceNumber();
+    const invoiceNumber = await this.generateInvoiceNumber(tenantId);
     const now = new Date();
     const dueDate = dto.dueDate
       ? new Date(dto.dueDate)

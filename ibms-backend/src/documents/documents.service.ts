@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateDocumentDto, UpdateDocumentDto } from './dto/document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class DocumentsService {
@@ -27,14 +28,15 @@ export class DocumentsService {
     });
   }
 
-  private async generateDocumentNumber(): Promise<string> {
+  private async generateDocumentNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.document.count();
-    return `DOC-${dateStr}-${String(count + 1).padStart(5, '0')}`;
+    const count = await this.prisma.document.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `DOC-${dateStr}-${String(count + 1).padStart(5, '0')}-${hex}`;
   }
 
   async create(tenantId: string, userId: string, dto: CreateDocumentDto) {
-    const documentNumber = await this.generateDocumentNumber();
+    const documentNumber = await this.generateDocumentNumber(tenantId);
 
     const doc = await this.prisma.document.create({
       data: {
@@ -73,6 +75,7 @@ export class DocumentsService {
 
     const where: Prisma.DocumentWhereInput = {
       tenantId,
+      isExpired: false,
       ...(category && { category }),
       ...(linkedEntityType && { linkedEntityType }),
       ...(linkedEntityId && { linkedEntityId }),
@@ -163,7 +166,10 @@ export class DocumentsService {
 
   async remove(id: string, tenantId: string, userId: string) {
     await this.findOne(id, tenantId);
-    await this.prisma.document.delete({ where: { id } });
+    await this.prisma.document.update({
+      where: { id },
+      data: { isExpired: true },
+    });
     await this.logAudit(tenantId, userId, 'document.deleted', id);
     return { deleted: true };
   }

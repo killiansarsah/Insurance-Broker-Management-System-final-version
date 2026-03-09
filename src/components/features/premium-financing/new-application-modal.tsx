@@ -248,7 +248,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
 
                                 {/* Client List */}
                                 <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
-                                    {filteredClients.map((client) => {
+                                    {filteredClients.map((client: any) => {
                                         const displayName = getClientDisplayName(client);
                                         return (
                                             <motion.button
@@ -330,7 +330,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
 
                                 {/* Policy Cards */}
                                 <div className="space-y-3">
-                                    {clientPolicies.map((policy) => (
+                                    {clientPolicies.map((policy: any) => (
                                         <motion.button
                                             key={policy.id}
                                             variants={ITEM_VARIANTS}

@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
+import type { User } from '@/types';
 
 type InviteStatus = 'loading' | 'valid' | 'invalid' | 'submitting' | 'success';
 
@@ -18,7 +19,6 @@ function AcceptInviteContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const token = searchParams.get('token');
-    const login = useAuthStore((s) => s.login);
 
     const [status, setStatus] = useState<InviteStatus>('loading');
     const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null);
@@ -64,7 +64,7 @@ function AcceptInviteContent() {
         setError('');
 
         try {
-            const res = await apiClient.post<{ accessToken: string; user: { email: string } }>(
+            const res = await apiClient.post<{ accessToken: string; user: User }>(
                 '/invitations/accept',
                 {
                     token,
@@ -75,7 +75,7 @@ function AcceptInviteContent() {
             );
 
             apiClient.setAccessToken(res.accessToken);
-            await login(res.user.email, form.password);
+            useAuthStore.setState({ user: res.user, isAuthenticated: true });
             setStatus('success');
             router.push('/dashboard');
         } catch {

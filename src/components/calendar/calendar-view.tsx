@@ -48,8 +48,8 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     const createEvent = useCreateCalendarEvent();
     
     const events = useMemo(() => {
-        if (!eventsData?.data) return [];
-        return eventsData.data.map((e: any) => ({
+        if (!eventsData) return [];
+        return eventsData.map((e: any) => ({
             ...e,
             start: new Date(e.start),
             end: new Date(e.end)
@@ -257,7 +257,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     {/* Vibrancy Indicators for multiple events */}
                     {dayEvents.length > 1 && (
                         <div className="absolute top-2 right-10 flex gap-1">
-                            {dayEvents.slice(0, 3).map((_, idx) => (
+                            {dayEvents.slice(0, 3).map((_: any, idx: number) => (
                                 <div key={idx} className="w-1.5 h-1.5 rounded-full bg-primary-500/60" />
                             ))}
                         </div>
@@ -430,7 +430,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         <div className="absolute left-[19px] top-4 bottom-4 w-px bg-surface-200/60" />
 
                         {dayEvents.length > 0 ? (
-                            dayEvents.map((event, idx) => (
+                            dayEvents.map((event: any, idx: number) => (
                                 <motion.div
                                     key={event.id}
                                     initial={{ opacity: 0, x: 20 }}
@@ -524,7 +524,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
                             <div className="space-y-4">
                                 {events.filter(e => isSameDay(e.start, selectedDate)).length > 0 ? (
-                                    events.filter(e => isSameDay(e.start, selectedDate)).map((event, idx) => (
+                                    events.filter(e => isSameDay(e.start, selectedDate)).map((event: any, idx: number) => (
                                         <motion.div
                                             key={event.id}
                                             initial={{ opacity: 0, y: 10 }}

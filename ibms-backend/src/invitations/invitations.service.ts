@@ -2,6 +2,7 @@ import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth/auth.service.js';
+import { EmailService } from '../email/email.service.js';
 import { canAssignRole } from '../common/constants/role-hierarchy.js';
 import type { CreateInvitationDto } from './dto/create-invitation.dto.js';
 import type { AcceptInvitationDto } from './dto/accept-invitation.dto.js';
@@ -10,6 +11,7 @@ import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
 
 const PASSWORD_HASH_COST = 12;
+const TOKEN_HASH_COST = 10;
 
 interface InvitationRecord {
   id: string;
@@ -18,6 +20,7 @@ interface InvitationRecord {
   role: string;
   branchId: string | null;
   token: string;
+  tokenFamily: string | null;
   status: string;
   invitedById: string;
   expiresAt: Date;
@@ -33,6 +36,7 @@ export class InvitationsService {
     private prisma: PrismaService,
     private config: ConfigService,
     private auth: AuthService,
+    private email: EmailService,
   ) {}
 
   async create(
@@ -72,7 +76,9 @@ export class InvitationsService {
       );
     }
 
-    const token = crypto.randomBytes(32).toString('hex');
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = await bcrypt.hash(rawToken, TOKEN_HASH_COST);
+    const tokenFamily = rawToken.substring(0, 16);
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000);
 
     const invitation = await this.prisma.invitation.create({
@@ -81,7 +87,8 @@ export class InvitationsService {
         email: dto.email,
         role: dto.role,
         branchId: dto.branchId ?? null,
-        token,
+        token: tokenHash,
+        tokenFamily,
         expiresAt,
         invitedById: inviterId,
       },
@@ -94,7 +101,9 @@ export class InvitationsService {
       'FRONTEND_URL',
       'http://localhost:3000',
     );
-    this.logger.log(`Invite URL: ${frontendUrl}/accept-invite?token=${token}`);
+    this.logger.log(`Invitation sent to ${dto.email}`);
+
+    await this.email.sendInvite(dto.email, rawToken, frontendUrl);
 
     await this.prisma.auditLog.create({
       data: {
@@ -188,13 +197,23 @@ export class InvitationsService {
     return { success: true };
   }
 
-  async validate(token: string) {
-    const invitation = (await this.prisma.invitation.findFirst({
-      where: { token },
+  async validate(rawToken: string) {
+    const tokenFamily = rawToken.substring(0, 16);
+    const candidates = await this.prisma.invitation.findMany({
+      where: { tokenFamily, status: 'PENDING' },
       include: {
         tenant: { select: { name: true } },
       },
-    })) as (InvitationRecord & { tenant: { name: string } }) | null;
+    });
+
+    let invitation: (InvitationRecord & { tenant: { name: string } }) | null = null;
+    for (const c of candidates) {
+      const ok = await bcrypt.compare(rawToken, c.token);
+      if (ok) {
+        invitation = c as InvitationRecord & { tenant: { name: string } };
+        break;
+      }
+    }
 
     if (!invitation) {
       return { valid: false, reason: 'not_found' as const };
@@ -228,12 +247,23 @@ export class InvitationsService {
   }
 
   async accept(dto: AcceptInvitationDto) {
-    const invitation = (await this.prisma.invitation.findFirst({
-      where: { token: dto.token },
+    const rawToken = dto.token;
+    const tokenFamily = rawToken.substring(0, 16);
+    const candidates = await this.prisma.invitation.findMany({
+      where: { tokenFamily, status: 'PENDING' },
       include: {
         tenant: { select: { id: true, name: true } },
       },
-    })) as (InvitationRecord & { tenant: { id: string; name: string } }) | null;
+    });
+
+    let invitation: (InvitationRecord & { tenant: { id: string; name: string } }) | null = null;
+    for (const c of candidates) {
+      const ok = await bcrypt.compare(rawToken, c.token);
+      if (ok) {
+        invitation = c as InvitationRecord & { tenant: { id: string; name: string } };
+        break;
+      }
+    }
 
     if (!invitation) {
       throw new HttpException(

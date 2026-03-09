@@ -16,12 +16,10 @@ import { UpdateLeadDto } from './dto/update-lead.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import type { RequestWithUser } from '../common/types/request.types.js';
 
-interface RequestWithUser {
-  user: { tenantId: string; sub: string; role: string };
-}
 
-@Controller('api/v1/leads')
+@Controller('leads')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}

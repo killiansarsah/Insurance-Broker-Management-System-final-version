@@ -13,11 +13,6 @@ const nextConfig: NextConfig = {
   basePath: isStaticExport ? `/${REPO_NAME}` : '',
   assetPrefix: isStaticExport ? `/${REPO_NAME}/` : '',
   trailingSlash: true,
-  // TODO: Remove after Phase 4 migration resolves all type mismatches
-  // between kebab-case hooks (PolicyData, ClientData) and stub types (Policy, Client)
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   experimental: {
     optimizePackageImports: [
       'lucide-react',

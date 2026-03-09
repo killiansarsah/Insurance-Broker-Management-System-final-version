@@ -7,6 +7,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { CommissionQueryDto } from './dto/commission-query.dto';
 import { ReceiveCommissionDto } from './dto/receive-commission.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class CommissionsService {
@@ -159,7 +160,7 @@ export class CommissionsService {
     // Auto-create a COMMISSION transaction
     const txnNumber = `TXN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(
       (await this.prisma.transaction.count()) + 1,
-    ).padStart(6, '0')}`;
+    ).padStart(6, '0')}-${randomBytes(3).toString('hex').toUpperCase()}`;
 
     await this.prisma.transaction.create({
       data: {

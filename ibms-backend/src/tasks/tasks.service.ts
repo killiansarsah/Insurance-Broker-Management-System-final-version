@@ -93,7 +93,7 @@ export class TasksService {
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy === 'createdAt' ? 'createdAt' : sortBy]: sortOrder },
+        orderBy: { [['createdAt', 'updatedAt', 'dueDate', 'title', 'status', 'priority'].includes(sortBy) ? sortBy : 'createdAt']: sortOrder },
         include: {
           assignedTo: {
             select: { id: true, firstName: true, lastName: true },

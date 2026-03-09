@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { Transaction, PaymentStatus } from '../types';
+import { apiClient } from '@/lib/api-client';
 
 interface PaymentState {
     transactions: Transaction[];
@@ -33,22 +34,21 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     processMoMoPayment: async (transactionData) => {
         set({ isProcessing: true });
 
-        // Simulate network delay for MoMo processing in Ghana
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        try {
+            const newTransaction = await apiClient.post<Transaction>(
+                '/transactions',
+                { ...transactionData, paymentMethod: 'MOBILE_MONEY' },
+            );
 
-        const newTransaction: Transaction = {
-            ...transactionData,
-            id: `tx-${Math.random().toString(36).substr(2, 9)}`,
-            status: 'paid', // Simulate success for now
-            createdAt: new Date().toISOString(),
-            processedAt: new Date().toISOString(),
-        };
+            set((state) => ({
+                transactions: [newTransaction, ...state.transactions],
+                isProcessing: false,
+            }));
 
-        set((state) => ({
-            transactions: [newTransaction, ...state.transactions],
-            isProcessing: false
-        }));
-
-        return true;
+            return true;
+        } catch {
+            set({ isProcessing: false });
+            return false;
+        }
     },
 }));

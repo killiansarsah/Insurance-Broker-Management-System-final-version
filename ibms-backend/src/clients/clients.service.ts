@@ -14,6 +14,7 @@ import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateNextOfKinDto } from './dto/create-next-of-kin.dto';
 import { CreateBankDetailDto } from './dto/create-bank-detail.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ClientsService {
@@ -22,7 +23,8 @@ export class ClientsService {
   private async generateClientNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.client.count({ where: { tenantId } });
     const padded = String(count + 1).padStart(6, '0');
-    return `CLI-${padded}`;
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `CLI-${padded}-${hex}`;
   }
 
   private async logAudit(
@@ -131,10 +133,6 @@ export class ClientsService {
     if (amlRiskLevel) where.amlRiskLevel = amlRiskLevel;
     if (region) where.region = region;
 
-    let orderBy: Prisma.ClientOrderByWithRelationInput = {
-      [sortBy]: sortOrder,
-    };
-
     // Safety check for valid columns
     const validSortColumns = [
       'firstName',
@@ -144,9 +142,11 @@ export class ClientsService {
       'updatedAt',
       'status',
     ];
-    if (!validSortColumns.includes(sortBy)) {
-      orderBy = { createdAt: 'desc' };
-    }
+    const safeSortBy = validSortColumns.includes(sortBy) ? sortBy : 'createdAt';
+
+    const orderBy: Prisma.ClientOrderByWithRelationInput = {
+      [safeSortBy]: sortOrder,
+    };
 
     const [data, total] = await this.prisma.$transaction([
       this.prisma.client.findMany({

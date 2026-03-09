@@ -12,11 +12,11 @@ export function CalendarWidget() {
     const { data: eventsData } = useCalendarEvents();
     
     const upcomingEvents = React.useMemo(() => {
-        if (!eventsData?.data) return [];
-        return eventsData.data
+        if (!eventsData) return [];
+        return eventsData
             .map((e: any) => ({ ...e, start: new Date(e.start), end: new Date(e.end) }))
             .filter(event => isAfter(event.start, today) || format(event.start, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
-            .sort((a, b) => a.start.getTime() - b.start.getTime())
+            .sort((a: any, b: any) => a.start.getTime() - b.start.getTime())
             .slice(0, 4);
     }, [eventsData, today]);
 
@@ -39,7 +39,7 @@ export function CalendarWidget() {
 
             <div className="flex-1 p-5 space-y-4">
                 {upcomingEvents.length > 0 ? (
-                    upcomingEvents.map((event) => (
+                    upcomingEvents.map((event: any) => (
                         <div key={event.id} className="flex gap-4 group cursor-pointer">
                             <div className="flex flex-col items-center justify-center w-12 h-12 rounded-[var(--radius-lg)] bg-surface-50 border border-surface-100 group-hover:bg-primary-50 group-hover:border-primary-100 transition-colors">
                                 <span className="text-[10px] font-bold text-surface-400 uppercase tracking-tighter group-hover:text-primary-400">

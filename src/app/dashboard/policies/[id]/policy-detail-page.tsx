@@ -201,7 +201,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             <AlertTriangle size={18} className="text-warning-500" /> Exclusions
                         </h3>
                         <ul className="space-y-2">
-                            {policy.exclusions.map((ex, i) => (
+                            {policy.exclusions.map((ex: any, i: number) => (
                                 <li key={i} className="flex items-start gap-2 text-sm text-surface-600">
                                     <span className="text-danger-400 mt-0.5">✕</span>
                                     {ex}
@@ -459,7 +459,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {policy.beneficiaries.map((b, i) => (
+                                {policy.beneficiaries.map((b: any, i: number) => (
                                     <tr key={i} className="border-b border-surface-50 last:border-0">
                                         <td className="py-3 font-medium text-surface-900">{b.name}</td>
                                         <td className="py-3 text-surface-600">{b.relationship}</td>
@@ -479,7 +479,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         <Stethoscope size={18} className="text-emerald-500" /> Riders / Add-ons
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                        {policy.riders.map((rider, i) => (
+                        {policy.riders.map((rider: any, i: number) => (
                             <span key={i} className="px-3 py-1.5 bg-emerald-50 text-emerald-700 text-sm font-medium rounded-lg border border-emerald-100">
                                 {rider}
                             </span>
@@ -601,7 +601,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {policy.installments.map((inst, i) => (
+                                {policy.installments.map((inst: any, i: number) => (
                                     <tr key={inst.id} className="border-b border-surface-50 last:border-0 hover:bg-surface-50/50">
                                         <td className="px-6 py-3 font-medium text-surface-600">{i + 1}</td>
                                         <td className="px-6 py-3 text-surface-900">{formatDate(inst.dueDate)}</td>
@@ -720,7 +720,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
             </div>
             {policy.documents && policy.documents.length > 0 ? (
                 <div className="p-2">
-                    {policy.documents.map((doc) => (
+                    {policy.documents.map((doc: any) => (
                         <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-surface-50 rounded-lg group transition-colors">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 group-hover:bg-white dark:group-hover:bg-slate-800 group-hover:shadow-sm transition-all">
@@ -840,7 +840,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             </tr>
                         </thead>
                         <tbody>
-                            {policy.endorsements.map((end) => (
+                            {policy.endorsements.map((end: any) => (
                                 <tr key={end.id} className="border-b border-surface-50 last:border-0 hover:bg-surface-50">
                                     <td className="px-6 py-3 font-mono text-xs text-surface-700">{end.endorsementNumber}</td>
                                     <td className="px-6 py-3 capitalize text-surface-700">{end.type}</td>
@@ -874,7 +874,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
             </h3>
             {policy.timeline && policy.timeline.length > 0 ? (
                 <div className="relative pl-4 space-y-8 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-200">
-                    {policy.timeline.map((event) => (
+                    {policy.timeline.map((event: any) => (
                         <div key={event.id} className="relative flex items-start gap-4">
                             <div className="relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-4 border-white shadow-sm shrink-0 bg-primary-50 text-primary-500">
                                 <Activity size={16} />

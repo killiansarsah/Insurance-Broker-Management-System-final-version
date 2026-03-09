@@ -197,7 +197,7 @@ export default function ProductsPage() {
 
                                                 {/* Coverage */}
                                                 <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                                    {product.coverageSummary.map((cov, ci) => (
+                                                    {product.coverageSummary.map((cov: string, ci: number) => (
                                                         <span key={ci} className="flex items-center gap-1 text-[10px] text-surface-500">
                                                             <CheckCircle size={9} className="text-success-500 shrink-0" />
                                                             {cov}

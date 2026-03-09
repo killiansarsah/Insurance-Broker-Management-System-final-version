@@ -43,8 +43,9 @@ class ApiClient {
                         return this.client(originalRequest);
                     } catch {
                         this.accessToken = null;
+                        // Dispatch a custom event so the auth store / app can handle navigation
                         if (typeof window !== 'undefined') {
-                            window.location.href = '/login';
+                            window.dispatchEvent(new CustomEvent('auth:session-expired'));
                         }
                         return Promise.reject(error);
                     }

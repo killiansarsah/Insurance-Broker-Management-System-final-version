@@ -8,6 +8,8 @@ import { TenantsModule } from '../tenants/tenants.module.js';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
+import { TwoFactorService } from './two-factor.service.js';
+import { TwoFactorController } from './two-factor.controller.js';
 
 @Module({
   imports: [
@@ -35,8 +37,8 @@ import { JwtStrategy } from './strategies/jwt.strategy.js';
     ConfigModule,
     TenantsModule,
   ],
-  providers: [AuthService, JwtStrategy],
-  controllers: [AuthController],
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, TwoFactorService],
+  controllers: [AuthController, TwoFactorController],
+  exports: [AuthService, TwoFactorService],
 })
 export class AuthModule {}

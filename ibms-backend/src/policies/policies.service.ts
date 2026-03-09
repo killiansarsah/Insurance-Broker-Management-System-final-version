@@ -12,17 +12,20 @@ import { ReinstatePolicyDto } from './dto/reinstate-policy.dto';
 import { CreateEndorsementDto } from './dto/endorsements/create-endorsement.dto';
 import { PayInstallmentDto } from './dto/installments/pay-installment.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class PoliciesService {
   constructor(private readonly prisma: PrismaService) { }
 
-  private async generatePolicyNumber(): Promise<string> {
+  private async generatePolicyNumber(tenantId: string, client?: { policy: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
+    const db = client ?? this.prisma;
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.policy.count();
+    const count = await db.policy.count({ where: { tenantId } });
     const padded = String(count + 1).padStart(5, '0');
-    return `POL-${dateStr}-${padded}`;
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `POL-${dateStr}-${padded}-${hex}`;
   }
 
   private async logAudit(
@@ -88,8 +91,6 @@ export class PoliciesService {
         'Product not found or does not belong to the carrier',
       );
 
-    const policyNumber =
-      dto.policyNumber || (await this.generatePolicyNumber());
     const currency = dto.currency || 'GHS';
     let commission = dto.commission;
 
@@ -99,6 +100,8 @@ export class PoliciesService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
+      const policyNumber =
+        dto.policyNumber || (await this.generatePolicyNumber(tenantId, tx));
       const createdPolicy = await tx.policy.create({
         data: {
           tenant: { connect: { id: tenantId } },
@@ -266,7 +269,17 @@ export class PoliciesService {
     const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
       include: {
-        client: true,
+        client: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            phone: true,
+            email: true,
+            type: true,
+          },
+        },
         carrier: true,
         product: true,
         vehicleDetails: true,
@@ -301,18 +314,21 @@ export class PoliciesService {
     userId: string,
     dto: UpdatePolicyDto,
   ) {
+    const updateData: Record<string, unknown> = {};
+    if (dto.premiumAmount !== undefined) updateData.premiumAmount = dto.premiumAmount;
+    if (dto.sumInsured !== undefined) updateData.sumInsured = dto.sumInsured;
+    if (dto.endDate !== undefined) updateData.expiryDate = new Date(dto.endDate);
+    if (dto.coverageDetails !== undefined) updateData.coverageDetails = dto.coverageDetails;
+    if (dto.premiumFrequency !== undefined) updateData.premiumFrequency = dto.premiumFrequency;
+    if (Object.keys(updateData).length === 0) {
+      throw new BadRequestException('No fields to update');
+    }
     const policy = await this.findOne(id, tenantId);
 
     return await this.prisma.$transaction(async (tx) => {
       const updated = await tx.policy.update({
         where: { id },
-        data: {
-          premiumAmount: dto.premiumAmount,
-          sumInsured: dto.sumInsured,
-          expiryDate: dto.endDate ? new Date(dto.endDate) : undefined,
-          coverageDetails: dto.coverageDetails,
-          premiumFrequency: dto.premiumFrequency,
-        },
+        data: updateData,
       });
 
       await tx.auditLog.create({
@@ -440,12 +456,19 @@ export class PoliciesService {
     if (policy.status !== 'ACTIVE')
       throw new BadRequestException('Only ACTIVE policies can be cancelled');
 
+    const effectiveDate = new Date(dto.effectiveDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (effectiveDate < today) {
+      throw new BadRequestException('effectiveDate cannot be in the past');
+    }
+
     return await this.prisma.$transaction(async (tx) => {
       const updated = await tx.policy.update({
         where: { id },
         data: {
           status: 'CANCELLED',
-          expiryDate: new Date(dto.effectiveDate),
+          expiryDate: effectiveDate,
         },
       });
 
@@ -466,20 +489,33 @@ export class PoliciesService {
 
   // ─── LAPSE (ACTIVE → LAPSED) ───────────────────────
   async lapse(id: string, tenantId: string, userId: string) {
-    const policy = await this.prisma.policy.findUnique({
-      where: { id, tenantId },
-    });
-    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
-    if (policy.status !== 'ACTIVE')
-      throw new BadRequestException('Only ACTIVE policies can be lapsed');
+    return await this.prisma.$transaction(async (tx) => {
+      const policy = await tx.policy.findUnique({
+        where: { id, tenantId },
+      });
+      if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+      if (policy.status !== 'ACTIVE')
+        throw new BadRequestException('Only ACTIVE policies can be lapsed');
 
-    const lapsed = await this.prisma.policy.update({
-      where: { id },
-      data: { status: 'LAPSED' },
-    });
+      const lapsed = await tx.policy.update({
+        where: { id },
+        data: { status: 'LAPSED' },
+      });
 
-    await this.logAudit(tenantId, userId, 'policy.lapsed', id);
-    return lapsed;
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'policy.lapsed',
+          entity: 'Policy',
+          entityId: id,
+          before: Prisma.JsonNull,
+          after: Prisma.JsonNull,
+        },
+      });
+
+      return lapsed;
+    });
   }
 
   // ─── REINSTATE (LAPSED → ACTIVE) ───────────────────
@@ -489,23 +525,33 @@ export class PoliciesService {
     userId: string,
     dto: ReinstatePolicyDto,
   ) {
-    const policy = await this.prisma.policy.findUnique({
-      where: { id, tenantId },
+    return await this.prisma.$transaction(async (tx) => {
+      const policy = await tx.policy.findUnique({
+        where: { id, tenantId },
+      });
+      if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+      if (policy.status !== 'LAPSED')
+        throw new BadRequestException('Only LAPSED policies can be reinstated');
+
+      const reinstated = await tx.policy.update({
+        where: { id },
+        data: { status: 'ACTIVE' },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'policy.reinstated',
+          entity: 'Policy',
+          entityId: id,
+          before: Prisma.JsonNull,
+          after: { reason: dto.reason } as Prisma.InputJsonObject,
+        },
+      });
+
+      return reinstated;
     });
-    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
-    if (policy.status !== 'LAPSED')
-      throw new BadRequestException('Only LAPSED policies can be reinstated');
-
-    const reinstated = await this.prisma.policy.update({
-      where: { id },
-      data: { status: 'ACTIVE' },
-    });
-
-    await this.logAudit(tenantId, userId, 'policy.reinstated', id, null, {
-      reason: dto.reason,
-    } as Prisma.InputJsonObject);
-
-    return reinstated;
   }
 
   // ─── ENDORSEMENTS ──────────────────────────────────
@@ -520,13 +566,20 @@ export class PoliciesService {
     });
     if (!policy) throw new NotFoundException('Policy not found');
 
+    const effectiveDate = new Date(dto.effectiveDate);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (effectiveDate < today) {
+      throw new BadRequestException('effectiveDate cannot be in the past');
+    }
+
     const endorsement = await this.prisma.policyEndorsement.create({
       data: {
         tenantId,
         policyId,
         type: dto.type,
         description: dto.description,
-        effectiveDate: new Date(dto.effectiveDate),
+        effectiveDate,
         premiumAdjustment: dto.premiumAdjustment,
         status: 'PENDING',
         requestedById: userId,

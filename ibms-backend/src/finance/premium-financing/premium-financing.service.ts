@@ -10,15 +10,17 @@ import {
   PayPfInstallmentDto,
 } from './dto/premium-financing.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class PremiumFinancingService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generatePfNumber(): Promise<string> {
+  private async generatePfNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.premiumFinancing.count();
-    return `PF-${dateStr}-${String(count + 1).padStart(4, '0')}`;
+    const count = await this.prisma.premiumFinancing.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `PF-${dateStr}-${String(count + 1).padStart(4, '0')}-${hex}`;
   }
 
   private async logAudit(
@@ -56,7 +58,7 @@ export class PremiumFinancingService {
     });
     if (!client) throw new NotFoundException('Client not found');
 
-    const applicationNumber = await this.generatePfNumber();
+    const applicationNumber = await this.generatePfNumber(tenantId);
 
     // Calculate interest: annual rate → monthly approximation
     const totalInterest = (dto.financedAmount * dto.interestRate) / 100;
@@ -217,7 +219,7 @@ export class PremiumFinancingService {
     // Auto-create transaction
     const txnNumber = `TXN-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${String(
       (await this.prisma.transaction.count()) + 1,
-    ).padStart(6, '0')}`;
+    ).padStart(6, '0')}-${randomBytes(3).toString('hex').toUpperCase()}`;
 
     await this.prisma.transaction.create({
       data: {

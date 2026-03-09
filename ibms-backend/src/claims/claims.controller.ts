@@ -26,12 +26,10 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import type { RequestWithUser } from '../common/types/request.types.js';
 
-interface RequestWithUser {
-  user: { tenantId: string; sub: string; role: string };
-}
 
-@Controller('api/v1/claims')
+@Controller('claims')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClaimsController {
   constructor(private readonly claimsService: ClaimsService) {}

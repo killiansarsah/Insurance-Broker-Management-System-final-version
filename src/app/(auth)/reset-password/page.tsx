@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { apiClient } from '@/lib/api-client';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -15,10 +16,17 @@ export default function ResetPasswordPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const token = searchParams.get('token');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError(null);
+
+        if (!token) {
+            setError('Invalid or missing reset token. Please request a new reset link.');
+            return;
+        }
 
         if (password.length < 8) {
             setError('Password must be at least 8 characters long.');
@@ -38,10 +46,14 @@ export default function ResetPasswordPage() {
         }
 
         setIsLoading(true);
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setIsLoading(false);
-        setIsSubmitted(true);
+        try {
+            await apiClient.post('/auth/reset-password', { token, newPassword: password });
+            setIsSubmitted(true);
+        } catch {
+            setError('Reset failed. The link may have expired. Please request a new one.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -141,5 +153,13 @@ export default function ResetPasswordPage() {
                 )}
             </motion.div>
         </div>
+    );
+}
+
+export default function ResetPasswordPage() {
+    return (
+        <Suspense>
+            <ResetPasswordContent />
+        </Suspense>
     );
 }

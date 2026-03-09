@@ -48,7 +48,7 @@ import {
 } from '@/hooks/api';
 import { useExpenses } from '@/hooks/api/use-finance';
 import { mockCommissions } from '@/hooks/api';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
 
 // ─── Helpers ─────────────────────────────────────────────────
 const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
@@ -261,8 +261,8 @@ function exportToCSV(data: Expense[], colHeaders: string[]) {
 
     let refNo = 1;
     const rows = data.map(e => [
-        e.date,
-        `"${e.description.replace(/"/g, '""')}"`,
+        safeCsvCell(e.date),
+        safeCsvCell(e.description),
         refNo++,
         e.amount.toFixed(2),
         ...EXCEL_COLUMNS.map(c => c.key === e.category ? e.amount.toFixed(2) : ''),
@@ -1088,7 +1088,7 @@ export default function ExpensesPage() {
                 <Card padding="lg">
                     <h3 className="text-sm font-bold text-surface-900 mb-4">By Category</h3>
                     <div className="space-y-3">
-                        {expenseSummary.byCategory.map(cat => {
+                        {expenseSummary.byCategory.map((cat: any) => {
                             const pct = Math.round((cat.amount / expenseSummary.totalExpenses) * 100);
                             return (
                                 <div key={cat.category}>
@@ -1115,7 +1115,7 @@ export default function ExpensesPage() {
                 <Card padding="lg">
                     <h3 className="text-sm font-bold text-surface-900 mb-4">By Department</h3>
                     <div className="space-y-3">
-                        {expenseSummary.byDepartment.map(dept => {
+                        {expenseSummary.byDepartment.map((dept: any) => {
                             const pct = Math.round((dept.amount / expenseSummary.totalExpenses) * 100);
                             return (
                                 <div key={dept.department}>

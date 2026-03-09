@@ -21,7 +21,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
     const { data: messagesData } = useChatMessages(conversation.id);
     const sendMessage = useSendChatMessage();
     
-    const messages = messagesData?.data || [];
+    const messages = messagesData || [];
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -103,7 +103,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                 ref={scrollRef}
                 className="flex-1 overflow-y-auto p-6 space-y-4 bg-[url('/grid-light.svg')] bg-repeat"
             >
-                {messages.map((msg) => {
+                {messages.map((msg: any) => {
                     const isSelf = msg.senderId === '1';
                     return (
                         <div

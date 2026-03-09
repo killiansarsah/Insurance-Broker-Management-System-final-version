@@ -106,6 +106,7 @@ async function main(): Promise<void> {
       role: UserRole.TENANT_ADMIN,
       branchId: sicAccraBranch?.id,
       isActive: true,
+      mustChangePassword: true,
     },
   });
 
@@ -127,6 +128,7 @@ async function main(): Promise<void> {
       role: UserRole.TENANT_ADMIN,
       branchId: enterpriseAccraBranch?.id,
       isActive: true,
+      mustChangePassword: true,
     },
   });
 

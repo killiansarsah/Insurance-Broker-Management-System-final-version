@@ -15,7 +15,7 @@ interface ChatListProps {
 
 export function ChatList({ activeId, onSelect }: ChatListProps) {
     const { data: roomsData } = useChatRooms();
-    const rooms = roomsData?.data || [];
+    const rooms = roomsData || [];
 
     return (
         <Card padding="none" className="flex flex-col h-full bg-surface-50/30 border-surface-200 overflow-hidden">

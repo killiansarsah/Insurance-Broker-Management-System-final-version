@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma } from '@prisma/client';
 import { RenewPolicyDto } from './dto/renew-policy.dto';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class RenewalsService {
@@ -104,7 +105,7 @@ export class RenewalsService {
           brokerId: userId,
           insuranceType: oldPolicy.insuranceType,
           policyType: oldPolicy.policyType,
-          policyNumber: `${oldPolicy.policyNumber}-REN`,
+          policyNumber: `${oldPolicy.policyNumber}-REN-${randomBytes(3).toString('hex').toUpperCase()}`,
           inceptionDate: newStartDate,
           expiryDate: newEndDate,
           sumInsured: dto.sumInsured ?? oldPolicy.sumInsured,
@@ -144,17 +145,6 @@ export class RenewalsService {
                 } as unknown as Prisma.MarineDetailCreateWithoutPolicyInput,
               }
             : undefined,
-        },
-      });
-
-      // Update old policy with reference to the new renewal
-      await tx.policy.update({
-        where: { id: oldPolicy.id },
-        data: {
-          // Store the renewed policy reference; schema doesn't have
-          // a dedicated `renewedPolicyId` field, so we use coverageDetails
-          // or we skip if the schema lacks the field. Let's check if
-          // previousPolicyId can be used in reverse via query.
         },
       });
 

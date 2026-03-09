@@ -24,8 +24,7 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { useNotificationStore } from '@/stores/notification-store';
-import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead } from '@/hooks/api/use-notifications';
+import { useNotifications, useMarkNotificationRead, useMarkAllNotificationsRead, useDeleteNotification } from '@/hooks/api/use-notifications';
 import { cn, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { NotificationType, NotificationPriority } from '@/types';
@@ -68,8 +67,9 @@ export default function NotificationsPage() {
     const { data: notificationsData } = useNotifications();
     const markAsReadMutation = useMarkNotificationRead();
     const markAllAsReadMutation = useMarkAllNotificationsRead();
+    const deleteNotificationMutation = useDeleteNotification();
     
-    const notifications = notificationsData?.data || [];
+    const notifications = notificationsData || [];
 
     const [tab, setTab] = useState<TabKey>('all');
     const [typeFilter, setTypeFilter] = useState<NotificationType | 'all'>('all');
@@ -106,19 +106,21 @@ export default function NotificationsPage() {
     };
 
     const deleteNotification = (id: string) => {
-        // TODO: Implement delete API
-        toast.success('Notification deleted');
+        deleteNotificationMutation.mutate(id, {
+            onSuccess: () => toast.success('Notification deleted'),
+        });
     };
 
     const clearAll = () => {
-        // TODO: Implement clear all API
-        toast.success('All notifications archived');
+        markAllAsReadMutation.mutate(undefined, {
+            onSuccess: () => toast.success('All notifications cleared'),
+        });
     };
 
     const tabs: { key: TabKey; label: string; count?: number }[] = [
-        { key: 'all', label: 'All', count: notifications.filter((n) => !n.archived).length },
+        { key: 'all', label: 'All', count: notifications.filter((n: any) => !n.archived).length },
         { key: 'unread', label: 'Unread', count: unread },
-        { key: 'archived', label: 'Archived', count: notifications.filter((n) => n.archived).length },
+        { key: 'archived', label: 'Archived', count: notifications.filter((n: any) => n.archived).length },
     ];
 
     return (
@@ -208,14 +210,14 @@ export default function NotificationsPage() {
             {/* Notification List */}
             {filteredNotifs.length > 0 ? (
                 <div className="space-y-2">
-                    {filteredNotifs.map((notif) => {
-                        const cfg = TYPE_CONFIG[notif.type];
+                    {filteredNotifs.map((notif: any) => {
+                        const cfg = (TYPE_CONFIG as Record<string, any>)[notif.type];
                         return (
                             <Card
                                 key={notif.id}
                                 className={cn(
                                     'border-l-4 transition-all group',
-                                    PRIORITY_STYLES[notif.priority],
+                                    (PRIORITY_STYLES as Record<string, string>)[notif.priority],
                                     !notif.read && 'bg-primary-50/20 dark:bg-primary-900/10'
                                 )}
                                 padding="none"

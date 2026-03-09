@@ -35,12 +35,11 @@ export class CarriersService {
   }
 
   async create(tenantId: string, userId: string, dto: CreateCarrierDto) {
-    const existing = await this.prisma.carrier.findUnique({
+    const existing = await this.prisma.carrier.findFirst({
       where: {
-        tenantId_slug: {
-          tenantId,
-          slug: dto.slug,
-        },
+        tenantId,
+        slug: dto.slug,
+        deletedAt: null,
       },
     });
 
@@ -154,8 +153,8 @@ export class CarriersService {
     if (!carrier) throw new NotFoundException('Carrier not found');
 
     if (dto.slug && dto.slug !== carrier.slug) {
-      const existing = await this.prisma.carrier.findUnique({
-        where: { tenantId_slug: { tenantId, slug: dto.slug } },
+      const existing = await this.prisma.carrier.findFirst({
+        where: { tenantId, slug: dto.slug, deletedAt: null },
       });
       if (existing) {
         throw new BadRequestException(

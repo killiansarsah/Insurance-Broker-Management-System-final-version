@@ -14,7 +14,7 @@ export default function ChatPage() {
     const linkedType = searchParams.get('linkedType');
     
     const { data: roomsData } = useChatRooms();
-    const rooms = roomsData?.data || [];
+    const rooms = roomsData || [];
 
     // Find a chat that matches the linked resource
     const initialChat = rooms.find((c: any) =>
@@ -52,7 +52,7 @@ export default function ChatPage() {
                         <ArrowLeft size={16} /> Back to conversations
                     </button>
                     {activeChat ? (
-                        <MessageWindow conversation={activeChat} />
+                        <MessageWindow conversation={activeChat as any} />
                     ) : (
                         <Card className="h-full flex flex-col items-center justify-center text-center p-12">
                             <div className="w-16 h-16 bg-surface-100 rounded-full flex items-center justify-center mb-4 text-surface-400">

@@ -22,37 +22,35 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import type { RequestWithUser } from '../common/types/request.types.js';
 
-interface RequestWithUser {
-  user: { tenantId: string; sub: string; role: string };
-}
 
-@Controller('api/v1')
+@Controller('complaints')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ComplaintsController {
   constructor(private readonly complaintsService: ComplaintsService) {}
 
   // ─── COMPLAINTS CRUD ───────────────────────────────
 
-  @Post('complaints')
+  @Post()
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   create(@Request() req: RequestWithUser, @Body() dto: CreateComplaintDto) {
     return this.complaintsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
-  @Get('complaints')
+  @Get()
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
   findAll(@Request() req: RequestWithUser, @Query() query: ComplaintQueryDto) {
     return this.complaintsService.findAll(req.user.tenantId, query);
   }
 
-  @Get('complaints/:id')
+  @Get(':id')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.complaintsService.findOne(id, req.user.tenantId);
   }
 
-  @Patch('complaints/:id')
+  @Patch(':id')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   update(
     @Request() req: RequestWithUser,
@@ -69,7 +67,7 @@ export class ComplaintsController {
 
   // ─── STATUS TRANSITIONS ────────────────────────────
 
-  @Post('complaints/:id/assign')
+  @Post(':id/assign')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   assign(
     @Request() req: RequestWithUser,
@@ -84,7 +82,7 @@ export class ComplaintsController {
     );
   }
 
-  @Post('complaints/:id/escalate')
+  @Post(':id/escalate')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   escalate(
     @Request() req: RequestWithUser,
@@ -99,7 +97,7 @@ export class ComplaintsController {
     );
   }
 
-  @Post('complaints/:id/resolve')
+  @Post(':id/resolve')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   resolve(
     @Request() req: RequestWithUser,
@@ -114,7 +112,7 @@ export class ComplaintsController {
     );
   }
 
-  @Post('complaints/:id/reopen')
+  @Post(':id/reopen')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   reopen(
     @Request() req: RequestWithUser,

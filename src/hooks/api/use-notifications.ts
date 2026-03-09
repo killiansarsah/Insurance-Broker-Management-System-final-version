@@ -35,7 +35,18 @@ export function useMarkNotificationRead() {
 export function useMarkAllNotificationsRead() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: () => apiClient.patch('/notifications/read-all'),
+        mutationFn: () => apiClient.post('/notifications/mark-all-read'),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['notifications'] });
+            qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });
+        },
+    });
+}
+
+export function useDeleteNotification() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => apiClient.delete(`/notifications/${id}`),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['notifications'] });
             qc.invalidateQueries({ queryKey: ['notifications', 'unread-count'] });

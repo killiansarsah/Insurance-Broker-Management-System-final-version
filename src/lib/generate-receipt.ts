@@ -10,12 +10,21 @@ const METHOD_LABELS: Record<string, string> = {
     card: 'Card Payment',
 };
 
+function escapeHtml(str: string): string {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
 /**
  * Generates an HTML receipt document and opens it in a new window for printing/saving as PDF.
  */
 export function generateReceipt(txn: Transaction) {
-    const dateStr = format(new Date(txn.processedAt || txn.createdAt), 'dd MMMM yyyy, h:mm a');
-    const receiptNumber = `RCT-${txn.id.replace('TXN-', '')}`;
+    const dateStr = escapeHtml(format(new Date(txn.processedAt || txn.createdAt), 'dd MMMM yyyy, h:mm a'));
+    const receiptNumber = escapeHtml(`RCT-${txn.id.replace('TXN-', '')}`);
 
     const html = `
 <!DOCTYPE html>
@@ -145,36 +154,36 @@ export function generateReceipt(txn: Transaction) {
 
         <div class="amount-section">
             <div class="amount-label">Amount Received</div>
-            <div class="amount-value">${formatCurrency(txn.amount, txn.currency)}</div>
+            <div class="amount-value">${escapeHtml(formatCurrency(txn.amount, txn.currency))}</div>
             <div class="receipt-number">${receiptNumber}</div>
         </div>
 
         <div class="details">
             <div class="detail-row">
                 <span class="detail-label">Client</span>
-                <span class="detail-value">${txn.clientName}</span>
+                <span class="detail-value">${escapeHtml(txn.clientName)}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Policy Number</span>
-                <span class="detail-value" style="font-family: monospace;">${txn.policyNumber}</span>
+                <span class="detail-value" style="font-family: monospace;">${escapeHtml(txn.policyNumber)}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Payment Method</span>
-                <span class="detail-value">${METHOD_LABELS[txn.method] || txn.method}${txn.momoNetwork ? ' (' + txn.momoNetwork.toUpperCase() + ')' : ''}</span>
+                <span class="detail-value">${escapeHtml(METHOD_LABELS[txn.method] || txn.method)}${txn.momoNetwork ? ' (' + escapeHtml(txn.momoNetwork.toUpperCase()) + ')' : ''}</span>
             </div>
             ${txn.phoneNumber ? `
             <div class="detail-row">
                 <span class="detail-label">Phone Number</span>
-                <span class="detail-value">${txn.phoneNumber}</span>
+                <span class="detail-value">${escapeHtml(txn.phoneNumber)}</span>
             </div>
             ` : ''}
             <div class="detail-row">
                 <span class="detail-label">Reference</span>
-                <span class="detail-value" style="font-family: monospace;">${txn.reference}</span>
+                <span class="detail-value" style="font-family: monospace;">${escapeHtml(txn.reference)}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Description</span>
-                <span class="detail-value">${txn.description}</span>
+                <span class="detail-value">${escapeHtml(txn.description)}</span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Date & Time</span>

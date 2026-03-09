@@ -22,7 +22,14 @@ export class PrismaService
       ],
     });
 
-    // Soft-delete middleware: filter out deleted records by default
+    // Soft-delete middleware: filter out deleted records by default.
+    // - findUnique is converted to findFirst so that the extra `deletedAt`
+    //   filter can be injected (Prisma's findUnique only accepts @@unique
+    //   fields in `where`). This means the engine won't use a unique index
+    //   lookup anymore, but correctness is preserved.
+    // - delete/deleteMany are rewritten to update with `deletedAt = now()`.
+    // NOTE: If Prisma client extensions ($extends) are available, prefer
+    // migrating to those as $use middleware is deprecated in Prisma 5+.
     this.$use(async (params, next) => {
       const modelsWithSoftDelete = [
         'User',

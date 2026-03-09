@@ -24,7 +24,7 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { usePolicies } from '@/hooks/api';
-import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -46,15 +46,15 @@ const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
     { label: 'Other', value: 'other' },
 ];
 
-function exportToCsv(policies: Policy[]) {
+function exportToCsv(policies: any[]) {
     const headers = ['Policy #', 'Client', 'Type', 'Coverage', 'Status', 'Insurer', 'Premium (GHS)', 'Sum Insured (GHS)', 'Inception', 'Expiry', 'Broker', 'Commission Rate', 'Commission Amt', 'Payment Status'];
     const rows = policies.map(p => [
         p.policyNumber, p.clientName, p.insuranceType, p.coverageType || '', p.status,
         p.insurerName, p.premiumAmount.toFixed(2), p.sumInsured.toFixed(2),
-        p.inceptionDate, p.expiryDate, p.brokerName,
+        (p.inceptionDate as string), p.expiryDate, p.brokerName,
         `${p.commissionRate}%`, p.commissionAmount.toFixed(2), p.paymentStatus,
     ]);
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const csv = [headers, ...rows].map(r => r.map(c => safeCsvCell(c)).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -73,7 +73,7 @@ export default function PoliciesPage() {
     const policies = policiesData?.data || [];
     
     const BROKERS = useMemo(() => 
-        Array.from(new Set(policies.map((p: Policy) => p.brokerName))).sort().map(b => ({ label: b, value: b })),
+        Array.from(new Set(policies.map((p: any) => p.brokerName))).sort().map(b => ({ label: b, value: b })),
         [policies]
     );
 
@@ -95,22 +95,22 @@ export default function PoliciesPage() {
         if (filterStatus && p.status !== filterStatus) return false;
         if (filterType && p.insuranceType !== filterType) return false;
         if (filterBroker && p.brokerName !== filterBroker) return false;
-        if (filterDateFrom && p.inceptionDate < filterDateFrom) return false;
-        if (filterDateTo && p.inceptionDate > filterDateTo) return false;
+        if (filterDateFrom && (p.inceptionDate as string) < filterDateFrom) return false;
+        if (filterDateTo && (p.inceptionDate as string) > filterDateTo) return false;
         return true;
     }), [baseData, filterStatus, filterType, filterBroker, filterDateFrom, filterDateTo]);
 
     // KPI Calculations
     const activePolicies = baseData.filter((p) => p.status === 'active');
     const totalPremium = baseData.reduce((s, p) => s + p.premiumAmount, 0);
-    const expiringSoon = baseData.filter((p) => (p.daysToExpiry ?? 999) <= 30 && p.status === 'active');
+    const expiringSoon = baseData.filter((p) => ((p.daysToExpiry as number) ?? 999) <= 30 && p.status === 'active');
     const pendingDraft = baseData.filter((p) => p.status === 'pending' || p.status === 'draft');
     const lapsedPolicies = baseData.filter((p) => p.status === 'lapsed');
     const now = new Date();
     const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const monthEnd = new Date(nextMonth.getTime() - 86_400_000).toISOString().split('T')[0];
-    const newThisMonth = baseData.filter((p) => p.inceptionDate >= monthStart && p.inceptionDate <= monthEnd);
+    const newThisMonth = baseData.filter((p) => (p.inceptionDate as string) >= monthStart && (p.inceptionDate as string) <= monthEnd);
 
     const kpis = [
         {
@@ -416,7 +416,7 @@ export default function PoliciesPage() {
             </div>
 
             {/* Data Table */}
-            <DataTable<Policy>
+            <DataTable<any>
                 data={filtered}
                 columns={columns}
                 searchPlaceholder="Search by policy number, client, insurer, coverage…"

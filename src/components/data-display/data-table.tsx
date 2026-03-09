@@ -13,7 +13,7 @@ import {
     Inbox,
     FileSpreadsheet,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, safeCsvCell } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 
 interface Column<T> {
@@ -172,8 +172,7 @@ export function DataTable<T>({
             columns
                 .map((c) => {
                     const val = (row as Record<string, unknown>)[c.key];
-                    const str = val == null ? '' : String(val);
-                    return str.includes(',') ? `"${str}"` : str;
+                    return safeCsvCell(val);
                 })
                 .join(',')
         );

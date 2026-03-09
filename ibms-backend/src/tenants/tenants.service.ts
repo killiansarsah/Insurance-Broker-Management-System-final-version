@@ -15,14 +15,14 @@ export class TenantsService {
 
   constructor(private prisma: PrismaService) {}
 
-  private getFromCache(key: string): Tenant | null {
+  private getFromCache(key: string): { found: boolean; value: Tenant | null } {
     const entry = this.cache.get(key);
-    if (!entry) return null;
+    if (!entry) return { found: false, value: null };
     if (Date.now() > entry.expiresAt) {
       this.cache.delete(key);
-      return null;
+      return { found: false, value: null };
     }
-    return entry.value;
+    return { found: true, value: entry.value };
   }
 
   private setCache(key: string, value: Tenant | null): void {
@@ -32,7 +32,7 @@ export class TenantsService {
   async findBySlug(slug: string) {
     const cacheKey = `slug:${slug}`;
     const cached = this.getFromCache(cacheKey);
-    if (cached !== null) return cached;
+    if (cached.found) return cached.value;
 
     const tenant = await this.prisma.tenant.findUnique({ where: { slug } });
     this.setCache(cacheKey, tenant ?? null);
@@ -42,7 +42,7 @@ export class TenantsService {
   async findById(id: string) {
     const cacheKey = `id:${id}`;
     const cached = this.getFromCache(cacheKey);
-    if (cached !== null) return cached;
+    if (cached.found) return cached.value;
 
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
     this.setCache(cacheKey, tenant ?? null);

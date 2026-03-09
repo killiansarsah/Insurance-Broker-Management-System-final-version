@@ -11,6 +11,7 @@ import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { TwoFactorService } from './two-factor.service.js';
 import { Public } from '../common/decorators/public.decorator.js';
 import { Throttle } from '@nestjs/throttler';
 import type { Response, Request } from 'express';
@@ -31,7 +32,10 @@ const REFRESH_COOKIE_OPTIONS = {
 
 @Controller('auth')
 export class AuthController {
-  constructor(private auth: AuthService) {}
+  constructor(
+    private auth: AuthService,
+    private twoFactor: TwoFactorService,
+  ) {}
 
   @Public()
   @Throttle({ default: { ttl: 900000, limit: 10 } })
@@ -48,6 +52,52 @@ export class AuthController {
       req.ip,
       req.get('user-agent'),
     );
+
+    // If 2FA is required, return challenge (no tokens)
+    if ('requiresTwoFactor' in result) {
+      return { requiresTwoFactor: true, userId: result.userId, tenantId: result.tenantId };
+    }
+
+    res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
+    return { accessToken: result.accessToken, user: result.user };
+  }
+
+  @Public()
+  @Throttle({ default: { ttl: 900000, limit: 10 } })
+  @Post('login/2fa')
+  @HttpCode(200)
+  async loginWith2fa(
+    @Body() body: { userId: string; tenantId: string; token: string },
+    @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
+  ) {
+    // Verify the TOTP token
+    const user = await this.auth.getProfile(body.userId);
+    if (!user) {
+      return { error: 'Invalid credentials' };
+    }
+
+    const dbUser = await this.auth['prisma'].user.findUnique({
+      where: { id: body.userId },
+      select: { twoFactorSecret: true, twoFactorEnabled: true },
+    });
+
+    if (!dbUser?.twoFactorEnabled || !dbUser.twoFactorSecret) {
+      return { error: 'Invalid credentials' };
+    }
+
+    const isValid = this.twoFactor.verifyToken(dbUser.twoFactorSecret, body.token);
+    if (!isValid) {
+      return { error: 'Invalid verification code' };
+    }
+
+    const result = await this.auth.completeTwoFactorLogin(
+      body.userId,
+      body.tenantId,
+      req.ip,
+      req.get('user-agent'),
+    );
+
     res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
     return { accessToken: result.accessToken, user: result.user };
   }
@@ -66,7 +116,7 @@ export class AuthController {
       req.get('user-agent'),
     );
     res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
-    return { accessToken: result.accessToken };
+    return { accessToken: result.accessToken, user: result.user };
   }
 
   @Post('logout')

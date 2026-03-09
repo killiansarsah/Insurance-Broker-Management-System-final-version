@@ -14,6 +14,10 @@
         "/^npx --yes @nestjs/cli@latest new ibms-backend --strict --package-manager npm --skip-git$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^cd C:\\\\Users\\\\Owner\\\\Desktop\\\\ibms\\\\ibms-backend; npx tsc --noEmit 2>&1 \\| Select-Object -Last 50$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

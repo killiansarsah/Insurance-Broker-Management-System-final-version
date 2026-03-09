@@ -36,6 +36,10 @@ const envSchema = z.object({
   // Redis (optional for Phase 1)
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.coerce.number().int().positive().default(6379),
+
+  // Email (optional — logs only if not configured)
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().default('IBMS <noreply@ibms.app>'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

@@ -10,15 +10,17 @@ import {
   ApprovalDecisionDto,
 } from './dto/approval.dto';
 import { Prisma } from '@prisma/client';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ApprovalsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  private async generateRefNumber(): Promise<string> {
+  private async generateRefNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.approval.count();
-    return `APR-${dateStr}-${String(count + 1).padStart(5, '0')}`;
+    const count = await this.prisma.approval.count({ where: { tenantId } });
+    const hex = randomBytes(3).toString('hex').toUpperCase();
+    return `APR-${dateStr}-${String(count + 1).padStart(5, '0')}-${hex}`;
   }
 
   private async logAudit(
@@ -41,7 +43,7 @@ export class ApprovalsService {
   }
 
   async create(tenantId: string, userId: string, dto: CreateApprovalDto) {
-    const refNumber = await this.generateRefNumber();
+    const refNumber = await this.generateRefNumber(tenantId);
 
     const approval = await this.prisma.approval.create({
       data: {

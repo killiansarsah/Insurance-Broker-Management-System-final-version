@@ -9,6 +9,10 @@ interface ClaimData {
     claimNumber: string;
     status: string;
     claimAmount: number;
+    settledAmount?: number;
+    settlementDate?: string;
+    intimationDate?: string;
+    insuranceType?: string;
     [key: string]: unknown;
 }
 

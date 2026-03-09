@@ -48,7 +48,7 @@ export default function ClaimsPage() {
     const settledClaims = baseData.filter(c => c.settlementDate && c.intimationDate);
     const avgDays = settledClaims.length > 0
         ? Math.round(settledClaims.reduce((sum, c) => {
-            const start = new Date(c.intimationDate).getTime();
+            const start = new Date(c.intimationDate!).getTime();
             const end = new Date(c.settlementDate!).getTime();
             return sum + (end - start) / 86_400_000;
         }, 0) / settledClaims.length)
@@ -128,10 +128,10 @@ export default function ClaimsPage() {
                 columns={[
                     { key: 'claimNumber', label: 'Claim #', sortable: true, render: (c) => <span className="font-mono font-medium">{c.claimNumber}</span> },
                     { key: 'policyNumber', label: 'Policy #', sortable: true },
-                    { key: 'insuranceType', label: 'Type', sortable: true, render: (c) => <span className="capitalize">{c.insuranceType.replace('_', ' ')}</span> },
-                    { key: 'incidentDate', label: 'Incident Date', sortable: true, render: (c) => formatDate(c.incidentDate) },
+                    { key: 'insuranceType', label: 'Type', sortable: true, render: (c) => <span className="capitalize">{(c.insuranceType || '').replace('_', ' ')}</span> },
+                    { key: 'incidentDate', label: 'Incident Date', sortable: true, render: (c) => formatDate(c.incidentDate as string) },
                     { key: 'clientName', label: 'Claimant', sortable: true },
-                    { key: 'status', label: 'Status', sortable: true, render: (c) => <StatusBadge status={c.status} /> },
+                    { key: 'status', label: 'Status', sortable: true, render: (c) => <StatusBadge status={c.status as any} /> },
                     { key: 'claimAmount', label: 'Est. Amount', sortable: true, render: (c) => formatCurrency(c.claimAmount) },
                 ]}
                 searchKeys={['claimNumber', 'policyNumber', 'clientName']}
