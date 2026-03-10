@@ -36,6 +36,7 @@ import { DepartmentsModule } from './departments/departments.module';
 import { SettingsModule } from './settings/settings.module';
 import { EmailModule } from './email/email.module';
 import { QuotesModule } from './quotes/quotes.module';
+import { IntegrationsModule } from './integrations/integrations.module';
 
 @Module({
   imports: [
@@ -122,6 +123,7 @@ import { QuotesModule } from './quotes/quotes.module';
     AuditModule,
     DepartmentsModule,
     SettingsModule,
+    IntegrationsModule,
   ],
   providers: [
     // Apply rate limiting globally

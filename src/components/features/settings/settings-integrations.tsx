@@ -13,6 +13,13 @@ import {
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
+import {
+    useIntegrations,
+    useConnectIntegration,
+    useDisconnectIntegration,
+    useUpdateIntegration,
+    useSyncIntegration,
+} from '@/hooks/api/use-integrations';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -171,29 +178,47 @@ const SYNC_OPTIONS: { value: SyncFrequency; label: string }[] = [
     { value: 'manual', label: 'Manual only' },
 ];
 
-const LS_KEY = 'ibms_integrations_v2';
-
 function formatFileSize(bytes: number): string {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
+/** Merges static service catalog with backend integration records. */
+function mergeWithApiData(catalog: IntegrationService[], apiData: any[]): IntegrationService[] {
+    const byKey = new Map<string, any>();
+    for (const rec of apiData) byKey.set(rec.serviceKey, rec);
+    return catalog.map(svc => {
+        const db = byKey.get(svc.id);
+        if (!db) return svc;
+        return {
+            ...svc,
+            connected: db.connected,
+            connectedAt: db.connectedAt,
+            connectedEmail: db.connectedEmail,
+            syncFrequency: db.syncFrequency || svc.syncFrequency,
+            lastSyncAt: db.lastSyncAt,
+            syncEvents: Array.isArray(db.syncEvents) ? db.syncEvents : [],
+        };
+    });
+}
+
 // ─── Main Component ─────────────────────────────────────────
 
 export function SettingsIntegrations() {
-    const [services, setServices] = useState<IntegrationService[]>(() => {
-        const base = createServices();
-        if (typeof window === 'undefined') return base;
-        try {
-            const stored = JSON.parse(localStorage.getItem(LS_KEY) || '{}');
-            return base.map(s => {
-                const saved = stored[s.id];
-                if (!saved) return s;
-                return { ...s, ...saved, icon: s.icon };
-            });
-        } catch { return base; }
-    });
+    // ── API hooks ──
+    const { data: apiIntegrations } = useIntegrations();
+    const connectMutation = useConnectIntegration();
+    const disconnectMutation = useDisconnectIntegration();
+    const updateMutation = useUpdateIntegration();
+    const syncMutation = useSyncIntegration();
+
+    // Merge static catalog with API data
+    const services = useMemo(() => {
+        const catalog = createServices();
+        if (!apiIntegrations || !Array.isArray(apiIntegrations)) return catalog;
+        return mergeWithApiData(catalog, apiIntegrations);
+    }, [apiIntegrations]);
 
     const [activeCategory, setActiveCategory] = useState<IntegrationCategory>('all');
     const [connectingId, setConnectingId] = useState<string | null>(null);
@@ -211,11 +236,7 @@ export function SettingsIntegrations() {
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
-    const [recentImports, setRecentImports] = useState<ImportRecord[]>([
-        { name: 'clients_q3_2025.csv', date: 'Jan 24, 2026', by: 'Alex J.', status: 'Success', ok: true },
-        { name: 'new_policies_batch_02.xlsx', date: 'Jan 22, 2026', by: 'Sarah K.', status: 'Success', ok: true },
-        { name: 'claims_legacy_data.csv', date: 'Jan 20, 2026', by: 'Alex J.', status: 'Failed', ok: false },
-    ]);
+    const [recentImports, setRecentImports] = useState<ImportRecord[]>([]);
 
     const DATA_TYPES = [
         { value: 'clients', label: 'Clients' },
@@ -228,24 +249,6 @@ export function SettingsIntegrations() {
 
     const ACCEPTED_TYPES = ['.csv', '.xlsx', '.xls', '.json'];
     const MAX_SIZE = 10 * 1024 * 1024;
-
-    // Persist to localStorage
-    useEffect(() => {
-        const toSave: Record<string, Partial<IntegrationService>> = {};
-        services.forEach(s => {
-            if (s.connected) {
-                toSave[s.id] = {
-                    connected: s.connected,
-                    connectedAt: s.connectedAt,
-                    connectedEmail: s.connectedEmail,
-                    syncFrequency: s.syncFrequency,
-                    lastSyncAt: s.lastSyncAt,
-                    syncEvents: s.syncEvents.slice(0, 10),
-                };
-            }
-        });
-        localStorage.setItem(LS_KEY, JSON.stringify(toSave));
-    }, [services]);
 
     // ── Computed ──
     const filtered = useMemo(() =>
@@ -278,25 +281,23 @@ export function SettingsIntegrations() {
             setConnectionStep('permissions');
         } else if (connectionStep === 'permissions') {
             setConnectionStep('connecting');
-            setTimeout(() => {
-                setConnectionStep('success');
-                const emails = ['alex.johnson@dezag.com', 'sarah.kwame@dezag.com', 'admin@dezagbrokers.com'];
-                const now = new Date().toISOString();
-                setServices(prev => prev.map(s =>
-                    s.id === connectingId ? {
-                        ...s,
-                        connected: true,
-                        connectedAt: now,
-                        connectedEmail: s.apiKeyRequired ? `••••${apiKeyInput.slice(-4)}` : emails[Math.floor(Math.random() * emails.length)],
-                        lastSyncAt: now,
-                        syncEvents: [{
-                            id: `evt-${Date.now()}`, type: 'connected' as const,
-                            message: 'Integration connected successfully', timestamp: now,
-                        }, ...s.syncEvents],
-                    } : s
-                ));
-                toast.success(`Connected to ${services.find(s => s.id === connectingId)?.name}!`);
-            }, 2000);
+            const svc = services.find(s => s.id === connectingId);
+            const emails = ['alex.johnson@dezag.com', 'sarah.kwame@dezag.com', 'admin@dezagbrokers.com'];
+            connectMutation.mutate({
+                serviceKey: connectingId!,
+                apiKey: apiKeyInput || undefined,
+                apiSecret: apiSecretInput || undefined,
+                connectedEmail: svc?.apiKeyRequired ? `••••${apiKeyInput.slice(-4)}` : emails[Math.floor(Math.random() * emails.length)],
+            }, {
+                onSuccess: () => {
+                    setConnectionStep('success');
+                    toast.success(`Connected to ${svc?.name}!`);
+                },
+                onError: () => {
+                    setConnectionStep('signin');
+                    toast.error('Connection failed. Please try again.');
+                },
+            });
         }
     };
 
@@ -307,44 +308,34 @@ export function SettingsIntegrations() {
 
     const disconnect = (id: string) => {
         const svc = services.find(s => s.id === id);
-        setServices(prev => prev.map(s =>
-            s.id === id ? {
-                ...s, connected: false, connectedAt: undefined, connectedEmail: undefined,
-                lastSyncAt: undefined,
-                syncEvents: [{
-                    id: `evt-${Date.now()}`, type: 'disconnected' as const,
-                    message: 'Integration disconnected', timestamp: new Date().toISOString(),
-                }, ...s.syncEvents].slice(0, 10),
-            } : s
-        ));
-        setConfigId(null);
-        toast.info(`${svc?.name} disconnected`);
+        disconnectMutation.mutate(id, {
+            onSuccess: () => {
+                setConfigId(null);
+                toast.info(`${svc?.name} disconnected`);
+            },
+        });
     };
 
     const handleSync = (id: string) => {
         setSyncing(id);
         const svc = services.find(s => s.id === id);
         toast.info(`Syncing ${svc?.name}...`);
-        setTimeout(() => {
-            const count = Math.floor(Math.random() * 50) + 5;
-            const now = new Date().toISOString();
-            setServices(prev => prev.map(s =>
-                s.id === id ? {
-                    ...s, lastSyncAt: now,
-                    syncEvents: [{
-                        id: `evt-${Date.now()}`, type: 'sync' as const,
-                        message: `Synced ${count} records successfully`, timestamp: now, count,
-                    }, ...s.syncEvents].slice(0, 10),
-                } : s
-            ));
-            setSyncing(null);
-            toast.success(`${svc?.name} — synced ${count} records`);
-        }, 1800);
+        syncMutation.mutate(id, {
+            onSuccess: () => {
+                setSyncing(null);
+                toast.success(`${svc?.name} synced successfully`);
+            },
+            onError: () => {
+                setSyncing(null);
+                toast.error(`${svc?.name} sync failed`);
+            },
+        });
     };
 
     const updateSyncFrequency = (id: string, freq: SyncFrequency) => {
-        setServices(prev => prev.map(s => s.id === id ? { ...s, syncFrequency: freq } : s));
-        toast.success('Sync frequency updated');
+        updateMutation.mutate({ serviceKey: id, syncFrequency: freq }, {
+            onSuccess: () => toast.success('Sync frequency updated'),
+        });
     };
 
     // ── Upload handlers ──

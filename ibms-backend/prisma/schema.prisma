@@ -442,6 +442,7 @@ model Tenant {
   departments      Department[]
   carriers         Carrier[]
   quotes           Quote[]
+  integrations     Integration[]
 
   @@map("tenants")
 }
@@ -1569,4 +1570,27 @@ model QuoteOption {
 
   @@index([quoteId])
   @@map("quote_options")
+}
+// ─── INTEGRATIONS ─────────────────────────────────
+
+model Integration {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @db.Uuid
+  serviceKey      String   // e.g. 'google-calendar', 'paystack'
+  connected       Boolean  @default(false)
+  connectedAt     DateTime?
+  connectedEmail  String?
+  syncFrequency   String   @default("manual") // 15m | 1h | 6h | 24h | manual
+  lastSyncAt      DateTime?
+  config          Json     @default("{}")
+  credentials     Json     @default("{}")
+  syncEvents      Json     @default("[]")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, serviceKey])
+  @@index([tenantId])
+  @@map("integrations")
 }

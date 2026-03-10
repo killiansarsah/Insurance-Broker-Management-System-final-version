@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, User, Bot, Paperclip, Smile, Shield, FileText } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { ChatConversation, ChatMessage } from '@/types';
-import { useChatMessages, useSendChatMessage } from '@/hooks/api/use-chat';
+import { ChatConversation } from '@/types';
+import { useChatMessages } from '@/hooks/api/use-chat';
+import { useChatSocket } from '@/hooks/use-chat-socket';
+import { useAuthStore } from '@/stores/auth-store';
 import { toast } from 'sonner';
 
 interface MessageWindowProps {
@@ -16,40 +18,79 @@ interface MessageWindowProps {
 
 export function MessageWindow({ conversation }: MessageWindowProps) {
     const [inputValue, setInputValue] = useState('');
+    const [liveMessages, setLiveMessages] = useState<any[]>([]);
+    const [typingUser, setTypingUser] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
-    
-    const { data: messagesData } = useChatMessages(conversation.id);
-    const sendMessage = useSendChatMessage();
-    
-    const messages = messagesData || [];
+    const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const { data: messagesData } = useChatMessages(conversation.id);
+    const currentUserId = useAuthStore((s) => s.user?.id);
+    const { joinRoom, sendMessage: socketSendMessage, sendTyping, onNewMessage, onTyping } = useChatSocket();
+
+    // Initial messages from REST, augmented with live socket messages
+    const restMessages = messagesData || [];
+    const allMessages = [...restMessages, ...liveMessages];
+
+    // Join room via socket when conversation changes
+    useEffect(() => {
+        joinRoom(conversation.id);
+        setLiveMessages([]); // Reset live messages for new room
+        setTypingUser(null);
+    }, [conversation.id, joinRoom]);
+
+    // Listen for real-time messages
+    useEffect(() => {
+        const unsub = onNewMessage((msg) => {
+            if (msg.roomId === conversation.id) {
+                setLiveMessages((prev) => {
+                    // Avoid duplicates
+                    if (prev.some((m) => m.id === msg.id)) return prev;
+                    return [...prev, {
+                        id: msg.id,
+                        content: msg.content,
+                        senderId: msg.senderId,
+                        timestamp: msg.createdAt,
+                        status: 'SENT',
+                        sender: msg.sender,
+                    }];
+                });
+            }
+        });
+        return unsub;
+    }, [conversation.id, onNewMessage]);
+
+    // Listen for typing indicators
+    useEffect(() => {
+        const unsub = onTyping((data) => {
+            if (data.roomId === conversation.id && data.userId !== currentUserId) {
+                setTypingUser(data.userName || 'Someone');
+                if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+                typingTimeoutRef.current = setTimeout(() => setTypingUser(null), 3000);
+            }
+        });
+        return unsub;
+    }, [conversation.id, currentUserId, onTyping]);
+
+    // Auto-scroll on new messages
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [allMessages.length]);
+
+    // Emit typing indicator on input
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+        setInputValue(e.target.value);
+        sendTyping(conversation.id);
+    }, [conversation.id, sendTyping]);
 
     const handleSendMessage = (e: React.FormEvent) => {
         e.preventDefault();
         if (!inputValue.trim()) return;
 
-        sendMessage.mutate(
-            { 
-                roomId: conversation.id, 
-                data: { 
-                    content: inputValue,
-                    senderId: '1' // current user
-                } 
-            },
-            {
-                onSuccess: () => {
-                    setInputValue('');
-                },
-                onError: () => {
-                    toast.error('Failed to send message');
-                }
-            }
-        );
+        // Send via WebSocket for instant delivery
+        socketSendMessage(conversation.id, inputValue.trim());
+        setInputValue('');
     };
 
     return (
@@ -103,8 +144,8 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                 ref={scrollRef}
                 className="flex-1 overflow-y-auto p-6 space-y-4 bg-[url('/grid-light.svg')] bg-repeat"
             >
-                {messages.map((msg: any) => {
-                    const isSelf = msg.senderId === '1';
+                {allMessages.map((msg: any) => {
+                    const isSelf = msg.senderId === currentUserId;
                     return (
                         <div
                             key={msg.id}
@@ -133,6 +174,18 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                         </div>
                     );
                 })}
+
+                {/* Typing Indicator */}
+                {typingUser && (
+                    <div className="flex items-center gap-2 text-xs text-surface-400 animate-pulse">
+                        <div className="flex gap-1">
+                            <span className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce [animation-delay:0ms]" />
+                            <span className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce [animation-delay:150ms]" />
+                            <span className="w-1.5 h-1.5 bg-surface-400 rounded-full animate-bounce [animation-delay:300ms]" />
+                        </div>
+                        <span>{typingUser} is typing...</span>
+                    </div>
+                )}
             </div>
 
             {/* Input Area */}
@@ -145,7 +198,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                         <input
                             type="text"
                             value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
+                            onChange={handleInputChange}
                             placeholder={conversation.type === 'ai' ? "Ask Kojo about policies..." : "Type a message..."}
                             className="w-full h-11 pl-4 pr-12 bg-surface-50 border border-surface-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
                             aria-label="Message input"
