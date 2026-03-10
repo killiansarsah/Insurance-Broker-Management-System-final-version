@@ -11,7 +11,7 @@ export class UpdateTenantSettingsDto {
   @IsOptional()
   name?: string;
 
-  @IsUrl()
+  @IsString()
   @IsOptional()
   logoUrl?: string;
 
@@ -49,7 +49,7 @@ export class UpdateProfileDto {
   @IsOptional()
   phone?: string;
 
-  @IsUrl()
+  @IsString()
   @IsOptional()
   avatarUrl?: string;
 }

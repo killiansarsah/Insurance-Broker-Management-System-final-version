@@ -3,7 +3,7 @@
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { useProfileStore } from '@/stores/profile-store';
 import { useAuthStore } from '@/stores/auth-store';
-import { useProfile, useUpdateProfile } from '@/hooks/api/use-settings';
+import { useProfile, useUpdateProfile, useUploadAvatar } from '@/hooks/api/use-settings';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
@@ -11,6 +11,7 @@ export function SettingsProfile() {
     const { avatarUrl, updateProfile: updateStore } = useProfileStore();
     const { data: profile } = useProfile();
     const updateProfileMutation = useUpdateProfile();
+    const uploadAvatarMutation = useUploadAvatar();
     const authUser = useAuthStore((s) => s.user);
 
     const [localFirstName, setLocalFirstName] = useState('');
@@ -32,8 +33,16 @@ export function SettingsProfile() {
             setLocalPhone((profile.phone as string) || '');
             setLocalJobTitle((profile.jobTitle as string) || '');
             setLocalLocation((profile.location as string) || '');
+            // Hydrate avatar from backend if available
+            if (profile.avatarUrl) {
+                const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+                const fullUrl = (profile.avatarUrl as string).startsWith('http')
+                    ? (profile.avatarUrl as string)
+                    : `${backendBase}${profile.avatarUrl}`;
+                updateStore({ avatarUrl: fullUrl });
+            }
         }
-    }, [profile]);
+    }, [profile, updateStore]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,15 +51,23 @@ export function SettingsProfile() {
         if (!file) return;
         if (file.size > 5 * 1024 * 1024) { toast.error('File Too Large', { description: 'Please select an image under 5MB.' }); return; }
         if (!file.type.startsWith('image/')) { toast.error('Invalid File Type', { description: 'Please select an image file (PNG, JPG, etc.).' }); return; }
-        const url = URL.createObjectURL(file);
-        updateStore({ avatarUrl: url });
-        // Sync avatar to auth store so the header/nav shows the new photo
-        const currentUser = useAuthStore.getState().user;
-        if (currentUser) {
-            useAuthStore.setState({ user: { ...currentUser, avatarUrl: url } });
-        }
-        toast.success('Photo Updated', { description: 'Your profile photo has been updated.' });
-    }, [updateStore]);
+
+        uploadAvatarMutation.mutate(file, {
+            onSuccess: (data: any) => {
+                const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+                const fullUrl = `${backendBase}${data.avatarUrl}`;
+                updateStore({ avatarUrl: fullUrl });
+                const currentUser = useAuthStore.getState().user;
+                if (currentUser) {
+                    useAuthStore.setState({ user: { ...currentUser, avatarUrl: fullUrl } });
+                }
+                toast.success('Photo Updated', { description: 'Your profile photo has been uploaded.' });
+            },
+            onError: () => {
+                toast.error('Upload Failed', { description: 'Could not upload photo. Please try again.' });
+            },
+        });
+    }, [updateStore, uploadAvatarMutation]);
 
     const handleSave = () => {
         setIsSaving(true);
@@ -137,12 +154,16 @@ export function SettingsProfile() {
                             Change Photo
                         </button>
                         <button onClick={() => {
-                            updateStore({ avatarUrl: null });
-                            const currentUser = useAuthStore.getState().user;
-                            if (currentUser) {
-                                useAuthStore.setState({ user: { ...currentUser, avatarUrl: undefined } });
-                            }
-                            toast.success('Photo Removed', { description: 'Your profile photo has been removed.' });
+                            updateProfileMutation.mutate({ avatarUrl: '' }, {
+                                onSuccess: () => {
+                                    updateStore({ avatarUrl: null });
+                                    const currentUser = useAuthStore.getState().user;
+                                    if (currentUser) {
+                                        useAuthStore.setState({ user: { ...currentUser, avatarUrl: undefined } });
+                                    }
+                                    toast.success('Photo Removed', { description: 'Your profile photo has been removed.' });
+                                },
+                            });
                         }} className="px-6 h-10 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-600 transition-colors cursor-pointer">
                             Remove
                         </button>

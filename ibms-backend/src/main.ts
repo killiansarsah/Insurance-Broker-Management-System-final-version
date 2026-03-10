@@ -1,20 +1,32 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { json, urlencoded } from 'express';
+import { join } from 'path';
+import { mkdirSync, existsSync } from 'fs';
 import { AppModule } from './app.module.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
 import { createGlobalValidationPipe } from './common/pipes/validation.pipe.js';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: true,
     bufferLogs: true,
   });
+
+  // Ensure uploads directory exists
+  const uploadsDir = join(process.cwd(), 'uploads');
+  if (!existsSync(uploadsDir)) {
+    mkdirSync(uploadsDir, { recursive: true });
+  }
+
+  // Serve uploaded files at /uploads/
+  app.useStaticAssets(uploadsDir, { prefix: '/uploads/' });
 
   // Use Pino for structured logging
   app.useLogger(app.get(PinoLogger));

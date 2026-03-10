@@ -79,13 +79,6 @@ export const useProfileStore = create<ProfileState>()(
         }),
         {
             name: 'ibms-profile',
-            // Blob URLs (from URL.createObjectURL) are ephemeral and die on page reload.
-            // Exclude them from persistence so we never restore a dead blob: URL.
-            partialize: (state) => {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                const { avatarUrl, logoUrl, ...rest } = state;
-                return rest;
-            },
         }
     )
 );

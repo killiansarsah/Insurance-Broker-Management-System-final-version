@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useProfileStore } from '@/stores/profile-store';
-import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/api/use-settings';
+import { useTenantSettings, useUpdateTenantSettings, useUploadLogo } from '@/hooks/api/use-settings';
 import { toast } from 'sonner';
 
 export function SettingsOrganization() {
@@ -14,6 +14,7 @@ export function SettingsOrganization() {
     const { logoUrl, updateProfile } = useProfileStore();
     const { data: tenant } = useTenantSettings();
     const updateTenantMutation = useUpdateTenantSettings();
+    const uploadLogoMutation = useUploadLogo();
 
     // Local editable copies
     const [lCompanyName, setLCompanyName] = useState('');
@@ -66,8 +67,16 @@ export function SettingsOrganization() {
             setLLedPrefix(t.ledPrefix || '');
             setLPrimaryColor(t.primaryColor || '#c28532');
             setLAccentColor(t.accentColor || '#2563eb');
+            // Hydrate logo from backend if available
+            if (t.logoUrl) {
+                const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+                const fullUrl = (t.logoUrl as string).startsWith('http')
+                    ? (t.logoUrl as string)
+                    : `${backendBase}${t.logoUrl}`;
+                updateProfile({ logoUrl: fullUrl });
+            }
         }
-    }, [tenant]);
+    }, [tenant, updateProfile]);
 
     // Apply branding colors as CSS custom properties live
     useEffect(() => {
@@ -107,9 +116,21 @@ export function SettingsOrganization() {
     const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        const url = URL.createObjectURL(file);
-        updateProfile({ logoUrl: url });
-    }, [updateProfile]);
+        if (file.size > 5 * 1024 * 1024) { toast.error('File Too Large', { description: 'Please select an image under 5MB.' }); return; }
+        if (!file.type.startsWith('image/')) { toast.error('Invalid File Type', { description: 'Please select an image file.' }); return; }
+
+        uploadLogoMutation.mutate(file, {
+            onSuccess: (data: any) => {
+                const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+                const fullUrl = `${backendBase}${data.logoUrl}`;
+                updateProfile({ logoUrl: fullUrl });
+                toast.success('Logo Updated', { description: 'Organization logo has been uploaded.' });
+            },
+            onError: () => {
+                toast.error('Upload Failed', { description: 'Could not upload logo. Please try again.' });
+            },
+        });
+    }, [updateProfile, uploadLogoMutation]);
 
     return (
         <div className="flex flex-col gap-10">

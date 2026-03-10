@@ -101,6 +101,15 @@ class ApiClient {
         return res.data;
     }
 
+    async upload<T>(url: string, file: File, fieldName = 'file') {
+        const formData = new FormData();
+        formData.append(fieldName, file);
+        const res = await this.client.post<T>(url, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        return res.data;
+    }
+
     async patch<T>(url: string, data?: unknown) {
         const res = await this.client.patch<T>(url, data);
         return res.data;

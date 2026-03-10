@@ -42,3 +42,21 @@ export function useChangePassword() {
             apiClient.post('/settings/change-password', data),
     });
 }
+
+export function useUploadAvatar() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (file: File) =>
+            apiClient.upload<{ id: string; avatarUrl: string }>('/settings/upload-avatar', file),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['settings', 'profile'] }),
+    });
+}
+
+export function useUploadLogo() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (file: File) =>
+            apiClient.upload<{ id: string; logoUrl: string }>('/settings/upload-logo', file),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['settings', 'tenant'] }),
+    });
+}

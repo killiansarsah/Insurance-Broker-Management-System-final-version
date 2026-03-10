@@ -3,6 +3,8 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
+import { existsSync, unlinkSync } from 'fs';
+import { join } from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   UpdateTenantSettingsDto,
@@ -165,5 +167,45 @@ export class SettingsService {
 
     await this.logAudit(tenantId, userId, 'user.password.changed', userId);
     return { message: 'Password changed successfully' };
+  }
+
+  // ─── FILE UPLOADS ─────────────────────────────────
+  async saveAvatarUrl(userId: string, filename: string) {
+    // Remove old uploaded file if it was a local upload
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { avatarUrl: true },
+    });
+    if (user?.avatarUrl?.startsWith('/uploads/')) {
+      const oldPath = join(process.cwd(), user.avatarUrl);
+      if (existsSync(oldPath)) unlinkSync(oldPath);
+    }
+
+    const avatarUrl = `/uploads/${filename}`;
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { avatarUrl },
+      select: { id: true, avatarUrl: true },
+    });
+    return updated;
+  }
+
+  async saveLogoUrl(tenantId: string, userId: string, filename: string) {
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { logoUrl: true },
+    });
+    if (tenant?.logoUrl?.startsWith('/uploads/')) {
+      const oldPath = join(process.cwd(), tenant.logoUrl);
+      if (existsSync(oldPath)) unlinkSync(oldPath);
+    }
+
+    const logoUrl = `/uploads/${filename}`;
+    const updated = await this.prisma.tenant.update({
+      where: { id: tenantId },
+      data: { logoUrl },
+    });
+    await this.logAudit(tenantId, userId, 'settings.logo.updated', tenantId);
+    return { id: updated.id, logoUrl: updated.logoUrl };
   }
 }
