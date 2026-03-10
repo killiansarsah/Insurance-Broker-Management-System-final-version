@@ -13,14 +13,14 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useComplianceSummary, useKycQueue, useAmlScreening } from '@/hooks/api/use-compliance';
+import { useComplianceSummary, useKycQueue, useAmlScreening, usePepSearch } from '@/hooks/api/use-compliance';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 export default function CompliancePage() {
     const [pepSearch, setPepSearch] = useState('');
-    const [pepResult, setPepResult] = useState<null | 'clean' | 'match'>(null);
-    const [isSearching, setIsSearching] = useState(false);
+    const [pepResult, setPepResult] = useState<null | { result: 'clean' | 'match'; matches: Array<{ id: string; name: string; source: string }> }>(null);
+    const pepSearchMutation = usePepSearch();
 
     const { data: summary } = useComplianceSummary();
     const { data: kycQueue } = useKycQueue();
@@ -35,12 +35,15 @@ export default function CompliancePage() {
 
     function handlePepSearch() {
         if (!pepSearch) return;
-        setIsSearching(true);
         setPepResult(null);
-        setTimeout(() => {
-            setIsSearching(false);
-            setPepResult(Math.random() > 0.7 ? 'match' : 'clean'); // PEP screening placeholder
-        }, 1500);
+        pepSearchMutation.mutate(pepSearch, {
+            onSuccess: (data: any) => {
+                setPepResult(data);
+            },
+            onError: () => {
+                toast.error('PEP search failed. Please try again.');
+            },
+        });
     }
 
     return (
@@ -140,19 +143,19 @@ export default function CompliancePage() {
                                     className="w-full pl-9 pr-4 py-2 text-sm bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
                                 />
                             </div>
-                            <Button className="w-full" variant="primary" onClick={handlePepSearch} disabled={isSearching || !pepSearch}>
-                                {isSearching ? 'Screening...' : 'Screen Name'}
+                            <Button className="w-full" variant="primary" onClick={handlePepSearch} disabled={pepSearchMutation.isPending || !pepSearch}>
+                                {pepSearchMutation.isPending ? 'Screening...' : 'Screen Name'}
                             </Button>
 
                             {pepResult && (
                                 <div className={cn(
                                     "p-3 rounded-[var(--radius-md)] border text-sm flex items-start gap-2 animate-in fade-in slide-in-from-top-1",
-                                    pepResult === 'clean' ? "bg-success-50 border-success-200 text-success-800" : "bg-danger-50 border-danger-200 text-danger-800"
+                                    pepResult.result === 'clean' ? "bg-success-50 border-success-200 text-success-800" : "bg-danger-50 border-danger-200 text-danger-800"
                                 )}>
-                                    {pepResult === 'clean' ? <CheckCircle size={16} className="shrink-0 mt-0.5" /> : <XCircle size={16} className="shrink-0 mt-0.5" />}
+                                    {pepResult.result === 'clean' ? <CheckCircle size={16} className="shrink-0 mt-0.5" /> : <XCircle size={16} className="shrink-0 mt-0.5" />}
                                     <div>
-                                        <p className="font-bold">{pepResult === 'clean' ? 'No Matches Found' : 'Potential Match Detected'}</p>
-                                        <p className="text-xs opacity-90">{pepResult === 'clean' ? 'Clear to proceed.' : 'Review required. Source: OFAC List.'}</p>
+                                        <p className="font-bold">{pepResult.result === 'clean' ? 'No Matches Found' : `${pepResult.matches?.length ?? 0} Potential Match(es) Detected`}</p>
+                                        <p className="text-xs opacity-90">{pepResult.result === 'clean' ? 'Clear to proceed.' : pepResult.matches?.map(m => `${m.name} (${m.source})`).join(', ')}</p>
                                     </div>
                                 </div>
                             )}

@@ -257,4 +257,62 @@ export class ComplianceService {
       complaintSla: { withinSla: slaWithin, breached: slaBreached },
     };
   }
+
+  async pepSearch(tenantId: string, name: string) {
+    if (!name || name.trim().length < 2) {
+      return { result: 'clean' as const, matches: [] };
+    }
+
+    const searchName = name.trim();
+
+    // Search for PEP-flagged or high/critical risk clients matching the name
+    const matches = await this.prisma.client.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        OR: [
+          {
+            firstName: { contains: searchName, mode: 'insensitive' as const },
+          },
+          {
+            lastName: { contains: searchName, mode: 'insensitive' as const },
+          },
+          {
+            companyName: {
+              contains: searchName,
+              mode: 'insensitive' as const,
+            },
+          },
+        ],
+        AND: {
+          OR: [
+            { isPep: true },
+            { amlRiskLevel: { in: ['HIGH', 'CRITICAL'] } },
+          ],
+        },
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        companyName: true,
+        isPep: true,
+        amlRiskLevel: true,
+        clientNumber: true,
+      },
+      take: 10,
+    });
+
+    return {
+      result: matches.length > 0 ? ('match' as const) : ('clean' as const),
+      matches: matches.map((m) => ({
+        id: m.id,
+        name: m.companyName || `${m.firstName} ${m.lastName}`,
+        clientNumber: m.clientNumber,
+        isPep: m.isPep,
+        amlRiskLevel: m.amlRiskLevel,
+        source: m.isPep ? 'PEP Watchlist' : 'AML Risk Assessment',
+      })),
+    };
+  }
 }

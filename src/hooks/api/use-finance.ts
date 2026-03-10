@@ -107,10 +107,25 @@ export function usePremiumFinancing(params?: Record<string, unknown>) {
         queryFn: () => apiClient.get<PaginatedResponse<PremiumFinancingData>>('/premium-financing', params),
     });
 }
+export function usePremiumFinancingDetail(id: string) {
+    return useQuery({
+        queryKey: ['premium-financing', id],
+        queryFn: () => apiClient.get<PremiumFinancingData>(`/premium-financing/${id}`),
+        enabled: !!id,
+    });
+}
 export function useCreatePremiumFinancing() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (data: Record<string, unknown>) => apiClient.post('/premium-financing', data),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['premium-financing'] }),
+    });
+}
+export function usePayPfInstallment() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ pfId, installmentId, data }: { pfId: string; installmentId: string; data: Record<string, unknown> }) =>
+            apiClient.post(`/premium-financing/${pfId}/installments/${installmentId}/pay`, data),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['premium-financing'] }),
     });
 }

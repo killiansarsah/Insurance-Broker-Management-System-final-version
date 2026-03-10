@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
 import { ComplianceService } from './compliance.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -33,5 +33,14 @@ export class ComplianceController {
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
   summary(@Request() req: RequestWithUser) {
     return this.complianceService.summary(req.user.tenantId);
+  }
+
+  @Post('pep-search')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  pepSearch(
+    @Request() req: RequestWithUser,
+    @Body() body: { name: string },
+  ) {
+    return this.complianceService.pepSearch(req.user.tenantId, body.name);
   }
 }

@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { usePremiumFinancing, useCreatePremiumFinancing, usePayPfInstallment } from '@/hooks/api/use-finance';
 const NewPFAModal = dynamic(
     () => import('@/components/features/premium-financing/new-application-modal').then(m => ({ default: m.NewPFAModal })),
     { ssr: false }
@@ -109,7 +110,7 @@ function OverdueBadge({ days }: { days: number }) {
 }
 
 // ─── Detail Modal ───
-function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => void }) {
+function PFDetailModal({ app, onClose, onRecordPayment }: { app: PFApplication; onClose: () => void; onRecordPayment?: (pfId: string, installmentId: string) => void }) {
     const progressPct = app.numberOfInstallments > 0
         ? Math.round((app.installmentsPaid / app.numberOfInstallments) * 100)
         : 0;
@@ -446,7 +447,14 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                     variant="primary"
                                     className="bg-success-600 hover:bg-success-700 ml-auto rounded-xl shadow-lg shadow-success-600/20"
                                     leftIcon={<CreditCard size={16} />}
-                                    onClick={() => toast.success('Payment Recorded', { description: `Payment logged for ${app.applicationNumber}` })}
+                                    onClick={() => {
+                                        const nextInstallment = (app.installments ?? []).find((i: any) => i.status === 'PENDING' || i.status === 'OVERDUE');
+                                        if (nextInstallment && onRecordPayment) {
+                                            onRecordPayment(app.id, nextInstallment.id);
+                                        } else {
+                                            toast.info('No pending installments to pay');
+                                        }
+                                    }}
                                 >
                                     Record Payment
                                 </Button>
@@ -505,8 +513,62 @@ export default function PremiumFinancingPage() {
         setActiveTab(tabParam);
     }, [tabParam]);
 
-    // TODO: Replace with usePremiumFinancing() hook when backend supports it
-    const allApps: PFApplication[] = [];
+    // Fetch premium financing data from API
+    const { data: pfData, isLoading } = usePremiumFinancing();
+    const createPfMutation = useCreatePremiumFinancing();
+    const payInstallmentMutation = usePayPfInstallment();
+
+    const allApps: PFApplication[] = useMemo(() => {
+        const items = (pfData as any)?.items ?? (pfData as any)?.data ?? [];
+        return items.map((pf: any) => {
+            const clientName = pf.client?.companyName
+                || `${pf.client?.firstName ?? ''} ${pf.client?.lastName ?? ''}`.trim()
+                || 'Unknown Client';
+            // Calculate days overdue from installments or status
+            const now = new Date();
+            const overdueInstallments = (pf.installments ?? []).filter(
+                (i: any) => i.status === 'OVERDUE' || (i.status === 'PENDING' && new Date(i.dueDate) < now)
+            );
+            const oldestOverdue = overdueInstallments.length > 0
+                ? Math.max(...overdueInstallments.map((i: any) => Math.floor((now.getTime() - new Date(i.dueDate).getTime()) / 86400000)))
+                : 0;
+            return {
+                id: pf.id,
+                pfNumber: pf.applicationNumber,
+                applicationNumber: pf.applicationNumber,
+                clientName,
+                clientPhone: pf.client?.phone ?? pf.client?.mobilePhone ?? '',
+                clientEmail: pf.client?.email ?? '',
+                clientType: pf.client?.clientType ?? pf.client?.type ?? 'INDIVIDUAL',
+                policyNumber: pf.policy?.policyNumber ?? '',
+                insuranceType: pf.policy?.insuranceType ?? '',
+                insurerName: pf.policy?.insurerName ?? '',
+                coverageType: pf.policy?.coverageType ?? '',
+                totalPremium: Number(pf.totalPremium ?? 0),
+                downPayment: Number(pf.downPayment ?? 0),
+                downPaymentPct: Number(pf.downPaymentPct ?? 0),
+                financedAmount: Number(pf.financedAmount ?? 0),
+                financier: pf.financier ?? '',
+                interestRate: Number(pf.interestRateMonthly ?? 0),
+                interestRateMonthly: Number(pf.interestRateMonthly ?? 0),
+                totalInterest: Number(pf.totalInterest ?? 0),
+                totalRepayment: Number(pf.totalRepayment ?? 0),
+                numberOfInstallments: pf.numberOfInstallments ?? 0,
+                installmentsPaid: pf.installmentsPaid ?? 0,
+                installmentAmount: Number(pf.monthlyInstallment ?? 0),
+                monthlyInstallment: Number(pf.monthlyInstallment ?? 0),
+                amountPaid: Number(pf.amountPaid ?? 0),
+                outstandingBalance: Number(pf.outstandingBalance ?? 0),
+                nextDueDate: overdueInstallments[0]?.dueDate ?? '',
+                status: pf.status as PFStatus,
+                applicationDate: pf.createdAt ?? '',
+                assignedBroker: pf.assignedBroker ?? '',
+                daysOverdue: oldestOverdue,
+                overdueDays: oldestOverdue,
+                installments: pf.installments ?? [],
+            };
+        });
+    }, [pfData]);
 
     // Unique brokers
     const brokers = useMemo(() => {
@@ -587,15 +649,29 @@ export default function PremiumFinancingPage() {
         router.push(`/dashboard/premium-financing?tab=${tab}`, { scroll: false });
     };
 
-    const handleNewApplication = (_data: any) => {
-        // Integration with NewPFAModal
-        toast.success('Application Submitted', { description: 'New premium financing application has been created.' });
+    const handleNewApplication = (data: any) => {
+        createPfMutation.mutate(data, {
+            onSuccess: () => {
+                toast.success('Application Submitted', { description: 'New premium financing application has been created.' });
+            },
+            onError: (err: any) => {
+                toast.error('Failed to create application', { description: err?.message ?? 'Please try again.' });
+            },
+        });
     };
 
     // ─── KPI data (no longer a uniform grid — hero + compact blocks) ───
     const collectionPct = pfSummary.collectionRate ?? 0;
     const circumference = 2 * Math.PI * 40; // radius 40
     const strokeDash = (collectionPct / 100) * circumference;
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 min-h-screen">
@@ -960,6 +1036,20 @@ export default function PremiumFinancingPage() {
                     <PFDetailModal
                         app={selectedApp}
                         onClose={() => setSelectedApp(null)}
+                        onRecordPayment={(pfId, installmentId) => {
+                            payInstallmentMutation.mutate(
+                                { pfId, installmentId, data: { paymentMethod: 'BANK_TRANSFER' } },
+                                {
+                                    onSuccess: () => {
+                                        toast.success('Payment Recorded', { description: `Installment payment logged for ${selectedApp.applicationNumber}` });
+                                        setSelectedApp(null);
+                                    },
+                                    onError: (err: any) => {
+                                        toast.error('Payment Failed', { description: err?.message ?? 'Please try again.' });
+                                    },
+                                }
+                            );
+                        }}
                     />
                 )}
             </AnimatePresence>

@@ -52,51 +52,6 @@ const LEVEL_COLORS: Record<number, string> = {
     3: 'bg-danger-50 text-danger-700 border-danger-200',
 };
 
-// Build a unified escalations list from claims + complaints (computed inside component)
-const MANUAL_ESCALATIONS: EscalatedItem[] = [
-    {
-        id: 'esc-man-001',
-        refNumber: 'CLM-2025-0003',
-        type: 'CLAIM',
-        level: 2,
-        clientName: 'Ghana Shippers\' Authority',
-        subject: 'Major collision claim — assessor dispute on valuation',
-        amount: 75555,
-        daysPending: 14,
-        isBreached: true,
-        assignedTo: 'Dr. Ernest Osei',
-        escalatedAt: new Date(Date.now() - 86400000 * 14).toISOString(),
-        linkedId: 'CLM-2025-0003',
-    },
-    {
-        id: 'esc-man-002',
-        refNumber: 'CMP-2026-003',
-        type: 'complaint',
-        level: 1,
-        clientName: 'DM Pharmaceuticals',
-        subject: 'Delayed policy renewal processing',
-        daysPending: 5,
-        isBreached: false,
-        assignedTo: 'Esi Donkor',
-        escalatedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-        linkedId: 'cmp-3',
-    },
-    {
-        id: 'esc-man-003',
-        refNumber: 'CLM-2026-0007',
-        type: 'CLAIM',
-        level: 3,
-        clientName: 'Radiance Petroleum',
-        subject: 'Third-party liability claim — legal proceedings initiated',
-        amount: 210000,
-        daysPending: 31,
-        isBreached: true,
-        assignedTo: 'Dr. Ernest Osei',
-        escalatedAt: new Date(Date.now() - 86400000 * 31).toISOString(),
-        linkedId: 'CLM-2026-0007',
-    },
-];
-
 function EscalationBadge({ level }: { level: number }) {
     return (
         <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold border', LEVEL_COLORS[level] ?? 'bg-surface-100')}>
@@ -128,7 +83,7 @@ export default function EscalationsPage() {
             amount: c.claimAmount,
             daysPending: Math.floor((Date.now() - new Date(c.registrationDate ?? c.createdAt).getTime()) / 86400000),
             isBreached: true,
-            assignedTo: 'Kofi Asante',
+            assignedTo: c.handlerName || c.handler?.firstName ? `${c.handler?.firstName} ${c.handler?.lastName}` : 'Unassigned',
             escalatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
             linkedId: c.id,
         }));
@@ -141,11 +96,11 @@ export default function EscalationsPage() {
             subject: c.subject || '',
             daysPending: Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 86400000),
             isBreached: c.isBreached ?? false,
-            assignedTo: 'Abena Nyarko',
+            assignedTo: c.handlerName || 'Unassigned',
             escalatedAt: c.createdAt,
             linkedId: c.id,
         }));
-        return [...fromClaims, ...fromComplaints, ...MANUAL_ESCALATIONS];
+        return [...fromClaims, ...fromComplaints];
     }, [allClaims, allComplaints]);
 
     const filtered = ESCALATED_ITEMS.filter(item => {

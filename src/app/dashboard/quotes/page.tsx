@@ -32,7 +32,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
-import { useQuotes } from '@/hooks/api/use-quotes';
+import { useQuotes, useSendQuote, useAcceptQuote, useDeclineQuote, useDeleteQuote } from '@/hooks/api/use-quotes';
 
 // ─── Inline Types & Config (no backend API for quotes yet) ───
 type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED' | 'CONVERTED';
@@ -120,6 +120,8 @@ function exportToCsv(quotes: Quote[]) {
 function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => void }) {
     const selectedOption = quote.options.find((o: any) => o.isSelected) || quote.options.find((o: any) => o.isRecommended) || quote.options[0];
     const isValid = new Date(quote.validUntil) >= new Date();
+    const sendQuoteMutation = useSendQuote();
+    const acceptQuoteMutation = useAcceptQuote();
 
     useEffect(() => {
         const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -285,7 +287,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                             variant="outline"
                             size="sm"
                             leftIcon={<Copy size={14} />}
-                            onClick={() => toast.success('Quote duplicated as new draft')}
+                            onClick={() => toast.info('Duplicate feature coming soon')}
                         >
                             Duplicate
                         </Button>
@@ -304,7 +306,10 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                 variant="primary"
                                 size="sm"
                                 leftIcon={<Send size={14} />}
-                                onClick={() => toast.success(`Quote ${quote.quoteNumber} sent to client`)}
+                                onClick={() => sendQuoteMutation.mutate(quote.id, {
+                                    onSuccess: () => { toast.success(`Quote ${quote.quoteNumber} sent to client`); onClose(); },
+                                    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to send quote'),
+                                })}
                             >
                                 Send to Client
                             </Button>
@@ -315,7 +320,10 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                     variant="outline"
                                     size="sm"
                                     leftIcon={<RefreshCw size={14} />}
-                                    onClick={() => toast.info('Resending quote to client…')}
+                                    onClick={() => sendQuoteMutation.mutate(quote.id, {
+                                        onSuccess: () => toast.success('Quote resent to client'),
+                                        onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to resend'),
+                                    })}
                                 >
                                     Resend
                                 </Button>
@@ -323,7 +331,10 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                     variant="primary"
                                     size="sm"
                                     leftIcon={<CheckCircle2 size={14} />}
-                                    onClick={() => toast.success('Quote marked as accepted')}
+                                    onClick={() => acceptQuoteMutation.mutate(quote.id, {
+                                        onSuccess: () => { toast.success('Quote marked as accepted'); onClose(); },
+                                        onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to accept quote'),
+                                    })}
                                 >
                                     Mark Accepted
                                 </Button>
@@ -334,7 +345,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                 variant="primary"
                                 size="sm"
                                 leftIcon={<ArrowRight size={14} />}
-                                onClick={() => toast.success('Conversion to policy initiated')}
+                                onClick={() => toast.info('Policy conversion coming soon')}
                             >
                                 Convert to Policy
                             </Button>
@@ -371,6 +382,10 @@ export default function QuotesPage() {
 
     // Wire to backend API
     const { data: quotesData = { data: [] } } = useQuotes();
+    const sendQuoteMutation = useSendQuote();
+    const acceptQuoteMutation = useAcceptQuote();
+    const declineQuoteMutation = useDeclineQuote();
+    const deleteQuoteMutation = useDeleteQuote();
 
     const allQuotes: Quote[] = useMemo(() => {
         return ((quotesData as any).data || []).map((q: any) => ({
@@ -576,7 +591,10 @@ export default function QuotesPage() {
                         <button
                             className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-success-600 transition-colors cursor-pointer"
                             title="Send to client"
-                            onClick={() => toast.success(`Quote ${row.quoteNumber} sent to client`)}
+                            onClick={() => sendQuoteMutation.mutate(row.id, {
+                                onSuccess: () => toast.success(`Quote ${row.quoteNumber} sent to client`),
+                                onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to send quote'),
+                            })}
                         >
                             <Send size={15} />
                         </button>
@@ -584,14 +602,21 @@ export default function QuotesPage() {
                     <button
                         className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-surface-700 transition-colors cursor-pointer"
                         title="Duplicate"
-                        onClick={() => toast.success(`Duplicated ${row.quoteNumber} as new draft`)}
+                        onClick={() => toast.info('Duplicate feature coming soon')}
                     >
                         <Copy size={15} />
                     </button>
                     <button
                         className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-danger-600 transition-colors cursor-pointer"
                         title="Delete"
-                        onClick={() => toast.success(`Deleted ${row.quoteNumber}`)}
+                        onClick={() => {
+                            if (confirm(`Delete quote ${row.quoteNumber}?`)) {
+                                deleteQuoteMutation.mutate(row.id, {
+                                    onSuccess: () => toast.success(`Deleted ${row.quoteNumber}`),
+                                    onError: (err: any) => toast.error(err?.response?.data?.message || 'Failed to delete quote'),
+                                });
+                            }
+                        }}
                     >
                         <Trash2 size={15} />
                     </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
 export function useKycQueue() {
@@ -28,5 +28,12 @@ export function useComplianceSummary() {
   return useQuery({
     queryKey: ['COMPLIANCE', 'summary'],
     queryFn: () => apiClient.get('/compliance/summary'),
+  });
+}
+
+export function usePepSearch() {
+  return useMutation({
+    mutationFn: (name: string) =>
+      apiClient.post<{ result: 'clean' | 'match'; matches: Array<{ id: string; name: string; clientNumber: string; isPep: boolean; amlRiskLevel: string; source: string }> }>('/compliance/pep-search', { name }),
   });
 }

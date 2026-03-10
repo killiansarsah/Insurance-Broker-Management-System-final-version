@@ -4,24 +4,17 @@ import { useState } from 'react';
 import {
     Building2,
     Users,
-    Mail,
-    Phone,
     Plus,
     Edit,
     Search,
-    ChevronRight,
-    Target,
-    DollarSign,
     Shield,
     Settings,
-    FileText,
-    TrendingUp,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useUsers } from '@/hooks/api/use-users';
-import { cn, formatCurrency } from '@/lib/utils';
+import { useDepartments } from '@/hooks/api/useOther';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 interface Department {
@@ -31,141 +24,50 @@ interface Department {
     description: string;
     headId?: string;
     headName?: string;
-    branchId: string;
     branchName: string;
     memberCount: number;
-    activePolicies: number;
-    monthlyPremium: number;
     color: string;
-    icon: 'shield' | 'target' | 'dollar' | 'file' | 'trending' | 'settings';
 }
 
-const DEPARTMENTS: Department[] = [
-    {
-        id: 'dept-001',
-        name: 'Non-Life (General) Insurance',
-        code: 'NL-GEN',
-        description: 'Handles motor, fire, marine, engineering, and property policies.',
-        headId: 'usr-003',
-        headName: 'Esi Donkor',
-        branchId: 'BR-ACC-01',
-        branchName: 'Accra Main',
-        memberCount: 3,
-        activePolicies: 312,
-        monthlyPremium: 425000,
-        color: 'bg-primary-50 text-primary-700 border-primary-200',
-        icon: 'shield',
-    },
-    {
-        id: 'dept-002',
-        name: 'Life & Health Insurance',
-        code: 'LH-INS',
-        description: 'Manages life, health, personal accident, and annuity products.',
-        headId: 'usr-004',
-        headName: 'Kofi Asante',
-        branchId: 'BR-KUM-01',
-        branchName: 'Kumasi Branch',
-        memberCount: 2,
-        activePolicies: 87,
-        monthlyPremium: 145000,
-        color: 'bg-success-50 text-success-700 border-success-200',
-        icon: 'target',
-    },
-    {
-        id: 'dept-003',
-        name: 'Claims & Settlements',
-        code: 'CLM-STL',
-        description: 'Processes all claim intimations, assessments, and settlements.',
-        headId: 'usr-005',
-        headName: 'Abena Nyarko',
-        branchId: 'BR-ACC-01',
-        branchName: 'Accra Main',
-        memberCount: 2,
-        activePolicies: 0,
-        monthlyPremium: 0,
-        color: 'bg-orange-50 text-orange-700 border-orange-200',
-        icon: 'file',
-    },
-    {
-        id: 'dept-004',
-        name: 'Finance & Commissions',
-        code: 'FIN-COM',
-        description: 'Oversees premium collection, commission payouts, and reporting.',
-        headId: 'usr-002',
-        headName: 'Dr. Ernest Osei',
-        branchId: 'BR-ACC-01',
-        branchName: 'Accra Main',
-        memberCount: 1,
-        activePolicies: 0,
-        monthlyPremium: 0,
-        color: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-        icon: 'dollar',
-    },
-    {
-        id: 'dept-005',
-        name: 'Business Development',
-        code: 'BIZ-DEV',
-        description: 'Lead generation, client acquisition, and market expansion.',
-        headId: 'usr-003',
-        headName: 'Esi Donkor',
-        branchId: 'BR-ACC-01',
-        branchName: 'Accra Main',
-        memberCount: 2,
-        activePolicies: 0,
-        monthlyPremium: 0,
-        color: 'bg-purple-50 text-purple-700 border-purple-200',
-        icon: 'trending',
-    },
-    {
-        id: 'dept-006',
-        name: 'Compliance & Risk',
-        code: 'CMP-RSK',
-        description: 'Manages KYC/AML, NIC reporting, and regulatory compliance.',
-        headId: 'usr-002',
-        headName: 'Dr. Ernest Osei',
-        branchId: 'BR-ACC-01',
-        branchName: 'Accra Main',
-        memberCount: 1,
-        activePolicies: 0,
-        monthlyPremium: 0,
-        color: 'bg-blue-50 text-blue-700 border-blue-200',
-        icon: 'settings',
-    },
+const DEPT_COLORS = [
+    'bg-primary-50 text-primary-700 border-primary-200',
+    'bg-success-50 text-success-700 border-success-200',
+    'bg-orange-50 text-orange-700 border-orange-200',
+    'bg-yellow-50 text-yellow-700 border-yellow-200',
+    'bg-purple-50 text-purple-700 border-purple-200',
+    'bg-blue-50 text-blue-700 border-blue-200',
 ];
-
-const DEPT_ICONS = {
-    shield: <Shield size={20} />,
-    target: <Target size={20} />,
-    dollar: <DollarSign size={20} />,
-    file: <FileText size={20} />,
-    trending: <TrendingUp size={20} />,
-    settings: <Settings size={20} />,
-};
 
 export default function DepartmentsPage() {
     const [search, setSearch] = useState('');
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
     const { data: usersData } = useUsers();
+    const { data: deptsData, isLoading } = useDepartments();
     const allUsers: any[] = (usersData as any)?.items ?? usersData ?? [];
 
-    const filtered = DEPARTMENTS.filter(d =>
+    const departments: Department[] = ((deptsData as any[]) ?? []).map((d: any, i: number) => ({
+        id: d.id,
+        name: d.name,
+        code: d.code,
+        description: d.description ?? '',
+        headId: d.head?.id,
+        headName: d.head ? `${d.head.firstName} ${d.head.lastName}` : undefined,
+        branchName: d.branch?.name ?? '',
+        memberCount: d.memberCount ?? 0,
+        color: d.color && DEPT_COLORS.find(c => c.includes(d.color)) ? DEPT_COLORS.find(c => c.includes(d.color))! : DEPT_COLORS[i % DEPT_COLORS.length],
+    }));
+
+    const filtered = departments.filter(d =>
         search === '' ||
         d.name.toLowerCase().includes(search.toLowerCase()) ||
         d.code.toLowerCase().includes(search.toLowerCase()) ||
         d.branchName.toLowerCase().includes(search.toLowerCase())
     );
 
-    const totalMembers = DEPARTMENTS.reduce((s, d) => s + d.memberCount, 0);
-    const totalPolicies = DEPARTMENTS.reduce((s, d) => s + d.activePolicies, 0);
-    const totalPremium = DEPARTMENTS.reduce((s, d) => s + d.monthlyPremium, 0);
+    const totalMembers = departments.reduce((s, d) => s + d.memberCount, 0);
 
     const deptMembers = selectedDept
-        ? allUsers.filter((u: any) => {
-            if (selectedDept.id === 'dept-001') return ['usr-003', 'usr-004', 'usr-005'].includes(u.id);
-            if (selectedDept.id === 'dept-002') return ['usr-004', 'usr-005'].includes(u.id);
-            if (selectedDept.id === 'dept-003') return ['usr-005', 'usr-004'].includes(u.id);
-            return [selectedDept.headId].filter(Boolean).includes(u.id);
-        })
+        ? allUsers.filter((u: any) => u.departmentId === selectedDept.id)
         : [];
     return (
         <div className="space-y-6 animate-fade-in">
@@ -191,17 +93,17 @@ export default function DepartmentsPage() {
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-success-50 text-success-600"><FileText size={20} /></div>
+                    <div className="p-3 rounded-full bg-success-50 text-success-600"><Building2 size={20} /></div>
                     <div>
-                        <p className="text-xs font-semibold text-surface-500 uppercase">Active Policies</p>
-                        <p className="text-2xl font-bold">{totalPolicies.toLocaleString()}</p>
+                        <p className="text-xs font-semibold text-surface-500 uppercase">Departments</p>
+                        <p className="text-2xl font-bold">{departments.length}</p>
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-4">
-                    <div className="p-3 rounded-full bg-warning-50 text-warning-600"><DollarSign size={20} /></div>
+                    <div className="p-3 rounded-full bg-warning-50 text-warning-600"><Users size={20} /></div>
                     <div>
-                        <p className="text-xs font-semibold text-surface-500 uppercase">Monthly GWP</p>
-                        <p className="text-2xl font-bold">{formatCurrency(totalPremium)}</p>
+                        <p className="text-xs font-semibold text-surface-500 uppercase">All Users</p>
+                        <p className="text-2xl font-bold">{allUsers.length}</p>
                     </div>
                 </Card>
             </div>
@@ -221,6 +123,11 @@ export default function DepartmentsPage() {
             </Card>
 
             {/* Departments grid */}
+            {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-surface-500">Loading departments…</p>
+                </div>
+            ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                 {filtered.map(dept => (
                     <div
@@ -230,7 +137,7 @@ export default function DepartmentsPage() {
                     >
                         <div className={cn('p-4 flex items-start gap-4 border-l-4', dept.color.split(' ').filter(c => c.startsWith('border')).join(' ') || 'border-primary-400')}>
                             <div className={cn('p-2.5 rounded-lg shrink-0', ...dept.color.split(' '))}>
-                                {DEPT_ICONS[dept.icon]}
+                                <Building2 size={20} />
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
@@ -240,15 +147,9 @@ export default function DepartmentsPage() {
                                 <p className="text-xs text-surface-500 mt-1">{dept.description}</p>
                                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-xs text-surface-600">
                                     <span className="flex items-center gap-1"><Users size={11} />{dept.memberCount} staff</span>
-                                    <span className="flex items-center gap-1"><Building2 size={11} />{dept.branchName}</span>
+                                    {dept.branchName && <span className="flex items-center gap-1"><Building2 size={11} />{dept.branchName}</span>}
                                     {dept.headName && <span className="flex items-center gap-1"><Shield size={11} />Head: {dept.headName}</span>}
                                 </div>
-                                {dept.activePolicies > 0 && (
-                                    <div className="flex gap-4 mt-2 pt-2 border-t border-surface-100 text-xs text-surface-500">
-                                        <span className="font-semibold text-surface-700">{dept.activePolicies} policies</span>
-                                        <span className="font-semibold text-success-700">{formatCurrency(dept.monthlyPremium)}/mo</span>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -282,6 +183,7 @@ export default function DepartmentsPage() {
                     </div>
                 ))}
             </div>
+            )}
         </div>
     );
 }
