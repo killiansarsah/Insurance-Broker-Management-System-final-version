@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 interface Task {
     id: string;
     title: string;
-    priority: 'hot' | 'warm' | 'cold';
+    priority: 'HOT' | 'WARM' | 'COLD';
     type: string;
     description: string;
 }
@@ -66,8 +66,8 @@ export function ArchiveModal({ isOpen, onClose, archivedTasks, onRestore, onClea
                                 <div className="flex items-center gap-4">
                                     <div className={cn(
                                         "w-10 h-10 rounded-xl flex items-center justify-center shadow-inner text-white",
-                                        task.priority === 'hot' ? "bg-danger-500" :
-                                            task.priority === 'warm' ? "bg-accent-500" : "bg-primary-500"
+                                        task.priority === 'HOT' ? "bg-danger-500" :
+                                            task.priority === 'WARM' ? "bg-accent-500" : "bg-primary-500"
                                     )}>
                                         <Archive size={18} />
                                     </div>

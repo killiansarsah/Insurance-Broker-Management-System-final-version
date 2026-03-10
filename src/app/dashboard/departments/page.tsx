@@ -21,7 +21,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useUsers } from '@/hooks/api/use-users';
-import { users } from '@/hooks/api';
 import { cn, formatCurrency } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -146,6 +145,8 @@ const DEPT_ICONS = {
 export default function DepartmentsPage() {
     const [search, setSearch] = useState('');
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
+    const { data: usersData } = useUsers();
+    const allUsers: any[] = (usersData as any)?.items ?? usersData ?? [];
 
     const filtered = DEPARTMENTS.filter(d =>
         search === '' ||
@@ -159,7 +160,7 @@ export default function DepartmentsPage() {
     const totalPremium = DEPARTMENTS.reduce((s, d) => s + d.monthlyPremium, 0);
 
     const deptMembers = selectedDept
-        ? users.filter(u => {
+        ? allUsers.filter((u: any) => {
             if (selectedDept.id === 'dept-001') return ['usr-003', 'usr-004', 'usr-005'].includes(u.id);
             if (selectedDept.id === 'dept-002') return ['usr-004', 'usr-005'].includes(u.id);
             if (selectedDept.id === 'dept-003') return ['usr-005', 'usr-004'].includes(u.id);

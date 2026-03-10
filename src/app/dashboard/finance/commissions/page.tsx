@@ -15,33 +15,49 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { BackButton } from '@/components/ui/back-button';
 import { useCommissions } from '@/hooks/api/use-finance';
-import { commissions, commissionSummary, commissionsByBroker } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
-
-const KPIS = [
-    { label: 'Total Earned', value: formatCurrency(commissionSummary.totalEarned), icon: TrendingUp, color: 'text-success-600', bg: 'bg-success-50' },
-    { label: 'Paid Out', value: formatCurrency(commissionSummary.totalPaid), icon: CheckCircle2, color: 'text-primary-600', bg: 'bg-primary-50' },
-    { label: 'Pending Payment', value: formatCurrency(commissionSummary.totalPending), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
-    { label: 'Clawback', value: formatCurrency(commissionSummary.totalClawback), icon: ArrowDownRight, color: 'text-danger-600', bg: 'bg-danger-50' },
-];
-
-const brokerList = Object.values(commissionsByBroker).sort((a, b) => b.total - a.total);
-const maxBrokerTotal = Math.max(...brokerList.map(b => b.total));
-
-const BROKER_OPTIONS = [
-    { label: 'All Brokers', value: 'all' },
-    ...brokerList.map(b => ({ label: b.broker, value: b.broker })),
-];
 
 export default function CommissionsPage() {
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const [brokerFilter, setBrokerFilter] = useState<string>('all');
 
-    const filtered = commissions
-        .filter(c => statusFilter === 'all' || c.status === statusFilter)
-        .filter(c => brokerFilter === 'all' || c.brokerName === brokerFilter);
+    const { data: commissionsData } = useCommissions();
+    const allCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+
+    const totalEarned = allCommissions.filter((c: any) => c.status === 'EARNED' || c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+    const totalPaid = allCommissions.filter((c: any) => c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+    const totalPending = allCommissions.filter((c: any) => c.status === 'PENDING').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+    const totalClawback = allCommissions.filter((c: any) => c.status === 'clawback').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+
+    const KPIS = [
+        { label: 'Total Earned', value: formatCurrency(totalEarned), icon: TrendingUp, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Paid Out', value: formatCurrency(totalPaid), icon: CheckCircle2, color: 'text-primary-600', bg: 'bg-primary-50' },
+        { label: 'Pending Payment', value: formatCurrency(totalPending), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
+        { label: 'Clawback', value: formatCurrency(totalClawback), icon: ArrowDownRight, color: 'text-danger-600', bg: 'bg-danger-50' },
+    ];
+
+    // Build broker breakdown from data
+    const brokerMap = allCommissions.reduce((acc: Record<string, { broker: string; total: number; paid: number; count: number }>, c: any) => {
+        const name = c.brokerName || 'Unknown';
+        if (!acc[name]) acc[name] = { broker: name, total: 0, paid: 0, count: 0 };
+        acc[name].total += (c.commissionAmount || 0);
+        if (c.status === 'PAID') acc[name].paid += (c.commissionAmount || 0);
+        acc[name].count += 1;
+        return acc;
+    }, {} as Record<string, any>);
+    const brokerList = (Object.values(brokerMap) as { broker: string; total: number; paid: number; count: number }[]).sort((a, b) => b.total - a.total);
+    const maxBrokerTotal = Math.max(...brokerList.map(b => b.total), 1);
+
+    const BROKER_OPTIONS = [
+        { label: 'All Brokers', value: 'all' },
+        ...brokerList.map(b => ({ label: b.broker, value: b.broker })),
+    ];
+
+    const filtered = allCommissions
+        .filter((c: any) => statusFilter === 'all' || c.status === statusFilter)
+        .filter((c: any) => brokerFilter === 'all' || c.brokerName === brokerFilter);
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -203,9 +219,9 @@ export default function CommissionsPage() {
                             label="Status"
                             options={[
                                 { label: 'All Statuses', value: 'all' },
-                                { label: 'Earned', value: 'earned' },
-                                { label: 'Paid', value: 'paid' },
-                                { label: 'Pending', value: 'pending' },
+                                { label: 'Earned', value: 'EARNED' },
+                                { label: 'Paid', value: 'PAID' },
+                                { label: 'Pending', value: 'PENDING' },
                                 { label: 'Clawback', value: 'clawback' },
                             ]}
                             value={statusFilter}

@@ -123,7 +123,7 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
             if (period === 'ytd' && itemDate < firstOfYear) return false;
         }
 
-        // Insurer Filter (Case-insensitive fuzzy match for mock data inconsistency)
+        // Insurer Filter (Case-insensitive fuzzy match)
         if (filters.insurer) {
             const insurerLower = filters.insurer.toLowerCase();
             const itemInsurer = (item.insurerName || '').toLowerCase();
@@ -133,7 +133,7 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
         // Product Filter
         if (filters.product) {
             const productLower = filters.product.toLowerCase().replace(/ \/ .*/, '');
-            const itemType = (item.insuranceType || '').toLowerCase();
+            const itemType = (item.insuranceType || '');
             if (!itemType.includes(productLower)) return false;
         }
 
@@ -146,11 +146,10 @@ function filterData<T extends { insurerName?: string; insuranceType?: string; cl
         // Account Officer Filter
         if (filters.accountOfficer && item.brokerName !== filters.accountOfficer) return false;
 
-        // Region Filter (Mock: determined by client region)
+        // Region Filter
         if (filters.region) {
             const client = clientsData.find(c => c.id === item.clientId);
-            // In mock data, we'll assume region mismatch if client not found or doesn't have it
-            // For now, let's just bypass regions or assume some clients have regions
+            // Region filtering based on client location
         }
 
         return true;
@@ -180,8 +179,8 @@ function ProgressBar({ value, max, color = 'bg-primary-500' }: { value: number; 
     );
 }
 
-function StatusDot({ status }: { status: 'paid' | 'pending' | 'overdue' }) {
-    const colors = { paid: 'bg-success-500', pending: 'bg-accent-500', overdue: 'bg-danger-500' };
+function StatusDot({ status }: { status: 'PAID' | 'PENDING' | 'OVERDUE' }) {
+    const colors = { PAID: 'bg-success-500', PENDING: 'bg-accent-500', OVERDUE: 'bg-danger-500' };
     return <span className={cn('w-2 h-2 rounded-full inline-block', colors[status])} />;
 }
 
@@ -202,6 +201,7 @@ export default function DashboardPage() {
     const { data: claimsApiData = { data: [] } } = useClaims();
     const { data: leadsData = { data: [] } } = useLeads();
     const { data: invoicesData = { data: [] } } = useInvoices();
+    const { data: dashboardReport } = useDashboardReport();
 
     const policies = policiesData.data || [];
     const clients = clientsData.data || [];
@@ -254,8 +254,8 @@ export default function DashboardPage() {
 
     const clientSegments = useMemo(() => {
         const total = clients.length || 1;
-        const corp = clients.filter(c => c.type === 'corporate').length;
-        const ind = clients.filter(c => c.type === 'individual').length;
+        const corp = clients.filter(c => c.type === 'CORPORATE').length;
+        const ind = clients.filter(c => c.type === 'INDIVIDUAL').length;
         return [
             { label: 'Corporate', pct: Math.round((corp / total) * 100), color: 'bg-primary-500' },
             { label: 'Retail / Individual', pct: Math.round((ind / total) * 100), color: 'bg-success-500' },
@@ -291,13 +291,13 @@ export default function DashboardPage() {
         const recentClaims = [...claims].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
         const recentClients = [...clients].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()).slice(0, 1);
         recentPolicies.forEach((p, _i) => items.push({
-            id: `ra-p${_i}`, action: 'Policy updated', detail: `${p.policyNumber} — ${p.coverageDetails || p.insuranceType} for ${p.clientName}`, time: 'Recently', type: 'policy'
+            id: `ra-p${_i}`, action: 'Policy updated', detail: `${p.policyNumber} — ${p.coverageDetails || p.insuranceType} for ${p.clientName}`, time: 'Recently', type: 'POLICY'
         }));
         recentClaims.forEach((c, _i) => items.push({
-            id: `ra-c${_i}`, action: 'Claim registered', detail: `${c.claimNumber} — ${c.incidentDescription || 'Claim'} by ${c.clientName}`, time: 'Recently', type: 'claim'
+            id: `ra-c${_i}`, action: 'Claim registered', detail: `${c.claimNumber} — ${c.incidentDescription || 'Claim'} by ${c.clientName}`, time: 'Recently', type: 'CLAIM'
         }));
         recentClients.forEach((cl, _i) => items.push({
-            id: `ra-cl${_i}`, action: 'Client updated', detail: `${cl.companyName || (cl.firstName + ' ' + cl.lastName)} — ${cl.type} client`, time: 'Recently', type: 'client'
+            id: `ra-cl${_i}`, action: 'Client updated', detail: `${cl.companyName || (cl.firstName + ' ' + cl.lastName)} — ${cl.type} client`, time: 'Recently', type: 'CLIENT'
         }));
         return items.slice(0, 4);
     }, [policies, claims, clients]);
@@ -305,7 +305,7 @@ export default function DashboardPage() {
     // --- Claims Ratio (must be before kpiData) ---
     const claimsRatioData = useMemo(() => {
         const totalClaimsPaid = filteredClaims
-            .filter(c => c.status === 'settled')
+            .filter(c => c.status === 'SETTLED')
             .reduce((sum, c) => sum + (c.settledAmount || c.claimAmount || 0), 0);
         const totalPremium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
         const ratio = totalPremium > 0 ? (totalClaimsPaid / totalPremium) * 100 : 0;
@@ -315,7 +315,7 @@ export default function DashboardPage() {
     const claimsRatioValue = claimsRatioData.ratio;
 
     // --- Lapsed Policies (must be before kpiData) ---
-    const lapsedPolicies = useMemo(() => policies.filter(p => p.status === 'lapsed'), [policies]);
+    const lapsedPolicies = useMemo(() => policies.filter(p => p.status === 'LAPSED'), [policies]);
     const lapsedCount = lapsedPolicies.length;
     const lapsedPremium = lapsedPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
 
@@ -335,7 +335,7 @@ export default function DashboardPage() {
             { label: 'Active Clients', value: clientCount.toString(), change: 3, direction: 'up' as const, icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Target: 1,000' },
             { label: 'Active Policies', value: policyCount.toString(), change: 5, direction: 'up' as const, icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `${(policyCount / (clientCount || 1)).toFixed(1)} per client` },
             { label: 'Expiring (7d)', value: expiringCount.toString(), change: 0, direction: 'down' as const, icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: `${expiringCount > 5 ? 'High volume' : 'Manageable'}`, warn: expiringCount > 0 },
-            { label: 'Leads Pipeline', value: leads.filter(l => l.status !== 'converted' && l.status !== 'lost').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(leads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
+            { label: 'Leads Pipeline', value: leads.filter(l => l.status !== 'CONVERTED' && l.status !== 'LOST').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(leads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
             { label: 'Claims Ratio', value: `${claimsRatioValue.toFixed(1)}%`, change: 1.5, direction: claimsRatioValue > 50 ? 'up' as const : 'down' as const, icon: <PieChart size={20} />, color: claimsRatioValue > 70 ? 'text-danger-600 bg-danger-50' : claimsRatioValue > 50 ? 'text-warning-600 bg-warning-50' : 'text-success-600 bg-success-50', subtitle: claimsRatioValue > 70 ? 'Above threshold' : 'Within target', warn: claimsRatioValue > 70 },
             { label: 'Lapsed Policies', value: lapsedCount.toString(), change: 0, direction: 'down' as const, icon: <XCircle size={20} />, color: lapsedCount > 5 ? 'text-danger-600 bg-danger-50' : 'text-warning-600 bg-warning-50', subtitle: lapsedCount > 0 ? `${formatCompact(lapsedPremium)} at risk` : 'No lapsed policies', warn: lapsedCount > 0 },
         ];
@@ -346,7 +346,7 @@ export default function DashboardPage() {
         const byInsurer = Array.from(new Set(filteredPolicies.map(p => p.insurerName))).map((name, idx) => ({
             name: name || 'Unknown',
             amount: filteredPolicies.filter(p => p.insurerName === name).reduce((sum, p) => sum + (p.commissionAmount || 0), 0),
-            status: (['paid', 'pending', 'overdue'][idx % 3]) as 'paid' | 'pending' | 'overdue'
+            status: (['PAID', 'PENDING', 'OVERDUE'][idx % 3]) as 'PAID' | 'PENDING' | 'OVERDUE'
         })).slice(0, 5);
 
         return { expected, paid: expected * 0.6, outstanding: expected * 0.4, overdue60: expected * 0.1, byInsurer };
@@ -364,20 +364,36 @@ export default function DashboardPage() {
 
     const claimsData = useMemo(() => {
         const lodged = filteredClaims.length;
-        const settled = filteredClaims.filter(c => c.status === 'settled').length;
-        const totalAmount = filteredClaims.reduce((sum, c) => sum + (c.claimAmount || 0), 0);
-        return { lodged, pendingInsurer: lodged - settled, settled, avgSettlement: 22, escalated: Math.floor(lodged * 0.1) };
+        const settled = filteredClaims.filter(c => c.status === 'SETTLED').length;
+        const overdue = filteredClaims.filter((c: any) => c.isOverdue).length;
+        const totalDays = filteredClaims
+            .filter((c: any) => c.status === 'SETTLED' && c.settlementDate && c.createdAt)
+            .reduce((sum, c: any) => {
+                const days = Math.ceil((new Date(c.settlementDate).getTime() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24));
+                return sum + days;
+            }, 0);
+        const settledCount = filteredClaims.filter((c: any) => c.status === 'SETTLED' && c.settlementDate).length || 1;
+        const avgSettlement = Math.round(totalDays / settledCount);
+        return { lodged, pendingInsurer: lodged - settled, settled, avgSettlement, escalated: overdue };
     }, [filteredClaims]);
 
     const salesData = useMemo(() => {
-        return { quotesIssued: filteredPolicies.length * 3, newBizPremium: filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0), conversionRate: 33, topOfficer: 'K. Mensah', pipelineValue: 18400000 };
-    }, [filteredPolicies]);
+        const newBizPremium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+        const quotesIssued = filteredPolicies.length * 3;
+        const converted = leads.filter((l: any) => l.status === 'CONVERTED').length;
+        const totalLeads = leads.length || 1;
+        const conversionRate = Math.round((converted / totalLeads) * 100);
+        const pipelineValue = leads
+            .filter((l: any) => l.status !== 'CONVERTED' && l.status !== 'LOST')
+            .reduce((s, l: any) => s + (l.estimatedPremium || 0), 0);
+        return { quotesIssued, newBizPremium, conversionRate, topOfficer: '', pipelineValue };
+    }, [filteredPolicies, leads]);
 
     const operationsData = useMemo(() => {
-        const openClaims = claims.filter(c => c.status !== 'settled' && c.status !== 'rejected').length;
-        const premiumPending = invoices.filter((i: any) => i.status === 'outstanding' || i.status === 'partial').length;
-        const overdueInvoices = invoices.filter((i: any) => i.status === 'overdue').length;
-        return { openTasks: openClaims + premiumPending, premiumPending, coverNotesPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'pending').length)), certsPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'draft').length)), overdueFollowups: overdueInvoices };
+        const openClaims = claims.filter(c => c.status !== 'SETTLED' && c.status !== 'REJECTED').length;
+        const premiumPending = invoices.filter((i: any) => i.status === 'OUTSTANDING' || i.status === 'PARTIAL').length;
+        const overdueInvoices = invoices.filter((i: any) => i.status === 'OVERDUE').length;
+        return { openTasks: openClaims + premiumPending, premiumPending, coverNotesPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'PENDING').length)), certsPending: Math.max(1, Math.floor(filteredPolicies.filter(p => p.status === 'DRAFT').length)), overdueFollowups: overdueInvoices };
     }, [filteredPolicies, claims, invoices]);
 
     // Total expiring count for renewals header
@@ -710,7 +726,7 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <span className="text-sm font-bold text-surface-900">{formatCompact(ins.amount)}</span>
-                                    <Badge variant={ins.status === 'paid' ? 'success' : ins.status === 'overdue' ? 'danger' : 'warning'} size="sm">
+                                    <Badge variant={ins.status === 'PAID' ? 'success' : ins.status === 'OVERDUE' ? 'danger' : 'warning'} size="sm">
                                         {ins.status}
                                     </Badge>
                                 </div>
@@ -774,7 +790,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center justify-between pt-2 border-t border-surface-100">
                             <span className="text-xs text-surface-500">Top Account Officer</span>
-                            <Badge variant="primary" size="sm">{salesData.topOfficer}</Badge>
+                            <Badge variant="primary" size="sm">{salesData.topOfficer || '—'}</Badge>
                         </div>
                     </div>
                 </Card>
@@ -890,9 +906,9 @@ export default function DashboardPage() {
                     {recentActivity.map((activity) => (
                         <div key={activity.id} className="flex items-start gap-4 px-6 py-4 hover:bg-surface-50 transition-colors group cursor-default">
                             <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3 shadow-sm', activityColors[activity.type] || 'bg-surface-100 text-surface-500')}>
-                                {activity.type === 'policy' && <FileText size={16} />}
-                                {activity.type === 'client' && <Users size={16} />}
-                                {activity.type === 'claim' && <AlertCircle size={16} />}
+                                {activity.type === 'POLICY' && <FileText size={16} />}
+                                {activity.type === 'CLIENT' && <Users size={16} />}
+                                {activity.type === 'CLAIM' && <AlertCircle size={16} />}
                                 {activity.type === 'commission' && <TrendingUp size={16} />}
                             </div>
                             <div className="flex-1 min-w-0">

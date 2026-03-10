@@ -1,35 +1,16 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { usePolicy } from '@/hooks/api/use-policies';
-import { mockPolicies } from '@/hooks/api';
 import PolicyDetailClient from './policy-detail-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const policy = mockPolicies.find((p) => p.id === id);
-    if (!policy) return { title: 'Policy not found' };
     return {
-        title: `Policy ${policy.policyNumber}`,
-        description: `Details for policy ${policy.policyNumber}.`,
-        openGraph: {
-            title: `Policy ${policy.policyNumber}`,
-            description: `Details for policy ${policy.policyNumber}.`,
-            type: 'article',
-        },
+        title: 'Policy Details',
+        description: 'View policy details and endorsements.',
         alternates: { canonical: `/dashboard/policies/${id}` },
     };
 }
 
-// Static export — pre-generate all policy detail routes
-export function generateStaticParams() {
-    return mockPolicies.map((policy) => ({
-        id: policy.id,
-    }));
-}
-
 export default async function PolicyDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const policy = mockPolicies.find((p) => p.id === id);
-    if (!policy) notFound();
     return <PolicyDetailClient policyId={id} />;
 }

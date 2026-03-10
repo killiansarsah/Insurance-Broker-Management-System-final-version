@@ -35,19 +35,56 @@ const NewPFAModal = dynamic(
     () => import('@/components/features/premium-financing/new-application-modal').then(m => ({ default: m.NewPFAModal })),
     { ssr: false }
 );
-import {
-    mockPFApplications,
-    pfSummary,
-    PF_STATUS_CONFIG,
-    FINANCIERS,
-    type PFApplication,
-    type PFStatus,
-} from '@/hooks/api';
+
+// ─── Inline Types & Config (no backend API for premium financing yet) ───
+type PFStatus = 'SUBMITTED' | 'UNDER_REVIEW' | 'APPROVED' | 'ACTIVE' | 'COMPLETED' | 'DEFAULTED' | 'CANCELLED';
+
+interface PFApplication {
+    id: string;
+    pfNumber: string;
+    clientName: string;
+    clientPhone: string;
+    clientEmail: string;
+    policyNumber: string;
+    insuranceType: string;
+    totalPremium: number;
+    downPayment: number;
+    financedAmount: number;
+    financier: string;
+    interestRate: number;
+    numberOfInstallments: number;
+    installmentsPaid: number;
+    installmentAmount: number;
+    nextDueDate: string;
+    status: PFStatus;
+    applicationDate: string;
+    assignedBroker: string;
+    overdueDays: number;
+    [key: string]: any;
+}
+
+const PF_STATUS_CONFIG: Record<PFStatus, { label: string; bg: string; color: string; dot: string }> = {
+    SUBMITTED: { label: 'Submitted', bg: 'bg-surface-100', color: 'text-surface-600', dot: 'bg-surface-400' },
+    UNDER_REVIEW: { label: 'Under Review', bg: 'bg-amber-50', color: 'text-amber-700', dot: 'bg-amber-500' },
+    APPROVED: { label: 'Approved', bg: 'bg-blue-50', color: 'text-blue-700', dot: 'bg-blue-500' },
+    ACTIVE: { label: 'Active', bg: 'bg-primary-50', color: 'text-primary-700', dot: 'bg-primary-500' },
+    COMPLETED: { label: 'Completed', bg: 'bg-success-50', color: 'text-success-700', dot: 'bg-success-500' },
+    DEFAULTED: { label: 'Defaulted', bg: 'bg-danger-50', color: 'text-danger-700', dot: 'bg-danger-500' },
+    CANCELLED: { label: 'Cancelled', bg: 'bg-surface-100', color: 'text-surface-500', dot: 'bg-surface-400' },
+};
+
+const FINANCIERS = [
+    'First National Bank',
+    'Prudential Finance',
+    'Stanbic Premium Finance',
+    'ADB Premium Financing',
+    'Republic Premium Credit',
+];
 
 import { motion, AnimatePresence } from 'framer-motion';
 
 // ─── Pipeline Tab Types ───
-type PipelineTab = 'all' | 'pending' | 'active' | 'completed' | 'defaulted' | 'cancelled';
+type PipelineTab = 'all' | 'PENDING' | 'ACTIVE' | 'COMPLETED' | 'DEFAULTED' | 'CANCELLED';
 
 // ─── Status Badge (PF-specific) ───
 function PFStatusBadge({ status }: { status: PFStatus }) {
@@ -144,7 +181,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                         className="grid grid-cols-1 sm:grid-cols-2 gap-3"
                     >
                         <InfoCard label="Client" value={app.clientName} icon={<User size={16} />} accent="primary" />
-                        <InfoCard label="Client Type" value={app.clientType === 'corporate' ? 'Corporate' : 'Individual'} icon={<Building2 size={16} />} accent="blue" />
+                        <InfoCard label="Client Type" value={app.clientType === 'CORPORATE' ? 'Corporate' : 'Individual'} icon={<Building2 size={16} />} accent="blue" />
                         <InfoCard label="Policy" value={app.policyNumber} icon={<FileText size={16} />} accent="primary" />
                         <InfoCard label="Insurer" value={app.insurerName} icon={<Shield size={16} />} accent="success" />
                         <InfoCard label="Coverage" value={app.coverageType} icon={<BarChart3 size={16} />} accent="amber" />
@@ -210,7 +247,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                         <div className="flex items-center gap-4 mb-4">
                             <div className="flex-1 h-3.5 bg-surface-100 rounded-full overflow-hidden shadow-inner">
                                 <div
-                                    className={`h-full rounded-full pf-progress-bar relative overflow-hidden ${app.daysOverdue > 0 ? 'bg-danger-500' : app.status === 'completed' ? 'bg-success-500' : 'bg-primary-500'}`}
+                                    className={`h-full rounded-full pf-progress-bar relative overflow-hidden ${app.daysOverdue > 0 ? 'bg-danger-500' : app.status === 'COMPLETED' ? 'bg-success-500' : 'bg-primary-500'}`}
                                     style={{ width: `${progressPct}%` }}
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-[shimmer_2s_infinite]" />
@@ -312,7 +349,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                 </div>
                                 Installment Schedule
                                 <span className="ml-auto text-[10px] font-bold text-surface-400 uppercase tracking-wider">
-                                    {app.installments.filter((i: any) => i.status === 'paid').length}/{app.installments.length} paid
+                                    {app.installments.filter((i: any) => i.status === 'PAID').length}/{app.installments.length} paid
                                 </span>
                             </h3>
                             <div className="space-y-2">
@@ -324,11 +361,11 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold ${
-                                                inst.status === 'paid' ? 'bg-success-500' :
-                                                inst.status === 'overdue' ? 'bg-danger-500 pf-ring-pulse' :
+                                                inst.status === 'PAID' ? 'bg-success-500' :
+                                                inst.status === 'OVERDUE' ? 'bg-danger-500 pf-ring-pulse' :
                                                 'bg-surface-300'
                                             }`}>
-                                                {inst.status === 'paid' ? <CheckCircle2 size={14} /> : inst.number}
+                                                {inst.status === 'PAID' ? <CheckCircle2 size={14} /> : inst.number}
                                             </div>
                                             <span className="font-semibold text-surface-700">Installment #{inst.number}</span>
                                         </div>
@@ -336,11 +373,11 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                                             <span className="text-xs font-medium">{formatDate(inst.dueDate)}</span>
                                             <span className="font-bold text-surface-800 w-24 text-right">{formatCurrency(inst.amount)}</span>
                                             <span className={`text-[10px] font-black uppercase tracking-wider w-16 text-right ${
-                                                inst.status === 'paid' ? 'text-success-600' :
-                                                inst.status === 'overdue' ? 'text-danger-600' :
+                                                inst.status === 'PAID' ? 'text-success-600' :
+                                                inst.status === 'OVERDUE' ? 'text-danger-600' :
                                                 'text-surface-400'
                                             }`}>
-                                                {inst.status === 'paid' ? '✓ Paid' : inst.status === 'overdue' ? 'Overdue' : 'Pending'}
+                                                {inst.status === 'PAID' ? '✓ Paid' : inst.status === 'OVERDUE' ? 'Overdue' : 'Pending'}
                                             </span>
                                         </div>
                                     </div>
@@ -373,7 +410,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                     )}
 
                     {/* Action Buttons */}
-                    {(app.status === 'active' || app.status === 'submitted' || app.status === 'under_review') && (
+                    {(app.status === 'ACTIVE' || app.status === 'SUBMITTED' || app.status === 'UNDER_REVIEW') && (
                         <motion.div
                             initial={{ opacity: 0, y: 12 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -404,7 +441,7 @@ function PFDetailModal({ app, onClose }: { app: PFApplication; onClose: () => vo
                             >
                                 Email Statement
                             </Button>
-                            {app.status === 'active' && (
+                            {app.status === 'ACTIVE' && (
                                 <Button
                                     variant="primary"
                                     className="bg-success-600 hover:bg-success-700 ml-auto rounded-xl shadow-lg shadow-success-600/20"
@@ -468,41 +505,64 @@ export default function PremiumFinancingPage() {
         setActiveTab(tabParam);
     }, [tabParam]);
 
+    // TODO: Replace with usePremiumFinancing() hook when backend supports it
+    const allApps: PFApplication[] = [];
+
     // Unique brokers
     const brokers = useMemo(() => {
-        const set = new Set(mockPFApplications.map(a => a.assignedBroker));
+        const set = new Set(allApps.map(a => a.assignedBroker));
         return Array.from(set).sort();
-    }, []);
+    }, [allApps]);
 
-    // Pipeline tabs with dot-accent colors (distinct from renewals' pill counts)
+    const pfSummary = useMemo(() => {
+        const total = allApps.length;
+        const submitted = allApps.filter(a => a.status === 'SUBMITTED').length;
+        const underReview = allApps.filter(a => a.status === 'UNDER_REVIEW').length;
+        const approved = allApps.filter(a => a.status === 'APPROVED').length;
+        const active = allApps.filter(a => a.status === 'ACTIVE').length;
+        const completed = allApps.filter(a => a.status === 'COMPLETED').length;
+        const defaulted = allApps.filter(a => a.status === 'DEFAULTED').length;
+        const cancelled = allApps.filter(a => a.status === 'CANCELLED').length;
+        const totalFinanced = allApps.reduce((s, a) => s + (a.financedAmount || 0), 0);
+        const totalOutstanding = allApps
+            .filter(a => a.status === 'ACTIVE')
+            .reduce((s, a) => s + ((a.numberOfInstallments - a.installmentsPaid) * a.installmentAmount || 0), 0);
+        const collectionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+        const overdueAmount = allApps
+            .filter(a => a.status === 'DEFAULTED')
+            .reduce((s: number, a: any) => s + ((a.numberOfInstallments - (a.installmentsPaid || 0)) * (a.installmentAmount || 0)), 0);
+        return { total, submitted, underReview, approved, active, completed, defaulted, cancelled, totalFinanced, totalOutstanding, collectionRate, overdueAmount };
+    }, [allApps]);
+
+    // Pipeline tabs with dot-accent colors
     const pipelineTabs: { id: PipelineTab; label: string; count: number; dotColor: string; activeColor: string }[] = useMemo(() => [
         { id: 'all', label: 'All', count: pfSummary.total, dotColor: 'bg-surface-400', activeColor: 'border-surface-900' },
-        { id: 'pending', label: 'Pending', count: pfSummary.underReview + pfSummary.approved + pfSummary.submitted, dotColor: 'bg-amber-500', activeColor: 'border-amber-500' },
-        { id: 'active', label: 'Active', count: pfSummary.active, dotColor: 'bg-primary-500', activeColor: 'border-primary-500' },
-        { id: 'completed', label: 'Completed', count: pfSummary.completed, dotColor: 'bg-success-500', activeColor: 'border-success-500' },
-        { id: 'defaulted', label: 'Defaulted', count: pfSummary.defaulted, dotColor: 'bg-danger-500', activeColor: 'border-danger-500' },
-        { id: 'cancelled', label: 'Cancelled', count: pfSummary.cancelled, dotColor: 'bg-surface-400', activeColor: 'border-surface-500' },
-    ], []);
+        { id: 'PENDING', label: 'Pending', count: pfSummary.underReview + pfSummary.approved + pfSummary.submitted, dotColor: 'bg-amber-500', activeColor: 'border-amber-500' },
+        { id: 'ACTIVE', label: 'Active', count: pfSummary.active, dotColor: 'bg-primary-500', activeColor: 'border-primary-500' },
+        { id: 'COMPLETED', label: 'Completed', count: pfSummary.completed, dotColor: 'bg-success-500', activeColor: 'border-success-500' },
+        { id: 'DEFAULTED', label: 'Defaulted', count: pfSummary.defaulted, dotColor: 'bg-danger-500', activeColor: 'border-danger-500' },
+        { id: 'CANCELLED', label: 'Cancelled', count: pfSummary.cancelled, dotColor: 'bg-surface-400', activeColor: 'border-surface-500' },
+    ], [pfSummary]);
 
     // Filtered data
     const filteredApps = useMemo(() => {
-        let data = [...mockPFApplications];
+        let data = [...allApps];
 
         switch (activeTab) {
-            case 'pending':
-                data = data.filter(a => a.status === 'submitted' || a.status === 'under_review' || a.status === 'approved');
+            case 'PENDING':
+                data = data.filter(a => a.status === 'SUBMITTED' || a.status === 'UNDER_REVIEW' || a.status === 'APPROVED');
                 break;
-            case 'active':
-                data = data.filter(a => a.status === 'active');
+            case 'ACTIVE':
+                data = data.filter(a => a.status === 'ACTIVE');
                 break;
-            case 'completed':
-                data = data.filter(a => a.status === 'completed');
+            case 'COMPLETED':
+                data = data.filter(a => a.status === 'COMPLETED');
                 break;
-            case 'defaulted':
-                data = data.filter(a => a.status === 'defaulted');
+            case 'DEFAULTED':
+                data = data.filter(a => a.status === 'DEFAULTED');
                 break;
-            case 'cancelled':
-                data = data.filter(a => a.status === 'cancelled');
+            case 'CANCELLED':
+                data = data.filter(a => a.status === 'CANCELLED');
                 break;
         }
 
@@ -520,7 +580,7 @@ export default function PremiumFinancingPage() {
         });
 
         return data;
-    }, [activeTab, financierFilter, brokerFilter]);
+    }, [allApps, activeTab, financierFilter, brokerFilter]);
 
     const handleTabChange = (tab: PipelineTab) => {
         setActiveTab(tab);
@@ -806,7 +866,7 @@ export default function PremiumFinancingPage() {
                                             <div
                                                 className={`h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden ${
                                                     r.daysOverdue > 0 ? 'bg-danger-500' :
-                                                    r.status === 'completed' ? 'bg-success-500' :
+                                                    r.status === 'COMPLETED' ? 'bg-success-500' :
                                                     'bg-primary-500'
                                                 }`}
                                                 style={{ width: `${pct}%` }}

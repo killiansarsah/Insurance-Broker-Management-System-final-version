@@ -1,6 +1,6 @@
-'use client';
+﻿'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import * as XLSX from 'xlsx';
 import {
@@ -35,35 +35,50 @@ const ConfirmationModal = dynamic(
 import { toast } from 'sonner';
 import { BackButton } from '@/components/ui/back-button';
 import { CustomSelect } from '@/components/ui/select-custom';
-import {
-    expenses as initialExpenses,
-    expenseSummary,
-    EXPENSE_CATEGORIES,
-    CATEGORY_LABEL,
-    DEPARTMENTS,
-    type Expense,
-    type ExpenseCategory,
-    type ExpenseStatus,
-    type PaymentMethod,
-} from '@/hooks/api';
-import { useExpenses } from '@/hooks/api/use-finance';
-import { mockCommissions } from '@/hooks/api';
+import { useExpenses, useCommissions } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
 
-// ─── Helpers ─────────────────────────────────────────────────
+// Local type definitions (formerly from stubs)
+type ExpenseCategory = 'fuel_car_maintenance' | 'printing_stationery' | 'tele_post' | 'utilities' | 'levies_licenses' | 'transport' | 'provisions_toiletries' | 'allowances' | 'training' | 'subscriptions' | 'miscellaneous' | 'food' | 'salaries' | 'ssnit' | 'insurance' | 'business_prospecting';
+type ExpenseStatus = 'APPROVED' | 'PENDING' | 'REJECTED' | 'DRAFT';
+type PaymentMethod = 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'CASH' | 'CHEQUE' | 'CARD';
+interface Expense { id: string; date: string; description: string; amount: number; category: ExpenseCategory; department: string; status: ExpenseStatus; paymentMethod: PaymentMethod; approvedBy?: string; receipt?: string; notes?: string; [key: string]: any; }
+
+const EXPENSE_CATEGORIES = [
+    { value: 'fuel_car_maintenance', label: 'Fuel/Car Maintenance' },
+    { value: 'printing_stationery', label: 'Printing & Stationery' },
+    { value: 'tele_post', label: 'Tele & Post' },
+    { value: 'utilities', label: 'Utilities' },
+    { value: 'levies_licenses', label: 'Levies & Licenses' },
+    { value: 'transport', label: 'Transport' },
+    { value: 'provisions_toiletries', label: 'Provisions & Toiletries' },
+    { value: 'allowances', label: 'Allowances' },
+    { value: 'training', label: 'Training' },
+    { value: 'subscriptions', label: 'Subscriptions' },
+    { value: 'miscellaneous', label: 'Miscellaneous' },
+    { value: 'food', label: 'Food' },
+    { value: 'salaries', label: 'Salaries & Wages' },
+    { value: 'ssnit', label: 'SSNIT' },
+    { value: 'insurance', label: 'Insurance' },
+    { value: 'business_prospecting', label: 'Business Prospecting' },
+];
+const CATEGORY_LABEL: Record<ExpenseCategory, string> = { fuel_car_maintenance: 'Fuel/Car Maintenance', printing_stationery: 'Printing & Stationery', tele_post: 'Tele & Post', utilities: 'Utilities', levies_licenses: 'Levies & Licenses', transport: 'Transport', provisions_toiletries: 'Provisions & Toiletries', allowances: 'Allowances', training: 'Training', subscriptions: 'Subscriptions', miscellaneous: 'Miscellaneous', food: 'Food', salaries: 'Salaries & Wages', ssnit: 'SSNIT', insurance: 'Insurance', business_prospecting: 'Business Prospecting' };
+const DEPARTMENTS = ['Operations', 'Finance', 'Claims', 'Sales', 'IT', 'HR', 'Administration', 'Underwriting'];
+
+// â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const PAYMENT_METHOD_LABEL: Record<PaymentMethod, string> = {
-    bank_transfer: 'Bank Transfer',
-    mobile_money: 'Mobile Money',
-    cash: 'Cash',
-    cheque: 'Cheque',
-    card: 'Card',
+    BANK_TRANSFER: 'Bank Transfer',
+    MOBILE_MONEY: 'Mobile Money',
+    CASH: 'Cash',
+    CHEQUE: 'Cheque',
+    CARD: 'Card',
 };
 
 const STATUS_LABEL: Record<ExpenseStatus, string> = {
-    approved: 'Approved',
-    pending: 'Pending',
-    rejected: 'Rejected',
-    draft: 'Draft',
+    APPROVED: 'Approved',
+    PENDING: 'Pending',
+    REJECTED: 'Rejected',
+    DRAFT: 'Draft',
 };
 
 const MONTH_NAMES: Record<string, string> = {
@@ -100,8 +115,8 @@ const LS_HEADERS_KEY = 'ibms_expense_col_headers';
 const EXCEL_COL_HEADERS = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...EXCEL_COLUMNS.map(c => c.header)];
 const EXCEL_TOTAL_COLS = EXCEL_COL_HEADERS.length; // 20
 
-// ─── XLSX Export ─────────────────────────────────────────────
-function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
+// â”€â”€â”€ XLSX Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function exportToXLSX(data: Expense[], company: string, colHeaders: string[], commissionsList: any[] = []) {
     const monthMap = new Map<string, Expense[]>();
     data.forEach(e => {
         const key = e.date.slice(0, 7);
@@ -112,7 +127,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
     const wb = XLSX.utils.book_new();
     const expColHeaders = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
 
-    // Monthly expense sheets (JANUARY, FEBRUARY, MARCH …)
+    // Monthly expense sheets (JANUARY, FEBRUARY, MARCH â€¦)
     [...monthMap.keys()].sort().forEach(month => {
         const entries = monthMap.get(month)!;
         const [yr, mo] = month.split('-');
@@ -123,7 +138,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
             expColHeaders,
         ];
 
-        // Data rows — pad up to minimum 18 rows so template looks like original
+        // Data rows â€” pad up to minimum 18 rows so template looks like original
         const NUM_ROWS = Math.max(18, entries.length);
         for (let i = 0; i < NUM_ROWS; i++) {
             const e = entries[i];
@@ -172,7 +187,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
                 'PREMIUM (GHS)', 'RATE %', 'GROSS COMMISSION (GHS)',
                 'NIC LEVY', 'NET COMMISSION (GHS)', 'STATUS'],
         ];
-        mockCommissions.forEach(c => {
+        commissionsList.forEach(c => {
             commRows.push([
                 c.dateEarned, c.clientName, c.policyNumber, c.productType,
                 c.insurerName, c.premiumAmount, c.commissionRate,
@@ -180,19 +195,19 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
                 c.status.toUpperCase(),
             ]);
         });
-        const totalGross = mockCommissions.reduce((s, c) => s + c.commissionAmount, 0);
-        const totalNic = mockCommissions.reduce((s, c) => s + c.nicLevy, 0);
-        const totalNet = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
+        const totalGross = commissionsList.reduce((s, c) => s + c.commissionAmount, 0);
+        const totalNic = commissionsList.reduce((s, c) => s + c.nicLevy, 0);
+        const totalNet = commissionsList.reduce((s, c) => s + c.netCommission, 0);
         commRows.push(['', '', '', '', 'TOTAL', '', '', totalGross, totalNic, totalNet, '']);
         const ws = XLSX.utils.aoa_to_sheet(commRows);
         ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
         XLSX.utils.book_append_sheet(wb, ws, 'COMMISSION');
     }
 
-    // OVER RIDER sheet — commission totals grouped by insurer
+    // OVER RIDER sheet â€” commission totals grouped by insurer
     {
         const insurerMap = new Map<string, { gross: number; net: number }>();
-        mockCommissions.forEach(c => {
+        commissionsList.forEach(c => {
             const cur = insurerMap.get(c.insurerName) || { gross: 0, net: 0 };
             insurerMap.set(c.insurerName, {
                 gross: cur.gross + c.commissionAmount,
@@ -215,7 +230,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
     // ACCOUNT sheet
     {
         const totalExp = data.reduce((s, e) => s + e.amount, 0);
-        const totalComm = mockCommissions.reduce((s, c) => s + c.netCommission, 0);
+        const totalComm = commissionsList.reduce((s, c) => s + c.netCommission, 0);
         const acRows: (string | number)[][] = [
             [`${company} - ACCOUNT SUMMARY`],
             ['', ''],
@@ -233,7 +248,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
     // BUSINESS TYPE sheet
     {
         const btMap = new Map<string, { count: number; premium: number; commission: number }>();
-        mockCommissions.forEach(c => {
+        commissionsList.forEach(c => {
             const cur = btMap.get(c.productType) || { count: 0, premium: 0, commission: 0 };
             btMap.set(c.productType, {
                 count: cur.count + 1,
@@ -255,7 +270,7 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[]) {
     XLSX.writeFile(wb, `DEZAG_Expenses_${year}.xlsx`);
 }
 
-// ─── CSV Export (wide format matching Excel layout) ──────────
+// â”€â”€â”€ CSV Export (wide format matching Excel layout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function exportToCSV(data: Expense[], colHeaders: string[]) {
     const headers = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
 
@@ -278,7 +293,7 @@ function exportToCSV(data: Expense[], colHeaders: string[]) {
     URL.revokeObjectURL(url);
 }
 
-// ─── CSV Import (parse) ─────────────────────────────────────
+// â”€â”€â”€ CSV Import (parse) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function parseCSV(text: string): Partial<Expense>[] {
     const lines = text.split('\n').filter(l => l.trim());
     if (lines.length < 2) return [];
@@ -292,15 +307,15 @@ function parseCSV(text: string): Partial<Expense>[] {
             id: `exp-imp-${Date.now()}-${i}`,
             date: cols[0] || new Date().toISOString().slice(0, 10),
             description: cols[1] || '',
-            category: catEntry?.value || 'miscellaneous',
+            category: (catEntry?.value || 'miscellaneous') as ExpenseCategory,
             amount: parseFloat(cols[3]) || 0,
             currency: (['GHS', 'USD', 'EUR'].includes(cols[4] || '') ? cols[4] : 'GHS') as Expense['currency'],
             vendor: cols[5] || '',
             reference: cols[6] || '',
             paymentMethod: (Object.entries(PAYMENT_METHOD_LABEL).find(
                 ([, v]) => v.toLowerCase() === (cols[7] || '').toLowerCase()
-            )?.[0] || 'cash') as PaymentMethod,
-            status: 'draft' as ExpenseStatus,
+            )?.[0] || 'CASH') as PaymentMethod,
+            status: 'DRAFT' as ExpenseStatus,
             department: DEPARTMENTS.includes(cols[9] || '') ? cols[9] : 'Administration',
             notes: cols[10] || '',
             receiptAttached: false,
@@ -309,15 +324,15 @@ function parseCSV(text: string): Partial<Expense>[] {
     return parsed;
 }
 
-// ─── KPI data ────────────────────────────────────────────────
+// â”€â”€â”€ KPI data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 
 const STATUS_FILTER_OPTIONS = [
     { label: 'All Statuses', value: 'all' },
-    { label: 'Approved', value: 'approved' },
-    { label: 'Pending', value: 'pending' },
-    { label: 'Rejected', value: 'rejected' },
-    { label: 'Draft', value: 'draft' },
+    { label: 'Approved', value: 'APPROVED' },
+    { label: 'Pending', value: 'PENDING' },
+    { label: 'Rejected', value: 'REJECTED' },
+    { label: 'Draft', value: 'DRAFT' },
 ];
 
 const CATEGORY_FILTER_OPTIONS = [
@@ -330,16 +345,16 @@ const DEPT_FILTER_OPTIONS = [
     ...DEPARTMENTS.map(d => ({ label: d, value: d })),
 ];
 
-// ─── Inline cell editor ─────────────────────────────────────
+// â”€â”€â”€ Inline cell editor â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CellInput({
     value,
     onChange,
-    type = 'text',
+    type = 'TEXT',
     className,
 }: {
     value: string;
     onChange: (v: string) => void;
-    type?: 'text' | 'number' | 'date';
+    type?: 'TEXT' | 'number' | 'date';
     className?: string;
 }) {
     return (
@@ -381,9 +396,21 @@ function CellSelect({
     );
 }
 
-// ─── Main component ─────────────────────────────────────────
+// â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function ExpensesPage() {
-    const [expenses, setExpenses] = useState<Expense[]>([...initialExpenses]);
+    const { data: expensesData } = useExpenses();
+    const fetchedExpenses = ((expensesData as any)?.items ?? expensesData ?? []) as Expense[];
+    const { data: commissionsRaw } = useCommissions();
+    const allCommissions = ((commissionsRaw as any)?.items ?? commissionsRaw ?? []) as any[];
+
+    const [expenses, setExpenses] = useState<Expense[]>([]);
+    const [expensesInit, setExpensesInit] = useState(false);
+    useEffect(() => {
+        if (!expensesInit && fetchedExpenses.length > 0) {
+            setExpenses([...fetchedExpenses]);
+            setExpensesInit(true);
+        }
+    }, [fetchedExpenses, expensesInit]);
     const [showSummary, setShowSummary] = useState(false);
     const [statusFilter, setStatusFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
@@ -393,10 +420,10 @@ export default function ExpensesPage() {
     const [editRow, setEditRow] = useState<Partial<Expense>>({});
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [showImportHint, setShowImportHint] = useState(false);
-    const [expDeleteTarget, setExpDeleteTarget] = useState<{ type: 'single' | 'bulk'; id?: string } | null>(null);
+    const [expDeleteTarget, setExpDeleteTarget] = useState<{ type: 'SINGLE' | 'bulk'; id?: string } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // ─── Export customization ───
+    // â”€â”€â”€ Export customization â”€â”€â”€
     const [showCustomize, setShowCustomize] = useState(false);
     const [customCompany, setCustomCompany] = useState(() => {
         if (typeof window === 'undefined') return DEFAULT_COMPANY;
@@ -460,15 +487,15 @@ export default function ExpensesPage() {
         summaryData.reduce((s, r) => s + r.total, 0)
         , [summaryData]);
 
-    // ─── KPI data ───
+    // â”€â”€â”€ KPI data â”€â”€â”€
     const KPIS = useMemo(() => {
         const currentMonth = new Date().toISOString().slice(0, 7);
         const thisMonthTotal = expenses
             .filter(e => e.date.slice(0, 7) === currentMonth)
             .reduce((s, e) => s + e.amount, 0);
         const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
-        const pending = expenses.filter(e => e.status === 'pending').reduce((s, e) => s + e.amount, 0);
-        const rejected = expenses.filter(e => e.status === 'rejected').reduce((s, e) => s + e.amount, 0);
+        const pending = expenses.filter(e => e.status === 'PENDING').reduce((s, e) => s + e.amount, 0);
+        const rejected = expenses.filter(e => e.status === 'REJECTED').reduce((s, e) => s + e.amount, 0);
         return [
             { label: 'Total Expenses', value: formatCurrency(totalExpenses), icon: DollarSign, color: 'text-primary-600', bg: 'bg-primary-50' },
             { label: 'This Month', value: formatCurrency(thisMonthTotal), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
@@ -477,7 +504,7 @@ export default function ExpensesPage() {
         ];
     }, [expenses]);
 
-    // ─── Filtering ───
+    // â”€â”€â”€ Filtering â”€â”€â”€
     const filtered = useMemo(() => {
         let data = expenses;
         if (statusFilter !== 'all') data = data.filter(e => e.status === statusFilter);
@@ -496,7 +523,7 @@ export default function ExpensesPage() {
         return data;
     }, [expenses, statusFilter, categoryFilter, deptFilter, search]);
 
-    // ─── Inline edit ───
+    // â”€â”€â”€ Inline edit â”€â”€â”€
     const startEdit = (exp: Expense) => {
         setEditingId(exp.id);
         setEditRow({ ...exp });
@@ -516,7 +543,7 @@ export default function ExpensesPage() {
         setEditRow({});
     };
 
-    // ─── Add new row ───
+    // â”€â”€â”€ Add new row â”€â”€â”€
     const addNewRow = () => {
         const newExp: Expense = {
             id: `exp-${Date.now()}`,
@@ -527,8 +554,8 @@ export default function ExpensesPage() {
             currency: 'GHS',
             vendor: '',
             reference: `EXP-${new Date().getFullYear()}-${String(expenses.length + 1).padStart(3, '0')}`,
-            paymentMethod: 'cash',
-            status: 'draft',
+            paymentMethod: 'CASH',
+            status: 'DRAFT',
             department: 'Administration',
             receiptAttached: false,
         };
@@ -536,14 +563,14 @@ export default function ExpensesPage() {
         startEdit(newExp);
     };
 
-    // ─── Delete rows ───
+    // â”€â”€â”€ Delete rows â”€â”€â”€
     const deleteSelected = () => {
         setExpDeleteTarget({ type: 'bulk' });
     };
 
     const confirmExpDelete = () => {
         if (!expDeleteTarget) return;
-        if (expDeleteTarget.type === 'single' && expDeleteTarget.id) {
+        if (expDeleteTarget.type === 'SINGLE' && expDeleteTarget.id) {
             setExpenses(prev => prev.filter(e => e.id !== expDeleteTarget.id));
             setSelectedIds(prev => {
                 const next = new Set(prev);
@@ -560,7 +587,7 @@ export default function ExpensesPage() {
         setExpDeleteTarget(null);
     };
 
-    // ─── Select all ───
+    // â”€â”€â”€ Select all â”€â”€â”€
     const toggleSelectAll = () => {
         if (selectedIds.size === filtered.length) {
             setSelectedIds(new Set());
@@ -578,7 +605,7 @@ export default function ExpensesPage() {
         });
     };
 
-    // ─── Import ───
+    // â”€â”€â”€ Import â”€â”€â”€
     const handleImport = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -596,8 +623,8 @@ export default function ExpensesPage() {
                     currency: imp.currency || 'GHS' as const,
                     vendor: imp.vendor || '',
                     reference: imp.reference || '',
-                    paymentMethod: imp.paymentMethod || 'cash' as PaymentMethod,
-                    status: 'draft' as ExpenseStatus,
+                    paymentMethod: imp.paymentMethod || 'CASH' as PaymentMethod,
+                    status: 'DRAFT' as ExpenseStatus,
                     department: imp.department || 'Administration',
                     notes: imp.notes || '',
                     receiptAttached: false,
@@ -612,8 +639,31 @@ export default function ExpensesPage() {
         e.target.value = '';
     }, []);
 
-    // ─── Summary for filtered data ───
+    // â”€â”€â”€ Summary for filtered data â”€â”€â”€
     const filteredTotal = filtered.reduce((s, e) => s + e.amount, 0);
+
+    // Compute category and department summaries from expenses
+    const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+    const byCategory = useMemo(() => {
+        const map: Record<string, { category: string; amount: number; count: number }> = {};
+        expenses.forEach(e => {
+            const label = CATEGORY_LABEL[e.category] || e.category;
+            if (!map[label]) map[label] = { category: label, amount: 0, count: 0 };
+            map[label].amount += e.amount;
+            map[label].count += 1;
+        });
+        return Object.values(map).sort((a, b) => b.amount - a.amount);
+    }, [expenses]);
+    const byDepartment = useMemo(() => {
+        const map: Record<string, { department: string; amount: number; count: number }> = {};
+        expenses.forEach(e => {
+            const dept = e.department || 'Unknown';
+            if (!map[dept]) map[dept] = { department: dept, amount: 0, count: 0 };
+            map[dept].amount += e.amount;
+            map[dept].count += 1;
+        });
+        return Object.values(map).sort((a, b) => b.amount - a.amount);
+    }, [expenses]);
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -662,7 +712,7 @@ export default function ExpensesPage() {
                     <Button
                         variant="outline"
                         leftIcon={<FileSpreadsheet size={16} />}
-                        onClick={() => exportToXLSX(filtered, customCompany, customHeaders)}
+                        onClick={() => exportToXLSX(filtered, customCompany, customHeaders, allCommissions)}
                     >
                         Export Excel
                     </Button>
@@ -716,7 +766,7 @@ export default function ExpensesPage() {
                             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" />
                             <input
                                 type="text"
-                                placeholder="Search expenses…"
+                                placeholder="Search expensesâ€¦"
                                 value={search}
                                 onChange={e => setSearch(e.target.value)}
                                 className="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 rounded-lg
@@ -763,7 +813,7 @@ export default function ExpensesPage() {
                     <div className="flex items-center justify-between px-4 py-3 border-b border-surface-100 bg-surface-50">
                         <h3 className="text-sm font-bold text-surface-900">Expense Summary by Category &amp; Month</h3>
                         <span className="text-xs text-surface-500">
-                            {summaryMonths.map(m => MONTH_NAMES[m.split('-')[1]] || m).join(' · ')} &nbsp;·&nbsp; {summaryData.length} active categories
+                            {summaryMonths.map(m => MONTH_NAMES[m.split('-')[1]] || m).join(' Â· ')} &nbsp;Â·&nbsp; {summaryData.length} active categories
                         </span>
                     </div>
                     <div className="overflow-x-auto">
@@ -789,7 +839,7 @@ export default function ExpensesPage() {
                                             <td key={i} className="px-3 py-2.5 text-right">
                                                 {amt > 0
                                                     ? <span className="text-xs tabular-nums text-surface-700">{formatCurrency(amt)}</span>
-                                                    : <span className="text-surface-300 text-xs">—</span>
+                                                    : <span className="text-surface-300 text-xs">â€”</span>
                                                 }
                                             </td>
                                         ))}
@@ -973,7 +1023,7 @@ export default function ExpensesPage() {
                                             <td className="px-3 py-2.5">
                                                 {isEditing ? (
                                                     <CellSelect
-                                                        value={editRow.paymentMethod || 'cash'}
+                                                        value={editRow.paymentMethod || 'CASH'}
                                                         onChange={v => setEditRow(r => ({ ...r, paymentMethod: v as PaymentMethod }))}
                                                         options={Object.entries(PAYMENT_METHOD_LABEL).map(([v, l]) => ({ value: v, label: l }))}
                                                     />
@@ -999,7 +1049,7 @@ export default function ExpensesPage() {
                                             <td className="px-3 py-2.5 text-center">
                                                 {isEditing ? (
                                                     <CellSelect
-                                                        value={editRow.status || 'draft'}
+                                                        value={editRow.status || 'DRAFT'}
                                                         onChange={v => setEditRow(r => ({ ...r, status: v as ExpenseStatus }))}
                                                         options={Object.entries(STATUS_LABEL).map(([v, l]) => ({ value: v, label: l }))}
                                                     />
@@ -1013,7 +1063,7 @@ export default function ExpensesPage() {
                                                 {exp.receiptAttached ? (
                                                     <Paperclip size={14} className="mx-auto text-success-500" />
                                                 ) : (
-                                                    <span className="text-surface-300">—</span>
+                                                    <span className="text-surface-300">â€”</span>
                                                 )}
                                             </td>
 
@@ -1046,7 +1096,7 @@ export default function ExpensesPage() {
                                                             <Pencil size={14} />
                                                         </button>
                                                         <button
-                                                            onClick={() => setExpDeleteTarget({ type: 'single', id: exp.id })}
+                                                            onClick={() => setExpDeleteTarget({ type: 'SINGLE', id: exp.id })}
                                                             className="p-1.5 rounded-md hover:bg-danger-50 text-surface-400 hover:text-danger-600 transition-colors cursor-pointer"
                                                             title="Delete"
                                                         >
@@ -1088,8 +1138,8 @@ export default function ExpensesPage() {
                 <Card padding="lg">
                     <h3 className="text-sm font-bold text-surface-900 mb-4">By Category</h3>
                     <div className="space-y-3">
-                        {(expenseSummary.byCategory ?? []).map((cat: any) => {
-                            const pct = Math.round((cat.amount / expenseSummary.totalExpenses) * 100);
+                        {byCategory.map((cat: any) => {
+                            const pct = totalExpenses > 0 ? Math.round((cat.amount / totalExpenses) * 100) : 0;
                             return (
                                 <div key={cat.category}>
                                     <div className="flex items-center justify-between mb-1">
@@ -1115,8 +1165,8 @@ export default function ExpensesPage() {
                 <Card padding="lg">
                     <h3 className="text-sm font-bold text-surface-900 mb-4">By Department</h3>
                     <div className="space-y-3">
-                        {(expenseSummary.byDepartment ?? []).map((dept: any) => {
-                            const pct = Math.round((dept.amount / expenseSummary.totalExpenses) * 100);
+                        {byDepartment.map((dept: any) => {
+                            const pct = totalExpenses > 0 ? Math.round((dept.amount / totalExpenses) * 100) : 0;
                             return (
                                 <div key={dept.department}>
                                     <div className="flex items-center justify-between mb-1">

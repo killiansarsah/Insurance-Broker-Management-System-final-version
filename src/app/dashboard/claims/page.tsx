@@ -14,7 +14,7 @@ import { Card } from '@/components/ui/card';
 export default function ClaimsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const typeParam = searchParams.get('type') as 'motor' | 'non-motor' | null;
+    const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const { data: claimsData, isLoading } = useClaims();
     const claims = claimsData?.data || [];
@@ -23,8 +23,8 @@ export default function ClaimsPage() {
     const baseData = useMemo(() => {
         if (!typeParam) return claims;
         return claims.filter((c) => {
-            if (typeParam === 'motor') return c.insuranceType === 'motor';
-            if (typeParam === 'non-motor') return c.insuranceType !== 'motor';
+            if (typeParam === 'MOTOR') return c.insuranceType === 'MOTOR';
+            if (typeParam === 'non-motor') return c.insuranceType !== 'MOTOR';
             return true;
         });
     }, [typeParam]);
@@ -42,7 +42,7 @@ export default function ClaimsPage() {
     const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     const monthEnd = new Date(nextMonth.getTime() - 86_400_000).toISOString().split('T')[0];
-    const settledThisMonth = baseData.filter(c => c.status === 'settled' && c.settlementDate && c.settlementDate.slice(0, 10) >= monthStart && c.settlementDate.slice(0, 10) <= monthEnd);
+    const settledThisMonth = baseData.filter(c => c.status === 'SETTLED' && c.settlementDate && c.settlementDate.slice(0, 10) >= monthStart && c.settlementDate.slice(0, 10) <= monthEnd);
 
     // Avg settlement time — compute from intimation→settlement for settled claims
     const settledClaims = baseData.filter(c => c.settlementDate && c.intimationDate);
@@ -55,14 +55,14 @@ export default function ClaimsPage() {
         : 0;
 
     const stats = [
-        { label: 'Open Claims', value: baseData.filter(c => ['intimated', 'registered', 'under_review', 'assessed'].includes(c.status)).length, icon: AlertCircle, color: 'text-warning-600', bg: 'bg-warning-50' },
+        { label: 'Open Claims', value: baseData.filter(c => ['INTIMATED', 'REGISTERED', 'UNDER_REVIEW', 'ASSESSED'].includes(c.status)).length, icon: AlertCircle, color: 'text-warning-600', bg: 'bg-warning-50' },
         { label: 'Settled This Month', value: settledThisMonth.length, icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
         { label: 'Avg. Settlement Time', value: `${avgDays} Days`, icon: Clock, color: 'text-primary-600', bg: 'bg-primary-50' },
         { label: 'Total Incurred', value: formatCurrency(baseData.reduce((sum, c) => sum + (c.settledAmount || c.claimAmount || 0), 0)), icon: FileText, color: 'text-surface-600', bg: 'bg-surface-50' },
     ];
 
     const getTitle = () => {
-        if (typeParam === 'motor') return 'Motor Claims';
+        if (typeParam === 'MOTOR') return 'Motor Claims';
         if (typeParam === 'non-motor') return 'Non-Motor Claims';
         return 'All Claims';
     };
@@ -143,14 +143,14 @@ export default function ClaimsPage() {
                             label="Status"
                             options={[
                                 { label: 'All Statuses', value: 'all' },
-                                { label: 'Intimated', value: 'intimated' },
-                                { label: 'Registered', value: 'registered' },
-                                { label: 'Under Review', value: 'under_review' },
-                                { label: 'Approved', value: 'approved' },
-                                { label: 'Assessed', value: 'assessed' },
-                                { label: 'Settled', value: 'settled' },
-                                { label: 'Rejected', value: 'rejected' },
-                                { label: 'Closed', value: 'closed' },
+                                { label: 'Intimated', value: 'INTIMATED' },
+                                { label: 'Registered', value: 'REGISTERED' },
+                                { label: 'Under Review', value: 'UNDER_REVIEW' },
+                                { label: 'Approved', value: 'APPROVED' },
+                                { label: 'Assessed', value: 'ASSESSED' },
+                                { label: 'Settled', value: 'SETTLED' },
+                                { label: 'Rejected', value: 'REJECTED' },
+                                { label: 'Closed', value: 'CLOSED' },
                             ]}
                             value={statusFilter}
                             onChange={(v) => setStatusFilter(v as string)}

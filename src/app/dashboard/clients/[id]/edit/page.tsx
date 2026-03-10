@@ -1,13 +1,6 @@
-import { useClient } from '@/hooks/api/use-clients';
-import { mockClients } from '@/hooks/api';
 import EditClientPage from './edit-client-page';
 
-export async function generateStaticParams() {
-    return mockClients.map((client) => ({
-        id: client.id,
-    }));
-}
-
-export default function Page() {
-    return <EditClientPage />;
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    return <EditClientPage id={id} />;
 }

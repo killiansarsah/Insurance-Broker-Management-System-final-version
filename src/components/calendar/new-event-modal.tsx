@@ -5,7 +5,8 @@ import { Calendar as CalendarIcon, Clock, Tag, AlignLeft, CheckCircle2, MapPin, 
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { CalendarEventType, CalendarEventPriority } from '@/hooks/api';
+type CalendarEventType = 'MEETING' | 'POLICY' | 'CLAIM' | 'TEAM' | 'COMPLIANCE' | 'PAYMENT';
+type CalendarEventPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 import { Modal } from '@/components/ui/modal';
 import { CustomSelect } from '@/components/ui/select-custom';
 
@@ -21,11 +22,11 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
     const [date, setDate] = useState(initialDate ? format(initialDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'));
     const [startTime, setStartTime] = useState('09:00');
     const [endTime, setEndTime] = useState('10:00');
-    const [type, setType] = useState<CalendarEventType>('meeting');
+    const [type, setType] = useState<CalendarEventType>('MEETING');
     const [participant, setParticipant] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
-    const [priority, setPriority] = useState<CalendarEventPriority>('medium');
+    const [priority, setPriority] = useState<CalendarEventPriority>('MEDIUM');
 
     // Sync date field and reset form whenever modal opens or initialDate changes
     useEffect(() => {
@@ -36,9 +37,9 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
             setDescription('');
             setStartTime('09:00');
             setEndTime('10:00');
-            setType('meeting');
+            setType('MEETING');
             setLocation('');
-            setPriority('medium');
+            setPriority('MEDIUM');
         }
     }, [isOpen, initialDate]);
 
@@ -145,12 +146,12 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'Meeting', value: 'meeting' },
-                                { label: 'Policy Renewal', value: 'policy' },
-                                { label: 'Claim Review', value: 'claim' },
-                                { label: 'Internal Scrum', value: 'team' },
-                                { label: 'Compliance Deadline', value: 'compliance' },
-                                { label: 'Payment Follow-up', value: 'payment' },
+                                { label: 'Meeting', value: 'MEETING' },
+                                { label: 'Policy Renewal', value: 'POLICY' },
+                                { label: 'Claim Review', value: 'CLAIM' },
+                                { label: 'Internal Scrum', value: 'TEAM' },
+                                { label: 'Compliance Deadline', value: 'COMPLIANCE' },
+                                { label: 'Payment Follow-up', value: 'PAYMENT' },
                             ]}
                             value={type}
                             onChange={(v) => setType(v as CalendarEventType)}
@@ -177,10 +178,10 @@ export function NewEventModal({ isOpen, onClose, onSave, initialDate }: NewEvent
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'Low', value: 'low' },
-                                { label: 'Medium', value: 'medium' },
-                                { label: 'High', value: 'high' },
-                                { label: 'Urgent', value: 'urgent' },
+                                { label: 'Low', value: 'LOW' },
+                                { label: 'Medium', value: 'MEDIUM' },
+                                { label: 'High', value: 'HIGH' },
+                                { label: 'Urgent', value: 'URGENT' },
                             ]}
                             value={priority}
                             onChange={(v) => setPriority(v as CalendarEventPriority)}

@@ -20,7 +20,7 @@ const METHODS: {
     brandColorClass: string;
 }[] = [
         {
-            id: 'mobile_money',
+            id: 'MOBILE_MONEY',
             label: 'Mobile Money',
             icon: Smartphone,
             description: 'MTN, Telecel, AirtelTigo',
@@ -29,7 +29,7 @@ const METHODS: {
             brandColorClass: 'text-amber-600',
         },
         {
-            id: 'card',
+            id: 'CARD',
             label: 'Card Payment',
             icon: CreditCard,
             description: 'Visa, Mastercard, AMEX',
@@ -38,7 +38,7 @@ const METHODS: {
             brandColorClass: 'text-blue-600',
         },
         {
-            id: 'bank_transfer',
+            id: 'BANK_TRANSFER',
             label: 'Bank Transfer',
             icon: Building2,
             description: 'Direct Deposit / Transfer',
@@ -47,7 +47,7 @@ const METHODS: {
             brandColorClass: 'text-indigo-600',
         },
         {
-            id: 'cash',
+            id: 'CASH',
             label: 'Cash/Cheque',
             icon: Wallet,
             description: 'Physical payment receipting',

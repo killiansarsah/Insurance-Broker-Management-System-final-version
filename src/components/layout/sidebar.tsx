@@ -66,7 +66,7 @@ const navigation: NavSection[] = [
                 label: 'My Desk',
                 href: '/dashboard/tasks',
                 icon: <Briefcase size={18} />,
-                badge: '5', // Mock urgent tasks
+                badge: '5',
             },
             {
                 label: 'Calendar',

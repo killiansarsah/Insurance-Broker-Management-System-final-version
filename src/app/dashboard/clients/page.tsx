@@ -39,8 +39,8 @@ export default function ClientsPage() {
     const clients = clientsData?.data || [];
     
     const totalClients = clients.length;
-    const kycVerified = clients.filter((c) => c.kycStatus === 'verified').length;
-    const highRisk = clients.filter((c) => c.amlRiskLevel === 'high' || c.amlRiskLevel === 'critical').length;
+    const kycVerified = clients.filter((c) => c.kycStatus === 'VERIFIED').length;
+    const highRisk = clients.filter((c) => c.amlRiskLevel === 'HIGH' || c.amlRiskLevel === 'CRITICAL').length;
     const newThisMonth = clients.filter((c) => {
         const d = new Date(c.createdAt as string);
         const now = new Date();
@@ -107,7 +107,7 @@ export default function ClientsPage() {
     {
         label: 'Total Clients',
         value: totalClients,
-        description: `${clients.filter(c => c.status === 'active').length} active`,
+        description: `${clients.filter(c => c.status === 'ACTIVE').length} active`,
         icon: <Users size={22} strokeWidth={1.8} />,
         trend: '+12%',
         trendUp: true,
@@ -176,22 +176,22 @@ export default function ClientsPage() {
                     <div className="relative">
                         <div className={cn(
                             'w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 shadow-sm ring-2 ring-white transition-transform duration-200 group-hover/name:scale-105',
-                            row.type === 'corporate'
+                            row.type === 'CORPORATE'
                                 ? 'bg-gradient-to-br from-primary-500 to-primary-600 text-white'
                                 : 'bg-gradient-to-br from-accent-400 to-accent-500 text-white'
                         )}>
-                            {row.type === 'corporate' ? <Building2 size={16} /> : getClientDisplayName(row).charAt(0)}
+                            {row.type === 'CORPORATE' ? <Building2 size={16} /> : getClientDisplayName(row).charAt(0)}
                         </div>
                         <div className={cn(
                             'absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white',
-                            row.status === 'active' ? 'bg-success-400' : row.status === 'suspended' ? 'bg-accent-400' : 'bg-surface-300'
+                            row.status === 'ACTIVE' ? 'bg-success-400' : row.status === 'SUSPENDED' ? 'bg-accent-400' : 'bg-surface-300'
                         )} />
                     </div>
                     <div className="min-w-0">
                         <p className="text-sm font-semibold text-surface-900 leading-tight truncate">{getClientDisplayName(row)}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="text-[11px] text-surface-400">
-                                {row.type === 'corporate' ? '🏢 Corporate' : '👤 Individual'}
+                                {row.type === 'CORPORATE' ? '🏢 Corporate' : '👤 Individual'}
                             </span>
                             {row.email && (
                                 <span className="text-[10px] text-surface-300 hidden group-hover/name:inline-flex items-center gap-0.5 transition-opacity">
@@ -232,7 +232,7 @@ export default function ClientsPage() {
             render: (row: Client) => <StatusBadge status={row.amlRiskLevel} />,
         },
         {
-            key: 'phone',
+            key: 'PHONE',
             label: 'Phone',
             render: (row: Client) => (
                 <span className="text-sm text-surface-600 tabular-nums">{formatPhone(row.phone)}</span>
@@ -448,9 +448,9 @@ export default function ClientsPage() {
                 {!showFilters && (
                     <div className="flex items-center gap-2 animate-fade-in">
                         {([
-                            { value: 'active' as ClientStatus, dot: 'bg-success-400', label: 'Active' },
-                            { value: 'inactive' as ClientStatus, dot: 'bg-surface-400', label: 'Inactive' },
-                            { value: 'suspended' as ClientStatus, dot: 'bg-accent-400', label: 'Suspended' },
+                            { value: 'ACTIVE' as ClientStatus, dot: 'bg-success-400', label: 'Active' },
+                            { value: 'INACTIVE' as ClientStatus, dot: 'bg-surface-400', label: 'Inactive' },
+                            { value: 'SUSPENDED' as ClientStatus, dot: 'bg-accent-400', label: 'Suspended' },
                         ]).map((item) => (
                             <button
                                 key={item.value}
@@ -515,10 +515,10 @@ export default function ClientsPage() {
                         <CustomSelect
                             label="Status"
                             options={[
-                                { label: '✅ Active', value: 'active' },
-                                { label: '⏸️ Inactive', value: 'inactive' },
-                                { label: '⚠️ Suspended', value: 'suspended' },
-                                { label: '🚫 Blacklisted', value: 'blacklisted' },
+                                { label: '✅ Active', value: 'ACTIVE' },
+                                { label: '⏸️ Inactive', value: 'INACTIVE' },
+                                { label: '⚠️ Suspended', value: 'SUSPENDED' },
+                                { label: '🚫 Blacklisted', value: 'BLACKLISTED' },
                             ]}
                             value={filterStatus}
                             onChange={(v) => setFilterStatus(v as ClientStatus | '')}
@@ -527,10 +527,10 @@ export default function ClientsPage() {
                         <CustomSelect
                             label="KYC Status"
                             options={[
-                                { label: '⏳ Pending', value: 'pending' },
-                                { label: '✅ Verified', value: 'verified' },
-                                { label: '❌ Rejected', value: 'rejected' },
-                                { label: '⌛ Expired', value: 'expired' },
+                                { label: '⏳ Pending', value: 'PENDING' },
+                                { label: '✅ Verified', value: 'VERIFIED' },
+                                { label: '❌ Rejected', value: 'REJECTED' },
+                                { label: '⌛ Expired', value: 'EXPIRED' },
                             ]}
                             value={filterKyc}
                             onChange={(v) => setFilterKyc(v as KycStatus | '')}
@@ -539,10 +539,10 @@ export default function ClientsPage() {
                         <CustomSelect
                             label="AML Risk"
                             options={[
-                                { label: '🟢 Low', value: 'low' },
-                                { label: '🟡 Medium', value: 'medium' },
-                                { label: '🔴 High', value: 'high' },
-                                { label: '💀 Critical', value: 'critical' },
+                                { label: '🟢 Low', value: 'LOW' },
+                                { label: '🟡 Medium', value: 'MEDIUM' },
+                                { label: '🔴 High', value: 'HIGH' },
+                                { label: '💀 Critical', value: 'CRITICAL' },
                             ]}
                             value={filterRisk}
                             onChange={(v) => setFilterRisk(v as AmlRiskLevel | '')}
@@ -551,8 +551,8 @@ export default function ClientsPage() {
                         <CustomSelect
                             label="Client Type"
                             options={[
-                                { label: '👤 Individual', value: 'individual' },
-                                { label: '🏢 Corporate', value: 'corporate' },
+                                { label: '👤 Individual', value: 'INDIVIDUAL' },
+                                { label: '🏢 Corporate', value: 'CORPORATE' },
                             ]}
                             value={filterType}
                             onChange={(v) => setFilterType(v as ClientType | '')}
@@ -594,7 +594,7 @@ export default function ClientsPage() {
                 data={filteredClients}
                 columns={columns}
                 searchPlaceholder="Search by name, client number, phone, email…"
-                searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'phone', 'email']}
+                searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'PHONE', 'EMAIL']}
                 onRowClick={(row) => router.push(`/dashboard/clients/${row.id}`)}
                 emptyMessage="No clients match the current filters."
             />

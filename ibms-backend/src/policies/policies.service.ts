@@ -357,8 +357,8 @@ export class PoliciesService {
       },
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
-    if (policy.status !== 'DRAFT')
-      throw new BadRequestException('Only DRAFT policies can be bound');
+    if (policy.status !== 'DRAFT' && policy.status !== 'COVER_NOTE')
+      throw new BadRequestException('Only DRAFT or COVER_NOTE policies can be bound');
 
     return await this.prisma.$transaction(async (tx) => {
       const bound = await tx.policy.update({
@@ -424,9 +424,53 @@ export class PoliciesService {
           netCommission,
           status: 'PENDING',
           brokerId: policy.brokerId,
-          dateEarned: new Date(),
         },
       });
+
+      // ─── AUTO-CREATE CALENDAR EVENTS ──────────────────
+      // Renewal reminders at 90/60/30 days before expiry
+      if (policy.expiryDate) {
+        const expiryMs = new Date(policy.expiryDate).getTime();
+        const policyNum = policy.policyNumber;
+        for (const daysBefore of [90, 60, 30]) {
+          const reminderDate = new Date(
+            expiryMs - daysBefore * 24 * 60 * 60 * 1000,
+          );
+          if (reminderDate > new Date()) {
+            await (tx as Prisma.TransactionClient).calendarEvent.create({
+              data: {
+                tenantId,
+                title: `Renewal Reminder: ${policyNum} (${daysBefore}d)`,
+                description: `Policy ${policyNum} expires in ${daysBefore} days. Initiate renewal process.`,
+                startDate: reminderDate,
+                endDate: new Date(
+                  reminderDate.getTime() + 30 * 60 * 1000,
+                ),
+                type: 'POLICY',
+                createdById: userId,
+              },
+            });
+          }
+        }
+      }
+
+      // Installment due date reminders
+      for (const inst of installmentsData) {
+        const dueDate = new Date(inst.dueDate);
+        if (dueDate > new Date()) {
+          await (tx as Prisma.TransactionClient).calendarEvent.create({
+            data: {
+              tenantId,
+              title: `Premium Due: ${policy.policyNumber} #${inst.installmentNumber}`,
+              description: `Installment ${inst.installmentNumber} of ${numInstallments} due. Amount: ${inst.amount}`,
+              startDate: dueDate,
+              endDate: new Date(dueDate.getTime() + 30 * 60 * 1000),
+              type: 'PAYMENT',
+              createdById: userId,
+            },
+          });
+        }
+      }
 
       await tx.auditLog.create({
         data: {
@@ -439,6 +483,35 @@ export class PoliciesService {
       });
 
       return bound;
+    });
+  }
+
+  // ─── ISSUE COVER NOTE (DRAFT → COVER_NOTE) ─────────
+  async issueCoverNote(id: string, tenantId: string, userId: string) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id, tenantId },
+    });
+    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    if (policy.status !== 'DRAFT')
+      throw new BadRequestException('Only DRAFT policies can be issued as cover notes');
+
+    return await this.prisma.$transaction(async (tx) => {
+      const updated = await tx.policy.update({
+        where: { id },
+        data: { status: 'COVER_NOTE' },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'policy.cover_note_issued',
+          entity: 'Policy',
+          entityId: id,
+        },
+      });
+
+      return updated;
     });
   }
 
@@ -532,6 +605,11 @@ export class PoliciesService {
       if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
       if (policy.status !== 'LAPSED')
         throw new BadRequestException('Only LAPSED policies can be reinstated');
+
+      if (policy.endDate && new Date(policy.endDate) < new Date())
+        throw new BadRequestException(
+          'Cannot reinstate a policy past its expiry date – create a renewal instead',
+        );
 
       const reinstated = await tx.policy.update({
         where: { id },

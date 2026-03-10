@@ -1,6 +1,6 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
     Phone,
     Mail,
@@ -14,7 +14,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { getLeadById, LEAD_STAGES } from '@/hooks/api';
+import { useLead } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
@@ -22,10 +22,27 @@ import { toast } from 'sonner';
 
 
 
-export default function LeadDetailPage() {
-    const params = useParams();
+const LEAD_STAGES = [
+    { key: 'NEW', label: 'New', color: 'bg-blue-500' },
+    { key: 'CONTACTED', label: 'Contacted', color: 'bg-indigo-500' },
+    { key: 'QUALIFIED', label: 'Qualified', color: 'bg-purple-500' },
+    { key: 'PROPOSAL', label: 'Proposal', color: 'bg-amber-500' },
+    { key: 'NEGOTIATION', label: 'Negotiation', color: 'bg-orange-500' },
+    { key: 'WON', label: 'Won', color: 'bg-green-500' },
+    { key: 'LOST', label: 'Lost', color: 'bg-red-500' },
+];
+
+export default function LeadDetailPage({ id }: { id: string }) {
     const router = useRouter();
-    const lead = getLeadById(params.id as string);
+    const { data: lead, isLoading } = useLead(id) as { data: Record<string, any> | undefined; isLoading: boolean };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (!lead) {
         return (
@@ -65,7 +82,7 @@ export default function LeadDetailPage() {
                                 phone: lead.phone || '',
                                 email: lead.email || '',
                                 companyName: lead.companyName || '',
-                                type: lead.companyName ? 'corporate' : 'individual'
+                                type: lead.companyName ? 'CORPORATE' : 'INDIVIDUAL'
                             });
                             router.push(`/dashboard/clients/new?${params.toString()}`);
                         }}

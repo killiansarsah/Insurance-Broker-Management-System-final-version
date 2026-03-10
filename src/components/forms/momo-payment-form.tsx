@@ -13,9 +13,9 @@ interface MoMoPaymentFormProps {
 }
 
 const NETWORKS: { id: MoMoNetwork; label: string; color: string; logo?: string }[] = [
-    { id: 'mtn', label: 'MTN MoMo', color: 'bg-[#FFCC00] text-black' },
-    { id: 'telecel', label: 'Telecel Cash', color: 'bg-[#E60000] text-white' },
-    { id: 'airteltigo', label: 'AT Money', color: 'bg-[#003399] text-white' },
+    { id: 'MTN', label: 'MTN MoMo', color: 'bg-[#FFCC00] text-black' },
+    { id: 'TELECEL', label: 'Telecel Cash', color: 'bg-[#E60000] text-white' },
+    { id: 'AIRTELTIGO', label: 'AT Money', color: 'bg-[#003399] text-white' },
 ];
 
 export function MoMoPaymentForm({
@@ -47,7 +47,7 @@ export function MoMoPaymentForm({
                                 'w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shadow-sm group-hover:scale-110 transition-transform',
                                 n.color
                             )}>
-                                {n.id === 'mtn' ? 'MTN' : n.id === 'telecel' ? 'TC' : 'AT'}
+                                {n.id === 'MTN' ? 'MTN' : n.id === 'TELECEL' ? 'TC' : 'AT'}
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">
                                 {n.label}
@@ -64,7 +64,7 @@ export function MoMoPaymentForm({
             </div>
 
             <div>
-                <label htmlFor="phone" className="text-sm font-medium text-slate-700 mb-1.5 block">
+                <label htmlFor="PHONE" className="text-sm font-medium text-slate-700 mb-1.5 block">
                     Mobile Number
                 </label>
                 <div className="relative group">
@@ -72,7 +72,7 @@ export function MoMoPaymentForm({
                         <span className="text-sm font-bold text-slate-400">+233</span>
                     </div>
                     <input
-                        id="phone"
+                        id="PHONE"
                         type="tel"
                         value={phoneNumber}
                         onChange={(e) => onPhoneChange(e.target.value)}

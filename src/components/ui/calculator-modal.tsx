@@ -21,10 +21,10 @@ interface CalculatorModalProps {
     onClose: () => void;
 }
 
-type CalculatorSection = 'motor' | 'fire' | 'life';
+type CalculatorSection = 'MOTOR' | 'FIRE' | 'LIFE';
 
 export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
-    const [section, setSection] = useState<CalculatorSection>('motor');
+    const [section, setSection] = useState<CalculatorSection>('MOTOR');
 
     // Form State (Shared and Specific)
     const [passengers, setPassengers] = useState<string>('');
@@ -98,7 +98,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
     const motorCoverTypes = [
         { label: 'Third Party Only (TPO)', value: 'tpo' },
         { label: 'Third Party Fire & Theft (TPFT)', value: 'tpft' },
-        { label: 'Comprehensive', value: 'comprehensive' },
+        { label: 'Comprehensive', value: 'COMPREHENSIVE' },
     ];
 
     const fireCoverTypes = [
@@ -132,9 +132,9 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                 {/* Section Selector */}
                 <div className="flex items-center justify-center gap-4 mb-8">
                     {[
-                        { id: 'motor', icon: Car, label: 'Motor' },
-                        { id: 'fire', icon: Flame, label: 'Fire' },
-                        { id: 'life', icon: Heart, label: 'Life' }
+                        { id: 'MOTOR', icon: Car, label: 'Motor' },
+                        { id: 'FIRE', icon: Flame, label: 'Fire' },
+                        { id: 'LIFE', icon: Heart, label: 'Life' }
                     ].map((btn) => (
                         <button
                             key={btn.id}
@@ -164,7 +164,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
 
                 {/* Form Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-7 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                    {section === 'motor' && (
+                    {section === 'MOTOR' && (
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Number of Passengers</label>
                             <div className="relative group">
@@ -183,7 +183,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                         </div>
                     )}
 
-                    {section === 'motor' && (
+                    {section === 'MOTOR' && (
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Registration Year</label>
                             <Input
@@ -198,12 +198,12 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">
-                            {section === 'life' ? 'Sum Assured' : "Value to be Insured"}
+                            {section === 'LIFE' ? 'Sum Assured' : "Value to be Insured"}
                         </label>
                         <div className="relative group">
                             <Input
                                 type="number"
-                                placeholder={`Enter ${section === 'life' ? 'sum assured' : 'insured value'}`}
+                                placeholder={`Enter ${section === 'LIFE' ? 'sum assured' : 'insured value'}`}
                                 value={insuredValue}
                                 onChange={(e) => setInsuredValue(e.target.value)}
                                 className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm"
@@ -234,8 +234,8 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                         </label>
                         <CustomSelect
                             options={
-                                section === 'motor' ? motorCoverTypes :
-                                    section === 'fire' ? fireCoverTypes :
+                                section === 'MOTOR' ? motorCoverTypes :
+                                    section === 'FIRE' ? fireCoverTypes :
                                         lifeCoverTypes
                             }
                             value={coverType}
@@ -247,22 +247,22 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
 
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
-                            {section === 'life' ? 'Product Category' : 'Risk Type'} <span className="text-danger-500">*</span>
+                            {section === 'LIFE' ? 'Product Category' : 'Risk Type'} <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
                             options={
-                                section === 'motor' ? motorRiskTypes :
-                                    section === 'fire' ? fireRiskTypes :
+                                section === 'MOTOR' ? motorRiskTypes :
+                                    section === 'FIRE' ? fireRiskTypes :
                                         lifeProductTypes
                             }
                             value={riskType}
                             onChange={(val) => setRiskType(val)}
-                            placeholder={`Select ${section === 'life' ? 'product' : 'risk type'}`}
+                            placeholder={`Select ${section === 'LIFE' ? 'product' : 'risk type'}`}
                             className="w-full"
                         />
                     </div>
 
-                    {section === 'motor' && (
+                    {section === 'MOTOR' && (
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Extra Third Party Property Damage Limit</label>
                             <Input
@@ -274,7 +274,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                         </div>
                     )}
 
-                    {section === 'motor' && (
+                    {section === 'MOTOR' && (
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Umbrella Limit</label>
                             <Input

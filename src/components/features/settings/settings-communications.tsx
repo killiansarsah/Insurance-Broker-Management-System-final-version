@@ -70,11 +70,11 @@ export function SettingsCommunications() {
 
     const handleSave = () => {
         setIsSaving(true);
+        // Notification preferences will be persisted via API when the backend endpoint is available
         setTimeout(() => {
             setIsSaving(false);
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-        }, 1000);
+            toast.success('Configuration Saved', { description: 'Notification preferences updated locally.' });
+        }, 500);
     };
 
     return (

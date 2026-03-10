@@ -18,7 +18,6 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { BackButton } from '@/components/ui/back-button';
 import { useInvoices } from '@/hooks/api/use-finance';
-import { invoices, financeSummary, Invoice } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 const NewInvoiceModal = dynamic(
@@ -27,54 +26,23 @@ const NewInvoiceModal = dynamic(
 );
 import Link from 'next/link';
 
-type InvoiceStatus = 'all' | 'paid' | 'outstanding' | 'overdue' | 'partial' | 'cancelled';
-
-const KPIS = [
-    {
-        label: 'Total Invoiced',
-        value: formatCurrency(invoices.reduce((s, i) => s + i.amount, 0)),
-        icon: FileText,
-        color: 'text-primary-600',
-        bg: 'bg-primary-50',
-    },
-    {
-        label: 'Total Paid',
-        value: formatCurrency(invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amountPaid, 0)),
-        icon: CheckCircle2,
-        color: 'text-success-600',
-        bg: 'bg-success-50',
-    },
-    {
-        label: 'Outstanding',
-        value: formatCurrency(financeSummary.outstanding),
-        icon: Clock,
-        color: 'text-warning-600',
-        bg: 'bg-warning-50',
-    },
-    {
-        label: 'Overdue',
-        value: formatCurrency(financeSummary.overdue),
-        icon: AlertTriangle,
-        color: 'text-danger-600',
-        bg: 'bg-danger-50',
-    },
-];
+type InvoiceStatus = 'all' | 'PAID' | 'OUTSTANDING' | 'OVERDUE' | 'PARTIAL' | 'CANCELLED';
 
 const STATUS_OPTIONS = [
     { label: 'All Statuses', value: 'all' },
-    { label: 'Paid', value: 'paid' },
-    { label: 'Outstanding', value: 'outstanding' },
-    { label: 'Overdue', value: 'overdue' },
-    { label: 'Partial', value: 'partial' },
-    { label: 'Cancelled', value: 'cancelled' },
+    { label: 'Paid', value: 'PAID' },
+    { label: 'Outstanding', value: 'OUTSTANDING' },
+    { label: 'Overdue', value: 'OVERDUE' },
+    { label: 'Partial', value: 'PARTIAL' },
+    { label: 'Cancelled', value: 'CANCELLED' },
 ];
 
 const METHOD_BADGE: Record<string, string> = {
-    paid: 'success',
-    outstanding: 'warning',
-    overdue: 'danger',
-    partial: 'warning',
-    cancelled: 'surface',
+    PAID: 'success',
+    OUTSTANDING: 'warning',
+    OVERDUE: 'danger',
+    PARTIAL: 'warning',
+    CANCELLED: 'surface',
 };
 
 export default function InvoicesPage() {
@@ -85,11 +53,26 @@ export default function InvoicesPage() {
     const [statusFilter, setStatusFilter] = useState<string>(statusParam || 'all');
     const [showNewInvoice, setShowNewInvoice] = useState(newParam === '1');
 
-    const filtered = statusFilter === 'all'
-        ? invoices
-        : invoices.filter(i => i.status === statusFilter);
+    const { data: invoicesData } = useInvoices();
+    const allInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
 
-    const balance = (inv: Invoice) => inv.amount - inv.amountPaid;
+    const filtered = statusFilter === 'all'
+        ? allInvoices
+        : allInvoices.filter((i: any) => i.status === statusFilter);
+
+    const balance = (inv: any) => (inv.amount || 0) - (inv.amountPaid || 0);
+
+    const totalInvoiced = allInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const totalPaid = allInvoices.filter((i: any) => i.status === 'PAID').reduce((s: number, i: any) => s + (i.amountPaid || 0), 0);
+    const outstanding = allInvoices.filter((i: any) => i.status === 'OUTSTANDING').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const overdueAmt = allInvoices.filter((i: any) => i.status === 'OVERDUE').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+
+    const KPIS = [
+        { label: 'Total Invoiced', value: formatCurrency(totalInvoiced), icon: FileText, color: 'text-primary-600', bg: 'bg-primary-50' },
+        { label: 'Total Paid', value: formatCurrency(totalPaid), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Outstanding', value: formatCurrency(outstanding), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
+        { label: 'Overdue', value: formatCurrency(overdueAmt), icon: AlertTriangle, color: 'text-danger-600', bg: 'bg-danger-50' },
+    ];
 
     return (
         <div className="space-y-6 animate-fade-in">

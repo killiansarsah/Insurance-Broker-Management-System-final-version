@@ -53,7 +53,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
             ...e,
             start: new Date(e.startDate || e.start),
             end: new Date(e.endDate || e.end),
-            type: (e.type || '').toLowerCase(),
+            type: (e.type || ''),
         }));
     }, [eventsData]);
 
@@ -225,11 +225,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         isSelected && "ring-2 ring-primary-500 ring-offset-2 z-10",
 
                         // Liquid Color Accents
-                        !isOutsideMonth && primaryType === 'policy' && "bg-blue-500/5 border-blue-500/20",
+                        !isOutsideMonth && primaryType === 'POLICY' && "bg-blue-500/5 border-blue-500/20",
                         !isOutsideMonth && primaryType === 'meeting' && "bg-amber-500/5 border-amber-500/20",
-                        !isOutsideMonth && primaryType === 'claim' && "bg-red-500/5 border-red-500/20",
+                        !isOutsideMonth && primaryType === 'CLAIM' && "bg-red-500/5 border-red-500/20",
                         !isOutsideMonth && primaryType === 'team' && "bg-emerald-500/5 border-emerald-500/20",
-                        !isOutsideMonth && primaryType === 'compliance' && "bg-purple-500/5 border-purple-500/20",
+                        !isOutsideMonth && primaryType === 'COMPLIANCE' && "bg-purple-500/5 border-purple-500/20",
                         !isOutsideMonth && primaryType === 'payment' && "bg-teal-500/5 border-teal-500/20",
 
                         // Default border if no event
@@ -270,11 +270,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 key={event.id}
                                 className={cn(
                                     "px-1.5 py-0.5 rounded-md text-[9px] font-bold truncate transition-transform hover:scale-105",
-                                    event.type === 'policy' && "bg-blue-500 text-white",
+                                    event.type === 'POLICY' && "bg-blue-500 text-white",
                                     event.type === 'meeting' && "bg-amber-500 text-white",
-                                    event.type === 'claim' && "bg-red-500 text-white",
+                                    event.type === 'CLAIM' && "bg-red-500 text-white",
                                     event.type === 'team' && "bg-emerald-500 text-white",
-                                    event.type === 'compliance' && "bg-purple-500 text-white",
+                                    event.type === 'COMPLIANCE' && "bg-purple-500 text-white",
                                     event.type === 'payment' && "bg-teal-500 text-white"
                                 )}
                             >
@@ -357,11 +357,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                         whileHover={{ scale: 1.02, x: 2 }}
                                         className={cn(
                                             "p-3 rounded-xl border shadow-sm transition-all flex flex-col gap-1.5 relative overflow-hidden group/event",
-                                            event.type === 'policy' && "bg-blue-500 text-white border-blue-400",
+                                            event.type === 'POLICY' && "bg-blue-500 text-white border-blue-400",
                                             event.type === 'meeting' && "bg-amber-500 text-white border-amber-400",
-                                            event.type === 'claim' && "bg-red-500 text-white border-red-400",
+                                            event.type === 'CLAIM' && "bg-red-500 text-white border-red-400",
                                             event.type === 'team' && "bg-emerald-500 text-white border-emerald-400",
-                                            event.type === 'compliance' && "bg-purple-500 text-white border-purple-400",
+                                            event.type === 'COMPLIANCE' && "bg-purple-500 text-white border-purple-400",
                                             event.type === 'payment' && "bg-teal-500 text-white border-teal-400"
                                         )}
                                     >
@@ -442,11 +442,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                     {/* Timeline Marker */}
                                     <div className={cn(
                                         "absolute left-0 top-1 w-10 h-10 rounded-full border-4 border-surface-50 flex items-center justify-center z-10 transition-transform group-hover/timeline:scale-110 shadow-lg shadow-surface-900/5",
-                                        event.type === 'policy' && "bg-blue-500",
+                                        event.type === 'POLICY' && "bg-blue-500",
                                         event.type === 'meeting' && "bg-amber-500",
-                                        event.type === 'claim' && "bg-red-500",
+                                        event.type === 'CLAIM' && "bg-red-500",
                                         event.type === 'team' && "bg-emerald-500",
-                                        event.type === 'compliance' && "bg-purple-500",
+                                        event.type === 'COMPLIANCE' && "bg-purple-500",
                                         event.type === 'payment' && "bg-teal-500"
                                     )}>
                                         <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
@@ -535,11 +535,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                         >
                                             <div className={cn(
                                                 "w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-inner transition-transform group-hover:scale-110",
-                                                event.type === 'policy' && "bg-blue-500 text-white",
+                                                event.type === 'POLICY' && "bg-blue-500 text-white",
                                                 event.type === 'meeting' && "bg-amber-500 text-white",
-                                                event.type === 'claim' && "bg-red-500 text-white",
+                                                event.type === 'CLAIM' && "bg-red-500 text-white",
                                                 event.type === 'team' && "bg-emerald-500 text-white",
-                                                event.type === 'compliance' && "bg-purple-500 text-white",
+                                                event.type === 'COMPLIANCE' && "bg-purple-500 text-white",
                                                 event.type === 'payment' && "bg-teal-500 text-white"
                                             )}>
                                                 <CalendarIcon size={28} strokeWidth={2.5} />

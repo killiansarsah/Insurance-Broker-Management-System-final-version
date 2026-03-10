@@ -71,6 +71,12 @@ export class PoliciesController {
     return this.policiesService.bind(id, req.user.tenantId, req.user.sub);
   }
 
+  @Post(':id/cover-note')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  issueCoverNote(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.policiesService.issueCoverNote(id, req.user.tenantId, req.user.sub);
+  }
+
   @Post(':id/cancel')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   cancel(

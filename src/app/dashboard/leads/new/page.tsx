@@ -17,7 +17,7 @@ export default function NewLeadPage() {
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
     const [productInterest, setProductInterest] = useState<string | null>(null);
-    const [priority, setPriority] = useState<string | null>('warm');
+    const [priority, setPriority] = useState<string | null>('WARM');
     const [notes, setNotes] = useState('');
     const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -153,11 +153,11 @@ export default function NewLeadPage() {
                             <CustomSelect
                                 placeholder="Select Product..."
                                 options={[
-                                    { label: 'Motor Insurance', value: 'motor' },
-                                    { label: 'Fire & Allied Perils', value: 'fire' },
-                                    { label: 'Life Assurance', value: 'life' },
+                                    { label: 'Motor Insurance', value: 'MOTOR' },
+                                    { label: 'Fire & Allied Perils', value: 'FIRE' },
+                                    { label: 'Life Assurance', value: 'LIFE' },
                                     { label: 'Health / Medical', value: 'medical' },
-                                    { label: 'Travel Insurance', value: 'travel' },
+                                    { label: 'Travel Insurance', value: 'TRAVEL' },
                                 ]}
                                 value={productInterest}
                                 onChange={(v) => setProductInterest(v as string | null)}
@@ -172,9 +172,9 @@ export default function NewLeadPage() {
                             </label>
                             <CustomSelect
                                 options={[
-                                    { label: 'Hot (Immediate)', value: 'hot' },
-                                    { label: 'Warm (Interested)', value: 'warm' },
-                                    { label: 'Cold (Future)', value: 'cold' },
+                                    { label: 'Hot (Immediate)', value: 'HOT' },
+                                    { label: 'Warm (Interested)', value: 'WARM' },
+                                    { label: 'Cold (Future)', value: 'COLD' },
                                 ]}
                                 value={priority}
                                 onChange={(v) => setPriority(v as string | null)}

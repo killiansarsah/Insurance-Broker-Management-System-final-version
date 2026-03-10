@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     AlertTriangle,
@@ -20,12 +20,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useClaims } from '@/hooks/api/use-claims';
 import { useComplaints } from '@/hooks/api/use-complaints';
-import { claims } from '@/hooks/api';
-import { MOCK_COMPLAINTS } from '@/hooks/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
-type EscalationType = 'claim' | 'complaint';
+type EscalationType = 'CLAIM' | 'complaint';
 
 interface EscalatedItem {
     id: string;
@@ -54,42 +52,12 @@ const LEVEL_COLORS: Record<number, string> = {
     3: 'bg-danger-50 text-danger-700 border-danger-200',
 };
 
-// Build a unified escalations list from claims + complaints
-const ESCALATED_ITEMS: EscalatedItem[] = [
-    // Claims overdue become escalated
-    ...claims.filter(c => c.isOverdue).map(c => ({
-        id: `esc-c-${c.id}`,
-        refNumber: c.claimNumber,
-        type: 'claim' as const,
-        level: 1,
-        clientName: c.clientName,
-        subject: c.incidentDescription,
-        amount: c.claimAmount,
-        daysPending: Math.floor((Date.now() - new Date(c.registrationDate ?? c.createdAt).getTime()) / 86400000),
-        isBreached: true,
-        assignedTo: 'Kofi Asante',
-        escalatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        linkedId: c.id,
-    })),
-    // Complaints with escalationLevel > 0
-    ...MOCK_COMPLAINTS.filter(c => c.escalationLevel > 0).map(c => ({
-        id: `esc-cmp-${c.id}`,
-        refNumber: c.complaintNumber,
-        type: 'complaint' as const,
-        level: c.escalationLevel,
-        clientName: c.complainantName,
-        subject: c.subject,
-        daysPending: Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 86400000),
-        isBreached: c.isBreached,
-        assignedTo: 'Abena Nyarko',
-        escalatedAt: c.createdAt,
-        linkedId: c.id,
-    })),
-    // Add a few manual mock escalations for demo
+// Build a unified escalations list from claims + complaints (computed inside component)
+const MANUAL_ESCALATIONS: EscalatedItem[] = [
     {
         id: 'esc-man-001',
         refNumber: 'CLM-2025-0003',
-        type: 'claim',
+        type: 'CLAIM',
         level: 2,
         clientName: 'Ghana Shippers\' Authority',
         subject: 'Major collision claim — assessor dispute on valuation',
@@ -116,7 +84,7 @@ const ESCALATED_ITEMS: EscalatedItem[] = [
     {
         id: 'esc-man-003',
         refNumber: 'CLM-2026-0007',
-        type: 'claim',
+        type: 'CLAIM',
         level: 3,
         clientName: 'Radiance Petroleum',
         subject: 'Third-party liability claim — legal proceedings initiated',
@@ -144,6 +112,42 @@ export default function EscalationsPage() {
     const [typeFilter, setTypeFilter] = useState<EscalationType | 'all'>('all');
     const [levelFilter, setLevelFilter] = useState<number | 'all'>('all');
 
+    const { data: claimsData, isLoading: claimsLoading } = useClaims();
+    const { data: complaintsData, isLoading: complaintsLoading } = useComplaints();
+    const allClaims: any[] = (claimsData as any)?.items ?? claimsData ?? [];
+    const allComplaints: any[] = (complaintsData as any)?.items ?? complaintsData ?? [];
+
+    const ESCALATED_ITEMS = useMemo(() => {
+        const fromClaims = allClaims.filter((c: any) => c.isOverdue).map((c: any) => ({
+            id: `esc-c-${c.id}`,
+            refNumber: c.claimNumber,
+            type: 'CLAIM' as const,
+            level: 1,
+            clientName: c.clientName || 'Unknown',
+            subject: c.incidentDescription || c.description || '',
+            amount: c.claimAmount,
+            daysPending: Math.floor((Date.now() - new Date(c.registrationDate ?? c.createdAt).getTime()) / 86400000),
+            isBreached: true,
+            assignedTo: 'Kofi Asante',
+            escalatedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+            linkedId: c.id,
+        }));
+        const fromComplaints = allComplaints.filter((c: any) => c.escalationLevel > 0).map((c: any) => ({
+            id: `esc-cmp-${c.id}`,
+            refNumber: c.complaintNumber,
+            type: 'complaint' as const,
+            level: c.escalationLevel,
+            clientName: c.complainantName || 'Unknown',
+            subject: c.subject || '',
+            daysPending: Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 86400000),
+            isBreached: c.isBreached ?? false,
+            assignedTo: 'Abena Nyarko',
+            escalatedAt: c.createdAt,
+            linkedId: c.id,
+        }));
+        return [...fromClaims, ...fromComplaints, ...MANUAL_ESCALATIONS];
+    }, [allClaims, allComplaints]);
+
     const filtered = ESCALATED_ITEMS.filter(item => {
         const matchSearch = search === '' ||
             item.clientName.toLowerCase().includes(search.toLowerCase()) ||
@@ -156,7 +160,7 @@ export default function EscalationsPage() {
 
     const breached = ESCALATED_ITEMS.filter(i => i.isBreached).length;
     const level3 = ESCALATED_ITEMS.filter(i => i.level === 3).length;
-    const totalClaims = ESCALATED_ITEMS.filter(i => i.type === 'claim').reduce((s, i) => s + (i.amount ?? 0), 0);
+    const totalClaims = ESCALATED_ITEMS.filter(i => i.type === 'CLAIM').reduce((s, i) => s + ((i as any).amount ?? 0), 0);
 
     function handleEscalateUp(item: EscalatedItem) {
         toast.success(`Escalated to Level ${Math.min(item.level + 1, 3)}`, {
@@ -168,6 +172,17 @@ export default function EscalationsPage() {
         toast.success('Marked as Resolved', {
             description: `${item.refNumber} has been resolved and removed from escalations.`,
         });
+    }
+
+    if (claimsLoading || complaintsLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading escalations...</p>
+                </div>
+            </div>
+        );
     }
 
     return (
@@ -233,7 +248,7 @@ export default function EscalationsPage() {
                     </div>
                     <select value={typeFilter} onChange={e => setTypeFilter(e.target.value as typeof typeFilter)} className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
                         <option value="all">All Types</option>
-                        <option value="claim">Claims</option>
+                        <option value="CLAIM">Claims</option>
                         <option value="complaint">Complaints</option>
                     </select>
                     <select value={levelFilter === 'all' ? 'all' : String(levelFilter)} onChange={e => setLevelFilter(e.target.value === 'all' ? 'all' : Number(e.target.value))} className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500">
@@ -256,13 +271,13 @@ export default function EscalationsPage() {
                 ) : filtered.map(item => (
                     <Card key={item.id} padding="none" className={cn('overflow-hidden', item.isBreached && 'border-danger-200')}>
                         <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-4">
-                            <div className={cn('shrink-0 p-2.5 rounded-lg', item.type === 'claim' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600')}>
-                                {item.type === 'claim' ? <FileText size={18} /> : <MessageSquare size={18} />}
+                            <div className={cn('shrink-0 p-2.5 rounded-lg', item.type === 'CLAIM' ? 'bg-orange-50 text-orange-600' : 'bg-purple-50 text-purple-600')}>
+                                {item.type === 'CLAIM' ? <FileText size={18} /> : <MessageSquare size={18} />}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2 mb-1">
                                     <span className="text-xs font-medium text-surface-500">{item.refNumber}</span>
-                                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold capitalize', item.type === 'claim' ? 'bg-orange-50 text-orange-700' : 'bg-purple-50 text-purple-700')}>{item.type}</span>
+                                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold capitalize', item.type === 'CLAIM' ? 'bg-orange-50 text-orange-700' : 'bg-purple-50 text-purple-700')}>{item.type}</span>
                                     <EscalationBadge level={item.level} />
                                     {item.isBreached && <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-danger-50 text-danger-700">SLA BREACHED</span>}
                                 </div>
@@ -272,11 +287,11 @@ export default function EscalationsPage() {
                                     <span className="flex items-center gap-1"><Clock size={11} />{item.daysPending} days pending</span>
                                     <span className="flex items-center gap-1"><User size={11} />Handler: {item.assignedTo}</span>
                                 </div>
-                                {item.amount && <p className="mt-1 text-sm font-semibold text-surface-800">{formatCurrency(item.amount)}</p>}
+                                {(item as any).amount && <p className="mt-1 text-sm font-semibold text-surface-800">{formatCurrency((item as any).amount)}</p>}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 <Button size="sm" variant="outline" onClick={() => {
-                                    if (item.type === 'claim') router.push(`/dashboard/claims/${item.linkedId}`);
+                                    if (item.type === 'CLAIM') router.push(`/dashboard/claims/${item.linkedId}`);
                                     else router.push(`/dashboard/complaints/${item.linkedId}`);
                                 }}>
                                     View <ChevronRight size={12} className="ml-1" />

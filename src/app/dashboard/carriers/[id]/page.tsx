@@ -1,44 +1,16 @@
-
 import type { Metadata } from 'next';
-import { useCarrier } from '@/hooks/api/use-carriers';
-import { carriers } from '@/hooks/api';
-import { carrierProducts } from '@/hooks/api';
 import CarrierDetailClient from './client-page';
-import { notFound } from 'next/navigation';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const carrier = carriers.find((c) => c.slug === id);
-    if (!carrier) return { title: 'Carrier not found' };
     return {
-        title: carrier.name,
-        description: `Products, contacts and performance overview for ${carrier.name}.`,
-        openGraph: {
-            title: carrier.name,
-            description: `Products, contacts and performance overview for ${carrier.name}.`,
-            type: 'article',
-        },
+        title: 'Carrier Details',
+        description: 'View carrier products and contact info.',
         alternates: { canonical: `/dashboard/carriers/${id}` },
     };
 }
 
-// Required for static export
-export function generateStaticParams() {
-    return carriers.map((carrier) => ({
-        id: carrier.slug,
-    }));
-}
-
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const carrier = carriers.find((c) => c.slug === id);
-
-    if (!carrier) {
-        notFound();
-    }
-
-    // Filter products for this carrier using the carrier's ID
-    const products = carrierProducts.filter(p => p.carrierId === carrier.id);
-
-    return <CarrierDetailClient carrier={carrier} products={products} />;
+    return <CarrierDetailClient carrierId={id} />;
 }

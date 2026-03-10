@@ -42,16 +42,16 @@ export function Header() {
         .slice(0, 7);
 
     const notifDot: Record<string, string> = {
-        renewal: 'bg-warning-500',
-        claim: 'bg-danger-500',
-        commission: 'bg-success-500',
-        lead: 'bg-primary-500',
-        followup: 'bg-accent-500',
-        compliance: 'bg-surface-500',
-        finance: 'bg-warning-600',
-        system: 'bg-surface-400',
-        document: 'bg-accent-500',
-        approval: 'bg-primary-500',
+        RENEWAL: 'bg-warning-500',
+        CLAIM: 'bg-danger-500',
+        COMMISSION: 'bg-success-500',
+        LEAD: 'bg-primary-500',
+        FOLLOWUP: 'bg-accent-500',
+        COMPLIANCE: 'bg-surface-500',
+        FINANCE: 'bg-warning-600',
+        SYSTEM: 'bg-surface-400',
+        DOCUMENT: 'bg-accent-500',
+        APPROVAL: 'bg-primary-500',
     };
 
     const unread = unreadCount();

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import {
@@ -15,16 +15,20 @@ import {
     ClipboardList,
     UserCheck,
     Clock,
-    MessageSquare
+    MessageSquare,
+    Phone,
+    Mail,
+    Plus,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { claims as initialClaims } from '@/hooks/api';
+import { useClaim, useClaimFollowUps, useAddClaimFollowUp } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Claim } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
+import { generateReportPdf } from '@/lib/generate-report-pdf';
 
 const ClaimStatusModal = dynamic(
     () => import('@/components/claims/claim-status-modal').then(m => ({ default: m.ClaimStatusModal })),
@@ -43,21 +47,31 @@ function InfoItem({ icon, label, value, className }: { icon: React.ReactNode; la
     );
 }
 
-export default function ClaimDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function ClaimDetailPage({ id }: { id: string }) {
     const router = useRouter();
 
-    // Use local state to handle updates for this session
-    const [claim, setClaim] = useState<Claim>(() => {
-        return initialClaims.find((c) => c.id === id) || initialClaims[0];
-    });
+    const { data: claimData, isLoading } = useClaim(id);
+    const [claimOverrides, setClaimOverrides] = useState<Partial<Claim>>({});
+    const claim = claimData ? { ...(claimData as unknown as Claim), ...claimOverrides } : null;
 
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
+    const [showFollowUpForm, setShowFollowUpForm] = useState(false);
+    const [followUpData, setFollowUpData] = useState({ method: 'PHONE', note: '', contactName: '', nextAction: '' });
 
+    const followUpsQuery = useClaimFollowUps(id);
+    const addFollowUp = useAddClaimFollowUp();
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
     if (!claim) return <div>Claim not found</div>;
 
     const handleUpdateClaim = (updates: Partial<Claim>) => {
-        setClaim(prev => ({ ...prev, ...updates }));
+        setClaimOverrides(prev => ({ ...prev, ...updates }));
     };
 
     const timeline = [
@@ -90,7 +104,19 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.success('PDF Export', { description: `Claim report for ${claim.claimNumber} is being generated.` })}>Export PDF</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
+                        generateReportPdf(`Claim Report — ${claim.claimNumber}`, [
+                            { title: 'Claim Details', rows: [
+                                { label: 'Claim Number', value: claim.claimNumber },
+                                { label: 'Status', value: claim.status },
+                                { label: 'Insurance Type', value: claim.insuranceType },
+                                { label: 'Incident Date', value: formatDate(claim.incidentDate) },
+                                { label: 'Claim Amount', value: formatCurrency(claim.claimAmount) },
+                                { label: 'Settled Amount', value: claim.settledAmount ? formatCurrency(claim.settledAmount) : '—' },
+                            ]},
+                        ]);
+                        toast.success('PDF Generated', { description: 'Print dialog opened — save as PDF.' });
+                    }}>Export PDF</Button>
                     <Button
                         variant="primary"
                         onClick={() => setIsStatusModalOpen(true)}
@@ -141,6 +167,123 @@ export default function ClaimDetailPage({ params }: { params: Promise<{ id: stri
                                     {claim.settledAmount ? formatCurrency(claim.settledAmount) : '—'}
                                 </span>
                             } />
+                        </div>
+                    </Card>
+
+                    {/* Chase Log / Follow-Ups */}
+                    <Card padding="lg">
+                        <div className="flex items-center justify-between">
+                            <CardHeader title="Chase Log" />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                leftIcon={<Plus size={14} />}
+                                onClick={() => setShowFollowUpForm(v => !v)}
+                            >
+                                {showFollowUpForm ? 'Cancel' : 'Add Follow-Up'}
+                            </Button>
+                        </div>
+
+                        {showFollowUpForm && (
+                            <form
+                                className="mt-4 space-y-3 p-4 bg-surface-50 rounded-[var(--radius-md)] border border-surface-200"
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    if (followUpData.note.length < 5) {
+                                        toast.error('Note must be at least 5 characters');
+                                        return;
+                                    }
+                                    addFollowUp.mutate(
+                                        { claimId: id, data: followUpData },
+                                        {
+                                            onSuccess: () => {
+                                                toast.success('Follow-up recorded');
+                                                setFollowUpData({ method: 'PHONE', note: '', contactName: '', nextAction: '' });
+                                                setShowFollowUpForm(false);
+                                            },
+                                            onError: () => toast.error('Failed to record follow-up'),
+                                        }
+                                    );
+                                }}
+                            >
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label className="text-xs font-semibold text-surface-500 uppercase">Method</label>
+                                        <select
+                                            className="mt-1 w-full rounded-[var(--radius-md)] border border-surface-300 px-3 py-2 text-sm bg-white"
+                                            value={followUpData.method}
+                                            onChange={e => setFollowUpData(d => ({ ...d, method: e.target.value }))}
+                                        >
+                                            <option value="PHONE">Phone</option>
+                                            <option value="EMAIL">Email</option>
+                                            <option value="IN_PERSON">In Person</option>
+                                            <option value="LETTER">Letter</option>
+                                            <option value="OTHER">Other</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-semibold text-surface-500 uppercase">Contact Name</label>
+                                        <input
+                                            className="mt-1 w-full rounded-[var(--radius-md)] border border-surface-300 px-3 py-2 text-sm"
+                                            placeholder="Person contacted"
+                                            value={followUpData.contactName}
+                                            onChange={e => setFollowUpData(d => ({ ...d, contactName: e.target.value }))}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-surface-500 uppercase">Note</label>
+                                    <textarea
+                                        className="mt-1 w-full rounded-[var(--radius-md)] border border-surface-300 px-3 py-2 text-sm"
+                                        rows={2}
+                                        placeholder="Details of the follow-up..."
+                                        value={followUpData.note}
+                                        onChange={e => setFollowUpData(d => ({ ...d, note: e.target.value }))}
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-semibold text-surface-500 uppercase">Next Action</label>
+                                    <input
+                                        className="mt-1 w-full rounded-[var(--radius-md)] border border-surface-300 px-3 py-2 text-sm"
+                                        placeholder="What to do next"
+                                        value={followUpData.nextAction}
+                                        onChange={e => setFollowUpData(d => ({ ...d, nextAction: e.target.value }))}
+                                    />
+                                </div>
+                                <Button type="submit" variant="primary" size="sm" isLoading={addFollowUp.isPending}>
+                                    Save Follow-Up
+                                </Button>
+                            </form>
+                        )}
+
+                        <div className="mt-4 space-y-3">
+                            {followUpsQuery.isLoading && <p className="text-sm text-surface-400">Loading...</p>}
+                            {(() => {
+                                const fups = followUpsQuery.data as Record<string, unknown>[] | undefined;
+                                if (!fups || !Array.isArray(fups)) return null;
+                                if (fups.length === 0) return <p className="text-sm text-surface-400 text-center py-4">No follow-ups recorded yet</p>;
+                                return fups.map((fu) => (
+                                    <div key={fu.id as string} className="flex items-start gap-3 p-3 bg-surface-50 rounded-[var(--radius-md)] border border-surface-100">
+                                        <div className="mt-0.5">
+                                            {fu.method === 'PHONE' && <Phone size={14} className="text-primary-500" />}
+                                            {fu.method === 'EMAIL' && <Mail size={14} className="text-primary-500" />}
+                                            {!['PHONE', 'EMAIL'].includes(fu.method as string) && <MessageSquare size={14} className="text-primary-500" />}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-surface-700 uppercase">{(fu.method as string).replace('_', ' ')}</span>
+                                                <span className="text-[10px] text-surface-400">{formatDate(fu.createdAt as string)}</span>
+                                            </div>
+                                            {fu.contactName ? <p className="text-xs text-surface-500 mt-0.5">Contact: {fu.contactName as string}</p> : null}
+                                            <p className="text-sm text-surface-800 mt-1">{fu.note as string}</p>
+                                            {fu.nextAction ? (
+                                                <p className="text-xs text-primary-600 mt-1 font-medium">Next: {fu.nextAction as string}</p>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
                         </div>
                     </Card>
                 </div>

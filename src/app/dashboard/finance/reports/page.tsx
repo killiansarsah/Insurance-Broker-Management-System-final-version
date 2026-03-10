@@ -14,20 +14,9 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
-import {
-    monthlyRevenue,
-    agingBuckets,
-    topClients,
-    productBreakdown,
-    reportSummary,
-} from '@/hooks/api';
+import { useFinanceDashboard, useInvoices, useCommissions } from '@/hooks/api/use-finance';
 import { formatCurrency, cn } from '@/lib/utils';
 import Link from 'next/link';
-
-// Compute ranges for the date picker boundaries
-const allMonths = monthlyRevenue.map(m => m.month);
-const earliestMonth = allMonths.length > 0 ? allMonths[0] : '';
-const latestMonth = allMonths.length > 0 ? allMonths[allMonths.length - 1] : '';
 
 // Helper: parse 'January 2025' → Date
 function parseMonth(label: string): Date {
@@ -47,12 +36,93 @@ function fromMonthInput(val: string): Date {
     const [y, m] = val.split('-').map(Number);
     return new Date(y, m - 1, 1);
 }
-const maxRevenue = Math.max(...monthlyRevenue.map(m => m.premiumCollected));
-const maxCommission = Math.max(...monthlyRevenue.map(m => m.commissionsEarned));
-const totalAging = agingBuckets.reduce((s, b) => s + b.amount, 0);
-const totalProductPremium = productBreakdown.reduce((s, p) => s + p.premium, 0);
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 export default function FinanceReportsPage() {
+    const { data: dashboardData } = useFinanceDashboard();
+    const dashboard = dashboardData as any;
+    const { data: invoicesData } = useInvoices();
+    const allInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
+    const { data: commissionsData } = useCommissions();
+    const allCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+
+    // Build monthlyRevenue from invoices
+    const monthlyRevenue = useMemo(() => {
+        const map: Record<string, { premiumCollected: number; commissionsEarned: number }> = {};
+        allInvoices.forEach((inv: any) => {
+            const d = new Date(inv.createdAt || inv.dateIssued || inv.dateDue);
+            const key = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+            if (!map[key]) map[key] = { premiumCollected: 0, commissionsEarned: 0 };
+            map[key].premiumCollected += (inv.amount || 0);
+        });
+        allCommissions.forEach((c: any) => {
+            const d = new Date(c.datePolicyIssued || c.createdAt);
+            const key = `${MONTH_NAMES[d.getMonth()]} ${d.getFullYear()}`;
+            if (!map[key]) map[key] = { premiumCollected: 0, commissionsEarned: 0 };
+            map[key].commissionsEarned += (c.commissionAmount || 0);
+        });
+        return Object.entries(map)
+            .map(([month, data]) => ({ month, shortMonth: SHORT_MONTHS[MONTH_NAMES.indexOf(month.split(' ')[0])], ...data }))
+            .sort((a, b) => parseMonth(a.month).getTime() - parseMonth(b.month).getTime());
+    }, [allInvoices, allCommissions]);
+
+    // Build aging buckets from outstanding invoices
+    const agingBuckets = useMemo(() => {
+        const now = Date.now();
+        const buckets = [
+            { days: '0-30', label: '0–30 Days', color: 'bg-success-500', amount: 0, count: 0 },
+            { days: '31-60', label: '31–60 Days', color: 'bg-amber-500', amount: 0, count: 0 },
+            { days: '61-90', label: '61–90 Days', color: 'bg-orange-500', amount: 0, count: 0 },
+            { days: '90+', label: '90+ Days', color: 'bg-danger-500', amount: 0, count: 0 },
+        ];
+        allInvoices.filter((i: any) => i.status === 'OUTSTANDING' || i.status === 'OVERDUE').forEach((inv: any) => {
+            const daysPast = Math.floor((now - new Date(inv.dateDue).getTime()) / 86400000);
+            const idx = daysPast <= 30 ? 0 : daysPast <= 60 ? 1 : daysPast <= 90 ? 2 : 3;
+            buckets[idx].amount += (inv.amount || 0) - (inv.amountPaid || 0);
+            buckets[idx].count += 1;
+        });
+        return buckets;
+    }, [allInvoices]);
+
+    // Top clients by premium
+    const topClients = useMemo(() => {
+        const map: Record<string, { clientId: string; clientName: string; totalPremium: number; policyCount: number }> = {};
+        allInvoices.forEach((inv: any) => {
+            const id = inv.clientId || 'unknown';
+            if (!map[id]) map[id] = { clientId: id, clientName: inv.clientName || 'Unknown', totalPremium: 0, policyCount: 0 };
+            map[id].totalPremium += (inv.amount || 0);
+            map[id].policyCount += 1;
+        });
+        return Object.values(map).sort((a, b) => b.totalPremium - a.totalPremium).slice(0, 10);
+    }, [allInvoices]);
+
+    // Product breakdown from commissions
+    const productBreakdown = useMemo(() => {
+        const colors = ['bg-primary-500', 'bg-amber-500', 'bg-success-500', 'bg-violet-500', 'bg-rose-500', 'bg-cyan-500', 'bg-indigo-500', 'bg-orange-500'];
+        const map: Record<string, { product: string; premium: number; commission: number; count: number }> = {};
+        allCommissions.forEach((c: any) => {
+            const prod = c.productType || 'Other';
+            if (!map[prod]) map[prod] = { product: prod, premium: 0, commission: 0, count: 0 };
+            map[prod].premium += (c.premiumAmount || 0);
+            map[prod].commission += (c.commissionAmount || 0);
+            map[prod].count += 1;
+        });
+        return Object.values(map).sort((a, b) => b.premium - a.premium).map((p, i) => ({ ...p, color: colors[i % colors.length] }));
+    }, [allCommissions]);
+
+    const totalAging = agingBuckets.reduce((s, b) => s + b.amount, 0);
+    const totalProductPremium = productBreakdown.reduce((s, p) => s + p.premium, 0);
+    const totalPremium = allInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const totalPaid = allInvoices.filter((i: any) => i.status === 'PAID').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const collectionRate = totalPremium > 0 ? Math.round((totalPaid / totalPremium) * 100) : 0;
+    const reportSummary = { collectionRate, avgDaysToCollect: dashboard?.avgDaysToCollect ?? 28, totalOutstanding: totalAging };
+
+    const allMonths = monthlyRevenue.map(m => m.month);
+    const earliestMonth = allMonths.length > 0 ? allMonths[0] : '';
+    const latestMonth = allMonths.length > 0 ? allMonths[allMonths.length - 1] : '';
+
     const defaultFrom = allMonths.length >= 6 ? toMonthInput(allMonths[allMonths.length - 6]) : (earliestMonth ? toMonthInput(earliestMonth) : '');
     const defaultTo = latestMonth ? toMonthInput(latestMonth) : '';
 
@@ -104,7 +174,7 @@ export default function FinanceReportsPage() {
                 <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
                     const data = {
                         summary: reportSummary,
-                        monthlyRevenue,
+                        monthlyRevenue: filteredRevenue,
                         agingBuckets,
                         topClients,
                         productBreakdown,

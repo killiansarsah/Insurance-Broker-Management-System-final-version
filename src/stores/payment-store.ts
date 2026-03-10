@@ -25,7 +25,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     updateTransactionStatus: (id: string, status: PaymentStatus) =>
         set((state) => ({
             transactions: state.transactions.map((tx) =>
-                tx.id === id ? { ...tx, status, processedAt: status === 'paid' ? new Date().toISOString() : tx.processedAt } : tx
+                tx.id === id ? { ...tx, status, processedAt: status === 'PAID' ? new Date().toISOString() : tx.processedAt } : tx
             ),
         })),
 

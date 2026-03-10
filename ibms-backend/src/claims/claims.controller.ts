@@ -23,6 +23,7 @@ import {
   ReopenClaimDto,
   CreateClaimDocumentDto,
 } from './dto/claim-actions.dto';
+import { CreateClaimFollowUpDto } from './dto/claim-follow-up.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -173,5 +174,29 @@ export class ClaimsController {
       req.user.tenantId,
       req.user.sub,
     );
+  }
+
+  @Post(':claimId/follow-ups')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'CLAIMS_HANDLER')
+  addFollowUp(
+    @Request() req: RequestWithUser,
+    @Param('claimId') claimId: string,
+    @Body() dto: CreateClaimFollowUpDto,
+  ) {
+    return this.claimsService.addFollowUp(
+      claimId,
+      req.user.tenantId,
+      req.user.sub,
+      dto,
+    );
+  }
+
+  @Get(':claimId/follow-ups')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'CLAIMS_HANDLER', 'VIEWER')
+  listFollowUps(
+    @Request() req: RequestWithUser,
+    @Param('claimId') claimId: string,
+  ) {
+    return this.claimsService.listFollowUps(claimId, req.user.tenantId);
   }
 }

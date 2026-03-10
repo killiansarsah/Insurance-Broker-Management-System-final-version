@@ -19,7 +19,6 @@ import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { useComplaints } from '@/hooks/api/use-complaints';
-import { MOCK_COMPLAINTS } from '@/hooks/api';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 
@@ -33,10 +32,23 @@ export default function ComplaintsPage() {
     const router = useRouter();
     const [statusFilter, setStatusFilter] = useState('all');
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+    const { data: complaintsData, isLoading } = useComplaints();
+    const allComplaints: any[] = (complaintsData as any)?.items ?? complaintsData ?? [];
 
     const filtered = statusFilter === 'all'
-        ? MOCK_COMPLAINTS
-        : MOCK_COMPLAINTS.filter(c => c.status === statusFilter);
+        ? allComplaints
+        : allComplaints.filter((c: any) => c.status === statusFilter);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading complaints...</p>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -68,21 +80,21 @@ export default function ComplaintsPage() {
                     <div className="p-3 rounded-full bg-danger-50 text-danger-600"><AlertTriangle size={20} /></div>
                     <div>
                         <p className="text-xs font-semibold text-surface-500 uppercase">Attention Needed</p>
-                        <p className="text-2xl font-bold text-danger-900">{MOCK_COMPLAINTS.filter(c => c.priority === 'high').length}</p>
+                        <p className="text-2xl font-bold text-danger-900">{allComplaints.filter((c: any) => c.priority === 'HIGH').length}</p>
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-4 bg-warning-50/30 border-warning-100">
                     <div className="p-3 rounded-full bg-warning-50 text-warning-600"><Clock size={20} /></div>
                     <div>
                         <p className="text-xs font-semibold text-surface-500 uppercase">SLA Imminent</p>
-                        <p className="text-2xl font-bold text-warning-900">1</p>
+                        <p className="text-2xl font-bold text-warning-900">{allComplaints.filter((c: any) => c.status === 'REGISTERED' || c.status === 'UNDER_INVESTIGATION').length}</p>
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-4 bg-success-50/30 border-success-100">
                     <div className="p-3 rounded-full bg-success-50 text-success-600"><CheckCircle2 size={20} /></div>
                     <div>
                         <p className="text-xs font-semibold text-surface-500 uppercase">Resolved Today</p>
-                        <p className="text-2xl font-bold text-success-900">1</p>
+                        <p className="text-2xl font-bold text-success-900">{allComplaints.filter((c: any) => c.status === 'RESOLVED').length}</p>
                     </div>
                 </Card>
             </div>

@@ -25,14 +25,14 @@ export function PaymentProcessModal({
     policy,
 }: PaymentProcessModalProps) {
     const [step, setStep] = useState<Step>('method');
-    const [method, setMethod] = useState<PaymentMethod>('mobile_money');
-    const [network, setNetwork] = useState<MoMoNetwork>('mtn');
+    const [method, setMethod] = useState<PaymentMethod>('MOBILE_MONEY');
+    const [network, setNetwork] = useState<MoMoNetwork>('MTN');
     const [phone, setPhone] = useState('');
 
     const { isProcessing, processMoMoPayment } = usePaymentStore();
 
     const handleNext = async () => {
-        if (step === 'method' && method === 'mobile_money') {
+        if (step === 'method' && method === 'MOBILE_MONEY') {
             setStep('details');
         } else if (step === 'details') {
             setStep('processing');
@@ -43,7 +43,7 @@ export function PaymentProcessModal({
                 clientName: policy.clientName,
                 amount: policy.premiumAmount,
                 currency: policy.currency,
-                method: 'mobile_money',
+                method: 'MOBILE_MONEY',
                 momoNetwork: network,
                 phoneNumber: phone,
                 reference: `PREM-${policy.policyNumber.split('/').pop()}`,

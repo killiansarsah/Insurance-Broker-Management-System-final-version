@@ -29,17 +29,17 @@ import { cn, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
 type AuditAction =
-    | 'login' | 'logout'
-    | 'create' | 'update' | 'delete' | 'view'
-    | 'approve' | 'reject'
-    | 'export' | 'import'
-    | 'permission_change' | 'password_change'
-    | 'payment_processed' | 'report_generated';
+    | 'LOGIN' | 'LOGOUT'
+    | 'CREATE' | 'UPDATE' | 'DELETE' | 'VIEW'
+    | 'APPROVE' | 'REJECT'
+    | 'EXPORT' | 'IMPORT'
+    | 'PERMISSION_CHANGE' | 'PASSWORD_CHANGE'
+    | 'PAYMENT_PROCESSED' | 'REPORT_GENERATED';
 
 type AuditModule =
-    | 'auth' | 'clients' | 'policies' | 'claims'
-    | 'leads' | 'finance' | 'settings' | 'users'
-    | 'documents' | 'reports' | 'compliance';
+    | 'AUTH' | 'CLIENTS' | 'POLICIES' | 'CLAIMS'
+    | 'LEADS' | 'FINANCE' | 'SETTINGS' | 'USERS'
+    | 'DOCUMENTS' | 'REPORTS' | 'COMPLIANCE';
 
 interface AuditEntry {
     id: string;
@@ -54,7 +54,7 @@ interface AuditEntry {
     resourceLabel?: string;
     ipAddress: string;
     userAgent?: string;
-    severity: 'info' | 'warning' | 'critical';
+    severity: 'INFO' | 'WARNING' | 'CRITICAL';
     metadata?: Record<string, unknown>;
 }
 
@@ -65,13 +65,13 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-003',
         userName: 'Esi Donkor',
         userRole: 'Senior Broker',
-        action: 'create',
-        module: 'policies',
+        action: 'CREATE',
+        module: 'POLICIES',
         description: 'Created new motor policy for Radiance Petroleum',
         resourceId: 'pol-001',
         resourceLabel: 'GG-DSDM-1002-20-003928',
         ipAddress: '192.168.1.42',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-002',
@@ -79,13 +79,13 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-004',
         userName: 'Kofi Asante',
         userRole: 'Broker',
-        action: 'approve',
-        module: 'claims',
+        action: 'APPROVE',
+        module: 'CLAIMS',
         description: 'Approved claim settlement for CLM-2025-0004',
         resourceId: 'CLM-2025-0004',
         resourceLabel: 'CLM-2025-0004',
         ipAddress: '10.0.0.15',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-003',
@@ -93,13 +93,13 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-002',
         userName: 'Dr. Ernest Osei',
         userRole: 'Tenant Admin',
-        action: 'permission_change',
-        module: 'users',
+        action: 'PERMISSION_CHANGE',
+        module: 'USERS',
         description: 'Updated role permissions for Abena Nyarko — promoted to Senior Broker',
         resourceId: 'usr-005',
         resourceLabel: 'Abena Nyarko',
         ipAddress: '10.0.0.1',
-        severity: 'warning',
+        severity: 'WARNING',
     },
     {
         id: 'aud-004',
@@ -107,11 +107,11 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-003',
         userName: 'Esi Donkor',
         userRole: 'Senior Broker',
-        action: 'export',
-        module: 'reports',
+        action: 'EXPORT',
+        module: 'REPORTS',
         description: 'Exported Q4 commission report (PDF)',
         ipAddress: '192.168.1.42',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-005',
@@ -119,13 +119,13 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-005',
         userName: 'Abena Nyarko',
         userRole: 'Broker',
-        action: 'update',
-        module: 'clients',
+        action: 'UPDATE',
+        module: 'CLIENTS',
         description: 'Updated KYC status for Ghana Shippers\' Authority — set to Verified',
         resourceId: 'cli-001',
         resourceLabel: 'CLT-2025-0001',
         ipAddress: '172.16.0.88',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-006',
@@ -133,12 +133,12 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-001',
         userName: 'System Administrator',
         userRole: 'Platform Super Admin',
-        action: 'delete',
-        module: 'documents',
+        action: 'DELETE',
+        module: 'DOCUMENTS',
         description: 'Deleted expired document: Ghana_Card_2022_Expired.pdf',
         resourceLabel: 'Ghana_Card_2022_Expired.pdf',
         ipAddress: '127.0.0.1',
-        severity: 'warning',
+        severity: 'WARNING',
     },
     {
         id: 'aud-007',
@@ -146,12 +146,12 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-003',
         userName: 'Esi Donkor',
         userRole: 'Senior Broker',
-        action: 'payment_processed',
-        module: 'finance',
+        action: 'PAYMENT_PROCESSED',
+        module: 'FINANCE',
         description: 'Processed premium payment of GHS 36,185 for Agroterrum Ghana LTD',
         resourceLabel: 'PAY-2026-001122',
         ipAddress: '192.168.1.42',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-008',
@@ -159,11 +159,11 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-004',
         userName: 'Kofi Asante',
         userRole: 'Broker',
-        action: 'login',
-        module: 'auth',
+        action: 'LOGIN',
+        module: 'AUTH',
         description: 'User logged in successfully',
         ipAddress: '10.0.0.15',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-009',
@@ -171,11 +171,11 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-002',
         userName: 'Dr. Ernest Osei',
         userRole: 'Tenant Admin',
-        action: 'import',
-        module: 'clients',
+        action: 'IMPORT',
+        module: 'CLIENTS',
         description: 'Imported 12 new clients via CSV data onboarding',
         ipAddress: '10.0.0.1',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-010',
@@ -183,12 +183,12 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-005',
         userName: 'Abena Nyarko',
         userRole: 'Broker',
-        action: 'reject',
-        module: 'claims',
+        action: 'REJECT',
+        module: 'CLAIMS',
         description: 'Rejected claim CLM-2026-0011 — insufficient documentation',
         resourceLabel: 'CLM-2026-0011',
         ipAddress: '172.16.0.88',
-        severity: 'warning',
+        severity: 'WARNING',
     },
     {
         id: 'aud-011',
@@ -196,11 +196,11 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-001',
         userName: 'System Administrator',
         userRole: 'Platform Super Admin',
-        action: 'password_change',
-        module: 'auth',
+        action: 'PASSWORD_CHANGE',
+        module: 'AUTH',
         description: 'Forced password reset for usr-006 — security policy update',
         ipAddress: '127.0.0.1',
-        severity: 'critical',
+        severity: 'CRITICAL',
     },
     {
         id: 'aud-012',
@@ -208,11 +208,11 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-003',
         userName: 'Esi Donkor',
         userRole: 'Senior Broker',
-        action: 'view',
-        module: 'finance',
+        action: 'VIEW',
+        module: 'FINANCE',
         description: 'Viewed commission statements for January 2026',
         ipAddress: '192.168.1.42',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-013',
@@ -220,13 +220,13 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-004',
         userName: 'Kofi Asante',
         userRole: 'Broker',
-        action: 'create',
-        module: 'leads',
+        action: 'CREATE',
+        module: 'LEADS',
         description: 'Created new lead — Adjei Transport Services (fleet motor)',
         resourceId: 'lead-001',
         resourceLabel: 'LD-2026-0001',
         ipAddress: '10.0.0.15',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-014',
@@ -234,11 +234,11 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-002',
         userName: 'Dr. Ernest Osei',
         userRole: 'Tenant Admin',
-        action: 'report_generated',
-        module: 'reports',
+        action: 'REPORT_GENERATED',
+        module: 'REPORTS',
         description: 'Generated NIC Quarterly Returns Report — Q4 2025',
         ipAddress: '10.0.0.1',
-        severity: 'info',
+        severity: 'INFO',
     },
     {
         id: 'aud-015',
@@ -246,72 +246,72 @@ const AUDIT_LOG: AuditEntry[] = [
         userId: 'usr-001',
         userName: 'System Administrator',
         userRole: 'Platform Super Admin',
-        action: 'logout',
-        module: 'auth',
+        action: 'LOGOUT',
+        module: 'AUTH',
         description: 'Session timeout — auto logout after 8 hours inactivity',
         ipAddress: '127.0.0.1',
-        severity: 'info',
+        severity: 'INFO',
     },
 ];
 
 const ACTION_ICONS: Partial<Record<AuditAction, React.ReactNode>> = {
-    login: <LogIn size={14} />,
-    logout: <LogOut size={14} />,
-    create: <Plus size={14} />,
-    update: <Edit size={14} />,
-    delete: <Trash2 size={14} />,
-    view: <Eye size={14} />,
-    approve: <Shield size={14} />,
-    reject: <AlertTriangle size={14} />,
-    export: <Download size={14} />,
-    import: <RefreshCw size={14} />,
-    permission_change: <Lock size={14} />,
-    password_change: <Unlock size={14} />,
-    payment_processed: <DollarSign size={14} />,
-    report_generated: <FileText size={14} />,
+    LOGIN: <LogIn size={14} />,
+    LOGOUT: <LogOut size={14} />,
+    CREATE: <Plus size={14} />,
+    UPDATE: <Edit size={14} />,
+    DELETE: <Trash2 size={14} />,
+    VIEW: <Eye size={14} />,
+    APPROVE: <Shield size={14} />,
+    REJECT: <AlertTriangle size={14} />,
+    EXPORT: <Download size={14} />,
+    IMPORT: <RefreshCw size={14} />,
+    PERMISSION_CHANGE: <Lock size={14} />,
+    PASSWORD_CHANGE: <Unlock size={14} />,
+    PAYMENT_PROCESSED: <DollarSign size={14} />,
+    REPORT_GENERATED: <FileText size={14} />,
 };
 
 const SEVERITY_STYLES = {
-    info: 'bg-surface-100 text-surface-600',
-    warning: 'bg-warning-50 text-warning-700',
-    critical: 'bg-danger-50 text-danger-700',
+    INFO: 'bg-surface-100 text-surface-600',
+    WARNING: 'bg-warning-50 text-warning-700',
+    CRITICAL: 'bg-danger-50 text-danger-700',
 };
 
 const ACTION_STYLES: Partial<Record<AuditAction, string>> = {
-    login: 'bg-success-50 text-success-700',
-    logout: 'bg-surface-100 text-surface-600',
-    create: 'bg-primary-50 text-primary-700',
-    update: 'bg-blue-50 text-blue-700',
-    delete: 'bg-danger-50 text-danger-700',
-    approve: 'bg-success-50 text-success-700',
-    reject: 'bg-danger-50 text-danger-700',
-    export: 'bg-purple-50 text-purple-700',
-    import: 'bg-blue-50 text-blue-700',
-    permission_change: 'bg-warning-50 text-warning-700',
-    password_change: 'bg-warning-50 text-warning-700',
-    payment_processed: 'bg-teal-50 text-teal-700',
-    report_generated: 'bg-indigo-50 text-indigo-700',
-    view: 'bg-surface-100 text-surface-500',
+    LOGIN: 'bg-success-50 text-success-700',
+    LOGOUT: 'bg-surface-100 text-surface-600',
+    CREATE: 'bg-primary-50 text-primary-700',
+    UPDATE: 'bg-blue-50 text-blue-700',
+    DELETE: 'bg-danger-50 text-danger-700',
+    APPROVE: 'bg-success-50 text-success-700',
+    REJECT: 'bg-danger-50 text-danger-700',
+    EXPORT: 'bg-purple-50 text-purple-700',
+    IMPORT: 'bg-blue-50 text-blue-700',
+    PERMISSION_CHANGE: 'bg-warning-50 text-warning-700',
+    PASSWORD_CHANGE: 'bg-warning-50 text-warning-700',
+    PAYMENT_PROCESSED: 'bg-teal-50 text-teal-700',
+    REPORT_GENERATED: 'bg-indigo-50 text-indigo-700',
+    VIEW: 'bg-surface-100 text-surface-500',
 };
 
 const MODULE_LABELS: Record<AuditModule, string> = {
-    auth: 'Authentication',
-    clients: 'Clients',
-    policies: 'Policies',
-    claims: 'Claims',
-    leads: 'Leads',
-    finance: 'Finance',
-    settings: 'Settings',
-    users: 'Users',
-    documents: 'Documents',
-    reports: 'Reports',
-    compliance: 'Compliance',
+    AUTH: 'Authentication',
+    CLIENTS: 'Clients',
+    POLICIES: 'Policies',
+    CLAIMS: 'Claims',
+    LEADS: 'Leads',
+    FINANCE: 'Finance',
+    SETTINGS: 'Settings',
+    USERS: 'Users',
+    DOCUMENTS: 'Documents',
+    REPORTS: 'Reports',
+    COMPLIANCE: 'Compliance',
 };
 
 export default function AuditPage() {
     const [search, setSearch] = useState('');
     const [moduleFilter, setModuleFilter] = useState<AuditModule | 'all'>('all');
-    const [severityFilter, setSeverityFilter] = useState<'info' | 'warning' | 'critical' | 'all'>('all');
+    const [severityFilter, setSeverityFilter] = useState<'INFO' | 'WARNING' | 'CRITICAL' | 'all'>('all');
     const [userFilter, setUserFilter] = useState('all');
     const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -358,14 +358,14 @@ export default function AuditPage() {
                     <div className="p-2.5 rounded-full bg-warning-50 text-warning-600"><AlertTriangle size={18} /></div>
                     <div>
                         <p className="text-xs text-surface-500 font-semibold uppercase">Warnings</p>
-                        <p className="text-xl font-bold">{AUDIT_LOG.filter(e => e.severity === 'warning').length}</p>
+                        <p className="text-xl font-bold">{AUDIT_LOG.filter(e => e.severity === 'WARNING').length}</p>
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-3">
                     <div className="p-2.5 rounded-full bg-danger-50 text-danger-600"><Shield size={18} /></div>
                     <div>
                         <p className="text-xs text-surface-500 font-semibold uppercase">Critical</p>
-                        <p className="text-xl font-bold text-danger-700">{AUDIT_LOG.filter(e => e.severity === 'critical').length}</p>
+                        <p className="text-xl font-bold text-danger-700">{AUDIT_LOG.filter(e => e.severity === 'CRITICAL').length}</p>
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-3">
@@ -406,9 +406,9 @@ export default function AuditPage() {
                         className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option value="all">All Severities</option>
-                        <option value="info">Info</option>
-                        <option value="warning">Warning</option>
-                        <option value="critical">Critical</option>
+                        <option value="INFO">Info</option>
+                        <option value="WARNING">Warning</option>
+                        <option value="CRITICAL">Critical</option>
                     </select>
                     <select
                         value={userFilter}

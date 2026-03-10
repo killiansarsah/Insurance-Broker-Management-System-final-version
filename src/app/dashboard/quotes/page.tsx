@@ -32,26 +32,56 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
-import {
-    mockQuotes,
-    quoteSummary,
-    QUOTE_STATUS_CONFIG,
-    type Quote,
-    type QuoteStatus,
-} from '@/hooks/api';
+import { useQuotes } from '@/hooks/api/use-quotes';
+
+// ─── Inline Types & Config (no backend API for quotes yet) ───
+type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED' | 'CONVERTED';
+
+interface QuoteOption {
+    id: string;
+    carrierName: string;
+    premium: number;
+    sumInsured: number;
+    commissionRate: number;
+    commissionAmount: number;
+    excessOrDeductible: string;
+    coverageNotes: string;
+    isRecommended?: boolean;
+    isSelected?: boolean;
+}
+
+interface Quote {
+    id: string;
+    quoteNumber: string;
+    clientName: string;
+    clientPhone: string;
+    clientEmail: string;
+    insuranceType: string;
+    coverageType: string;
+    policyType: 'LIFE' | 'NON_LIFE';
+    status: QuoteStatus;
+    sumInsuredRequested: number;
+    requestDate: string;
+    validUntil: string;
+    sentDate?: string;
+    responseDate?: string;
+    riskDescription: string;
+    preparedBy: string;
+    options: QuoteOption[];
+    [key: string]: any;
+}
+
+const QUOTE_STATUS_CONFIG: Record<QuoteStatus, { label: string; bg: string; color: string; dot: string }> = {
+    DRAFT: { label: 'Draft', bg: 'bg-surface-100', color: 'text-surface-600', dot: 'bg-surface-400' },
+    SENT: { label: 'Sent', bg: 'bg-blue-50', color: 'text-blue-700', dot: 'bg-blue-500' },
+    ACCEPTED: { label: 'Accepted', bg: 'bg-success-50', color: 'text-success-700', dot: 'bg-success-500' },
+    DECLINED: { label: 'Declined', bg: 'bg-danger-50', color: 'text-danger-700', dot: 'bg-danger-500' },
+    EXPIRED: { label: 'Expired', bg: 'bg-warning-50', color: 'text-warning-700', dot: 'bg-warning-500' },
+    CONVERTED: { label: 'Converted', bg: 'bg-primary-50', color: 'text-primary-700', dot: 'bg-primary-500' },
+};
 
 // ─── Pipeline Tab ───
 type PipelineTab = 'all' | QuoteStatus;
-
-const PIPELINE_TABS: { key: PipelineTab; label: string; count: number }[] = [
-    { key: 'all', label: 'All', count: quoteSummary.total },
-    { key: 'draft', label: 'Draft', count: quoteSummary.drafts },
-    { key: 'sent', label: 'Sent', count: quoteSummary.sent },
-    { key: 'accepted', label: 'Accepted', count: quoteSummary.accepted },
-    { key: 'declined', label: 'Declined', count: quoteSummary.declined },
-    { key: 'expired', label: 'Expired', count: quoteSummary.expired },
-    { key: 'converted', label: 'Converted', count: quoteSummary.converted },
-];
 
 // ─── Status Badge ───
 function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
@@ -123,7 +153,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                     </div>
                     <div className="flex items-center gap-2 mt-3">
                         <QuoteStatusBadge status={quote.status} />
-                        {!isValid && quote.status !== 'expired' && quote.status !== 'converted' && quote.status !== 'accepted' && (
+                        {!isValid && quote.status !== 'EXPIRED' && quote.status !== 'CONVERTED' && quote.status !== 'ACCEPTED' && (
                             <span className="text-xs font-bold text-danger-600 bg-danger-50 px-2 py-0.5 rounded-full border border-danger-200">
                                 Quote expired
                             </span>
@@ -136,7 +166,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InfoCard label="Client" value={quote.clientName} icon={<User size={16} />} />
                         <InfoCard label="Insurance Type" value={`${quote.coverageType} (${quote.insuranceType})`} icon={<Shield size={16} />} />
-                        <InfoCard label="Policy Type" value={quote.policyType === 'life' ? 'Life' : 'Non-Life'} icon={<FileText size={16} />} />
+                        <InfoCard label="Policy Type" value={quote.policyType === 'LIFE' ? 'Life' : 'Non-Life'} icon={<FileText size={16} />} />
                         <InfoCard label="Sum Insured (Requested)" value={formatCurrency(quote.sumInsuredRequested)} icon={<BarChart3 size={16} />} />
                         <InfoCard label="Request Date" value={formatDate(quote.requestDate)} icon={<CalendarDays size={16} />} />
                         <InfoCard label="Valid Until" value={formatDate(quote.validUntil)} icon={<Clock size={16} />} />
@@ -269,7 +299,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                         </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                        {quote.status === 'draft' && (
+                        {quote.status === 'DRAFT' && (
                             <Button
                                 variant="primary"
                                 size="sm"
@@ -279,7 +309,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                 Send to Client
                             </Button>
                         )}
-                        {quote.status === 'sent' && (
+                        {quote.status === 'SENT' && (
                             <>
                                 <Button
                                     variant="outline"
@@ -299,7 +329,7 @@ function QuoteDetailModal({ quote, onClose }: { quote: Quote; onClose: () => voi
                                 </Button>
                             </>
                         )}
-                        {quote.status === 'accepted' && (
+                        {quote.status === 'ACCEPTED' && (
                             <Button
                                 variant="primary"
                                 size="sm"
@@ -339,28 +369,90 @@ export default function QuotesPage() {
     const [filterBroker, setFilterBroker] = useState('');
     const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
+    // Wire to backend API
+    const { data: quotesData = { data: [] } } = useQuotes();
+
+    const allQuotes: Quote[] = useMemo(() => {
+        return ((quotesData as any).data || []).map((q: any) => ({
+            id: q.id,
+            quoteNumber: q.quoteNumber,
+            clientName: q.client?.companyName || `${q.client?.firstName ?? ''} ${q.client?.lastName ?? ''}`.trim(),
+            clientPhone: q.client?.phone ?? '',
+            clientEmail: q.client?.email ?? '',
+            insuranceType: q.insuranceType ?? '',
+            coverageType: q.coverageType ?? '',
+            policyType: q.policyType ?? 'NON_LIFE',
+            status: q.status as QuoteStatus,
+            sumInsuredRequested: Number(q.sumInsuredRequested ?? 0),
+            requestDate: q.requestDate ?? q.createdAt,
+            validUntil: q.validUntil,
+            sentDate: q.sentDate,
+            responseDate: q.responseDate,
+            riskDescription: q.riskDescription ?? '',
+            preparedBy: q.preparedBy ? `${q.preparedBy.firstName ?? ''} ${q.preparedBy.lastName ?? ''}`.trim() : '',
+            options: (q.options || []).map((o: any) => ({
+                id: o.id,
+                carrierName: o.carrierName,
+                premium: Number(o.premium ?? 0),
+                sumInsured: Number(o.sumInsured ?? 0),
+                commissionRate: Number(o.commissionRate ?? 0),
+                commissionAmount: Number(o.commissionAmount ?? 0),
+                excessOrDeductible: o.excessOrDeductible ?? '',
+                coverageNotes: o.coverageNotes ?? '',
+                isRecommended: o.isRecommended ?? false,
+                isSelected: o.isSelected ?? false,
+            })),
+        }));
+    }, [quotesData]);
+
+    const quoteSummary = useMemo(() => {
+        const total = allQuotes.length;
+        const drafts = allQuotes.filter(q => q.status === 'DRAFT').length;
+        const sent = allQuotes.filter(q => q.status === 'SENT').length;
+        const accepted = allQuotes.filter(q => q.status === 'ACCEPTED').length;
+        const declined = allQuotes.filter(q => q.status === 'DECLINED').length;
+        const expired = allQuotes.filter(q => q.status === 'EXPIRED').length;
+        const converted = allQuotes.filter(q => q.status === 'CONVERTED').length;
+        const totalPremiumQuoted = allQuotes.reduce((sum, q) => {
+            const best = q.options.find((o: any) => o.isRecommended) || q.options[0];
+            return sum + (best?.premium || 0);
+        }, 0);
+        const conversionRate = total > 0 ? (converted / total) * 100 : 0;
+        return { total, drafts, sent, accepted, declined, expired, converted, totalPremiumQuoted, conversionRate };
+    }, [allQuotes]);
+
+    const PIPELINE_TABS: { key: PipelineTab; label: string; count: number }[] = [
+        { key: 'all', label: 'All', count: quoteSummary.total },
+        { key: 'DRAFT', label: 'Draft', count: quoteSummary.drafts },
+        { key: 'SENT', label: 'Sent', count: quoteSummary.sent },
+        { key: 'ACCEPTED', label: 'Accepted', count: quoteSummary.accepted },
+        { key: 'DECLINED', label: 'Declined', count: quoteSummary.declined },
+        { key: 'EXPIRED', label: 'Expired', count: quoteSummary.expired },
+        { key: 'CONVERTED', label: 'Converted', count: quoteSummary.converted },
+    ];
+
     // Filter data
     const filtered = useMemo(() => {
-        return mockQuotes.filter((q) => {
+        return allQuotes.filter((q) => {
             if (activeTab !== 'all' && q.status !== activeTab) return false;
             if (filterType && q.insuranceType !== filterType) return false;
             if (filterBroker && q.preparedBy !== filterBroker) return false;
             return true;
         });
-    }, [activeTab, filterType, filterBroker]);
+    }, [allQuotes, activeTab, filterType, filterBroker]);
 
     const hasFilters = filterType || filterBroker;
 
     // Insurance types from quotes data
     const insuranceTypes = useMemo(() => {
-        const types = Array.from(new Set(mockQuotes.map(q => q.insuranceType)));
+        const types = Array.from(new Set(allQuotes.map(q => q.insuranceType)));
         return types.sort().map(t => ({ label: t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' '), value: t }));
-    }, []);
+    }, [allQuotes]);
 
     const brokers = useMemo(() => {
-        const b = Array.from(new Set(mockQuotes.map(q => q.preparedBy)));
+        const b = Array.from(new Set(allQuotes.map(q => q.preparedBy)));
         return b.sort().map(name => ({ label: name, value: name }));
-    }, []);
+    }, [allQuotes]);
 
     // KPIs
     const kpis = [
@@ -462,7 +554,7 @@ export default function QuotesPage() {
             render: (row: Quote) => (
                 <div>
                     <span className="text-xs text-surface-500">{formatDate(row.requestDate)}</span>
-                    {row.status === 'sent' && new Date(row.validUntil) < new Date() && (
+                    {row.status === 'SENT' && new Date(row.validUntil) < new Date() && (
                         <p className="text-[10px] font-semibold text-danger-600">Validity expired</p>
                     )}
                 </div>
@@ -480,7 +572,7 @@ export default function QuotesPage() {
                     >
                         <Eye size={15} />
                     </button>
-                    {row.status === 'draft' && (
+                    {row.status === 'DRAFT' && (
                         <button
                             className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-success-600 transition-colors cursor-pointer"
                             title="Send to client"

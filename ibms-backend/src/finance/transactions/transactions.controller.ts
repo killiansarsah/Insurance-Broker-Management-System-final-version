@@ -42,6 +42,12 @@ export class TransactionsController {
     return this.transactionsService.findAll(req.user.tenantId, query);
   }
 
+  @Get('ledger-summary')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER', 'VIEWER')
+  ledgerSummary(@Request() req: RequestWithUser) {
+    return this.transactionsService.ledgerSummary(req.user.tenantId);
+  }
+
   @Get(':id')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {

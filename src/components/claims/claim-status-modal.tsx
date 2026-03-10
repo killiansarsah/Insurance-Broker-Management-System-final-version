@@ -26,18 +26,18 @@ interface ClaimStatusModalProps {
 }
 
 const statusOptions = [
-    { label: 'Registered', value: 'registered', icon: <FileText size={16} />, color: 'text-blue-600', bg: 'bg-blue-50' },
-    { label: 'Under Review', value: 'under_review', icon: <Clock size={16} />, color: 'text-warning-600', bg: 'bg-warning-50' },
-    { label: 'Assessed', value: 'assessed', icon: <Search size={16} />, color: 'text-info-600', bg: 'bg-info-50' },
-    { label: 'Approved', value: 'approved', icon: <ShieldCheck size={16} />, color: 'text-success-600', bg: 'bg-success-50' },
-    { label: 'Settled', value: 'settled', icon: <DollarSign size={16} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-    { label: 'Rejected', value: 'rejected', icon: <XCircle size={16} />, color: 'text-error-600', bg: 'bg-error-50' },
+    { label: 'Registered', value: 'REGISTERED', icon: <FileText size={16} />, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Under Review', value: 'UNDER_REVIEW', icon: <Clock size={16} />, color: 'text-warning-600', bg: 'bg-warning-50' },
+    { label: 'Assessed', value: 'ASSESSED', icon: <Search size={16} />, color: 'text-info-600', bg: 'bg-info-50' },
+    { label: 'Approved', value: 'APPROVED', icon: <ShieldCheck size={16} />, color: 'text-success-600', bg: 'bg-success-50' },
+    { label: 'Settled', value: 'SETTLED', icon: <DollarSign size={16} />, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+    { label: 'Rejected', value: 'REJECTED', icon: <XCircle size={16} />, color: 'text-error-600', bg: 'bg-error-50' },
 ];
 
 export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStatusModalProps) {
     const [selectedStatus, setSelectedStatus] = useState<ClaimStatus>(claim.status);
     const [amount, setAmount] = useState<string>(
-        (selectedStatus === 'settled' ? claim.settledAmount : selectedStatus === 'assessed' ? claim.assessedAmount : 0)?.toString() || ''
+        (selectedStatus === 'SETTLED' ? claim.settledAmount : selectedStatus === 'ASSESSED' ? claim.assessedAmount : 0)?.toString() || ''
     );
     const [note, setNote] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,16 +54,16 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
             updatedAt: new Date().toISOString(),
         };
 
-        if (selectedStatus === 'assessed') {
+        if (selectedStatus === 'ASSESSED') {
             updates.assessedAmount = parseFloat(amount);
             updates.assessmentDate = new Date().toISOString();
-        } else if (selectedStatus === 'approved') {
+        } else if (selectedStatus === 'APPROVED') {
             updates.approvalDate = new Date().toISOString();
-        } else if (selectedStatus === 'settled') {
+        } else if (selectedStatus === 'SETTLED') {
             updates.settledAmount = parseFloat(amount);
             updates.settlementDate = new Date().toISOString();
-        } else if (selectedStatus === 'rejected') {
-            updates.delayReason = note; // Using delayReason as a proxy for rejection reason in mock
+        } else if (selectedStatus === 'REJECTED') {
+            updates.delayReason = note;
         }
 
         onUpdate(updates);
@@ -108,10 +108,10 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                 </div>
 
                 {/* Dynamic Fields */}
-                {(selectedStatus === 'assessed' || selectedStatus === 'settled') && (
+                {(selectedStatus === 'ASSESSED' || selectedStatus === 'SETTLED') && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                         <label className="text-xs font-bold text-surface-500 uppercase tracking-wider">
-                            {selectedStatus === 'assessed' ? 'Assessed Amount' : 'Settlement Amount'} (GHS)
+                            {selectedStatus === 'ASSESSED' ? 'Assessed Amount' : 'Settlement Amount'} (GHS)
                         </label>
                         <Input
                             type="number"
@@ -124,7 +124,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                     </div>
                 )}
 
-                {selectedStatus === 'rejected' && (
+                {selectedStatus === 'REJECTED' && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                         <label className="text-xs font-bold text-surface-500 uppercase tracking-wider">
                             Rejection Reason
@@ -139,7 +139,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                     </div>
                 )}
 
-                {selectedStatus !== 'rejected' && (
+                {selectedStatus !== 'REJECTED' && (
                     <div className="space-y-2">
                         <label className="text-xs font-bold text-surface-500 uppercase tracking-wider">
                             Internal Note (Optional)

@@ -16,6 +16,7 @@ import {
   ReopenClaimDto,
   CreateClaimDocumentDto,
 } from './dto/claim-actions.dto';
+import { CreateClaimFollowUpDto } from './dto/claim-follow-up.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
 
@@ -431,14 +432,40 @@ export class ClaimsService {
     const now = new Date();
     const isOverdue30Day = now > new Date(claim.processingDeadline);
 
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: {
-        status: 'SETTLED',
-        settledAmount: dto.settledAmount,
-        settlementDate: now,
-        isOverdue: claim.isOverdue || isOverdue30Day,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const settled = await tx.claim.update({
+        where: { id },
+        data: {
+          status: 'SETTLED',
+          settledAmount: dto.settledAmount,
+          settlementDate: now,
+          isOverdue: claim.isOverdue || isOverdue30Day,
+        },
+      });
+
+      // Auto-create finance transaction for the settlement
+      const count = await tx.transaction.count({ where: { tenantId } });
+      const padded = String(count + 1).padStart(5, '0');
+      const txnNum = `TXN-CLM-${padded}`;
+
+      await tx.transaction.create({
+        data: {
+          tenantId,
+          transactionNumber: txnNum,
+          type: 'CLAIM_SETTLEMENT',
+          accountType: 'CLIENT_ACCOUNT',
+          amount: dto.settledAmount,
+          currency: claim.currency ?? 'GHS',
+          paymentMethod: (dto.paymentMethod as any) ?? 'BANK_TRANSFER',
+          paymentStatus: 'PAID',
+          reference: dto.paymentReference,
+          notes: `Claim settlement for ${claim.claimNumber}`,
+          policyId: claim.policyId,
+          clientId: claim.clientId,
+        },
+      });
+
+      return settled;
     });
 
     await this.logAudit(tenantId, userId, 'claim.settled', id, {
@@ -521,5 +548,53 @@ export class ClaimsService {
     await this.prisma.claimDocument.delete({ where: { id: docId } });
     await this.logAudit(tenantId, userId, 'claim.document.removed', docId);
     return { deleted: true };
+  }
+
+  // ─── FOLLOW-UP / CHASE LOG ──────────────────────────
+
+  async addFollowUp(
+    claimId: string,
+    tenantId: string,
+    userId: string,
+    dto: CreateClaimFollowUpDto,
+  ) {
+    await this.findOne(claimId, tenantId);
+
+    const followUp = await this.prisma.claimFollowUp.create({
+      data: {
+        tenantId,
+        claimId,
+        userId,
+        method: dto.method,
+        note: dto.note,
+        contactName: dto.contactName,
+        nextAction: dto.nextAction,
+        followUpDate: dto.followUpDate
+          ? new Date(dto.followUpDate)
+          : new Date(),
+      },
+      include: {
+        user: { select: { firstName: true, lastName: true } },
+      },
+    });
+
+    await this.logAudit(tenantId, userId, 'claim.follow_up.added', claimId, {
+      method: dto.method,
+      note: dto.note,
+    });
+
+    return followUp;
+  }
+
+  async listFollowUps(claimId: string, tenantId: string) {
+    await this.findOne(claimId, tenantId);
+
+    return this.prisma.claimFollowUp.findMany({
+      where: { claimId, tenantId },
+      orderBy: { followUpDate: 'desc' },
+      include: {
+        user: { select: { firstName: true, lastName: true } },
+      },
+    });
   }
 }

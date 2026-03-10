@@ -5,13 +5,53 @@ import { Search, Shield, CheckCircle, Filter } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCarriers } from '@/hooks/api/use-carriers';
-import { carriers } from '@/hooks/api';
-import {
-    carrierProducts, CATEGORY_LABELS, CATEGORY_COLORS,
-    getAllCategories, getCompulsoryProducts, type ProductCategory
-} from '@/hooks/api';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+
+type ProductCategory = string;
+
+const CATEGORY_LABELS: Record<string, string> = {
+    motor: 'Motor',
+    fire: 'Fire / Property',
+    marine: 'Marine',
+    health: 'Health',
+    life: 'Life',
+    liability: 'Liability',
+    engineering: 'Engineering',
+    bonds: 'Bonds / Guarantees',
+    travel: 'Travel',
+    agriculture: 'Agriculture',
+    professional_indemnity: 'Professional Indemnity',
+    oil_gas: 'Oil & Gas',
+    aviation: 'Aviation',
+    other: 'Other',
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+    motor: 'bg-blue-50 text-blue-700',
+    fire: 'bg-orange-50 text-orange-700',
+    marine: 'bg-cyan-50 text-cyan-700',
+    health: 'bg-green-50 text-green-700',
+    life: 'bg-violet-50 text-violet-700',
+    liability: 'bg-red-50 text-red-700',
+    engineering: 'bg-amber-50 text-amber-700',
+    bonds: 'bg-indigo-50 text-indigo-700',
+    travel: 'bg-teal-50 text-teal-700',
+    agriculture: 'bg-lime-50 text-lime-700',
+    professional_indemnity: 'bg-pink-50 text-pink-700',
+    oil_gas: 'bg-yellow-50 text-yellow-700',
+    aviation: 'bg-sky-50 text-sky-700',
+    other: 'bg-surface-100 text-surface-600',
+};
+
+interface Carrier {
+    id: string;
+    name: string;
+    shortName: string;
+    slug: string;
+    brandColor: string;
+    [key: string]: any;
+}
 
 export default function ProductsPage() {
     const [search, setSearch] = useState('');
@@ -19,20 +59,41 @@ export default function ProductsPage() {
     const [selectedCategory, setSelectedCategory] = useState<'all' | ProductCategory>('all');
     const [compulsoryOnly, setCompulsoryOnly] = useState(false);
 
-    const allCategories = useMemo(() => getAllCategories(), []);
-    const compulsoryCount = getCompulsoryProducts().length;
+    const { data: carriersData, isLoading } = useCarriers();
+    const carriers: Carrier[] = ((carriersData as any)?.items ?? carriersData ?? []) as Carrier[];
 
-    const filtered = carrierProducts.filter(p => {
+    // Build a flat list of all products across all carriers
+    const carrierProducts = useMemo(() => {
+        const products: any[] = [];
+        for (const c of carriers) {
+            if (c.products && Array.isArray(c.products)) {
+                for (const p of c.products) {
+                    products.push({ ...p, carrierId: c.id });
+                }
+            }
+        }
+        return products;
+    }, [carriers]);
+
+    const allCategories = useMemo(() => {
+        const cats = new Set<string>();
+        carrierProducts.forEach((p: any) => { if (p.category) cats.add(p.category); });
+        return Array.from(cats);
+    }, [carrierProducts]);
+
+    const compulsoryCount = carrierProducts.filter((p: any) => p.compulsory).length;
+
+    const filtered = carrierProducts.filter((p: any) => {
         if (selectedCarrier !== 'all' && p.carrierId !== selectedCarrier) return false;
         if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
         if (compulsoryOnly && !p.compulsory) return false;
         if (search) {
             const q = search.toLowerCase();
-            const c = carriers.find(c => c.id === p.carrierId);
+            const c = carriers.find((c: Carrier) => c.id === p.carrierId);
     return (
-                p.name.toLowerCase().includes(q) ||
-                p.description.toLowerCase().includes(q) ||
-                c?.shortName.toLowerCase().includes(q)
+                (p.name || '').toLowerCase().includes(q) ||
+                (p.description || '').toLowerCase().includes(q) ||
+                (c?.shortName || '').toLowerCase().includes(q)
             );
         }
         return true;
@@ -44,6 +105,17 @@ export default function ProductsPage() {
         { label: 'Categories', value: allCategories.length, color: 'text-blue-600' },
         { label: 'Carriers', value: carriers.length, color: 'text-violet-600' },
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading products...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -99,8 +171,8 @@ export default function ProductsPage() {
                         className="px-3 py-2 text-sm bg-surface-50 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 text-surface-700"
                     >
                         <option value="all">All Carriers</option>
-                        {carriers.map(c => (
-                            <option key={c.id} value={c.id}>{c.shortName}</option>
+                        {carriers.map((c: Carrier) => (
+                            <option key={c.id} value={c.id}>{c.shortName || c.name}</option>
                         ))}
                     </select>
                     {/* Category */}
@@ -110,8 +182,8 @@ export default function ProductsPage() {
                         className="px-3 py-2 text-sm bg-surface-50 border border-surface-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-400 text-surface-700"
                     >
                         <option value="all">All Categories</option>
-                        {allCategories.map(cat => (
-                            <option key={cat} value={cat}>{CATEGORY_LABELS[cat]}</option>
+                        {allCategories.map((cat: string) => (
+                            <option key={cat} value={cat}>{CATEGORY_LABELS[cat] || cat}</option>
                         ))}
                     </select>
                     {/* Compulsory toggle */}
@@ -151,8 +223,8 @@ export default function ProductsPage() {
                             <p className="text-sm">No products match your filters.</p>
                         </div>
                     ) : (
-                        filtered.map((product, i) => {
-                            const carrier = carriers.find(c => c.id === product.carrierId);
+                        filtered.map((product: any, i: number) => {
+                            const carrier = carriers.find((c: Carrier) => c.id === product.carrierId);
                             return (
                                 <motion.div
                                     key={product.id}
@@ -165,8 +237,8 @@ export default function ProductsPage() {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex flex-wrap items-center gap-2 mb-1.5">
                                                     <h3 className="text-[14px] font-bold text-surface-900">{product.name}</h3>
-                                                    <span className={cn('text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded', CATEGORY_COLORS[product.category])}>
-                                                        {CATEGORY_LABELS[product.category]}
+                                                    <span className={cn('text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded', CATEGORY_COLORS[product.category] || 'bg-surface-100 text-surface-600')}>
+                                                        {CATEGORY_LABELS[product.category] || product.category}
                                                     </span>
                                                     {product.compulsory && (
                                                         <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-red-50 text-red-600 border border-red-200">
@@ -197,7 +269,7 @@ export default function ProductsPage() {
 
                                                 {/* Coverage */}
                                                 <div className="flex flex-wrap gap-x-4 gap-y-1">
-                                                    {product.coverageSummary.map((cov: string, ci: number) => (
+                                                    {(product.coverageSummary || []).map((cov: string, ci: number) => (
                                                         <span key={ci} className="flex items-center gap-1 text-[10px] text-surface-500">
                                                             <CheckCircle size={9} className="text-success-500 shrink-0" />
                                                             {cov}
@@ -209,9 +281,9 @@ export default function ProductsPage() {
                                             {/* Commission + Min Premium */}
                                             <div className="text-right shrink-0 pl-4 border-l border-surface-100">
                                                 <p className="text-[9px] font-black text-surface-400 uppercase tracking-widest">Commission Rate</p>
-                                                <p className="text-2xl font-black text-primary-600 tabular-nums">{product.commissionRate}%</p>
+                                                <p className="text-2xl font-black text-primary-600 tabular-nums">{product.commissionRate || 0}%</p>
                                                 <p className="text-[10px] text-surface-400 mt-0.5">
-                                                    Min. GH₵ {product.minPremium.toLocaleString()}
+                                                    Min. GH₵ {(product.minPremium || 0).toLocaleString()}
                                                 </p>
                                             </div>
                                         </div>

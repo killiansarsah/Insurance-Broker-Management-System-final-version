@@ -17,67 +17,68 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { BackButton } from '@/components/ui/back-button';
 import { useTransactions } from '@/hooks/api/use-finance';
-import { receipts } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
 
-type Method = 'all' | 'bank_transfer' | 'mobile_money' | 'cash' | 'cheque' | 'card';
+type Method = 'all' | 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'CASH' | 'CHEQUE' | 'CARD';
 
 const METHOD_LABELS: Record<string, string> = {
-    bank_transfer: 'Bank Transfer',
-    mobile_money: 'Mobile Money',
-    cash: 'Cash',
-    cheque: 'Cheque',
-    card: 'Card',
+    BANK_TRANSFER: 'Bank Transfer',
+    MOBILE_MONEY: 'Mobile Money',
+    CASH: 'Cash',
+    CHEQUE: 'Cheque',
+    CARD: 'Card',
 };
 
 const METHOD_ICONS: Record<string, React.ReactNode> = {
-    bank_transfer: <Building size={12} />,
-    mobile_money: <Smartphone size={12} />,
-    cash: <Banknote size={12} />,
-    cheque: <FileCheck size={12} />,
-    card: <CreditCard size={12} />,
+    BANK_TRANSFER: <Building size={12} />,
+    MOBILE_MONEY: <Smartphone size={12} />,
+    CASH: <Banknote size={12} />,
+    CHEQUE: <FileCheck size={12} />,
+    CARD: <CreditCard size={12} />,
 };
 
 const METHOD_COLORS: Record<string, string> = {
-    bank_transfer: 'bg-primary-100 text-primary-700',
-    mobile_money: 'bg-success-100 text-success-700',
-    cash: 'bg-amber-100 text-amber-700',
-    cheque: 'bg-surface-100 text-surface-700',
-    card: 'bg-violet-100 text-violet-700',
+    BANK_TRANSFER: 'bg-primary-100 text-primary-700',
+    MOBILE_MONEY: 'bg-success-100 text-success-700',
+    CASH: 'bg-amber-100 text-amber-700',
+    CHEQUE: 'bg-surface-100 text-surface-700',
+    CARD: 'bg-violet-100 text-violet-700',
 };
-
-const totalCollected = receipts.reduce((s, r) => s + r.amount, 0);
-const currentMonthStart = (() => {
-    const now = new Date();
-    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-})();
-const thisMonth = receipts
-    .filter(r => r.dateReceived >= currentMonthStart)
-    .reduce((s, r) => s + r.amount, 0);
-const avgPayment = totalCollected / receipts.length;
-
-// Method breakdown
-const methodBreakdown = receipts.reduce((acc, r) => {
-    if (!acc[r.paymentMethod]) acc[r.paymentMethod] = 0;
-    acc[r.paymentMethod] += r.amount;
-    return acc;
-}, {} as Record<string, number>);
-
-const KPIS = [
-    { label: 'Total Collected', value: formatCurrency(totalCollected), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
-    { label: 'This Month', value: formatCurrency(thisMonth), icon: Calendar, color: 'text-primary-600', bg: 'bg-primary-50' },
-    { label: 'Avg. Payment', value: formatCurrency(avgPayment), icon: CreditCard, color: 'text-amber-600', bg: 'bg-amber-50' },
-    { label: 'Total Receipts', value: `${receipts.length} receipts`, icon: FileCheck, color: 'text-violet-600', bg: 'bg-violet-50' },
-];
 
 export default function PaymentsPage() {
     const [methodFilter, setMethodFilter] = useState<string>('all');
 
+    const { data: transactionsData } = useTransactions();
+    const allReceipts = ((transactionsData as any)?.items ?? transactionsData ?? []) as any[];
+
+    const totalCollected = allReceipts.reduce((s: number, r: any) => s + (r.amount || 0), 0);
+    const currentMonthStart = (() => {
+        const now = new Date();
+        return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    })();
+    const thisMonth = allReceipts
+        .filter((r: any) => r.dateReceived >= currentMonthStart)
+        .reduce((s: number, r: any) => s + (r.amount || 0), 0);
+    const avgPayment = allReceipts.length > 0 ? totalCollected / allReceipts.length : 0;
+
+    const methodBreakdown = allReceipts.reduce((acc: Record<string, number>, r: any) => {
+        if (!acc[r.paymentMethod]) acc[r.paymentMethod] = 0;
+        acc[r.paymentMethod] += (r.amount || 0);
+        return acc;
+    }, {} as Record<string, number>);
+
+    const KPIS = [
+        { label: 'Total Collected', value: formatCurrency(totalCollected), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'This Month', value: formatCurrency(thisMonth), icon: Calendar, color: 'text-primary-600', bg: 'bg-primary-50' },
+        { label: 'Avg. Payment', value: formatCurrency(avgPayment), icon: CreditCard, color: 'text-amber-600', bg: 'bg-amber-50' },
+        { label: 'Total Receipts', value: `${allReceipts.length} receipts`, icon: FileCheck, color: 'text-violet-600', bg: 'bg-violet-50' },
+    ];
+
     const filtered = methodFilter === 'all'
-        ? receipts
-        : receipts.filter(r => r.paymentMethod === methodFilter);
+        ? allReceipts
+        : allReceipts.filter((r: any) => r.paymentMethod === methodFilter);
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -229,11 +230,11 @@ export default function PaymentsPage() {
                         label="Payment Method"
                         options={[
                             { label: 'All Methods', value: 'all' },
-                            { label: 'Bank Transfer', value: 'bank_transfer' },
-                            { label: 'Mobile Money', value: 'mobile_money' },
-                            { label: 'Cash', value: 'cash' },
-                            { label: 'Cheque', value: 'cheque' },
-                            { label: 'Card', value: 'card' },
+                            { label: 'Bank Transfer', value: 'BANK_TRANSFER' },
+                            { label: 'Mobile Money', value: 'MOBILE_MONEY' },
+                            { label: 'Cash', value: 'CASH' },
+                            { label: 'Cheque', value: 'CHEQUE' },
+                            { label: 'Card', value: 'CARD' },
                         ]}
                         value={methodFilter}
                         onChange={(v) => setMethodFilter(v as string)}

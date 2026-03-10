@@ -18,7 +18,6 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useDocuments } from '@/hooks/api/use-documents';
-import { MOCK_DOCUMENTS } from '@/hooks/api';
 import { formatDate, cn } from '@/lib/utils';
 
 const UploadDocumentModal = dynamic(
@@ -38,19 +37,32 @@ export default function DocumentsPage() {
     const [category, setCategory] = useState('all');
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
+    const { data: docsData, isLoading } = useDocuments();
+    const allDocs: any[] = (docsData as any)?.items ?? docsData ?? [];
 
-    const filteredDocs = MOCK_DOCUMENTS.filter(doc => {
-        const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const filteredDocs = allDocs.filter((doc: any) => {
+        const matchesSearch = (doc.name || doc.fileName || '').toLowerCase().includes(searchTerm.toLowerCase());
         const matchesCategory = category === 'all' || doc.category === category;
         return matchesSearch && matchesCategory;
     });
 
     const getIcon = (mimeType: string) => {
-        if (mimeType.includes('pdf')) return <PdfIcon className="text-danger-500" size={24} />;
-        if (mimeType.includes('image')) return <ImageIcon className="text-primary-500" size={24} />;
-        if (mimeType.includes('zip')) return <Archive className="text-accent-500" size={24} />;
+        if (mimeType?.includes('pdf')) return <PdfIcon className="text-danger-500" size={24} />;
+        if (mimeType?.includes('IMAGE')) return <ImageIcon className="text-primary-500" size={24} />;
+        if (mimeType?.includes('zip')) return <Archive className="text-accent-500" size={24} />;
         return <FileText className="text-surface-400" size={24} />;
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading documents...</p>
+                </div>
+            </div>
+        );
+    }
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -96,8 +108,8 @@ export default function DocumentsPage() {
                         label="Category"
                         options={[
                             { label: 'All Categories', value: 'all' },
-                            { label: 'KYC / ID', value: 'kyc' },
-                            { label: 'Policy Docs', value: 'policy' },
+                            { label: 'KYC / ID', value: 'KYC' },
+                            { label: 'Policy Docs', value: 'POLICY' },
                             { label: 'Claim Photos', value: 'claims' },
                         ]}
                         value={category}
@@ -117,7 +129,7 @@ export default function DocumentsPage() {
                         >
                             <div className="flex items-start justify-between">
                                 <div className="w-10 h-10 rounded-lg bg-surface-50 flex items-center justify-center p-2 mb-3">
-                                    {getIcon(doc.mimeType)}
+                                    {getIcon(doc.mimeType || doc.fileType || '')}
                                 </div>
                                 <button
                                     className="text-surface-400 hover:text-surface-900"
@@ -127,11 +139,11 @@ export default function DocumentsPage() {
                                 </button>
                             </div>
 
-                            <h3 className="text-sm font-bold text-surface-900 truncate mb-1" title={doc.name}>
-                                {doc.name}
+                            <h3 className="text-sm font-bold text-surface-900 truncate mb-1" title={doc.name || doc.fileName}>
+                                {doc.name || doc.fileName}
                             </h3>
                             <p className="text-[10px] text-surface-500 font-medium uppercase tracking-tight mb-4">
-                                {doc.category} • {(doc.sizeBytes / (1024 * 1024)).toFixed(2)} MB
+                                {doc.category} • {doc.sizeBytes ? (doc.sizeBytes / (1024 * 1024)).toFixed(2) + ' MB' : '—'}
                             </p>
 
                             <div className="mt-auto pt-3 border-t border-surface-100 flex items-center justify-between">
@@ -140,7 +152,7 @@ export default function DocumentsPage() {
                                     className="p-1.5 rounded-full hover:bg-surface-50 text-primary-600 transition-colors"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        toast.success('Download started', { description: doc.name });
+                                        toast.success('Download started', { description: doc.name || doc.fileName });
                                     }}
                                 >
                                     <Download size={16} />

@@ -5,8 +5,7 @@ import { ArrowRight, Building2, Globe, Mail, Phone, Shield, Trophy, ExternalLink
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { type Carrier } from '@/hooks/api';
-import { type CarrierProduct } from '@/hooks/api';
+import { useCarrier, useCarrierProducts } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -64,11 +63,18 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
 
 import { BackButton } from '@/components/ui/back-button';
 
-export default function CarrierClientPage({ carrier, products = [] }: { carrier: Carrier; products?: CarrierProduct[] }) {
+interface Carrier { id: string; name: string; shortName: string; logoUrl?: string; brandColor: string; slug: string; type?: string; revenueRank?: number; [key: string]: string | number | boolean | string[] | undefined; }
+interface CarrierProduct { id: string; name: string; category: string; carrierId: string; commissionRate?: number; description?: string; coverageSummary?: string[]; [key: string]: unknown; }
+
+export default function CarrierClientPage({ carrierId }: { carrierId: string }) {
     const router = useRouter();
+    const { data: carrierData, isLoading } = useCarrier(carrierId);
+    const carrier = carrierData as Carrier | undefined;
+    const { data: productsData } = useCarrierProducts(carrierId);
+    const products = ((productsData as unknown as Record<string, unknown>)?.items as CarrierProduct[] ?? productsData ?? []) as CarrierProduct[];
 
     const groupedProducts = useMemo(() => {
-        return (products || []).reduce((acc, product) => {
+        return (products || []).reduce((acc: Record<string, CarrierProduct[]>, product: CarrierProduct) => {
             if (!acc[product.category]) acc[product.category] = [];
             acc[product.category].push(product);
             return acc;
@@ -76,10 +82,26 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
     }, [products]);
 
     // Split into Motor vs Others as requested by user
-    const motorProducts = groupedProducts['motor'] || [];
+    const motorProducts = groupedProducts['MOTOR'] || [];
     const otherProducts = Object.entries(groupedProducts)
-        .filter(([cat]) => cat !== 'motor')
+        .filter(([cat]) => cat !== 'MOTOR')
         .flatMap(([, items]) => items);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
+
+    if (!carrier) {
+        return (
+            <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
+                <p className="text-surface-500 text-lg">Carrier not found.</p>
+            </div>
+        );
+    }
 
     return (
         <div className="w-full space-y-8 pb-20 animate-fade-in relative max-w-7xl mx-auto">
@@ -123,18 +145,18 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-3">
                                 <span className={cn(
                                     "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                                    carrier.type === 'life' ? "bg-violet-100 text-violet-700 border-violet-200" :
-                                        carrier.type === 'non-life' ? "bg-blue-100 text-blue-700 border-blue-200" :
+                                    carrier.type === 'LIFE' ? "bg-violet-100 text-violet-700 border-violet-200" :
+                                        carrier.type === 'NON_LIFE' ? "bg-blue-100 text-blue-700 border-blue-200" :
                                             "bg-emerald-100 text-emerald-700 border-emerald-200"
                                 )}>
                                     {carrier.type} Insurance
                                 </span>
-                                {carrier.revenueRank > 0 && carrier.revenueRank <= 10 && (
+                                {(carrier.revenueRank ?? 0) > 0 && (carrier.revenueRank ?? 0) <= 10 ? (
                                     <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-700 border border-amber-200">
                                         <Trophy size={12} className="text-amber-500" />
                                         ranked #{carrier.revenueRank}
                                     </span>
-                                )}
+                                ) : null}
                             </div>
 
                             <h1 className="text-4xl md:text-5xl font-black text-surface-900 tracking-tight leading-tight mb-4">
@@ -175,7 +197,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                 variant="outline"
                                 className="h-12 px-8 text-base bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border-surface-200 hover:bg-white dark:hover:bg-slate-800"
                                 leftIcon={<ExternalLink size={18} />}
-                                onClick={() => window.open(carrier.website, '_blank')}
+                                onClick={() => window.open(carrier.website as string, '_blank')}
                             >
                                 Visit Website
                             </Button>
@@ -270,7 +292,7 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                     { icon: MapPin, label: 'Address', value: 'Headquarters', sub: carrier.hq },
                                     { icon: Phone, label: 'Phone', value: carrier.phone },
                                     { icon: Mail, label: 'Email', value: carrier.email },
-                                    { icon: Globe, label: 'Website', value: carrier.website.replace(/^https?:\/\//, '') },
+                                    { icon: Globe, label: 'Website', value: (carrier.website as string).replace(/^https?:\/\//, '') },
                                     { icon: User, label: 'Contact Person', value: carrier.contactPerson },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors group">
@@ -307,8 +329,8 @@ export default function CarrierClientPage({ carrier, products = [] }: { carrier:
                                     { icon: Hash, label: 'NIC License', value: carrier.licenseNumber },
                                     ...(carrier.rating ? [{ icon: Star, label: 'Rating', value: carrier.rating }] : []),
                                     ...(carrier.parentGroup ? [{ icon: Landmark, label: 'Parent Group', value: carrier.parentGroup }] : []),
-                                    ...(carrier.revenue2024 ? [{ icon: TrendingUp, label: 'Revenue (2024)', value: `GHS ${(carrier.revenue2024 / 1_000_000).toFixed(1)}M` }] : []),
-                                    { icon: Shield, label: 'Product Lines', value: carrier.productCategories.join(', ') },
+                                    ...(carrier.revenue2024 ? [{ icon: TrendingUp, label: 'Revenue (2024)', value: `GHS ${((carrier.revenue2024 as number) / 1_000_000).toFixed(1)}M` }] : []),
+                                    { icon: Shield, label: 'Product Lines', value: (carrier.productCategories as string[]).join(', ') },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors group">
                                         <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">
@@ -367,7 +389,7 @@ function ProductCard({ product }: { product: CarrierProduct }) {
                 <p className="text-sm text-surface-500 line-clamp-2">{product.description}</p>
             </div>
             <div className="shrink-0 self-center opacity-0 group-hover:opacity-100 transition-opacity -translate-x-2 group-hover:translate-x-0 transform duration-300">
-                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast.info(product.name, { description: product.coverageSummary.length > 0 ? `Coverage: ${product.coverageSummary.join(' · ')}` : product.description })}>
+                <Button variant="ghost" size="icon" className="rounded-full" onClick={() => toast.info(product.name, { description: (product.coverageSummary?.length ?? 0) > 0 ? `Coverage: ${product.coverageSummary!.join(' · ')}` : product.description })}>
                     <ArrowRight size={18} />
                 </Button>
             </div>

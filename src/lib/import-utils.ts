@@ -67,8 +67,8 @@ const CLIENT_FIELDS: FieldDef[] = [
     { key: 'lastName', label: 'Last Name', required: true, aliases: ['last name', 'last_name', 'lname', 'surname', 'family name'] },
     { key: 'type', label: 'Client Type', required: false, aliases: ['client type', 'type', 'category'] },
     { key: 'ghanaCardNumber', label: 'Ghana Card Number', required: true, aliases: ['ghana card', 'ghana card number', 'ghana_card', 'national id', 'id number', 'card number'] },
-    { key: 'phone', label: 'Phone', required: true, aliases: ['phone', 'phone number', 'mobile', 'tel', 'telephone', 'contact'], validate: validatePhone },
-    { key: 'email', label: 'Email', required: false, aliases: ['email', 'email address', 'e-mail'], validate: validateEmail },
+    { key: 'PHONE', label: 'Phone', required: true, aliases: ['PHONE', 'phone number', 'mobile', 'tel', 'telephone', 'contact'], validate: validatePhone },
+    { key: 'EMAIL', label: 'Email', required: false, aliases: ['EMAIL', 'email address', 'e-mail'], validate: validateEmail },
     { key: 'dateOfBirth', label: 'Date of Birth', required: false, aliases: ['date of birth', 'dob', 'birth date', 'birthday'], validate: validateDate },
     { key: 'gender', label: 'Gender', required: false, aliases: ['gender', 'sex'] },
     { key: 'nationality', label: 'Nationality', required: false, aliases: ['nationality', 'country'] },
@@ -82,8 +82,8 @@ const CLIENT_FIELDS: FieldDef[] = [
 // --- Policy Fields ---
 const POLICY_FIELDS: FieldDef[] = [
     { key: 'policyNumber', label: 'Policy Number', required: true, aliases: ['policy number', 'policy no', 'policy #', 'policy_number', 'pol no'] },
-    { key: 'insuranceType', label: 'Insurance Type', required: true, aliases: ['insurance type', 'type', 'product', 'product type', 'category', 'class', 'policy'] },
-    { key: 'clientName', label: 'Client Name', required: true, aliases: ['client', 'client name', 'insured', 'insured name', 'policyholder'] },
+    { key: 'insuranceType', label: 'Insurance Type', required: true, aliases: ['insurance type', 'type', 'product', 'product type', 'category', 'class', 'POLICY'] },
+    { key: 'clientName', label: 'Client Name', required: true, aliases: ['CLIENT', 'client name', 'insured', 'insured name', 'policyholder'] },
     { key: 'insurerName', label: 'Insurer/Carrier', required: true, aliases: ['insurer', 'carrier', 'underwriter', 'insurance company', 'insurer name'] },
     { key: 'status', label: 'Status', required: false, aliases: ['status', 'policy status'] },
     { key: 'inceptionDate', label: 'Start Date', required: true, aliases: ['inception', 'inception date', 'start date', 'effective date', 'commencement', 'date of issue'], validate: validateDate },
@@ -100,13 +100,13 @@ const POLICY_FIELDS: FieldDef[] = [
 const CLAIM_FIELDS: FieldDef[] = [
     { key: 'claimNumber', label: 'Claim Number', required: true, aliases: ['claim number', 'claim no', 'claim #', 'claim_number'] },
     { key: 'policyNumber', label: 'Policy Number', required: true, aliases: ['policy number', 'policy no', 'policy #', 'policy_number'] },
-    { key: 'clientName', label: 'Client Name', required: true, aliases: ['client', 'client name', 'claimant', 'insured'] },
+    { key: 'clientName', label: 'Client Name', required: true, aliases: ['CLIENT', 'client name', 'claimant', 'insured'] },
     { key: 'insuranceType', label: 'Insurance Type', required: false, aliases: ['insurance type', 'type', 'class'] },
     { key: 'status', label: 'Claim Status', required: false, aliases: ['status', 'claim status'] },
     { key: 'incidentDate', label: 'Date of Loss', required: true, aliases: ['incident date', 'date of loss', 'loss date', 'event date'], validate: validateDate },
     { key: 'incidentDescription', label: 'Description', required: false, aliases: ['description', 'incident description', 'loss description', 'details'] },
     { key: 'claimAmount', label: 'Claim Amount', required: true, aliases: ['claim amount', 'amount claimed', 'loss amount', 'amount'], validate: validateNumber },
-    { key: 'assessedAmount', label: 'Assessed Amount', required: false, aliases: ['assessed amount', 'assessed', 'survey amount'], validate: validateNumber },
+    { key: 'assessedAmount', label: 'Assessed Amount', required: false, aliases: ['assessed amount', 'ASSESSED', 'survey amount'], validate: validateNumber },
     { key: 'settledAmount', label: 'Settled Amount', required: false, aliases: ['settled amount', 'settlement', 'paid amount'], validate: validateNumber },
     { key: 'intimationDate', label: 'Intimation Date', required: false, aliases: ['intimation date', 'notified date', 'reported date'], validate: validateDate },
 ];
@@ -114,8 +114,8 @@ const CLAIM_FIELDS: FieldDef[] = [
 const LEAD_FIELDS: FieldDef[] = [
     { key: 'contactName', label: 'Contact Name', required: true, aliases: ['contact name', 'name', 'full name', 'prospect name'] },
     { key: 'companyName', label: 'Company Name', required: false, aliases: ['company', 'company name', 'business'] },
-    { key: 'phone', label: 'Phone', required: true, aliases: ['phone', 'phone number', 'mobile', 'tel', 'contact number'], validate: validatePhone },
-    { key: 'email', label: 'Email', required: false, aliases: ['email', 'email address'], validate: validateEmail },
+    { key: 'PHONE', label: 'Phone', required: true, aliases: ['PHONE', 'phone number', 'mobile', 'tel', 'contact number'], validate: validatePhone },
+    { key: 'EMAIL', label: 'Email', required: false, aliases: ['EMAIL', 'email address'], validate: validateEmail },
     { key: 'source', label: 'Lead Source', required: false, aliases: ['source', 'lead source', 'channel', 'referral source'] },
     { key: 'priority', label: 'Priority', required: false, aliases: ['priority', 'lead priority', 'temperature', 'hot/warm/cold'] },
     { key: 'productInterest', label: 'Product Interest', required: false, aliases: ['product interest', 'product', 'interest', 'insurance type'] },
@@ -124,21 +124,21 @@ const LEAD_FIELDS: FieldDef[] = [
 ];
 
 // --- Universal Fields (Combined for Relational Import) ---
-const UNIVERSAL_FIELDS: (FieldDef & { group: 'client' | 'policy' | 'asset' })[] = [
+const UNIVERSAL_FIELDS: (FieldDef & { group: 'CLIENT' | 'POLICY' | 'asset' })[] = [
     // Client Info
-    { group: 'client', key: 'firstName', label: 'Client First Name', required: true, aliases: ['first name', 'first_name', 'fname', 'insured'] },
-    { group: 'client', key: 'lastName', label: 'Client Last Name', required: true, aliases: ['last name', 'last_name', 'lname', 'surname'] },
-    { group: 'client', key: 'ghanaCardNumber', label: 'Ghana Card', required: false, aliases: ['ghana card', 'id number'] },
-    { group: 'client', key: 'companyName', label: 'Company Name', required: false, aliases: ['company', 'organisation', 'insured'] },
+    { group: 'CLIENT', key: 'firstName', label: 'Client First Name', required: true, aliases: ['first name', 'first_name', 'fname', 'insured'] },
+    { group: 'CLIENT', key: 'lastName', label: 'Client Last Name', required: true, aliases: ['last name', 'last_name', 'lname', 'surname'] },
+    { group: 'CLIENT', key: 'ghanaCardNumber', label: 'Ghana Card', required: false, aliases: ['ghana card', 'id number'] },
+    { group: 'CLIENT', key: 'companyName', label: 'Company Name', required: false, aliases: ['company', 'organisation', 'insured'] },
 
     // Policy Info
-    { group: 'policy', key: 'policyNumber', label: 'Policy Number', required: true, aliases: ['policy number', 'policy no', 'pol no'] },
-    { group: 'policy', key: 'insuranceType', label: 'Insurance Type', required: true, aliases: ['insurance type', 'product', 'class', 'policy'] },
-    { group: 'policy', key: 'insurerName', label: 'Insurer Name', required: true, aliases: ['insurer', 'carrier', 'insurance company'] },
-    { group: 'policy', key: 'inceptionDate', label: 'Effective Date', required: true, aliases: ['inception', 'start date', 'date of issue'], validate: validateDate },
-    { group: 'policy', key: 'expiryDate', label: 'Expiry Date', required: true, aliases: ['expiry', 'end date', 'date of expiry'], validate: validateDate },
-    { group: 'policy', key: 'premiumAmount', label: 'Premium Amount', required: true, aliases: ['premium', 'premium amount'], validate: validateNumber },
-    { group: 'policy', key: 'commissionAmount', label: 'Comm. Amount', required: false, aliases: ['commission', 'gross comm.', 'net comm.'], validate: validateNumber },
+    { group: 'POLICY', key: 'policyNumber', label: 'Policy Number', required: true, aliases: ['policy number', 'policy no', 'pol no'] },
+    { group: 'POLICY', key: 'insuranceType', label: 'Insurance Type', required: true, aliases: ['insurance type', 'product', 'class', 'POLICY'] },
+    { group: 'POLICY', key: 'insurerName', label: 'Insurer Name', required: true, aliases: ['insurer', 'carrier', 'insurance company'] },
+    { group: 'POLICY', key: 'inceptionDate', label: 'Effective Date', required: true, aliases: ['inception', 'start date', 'date of issue'], validate: validateDate },
+    { group: 'POLICY', key: 'expiryDate', label: 'Expiry Date', required: true, aliases: ['expiry', 'end date', 'date of expiry'], validate: validateDate },
+    { group: 'POLICY', key: 'premiumAmount', label: 'Premium Amount', required: true, aliases: ['premium', 'premium amount'], validate: validateNumber },
+    { group: 'POLICY', key: 'commissionAmount', label: 'Comm. Amount', required: false, aliases: ['commission', 'gross comm.', 'net comm.'], validate: validateNumber },
 
     // Asset Info
     { group: 'asset', key: 'assetDetails', label: 'Vehicle/Asset Details', required: false, aliases: ['vehicle number/ location', 'location', 'asset', 'vehicle no'] },
@@ -281,7 +281,7 @@ export function autoMapColumns(
             sourceColumn: sourceCol,
             targetField: bestMatch && bestScore > 50 ? bestMatch.key : '',
             isRequired: bestMatch?.required ?? false,
-            entityGroup: (bestMatch as (FieldDef & { group?: 'client' | 'policy' | 'asset' }))?.group,
+            entityGroup: (bestMatch as (FieldDef & { group?: 'CLIENT' | 'POLICY' | 'asset' }))?.group,
         };
     });
 }
@@ -413,23 +413,23 @@ export function buildRecord(
             return {
                 id,
                 clientNumber: `CLT-${Date.now().toString().slice(-6)}`,
-                type: (row.type?.toLowerCase() === 'corporate' ? 'corporate' : 'individual') as string,
-                status: 'active',
+                type: (row.type?.toUpperCase() === 'CORPORATE' ? 'CORPORATE' : 'INDIVIDUAL') as string,
+                status: 'ACTIVE',
                 firstName: row.firstName || '',
                 lastName: row.lastName || '',
                 ghanaCardNumber: row.ghanaCardNumber || '',
                 phone: row.phone || '',
                 email: row.email || '',
                 dateOfBirth: row.dateOfBirth || '',
-                gender: row.gender?.toLowerCase() || '',
+                gender: row.gender?.toUpperCase() || '',
                 nationality: row.nationality || 'Ghanaian',
                 digitalAddress: row.digitalAddress || '',
                 region: row.region || '',
                 city: row.city || '',
                 companyName: row.companyName || '',
                 tin: row.tin || '',
-                kycStatus: 'pending',
-                amlRiskLevel: 'low',
+                kycStatus: 'PENDING',
+                amlRiskLevel: 'LOW',
                 isPep: false,
                 eddRequired: false,
                 totalPolicies: 0,
@@ -443,7 +443,7 @@ export function buildRecord(
             return {
                 id,
                 policyNumber: row.policyNumber || '',
-                status: row.status || 'active',
+                status: row.status || 'ACTIVE',
                 insuranceType: row.insuranceType || 'other',
                 clientId: '',
                 clientName: row.clientName || row.firstName ? `${row.firstName} ${row.lastName}` : '',
@@ -468,7 +468,7 @@ export function buildRecord(
             return {
                 id,
                 claimNumber: row.claimNumber || '',
-                status: row.status || 'registered',
+                status: row.status || 'REGISTERED',
                 policyId: '',
                 policyNumber: row.policyNumber || '',
                 insuranceType: row.insuranceType || 'other',
@@ -492,8 +492,8 @@ export function buildRecord(
             return {
                 id,
                 leadNumber: `LD-${Date.now().toString().slice(-6)}`,
-                status: 'new',
-                priority: row.priority || 'warm',
+                status: 'NEW',
+                priority: row.priority || 'WARM',
                 source: row.source || 'other',
                 contactName: row.contactName || '',
                 companyName: row.companyName || '',

@@ -21,15 +21,14 @@ import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import type { ClientStatus, PolicyStatus, ClaimStatus, LeadStatus, ComplaintStatus } from '@/types';
 
-type AnyStatus = ClientStatus | PolicyStatus | ClaimStatus | LeadStatus | ComplaintStatus | 'active' | 'inactive';
-import { mockClients } from '@/hooks/api';
-import { mockPolicies } from '@/hooks/api';
-import { claims } from '@/hooks/api';
-import { mockLeads } from '@/hooks/api';
-import { MOCK_COMPLAINTS } from '@/hooks/api';
-import { nonLifeCarriers, lifeCarriers } from '@/hooks/api';
-import { cn, formatCurrency, formatDate } from '@/lib/utils';
-import { getClientDisplayName } from '@/hooks/api';
+type AnyStatus = ClientStatus | PolicyStatus | ClaimStatus | LeadStatus | ComplaintStatus | 'ACTIVE' | 'INACTIVE';
+import { useClients } from '@/hooks/api/use-clients';
+import { usePolicies } from '@/hooks/api/use-policies';
+import { useClaims } from '@/hooks/api/use-claims';
+import { useLeads } from '@/hooks/api/use-leads';
+import { useComplaints } from '@/hooks/api/use-complaints';
+import { useCarriers } from '@/hooks/api/use-carriers';
+import { cn, formatCurrency, formatDate, getClientDisplayName } from '@/lib/utils';
 
 type ResultCategory = 'clients' | 'policies' | 'claims' | 'leads' | 'carriers' | 'complaints';
 
@@ -88,17 +87,31 @@ function ResultsContent() {
     const router = useRouter();
     const query = searchParams.get('q') ?? '';
 
+    const { data: clientsData } = useClients();
+    const { data: policiesData } = usePolicies();
+    const { data: claimsData } = useClaims();
+    const { data: leadsData } = useLeads();
+    const { data: complaintsData } = useComplaints();
+    const { data: carriersData } = useCarriers();
+
+    const allClients: any[] = (clientsData as any)?.items ?? clientsData ?? [];
+    const allPolicies: any[] = (policiesData as any)?.items ?? policiesData ?? [];
+    const allClaims: any[] = (claimsData as any)?.items ?? claimsData ?? [];
+    const allLeads: any[] = (leadsData as any)?.items ?? leadsData ?? [];
+    const allComplaints: any[] = (complaintsData as any)?.items ?? complaintsData ?? [];
+    const allCarriers: any[] = (carriersData as any)?.items ?? carriersData ?? [];
+
     const results: SearchResult[] = useMemo(() => {
         if (!query || query.trim().length < 2) return [];
         const q = query.toLowerCase();
         const out: SearchResult[] = [];
 
         // Clients
-        mockClients.forEach(c => {
+        allClients.forEach(c => {
             const name = getClientDisplayName(c);
             if (
                 name.toLowerCase().includes(q) ||
-                c.clientNumber.toLowerCase().includes(q) ||
+                (c.clientNumber || '').toLowerCase().includes(q) ||
                 (c.email ?? '').toLowerCase().includes(q) ||
                 (c.phone ?? '').includes(q)
             ) {
@@ -106,65 +119,65 @@ function ResultsContent() {
                     id: c.id,
                     category: 'clients',
                     title: name,
-                    subtitle: c.clientNumber,
+                    subtitle: c.clientNumber || '',
                     status: c.status as AnyStatus,
-                    meta: c.type === 'corporate' ? 'Corporate' : 'Individual',
+                    meta: c.type === 'CORPORATE' ? 'Corporate' : 'Individual',
                     href: `/dashboard/clients/${c.id}`,
                 });
             }
         });
 
         // Policies
-        mockPolicies.forEach(p => {
+        allPolicies.forEach(p => {
             if (
-                p.policyNumber.toLowerCase().includes(q) ||
-                p.clientName.toLowerCase().includes(q) ||
-                p.insurerName.toLowerCase().includes(q) ||
-                p.insuranceType.toLowerCase().includes(q)
+                (p.policyNumber || '').toLowerCase().includes(q) ||
+                (p.clientName || '').toLowerCase().includes(q) ||
+                (p.insurerName || '').toLowerCase().includes(q) ||
+                (p.insuranceType || '').toLowerCase().includes(q)
             ) {
                 out.push({
                     id: p.id,
                     category: 'policies',
-                    title: p.policyNumber,
-                    subtitle: p.clientName,
+                    title: p.policyNumber || '',
+                    subtitle: p.clientName || '',
                     status: p.status as AnyStatus,
-                    meta: formatCurrency(p.premiumAmount),
+                    meta: p.premiumAmount ? formatCurrency(p.premiumAmount) : undefined,
                     href: `/dashboard/policies/${p.id}`,
                 });
             }
         });
 
         // Claims
-        claims.forEach(c => {
+        allClaims.forEach(c => {
             if (
-                c.claimNumber.toLowerCase().includes(q) ||
-                c.clientName.toLowerCase().includes(q) ||
+                (c.claimNumber || '').toLowerCase().includes(q) ||
+                (c.clientName || '').toLowerCase().includes(q) ||
                 (c.incidentDescription ?? '').toLowerCase().includes(q)
             ) {
                 out.push({
                     id: c.id,
                     category: 'claims',
-                    title: c.claimNumber,
-                    subtitle: c.clientName,
+                    title: c.claimNumber || '',
+                    subtitle: c.clientName || '',
                     status: c.status as AnyStatus,
-                    meta: formatCurrency(c.claimAmount),
+                    meta: c.claimAmount ? formatCurrency(c.claimAmount) : undefined,
                     href: `/dashboard/claims/${c.id}`,
                 });
             }
         });
 
         // Leads
-        mockLeads.forEach(l => {
+        allLeads.forEach(l => {
             if (
-                l.leadNumber.toLowerCase().includes(q) ||
-                l.contactName.toLowerCase().includes(q) ||
+                (l.leadNumber || '').toLowerCase().includes(q) ||
+                (l.contactName || '').toLowerCase().includes(q) ||
                 (l.companyName ?? '').toLowerCase().includes(q)
             ) {
                 out.push({
                     id: l.id,
                     category: 'leads',
-                    title: l.contactName,
-                    subtitle: l.leadNumber,
+                    title: l.contactName || '',
+                    subtitle: l.leadNumber || '',
                     status: l.status as AnyStatus,
                     meta: l.estimatedPremium ? formatCurrency(l.estimatedPremium) : undefined,
                     href: `/dashboard/leads/${l.id}`,
@@ -173,17 +186,17 @@ function ResultsContent() {
         });
 
         // Carriers
-        [...nonLifeCarriers, ...lifeCarriers].forEach(c => {
+        allCarriers.forEach(c => {
             if (
-                c.name.toLowerCase().includes(q) ||
-                c.shortName.toLowerCase().includes(q) ||
-                c.licenseNumber.toLowerCase().includes(q)
+                (c.name || '').toLowerCase().includes(q) ||
+                (c.shortName || '').toLowerCase().includes(q) ||
+                (c.licenseNumber || '').toLowerCase().includes(q)
             ) {
                 out.push({
                     id: c.id,
                     category: 'carriers',
-                    title: c.name,
-                    subtitle: c.licenseNumber,
+                    title: c.name || '',
+                    subtitle: c.licenseNumber || '',
                     status: c.status as AnyStatus,
                     meta: c.type,
                     href: `/dashboard/carriers/${c.id}`,
@@ -192,17 +205,17 @@ function ResultsContent() {
         });
 
         // Complaints
-        MOCK_COMPLAINTS.forEach(c => {
+        allComplaints.forEach(c => {
             if (
-                c.complaintNumber.toLowerCase().includes(q) ||
-                c.complainantName.toLowerCase().includes(q) ||
-                c.subject.toLowerCase().includes(q)
+                (c.complaintNumber || '').toLowerCase().includes(q) ||
+                (c.complainantName || '').toLowerCase().includes(q) ||
+                (c.subject || '').toLowerCase().includes(q)
             ) {
                 out.push({
                     id: c.id,
                     category: 'complaints',
-                    title: c.subject,
-                    subtitle: c.complainantName,
+                    title: c.subject || '',
+                    subtitle: c.complainantName || '',
                     status: c.status as AnyStatus,
                     meta: c.complaintNumber,
                     href: `/dashboard/complaints/${c.id}`,
@@ -211,7 +224,7 @@ function ResultsContent() {
         });
 
         return out.slice(0, 60); // cap at 60 results
-    }, [query]);
+    }, [query, allClients, allPolicies, allClaims, allLeads, allCarriers, allComplaints]);
 
     const grouped = useMemo(() => {
         const groups: Partial<Record<ResultCategory, SearchResult[]>> = {};

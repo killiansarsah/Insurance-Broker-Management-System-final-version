@@ -26,7 +26,7 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
     const [complainant, setComplainant] = useState('');
     const [policyNo, setPolicyNo] = useState('');
     const [type, setType] = useState('service');
-    const [priority, setPriority] = useState('medium');
+    const [priority, setPriority] = useState('MEDIUM');
     const [description, setDescription] = useState('');
 
     const handleSubmit = async (e?: React.FormEvent) => {
@@ -145,9 +145,9 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'Low', value: 'low' },
-                                { label: 'Medium', value: 'medium' },
-                                { label: 'High (Immediate Action)', value: 'high' },
+                                { label: 'Low', value: 'LOW' },
+                                { label: 'Medium', value: 'MEDIUM' },
+                                { label: 'High (Immediate Action)', value: 'HIGH' },
                             ]}
                             value={priority}
                             onChange={(v) => setPriority(v as string)}
@@ -161,9 +161,9 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
                             options={[
                                 { label: 'Service Quality', value: 'service' },
                                 { label: 'Claims Dispute', value: 'claims' },
-                                { label: 'Policy Terms', value: 'policy' },
+                                { label: 'Policy Terms', value: 'POLICY' },
                                 { label: 'Billing / Commission', value: 'billing' },
-                                { label: 'Other', value: 'other' },
+                                { label: 'Other', value: 'OTHER' },
                             ]}
                             value={type}
                             onChange={(v) => setType(v as string)}

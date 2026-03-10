@@ -77,7 +77,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                     <div className="px-6 py-2 bg-primary-50 border-t border-primary-100 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <div className="p-1 bg-white dark:bg-slate-800 rounded-md border border-primary-200 dark:border-primary-700 text-primary-600 dark:text-primary-400">
-                                {conversation.linkedResourceType === 'claim' ? <Shield size={14} /> : <FileText size={14} />}
+                                {conversation.linkedResourceType === 'CLAIM' ? <Shield size={14} /> : <FileText size={14} />}
                             </div>
                             <span className="text-[11px] font-bold text-primary-900 uppercase tracking-tight">
                                 Discussing {conversation.linkedResourceType}: {conversation.linkedResourceId}
@@ -88,7 +88,7 @@ export function MessageWindow({ conversation }: MessageWindowProps) {
                             size="sm"
                             className="h-7 text-[10px] font-bold uppercase tracking-wider px-3 border-primary-200 text-primary-700 hover:bg-primary-100"
                             onClick={() => {
-                                const path = conversation.linkedResourceType === 'claim' ? 'claims' : 'policies';
+                                const path = conversation.linkedResourceType === 'CLAIM' ? 'claims' : 'policies';
                                 window.location.href = `/dashboard/${path}/${conversation.linkedResourceId}`;
                             }}
                         >

@@ -1,31 +1,37 @@
 'use client';
 
-import { useRef, useCallback, useState } from 'react';
+import { useRef, useCallback, useState, useEffect } from 'react';
 import { useProfileStore } from '@/stores/profile-store';
+import { useProfile, useUpdateProfile } from '@/hooks/api/use-settings';
 import Image from 'next/image';
 import { toast } from 'sonner';
 
 export function SettingsProfile() {
-    const {
-        firstName,
-        lastName,
-        email,
-        phone,
-        jobTitle,
-        location,
-        avatarUrl,
-        updateProfile,
-    } = useProfileStore();
+    const { avatarUrl, updateProfile: updateStore } = useProfileStore();
+    const { data: profile } = useProfile();
+    const updateProfileMutation = useUpdateProfile();
 
-    const [localFirstName, setLocalFirstName] = useState(firstName);
-    const [localLastName, setLocalLastName] = useState(lastName);
-    const [localEmail, setLocalEmail] = useState(email);
-    const [localPhone, setLocalPhone] = useState(phone);
-    const [localJobTitle, setLocalJobTitle] = useState(jobTitle || '');
-    const [localLocation, setLocalLocation] = useState(location || '');
+    const [localFirstName, setLocalFirstName] = useState('');
+    const [localLastName, setLocalLastName] = useState('');
+    const [localEmail, setLocalEmail] = useState('');
+    const [localPhone, setLocalPhone] = useState('');
+    const [localJobTitle, setLocalJobTitle] = useState('');
+    const [localLocation, setLocalLocation] = useState('');
 
     const [isSaving, setIsSaving] = useState(false);
     const [showToast, setShowToast] = useState(false);
+
+    // Populate local state from API data
+    useEffect(() => {
+        if (profile) {
+            setLocalFirstName(profile.firstName || '');
+            setLocalLastName(profile.lastName || '');
+            setLocalEmail(profile.email || '');
+            setLocalPhone((profile.phone as string) || '');
+            setLocalJobTitle((profile.jobTitle as string) || '');
+            setLocalLocation((profile.location as string) || '');
+        }
+    }, [profile]);
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -35,24 +41,35 @@ export function SettingsProfile() {
         if (file.size > 5 * 1024 * 1024) { toast.error('File Too Large', { description: 'Please select an image under 5MB.' }); return; }
         if (!file.type.startsWith('image/')) { toast.error('Invalid File Type', { description: 'Please select an image file (PNG, JPG, etc.).' }); return; }
         const url = URL.createObjectURL(file);
-        updateProfile({ avatarUrl: url });
-    }, [updateProfile]);
+        updateStore({ avatarUrl: url });
+    }, [updateStore]);
 
     const handleSave = () => {
         setIsSaving(true);
-        updateProfile({
-            firstName: localFirstName,
-            lastName: localLastName,
-            email: localEmail,
-            phone: localPhone,
-            jobTitle: localJobTitle,
-            location: localLocation,
-        });
-        setTimeout(() => {
-            setIsSaving(false);
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-        }, 800);
+        updateProfileMutation.mutate(
+            {
+                firstName: localFirstName,
+                lastName: localLastName,
+                phone: localPhone,
+            },
+            {
+                onSuccess: () => {
+                    updateStore({
+                        firstName: localFirstName,
+                        lastName: localLastName,
+                        phone: localPhone,
+                        jobTitle: localJobTitle,
+                        location: localLocation,
+                    });
+                    setIsSaving(false);
+                    toast.success('Profile Saved', { description: 'Your profile has been updated successfully.' });
+                },
+                onError: () => {
+                    setIsSaving(false);
+                    toast.error('Save Failed', { description: 'Could not update your profile. Please try again.' });
+                },
+            }
+        );
     };
 
     return (
@@ -149,7 +166,7 @@ export function SettingsProfile() {
     );
 }
 
-function ProfileInput({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string; }) {
+function ProfileInput({ label, value, onChange, type = "TEXT" }: { label: string; value: string; onChange: (v: string) => void; type?: string; }) {
     return (
         <div className="flex flex-col gap-3">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>

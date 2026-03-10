@@ -120,3 +120,25 @@ export function useAddClaimDocument() {
         onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['claims', vars.claimId, 'documents'] }),
     });
 }
+
+// ─── FOLLOW-UPS / CHASE LOG ───
+
+export function useClaimFollowUps(claimId: string) {
+    return useQuery({
+        queryKey: ['claims', claimId, 'follow-ups'],
+        queryFn: () => apiClient.get(`/claims/${claimId}/follow-ups`),
+        enabled: !!claimId,
+    });
+}
+
+export function useAddClaimFollowUp() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ claimId, data }: { claimId: string; data: Record<string, unknown> }) =>
+            apiClient.post(`/claims/${claimId}/follow-ups`, data),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: ['claims', vars.claimId, 'follow-ups'] });
+            qc.invalidateQueries({ queryKey: ['claims', vars.claimId] });
+        },
+    });
+}

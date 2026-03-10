@@ -62,6 +62,14 @@ export class CreateClientDto {
   @IsOptional()
   occupation?: string;
 
+  @IsString()
+  @IsOptional()
+  tin?: string;
+
+  @IsString()
+  @IsOptional()
+  registrationNumber?: string;
+
   @IsBoolean()
   @IsOptional()
   isPep?: boolean;

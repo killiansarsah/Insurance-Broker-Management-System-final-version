@@ -16,8 +16,6 @@ export * from './use-documents';
 export * from './use-tasks';
 export * from './use-approvals';
 export * from './use-chat';
-
-// TEMPORARY: Stub re-exports for pages not yet migrated to real hooks.
-// Each page migration in Phase 4 should remove its stub dependency.
-// Once all pages are migrated, delete this line AND stubs.ts.
-export * from './stubs';
+export * from './use-remittances';
+export * from './use-compliance';
+export * from './use-quotes';

@@ -165,7 +165,21 @@ export class DocumentsService {
   }
 
   async remove(id: string, tenantId: string, userId: string) {
-    await this.findOne(id, tenantId);
+    const doc = await this.findOne(id, tenantId);
+
+    // NIC 7-year retention: block deletion of documents less than 7 years old
+    const sevenYearsMs = 7 * 365.25 * 24 * 60 * 60 * 1000;
+    const docAge = Date.now() - new Date(doc.createdAt).getTime();
+    if (docAge < sevenYearsMs) {
+      // Soft-archive only — mark as expired but retain
+      await this.prisma.document.update({
+        where: { id },
+        data: { isExpired: true },
+      });
+      await this.logAudit(tenantId, userId, 'document.archived', id);
+      return { deleted: false, archived: true, reason: 'NIC 7-year retention policy — document archived, not purged' };
+    }
+
     await this.prisma.document.update({
       where: { id },
       data: { isExpired: true },

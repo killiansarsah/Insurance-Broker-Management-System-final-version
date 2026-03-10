@@ -31,7 +31,7 @@ interface QueuedFile {
     file: File;
     id: string;
     progress: number;
-    status: 'pending' | 'uploading' | 'done' | 'error';
+    status: 'PENDING' | 'uploading' | 'done' | 'error';
 }
 
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
@@ -45,7 +45,7 @@ function formatBytes(bytes: number): string {
 
 function getFileIcon(type: string) {
     if (type.includes('pdf')) return <FileText size={18} className="text-danger-500" />;
-    if (type.includes('image')) return <ImageIcon size={18} className="text-primary-500" />;
+    if (type.includes('IMAGE')) return <ImageIcon size={18} className="text-primary-500" />;
     return <File size={18} className="text-surface-400" />;
 }
 
@@ -53,7 +53,7 @@ export function UploadDocumentModal({
     isOpen,
     onClose,
     defaultReferenceId = '',
-    defaultCategory = 'kyc',
+    defaultCategory = 'KYC',
 }: UploadDocumentModalProps) {
     const [files, setFiles] = useState<QueuedFile[]>([]);
     const [category, setCategory] = useState(defaultCategory);
@@ -79,7 +79,7 @@ export function UploadDocumentModal({
             }
             // Skip duplicates
             if (files.some((q) => q.file.name === f.name && q.file.size === f.size)) continue;
-            newFiles.push({ file: f, id: `${f.name}-${Date.now()}`, progress: 0, status: 'pending' });
+            newFiles.push({ file: f, id: `${f.name}-${Date.now()}`, progress: 0, status: 'PENDING' });
         }
         if (newFiles.length > 0) setFiles((prev) => [...prev, ...newFiles]);
     }, [files, validateFile]);
@@ -265,7 +265,7 @@ export function UploadDocumentModal({
                                         )}
                                     </div>
                                 </div>
-                                {qf.status === 'pending' && (
+                                {qf.status === 'PENDING' && (
                                     <button
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); removeFile(qf.id); }}
@@ -286,8 +286,8 @@ export function UploadDocumentModal({
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'KYC / Identification', value: 'kyc' },
-                                { label: 'Policy Document', value: 'policy' },
+                                { label: 'KYC / Identification', value: 'KYC' },
+                                { label: 'Policy Document', value: 'POLICY' },
                                 { label: 'Claim Evidence', value: 'claims' },
                                 { label: 'Financial / Receipt', value: 'financial' },
                                 { label: 'Legal / Compliance', value: 'legal' },
@@ -299,14 +299,14 @@ export function UploadDocumentModal({
 
                     <div className="space-y-2">
                         <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                            {category === 'kyc' ? <Users size={12} className="text-primary-500" /> : <Shield size={12} className="text-primary-500" />}
+                            {category === 'KYC' ? <Users size={12} className="text-primary-500" /> : <Shield size={12} className="text-primary-500" />}
                             Related Reference ID
                         </label>
                         <input
                             type="text"
                             value={referenceId}
                             onChange={(e) => setReferenceId(e.target.value)}
-                            placeholder={category === 'kyc' ? 'e.g. Client Name or ID' : 'e.g. Policy # or Claim #'}
+                            placeholder={category === 'KYC' ? 'e.g. Client Name or ID' : 'e.g. Policy # or Claim #'}
                             className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-semibold text-surface-900 shadow-sm placeholder:text-surface-400 bg-white/50 dark:bg-slate-800/50"
                         />
                     </div>

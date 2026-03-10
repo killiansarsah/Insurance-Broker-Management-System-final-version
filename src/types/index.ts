@@ -20,119 +20,120 @@ export type UserRole =
     | 'DATA_ENTRY'
     | 'VIEWER';
 
-export type ClientType = 'individual' | 'corporate';
-export type ClientStatus = 'active' | 'inactive' | 'suspended' | 'blacklisted';
-export type KycStatus = 'pending' | 'verified' | 'rejected' | 'expired';
-export type AmlRiskLevel = 'low' | 'medium' | 'high' | 'critical';
-export type Gender = 'male' | 'female' | 'other';
+export type ClientType = 'INDIVIDUAL' | 'CORPORATE';
+export type ClientStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLACKLISTED';
+export type KycStatus = 'PENDING' | 'VERIFIED' | 'REJECTED' | 'EXPIRED';
+export type AmlRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+export type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
 export type PolicyStatus =
-    | 'draft'
-    | 'pending'
-    | 'active'
-    | 'expired'
-    | 'cancelled'
-    | 'lapsed'
-    | 'suspended';
+    | 'DRAFT'
+    | 'COVER_NOTE'
+    | 'PENDING'
+    | 'ACTIVE'
+    | 'EXPIRED'
+    | 'CANCELLED'
+    | 'LAPSED'
+    | 'SUSPENDED';
 
 export type InsuranceType =
-    | 'motor'
-    | 'fire'
-    | 'marine'
-    | 'life'
-    | 'health'
-    | 'liability'
-    | 'engineering'
-    | 'bonds'
-    | 'travel'
-    | 'agriculture'
-    | 'oil_gas'
-    | 'aviation'
-    | 'professional_indemnity'
-    | 'other';
+    | 'MOTOR'
+    | 'FIRE'
+    | 'MARINE'
+    | 'LIFE'
+    | 'HEALTH'
+    | 'LIABILITY'
+    | 'ENGINEERING'
+    | 'BONDS'
+    | 'TRAVEL'
+    | 'AGRICULTURE'
+    | 'OIL_GAS'
+    | 'AVIATION'
+    | 'PROFESSIONAL_INDEMNITY'
+    | 'OTHER';
 
 export type LeadStatus =
-    | 'new'
-    | 'contacted'
-    | 'qualified'
-    | 'quoted'
-    | 'negotiation'
-    | 'converted'
-    | 'lost'
-    | 'nurturing';
+    | 'NEW'
+    | 'CONTACTED'
+    | 'QUALIFIED'
+    | 'QUOTED'
+    | 'NEGOTIATION'
+    | 'CONVERTED'
+    | 'LOST'
+    | 'NURTURING';
 
-export type LeadPriority = 'hot' | 'warm' | 'cold';
+export type LeadPriority = 'HOT' | 'WARM' | 'COLD';
 export type LeadSource =
-    | 'referral'
-    | 'walk_in'
-    | 'phone'
-    | 'email'
-    | 'website'
-    | 'social_media'
-    | 'event'
-    | 'partner'
-    | 'other';
+    | 'REFERRAL'
+    | 'WALK_IN'
+    | 'PHONE'
+    | 'EMAIL'
+    | 'WEBSITE'
+    | 'SOCIAL_MEDIA'
+    | 'EVENT'
+    | 'PARTNER'
+    | 'OTHER';
 
 export type ClaimStatus =
-    | 'intimated'
-    | 'registered'
-    | 'documents_pending'
-    | 'under_review'
-    | 'assessed'
-    | 'approved'
-    | 'rejected'
-    | 'settled'
-    | 'closed';
+    | 'INTIMATED'
+    | 'REGISTERED'
+    | 'DOCUMENTS_PENDING'
+    | 'UNDER_REVIEW'
+    | 'ASSESSED'
+    | 'APPROVED'
+    | 'REJECTED'
+    | 'SETTLED'
+    | 'CLOSED';
 
 export type ComplaintStatus =
-    | 'registered'
-    | 'assigned'
-    | 'under_investigation'
-    | 'resolved'
-    | 'escalated'
-    | 'closed';
+    | 'REGISTERED'
+    | 'ASSIGNED'
+    | 'UNDER_INVESTIGATION'
+    | 'RESOLVED'
+    | 'ESCALATED'
+    | 'CLOSED';
 
-export type ComplaintPriority = 'low' | 'medium' | 'high' | 'critical';
+export type ComplaintPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
 
-export type ChatMessageType = 'text' | 'file' | 'image' | 'voice' | 'link' | 'system';
-export type ReadStatus = 'sent' | 'delivered' | 'read';
+export type ChatMessageType = 'TEXT' | 'FILE' | 'IMAGE' | 'VOICE' | 'LINK' | 'SYSTEM';
+export type ReadStatus = 'SENT' | 'DELIVERED' | 'READ';
 
 export type DocumentCategory =
-    | 'client'
-    | 'policy'
-    | 'claim'
-    | 'compliance'
-    | 'internal'
-    | 'report'
-    | 'kyc';
+    | 'CLIENT'
+    | 'POLICY'
+    | 'CLAIM'
+    | 'COMPLIANCE'
+    | 'INTERNAL'
+    | 'REPORT'
+    | 'KYC';
 
-export type PaymentMethod = 'cash' | 'cheque' | 'bank_transfer' | 'mobile_money' | 'card';
-export type PaymentStatus = 'pending' | 'partial' | 'paid' | 'overdue' | 'refunded';
-export type MoMoNetwork = 'mtn' | 'telecel' | 'airteltigo';
+export type PaymentMethod = 'CASH' | 'CHEQUE' | 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'CARD';
+export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'OVERDUE' | 'REFUNDED';
+export type MoMoNetwork = 'MTN' | 'TELECEL' | 'AIRTELTIGO';
 
 // --- Policy-specific enums ---
 
-export type PolicyType = 'life' | 'non-life';
-export type PremiumFrequency = 'monthly' | 'quarterly' | 'semi_annual' | 'annual' | 'single';
-export type CommissionStatus = 'pending' | 'paid' | 'clawed_back';
+export type PolicyType = 'LIFE' | 'NON_LIFE';
+export type PremiumFrequency = 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL' | 'SINGLE';
+export type CommissionStatus = 'PENDING' | 'PAID' | 'CLAWED_BACK';
 
 export type EndorsementType =
-    | 'addition'
-    | 'deletion'
-    | 'alteration'
-    | 'extension'
+    | 'COVERAGE_CHANGE'
+    | 'COVERAGE_CHANGE'
+    | 'SUM_INSURED_CHANGE'
+    | 'COVERAGE_CHANGE'
     | 'cancellation';
 
-export type EndorsementStatus = 'pending' | 'approved' | 'rejected';
+export type EndorsementStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export type MotorCoverType = 'comprehensive' | 'third_party' | 'third_party_fire_theft' | 'commercial';
+export type MotorCoverType = 'COMPREHENSIVE' | 'THIRD_PARTY' | 'THIRD_PARTY_FIRE_THEFT' | 'COMMERCIAL';
 export type CancellationReason =
-    | 'non_payment'
-    | 'client_request'
-    | 'insurer_request'
-    | 'fraud'
-    | 'replaced'
-    | 'other';
+    | 'NON_PAYMENT'
+    | 'CLIENT_REQUEST'
+    | 'INSURER_CANCELLATION'
+    | 'MISREPRESENTATION'
+    | 'DUPLICATE_POLICY'
+    | 'OTHER';
 
 // --- Policy sub-entities ---
 
@@ -147,13 +148,13 @@ export interface VehicleDetails {
     color?: string;
     engineCapacity?: string;
     seatingCapacity?: number;
-    usageType: 'private' | 'commercial' | 'government' | 'diplomatic';
+    usageType: 'PRIVATE' | 'COMMERCIAL' | 'GOVERNMENT' | 'DIPLOMATIC';
     estimatedValue: number;
 }
 
 export interface PropertyDetails {
     propertyAddress: string;
-    propertyType: 'residential' | 'commercial' | 'industrial' | 'warehouse';
+    propertyType: 'RESIDENTIAL' | 'COMMERCIAL' | 'INDUSTRIAL' | 'WAREHOUSE';
     constructionType?: string;
     yearBuilt?: number;
     contents?: string;
@@ -194,7 +195,7 @@ export interface PremiumInstallment {
 export interface PolicyDocument {
     id: string;
     name: string;
-    type: 'policy_schedule' | 'cover_note' | 'proposal_form' | 'endorsement' | 'certificate' | 'inspection_report' | 'debit_note' | 'credit_note' | 'receipt' | 'other';
+    type: 'POLICY_SCHEDULE' | 'COVER_NOTE' | 'PROPOSAL_FORM' | 'ENDORSEMENT' | 'CERTIFICATE' | 'INSPECTION_REPORT' | 'DEBIT_NOTE' | 'CREDIT_NOTE' | 'RECEIPT' | 'OTHER';
     url?: string;
     uploadedAt: string;
 }
@@ -264,7 +265,7 @@ export interface Client {
     gender?: Gender;
     ghanaCardNumber?: string;
     nationality?: string;
-    maritalStatus?: 'single' | 'married' | 'divorced' | 'widowed';
+    maritalStatus?: 'SINGLE' | 'MARRIED' | 'DIVORCED' | 'WIDOWED';
     occupation?: string;
     employerName?: string;
     employerAddress?: string;
@@ -286,7 +287,7 @@ export interface Client {
     postalAddress?: string;
     region?: string;
     city?: string;
-    preferredCommunication?: 'phone' | 'email' | 'sms' | 'whatsapp';
+    preferredCommunication?: 'PHONE' | 'EMAIL' | 'SMS' | 'WHATSAPP';
 
     // KYC/AML
     kycStatus: KycStatus;
@@ -522,7 +523,7 @@ export interface ChatMessage {
     content: string;
     senderId: string;
     timestamp: string;
-    status: 'sent' | 'delivered' | 'read';
+    status: 'SENT' | 'DELIVERED' | 'READ';
 }
 
 export interface ChatConversation {
@@ -537,7 +538,7 @@ export interface ChatConversation {
     isOnline: boolean;
     type: 'direct' | 'group' | 'ai';
     linkedResourceId?: string;
-    linkedResourceType?: 'policy' | 'claim' | 'complaint' | 'client';
+    linkedResourceType?: 'POLICY' | 'CLAIM' | 'complaint' | 'CLIENT';
 }
 
 export interface Document {
@@ -636,7 +637,7 @@ export interface ImportColumnMapping {
     sourceColumn: string;
     targetField: string;
     isRequired: boolean;
-    entityGroup?: 'client' | 'policy' | 'asset' | 'claim' | 'lead'; // Used for universal import grouping
+    entityGroup?: 'CLIENT' | 'POLICY' | 'asset' | 'CLAIM' | 'lead'; // Used for universal import grouping
 }
 
 export interface ImportValidationError {
@@ -663,18 +664,18 @@ export interface ImportResult {
 
 // ─── Notifications ───────────────────────────────────────────────────────
 export type NotificationType =
-    | 'renewal'
-    | 'claim'
-    | 'commission'
-    | 'lead'
-    | 'followup'
-    | 'compliance'
-    | 'finance'
-    | 'system'
-    | 'document'
-    | 'approval';
+    | 'RENEWAL'
+    | 'CLAIM'
+    | 'COMMISSION'
+    | 'LEAD'
+    | 'FOLLOWUP'
+    | 'COMPLIANCE'
+    | 'FINANCE'
+    | 'SYSTEM'
+    | 'DOCUMENT'
+    | 'APPROVAL';
 
-export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type NotificationPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 export interface Notification {
     id: string;

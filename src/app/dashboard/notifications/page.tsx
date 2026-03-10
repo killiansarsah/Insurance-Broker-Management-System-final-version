@@ -30,23 +30,23 @@ import { toast } from 'sonner';
 import type { NotificationType, NotificationPriority } from '@/types';
 
 const TYPE_CONFIG: Record<NotificationType, { icon: React.ReactNode; color: string; label: string }> = {
-    renewal: { icon: <RefreshCw size={16} />, color: 'bg-primary-50 text-primary-600', label: 'Renewal' },
-    claim: { icon: <FileText size={16} />, color: 'bg-warning-50 text-warning-600', label: 'Claim' },
-    commission: { icon: <DollarSign size={16} />, color: 'bg-success-50 text-success-600', label: 'Commission' },
-    lead: { icon: <Users size={16} />, color: 'bg-accent-50 text-accent-600', label: 'Lead' },
-    followup: { icon: <Clock size={16} />, color: 'bg-primary-50 text-primary-600', label: 'Follow-up' },
-    compliance: { icon: <Shield size={16} />, color: 'bg-danger-50 text-danger-600', label: 'Compliance' },
-    finance: { icon: <DollarSign size={16} />, color: 'bg-warning-50 text-warning-600', label: 'Finance' },
-    system: { icon: <Settings size={16} />, color: 'bg-surface-100 text-surface-600', label: 'System' },
-    document: { icon: <FileText size={16} />, color: 'bg-accent-50 text-accent-600', label: 'Document' },
-    approval: { icon: <CheckCircle2 size={16} />, color: 'bg-primary-50 text-primary-600', label: 'Approval' },
+    RENEWAL: { icon: <RefreshCw size={16} />, color: 'bg-primary-50 text-primary-600', label: 'Renewal' },
+    CLAIM: { icon: <FileText size={16} />, color: 'bg-warning-50 text-warning-600', label: 'Claim' },
+    COMMISSION: { icon: <DollarSign size={16} />, color: 'bg-success-50 text-success-600', label: 'Commission' },
+    LEAD: { icon: <Users size={16} />, color: 'bg-accent-50 text-accent-600', label: 'Lead' },
+    FOLLOWUP: { icon: <Clock size={16} />, color: 'bg-primary-50 text-primary-600', label: 'Follow-up' },
+    COMPLIANCE: { icon: <Shield size={16} />, color: 'bg-danger-50 text-danger-600', label: 'Compliance' },
+    FINANCE: { icon: <DollarSign size={16} />, color: 'bg-warning-50 text-warning-600', label: 'Finance' },
+    SYSTEM: { icon: <Settings size={16} />, color: 'bg-surface-100 text-surface-600', label: 'System' },
+    DOCUMENT: { icon: <FileText size={16} />, color: 'bg-accent-50 text-accent-600', label: 'Document' },
+    APPROVAL: { icon: <CheckCircle2 size={16} />, color: 'bg-primary-50 text-primary-600', label: 'Approval' },
 };
 
 const PRIORITY_STYLES: Record<NotificationPriority, string> = {
-    urgent: 'border-l-danger-500',
-    high: 'border-l-warning-500',
-    medium: 'border-l-primary-500',
-    low: 'border-l-surface-300',
+    URGENT: 'border-l-danger-500',
+    HIGH: 'border-l-warning-500',
+    MEDIUM: 'border-l-primary-500',
+    LOW: 'border-l-surface-300',
 };
 
 type TabKey = 'all' | 'unread' | 'archived';

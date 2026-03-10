@@ -116,7 +116,7 @@ export default function UsersPage() {
             key: 'isActive',
             label: 'Status',
             sortable: true,
-            render: (row: any) => <StatusBadge status={row.isActive ? 'active' : 'inactive'} />
+            render: (row: any) => <StatusBadge status={row.isActive ? 'ACTIVE' : 'INACTIVE'} />
         },
         { key: 'lastLogin', label: 'Last Login', sortable: true, render: (row: any) => row.lastLogin ? formatDate(String(row.lastLogin)) : 'Never' },
         {
@@ -188,7 +188,7 @@ export default function UsersPage() {
             <DataTable<any>
                 data={filteredUsers}
                 columns={columns}
-                searchKeys={['firstName', 'lastName', 'email', 'role']}
+                searchKeys={['firstName', 'lastName', 'EMAIL', 'role']}
                 emptyMessage="No team members found."
                 headerActions={
                     <div className="flex items-center gap-2">

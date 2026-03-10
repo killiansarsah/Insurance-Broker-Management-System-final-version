@@ -30,20 +30,20 @@ import Link from 'next/link';
 import { toast } from 'sonner';
 
 const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
-    { label: 'Motor', value: 'motor' },
-    { label: 'Fire', value: 'fire' },
-    { label: 'Marine', value: 'marine' },
-    { label: 'Life', value: 'life' },
-    { label: 'Health', value: 'health' },
-    { label: 'Liability', value: 'liability' },
-    { label: 'Engineering', value: 'engineering' },
-    { label: 'Bonds', value: 'bonds' },
-    { label: 'Travel', value: 'travel' },
-    { label: 'Agriculture', value: 'agriculture' },
-    { label: 'Oil & Gas', value: 'oil_gas' },
-    { label: 'Aviation', value: 'aviation' },
-    { label: 'Professional Indemnity', value: 'professional_indemnity' },
-    { label: 'Other', value: 'other' },
+    { label: 'Motor', value: 'MOTOR' },
+    { label: 'Fire', value: 'FIRE' },
+    { label: 'Marine', value: 'MARINE' },
+    { label: 'Life', value: 'LIFE' },
+    { label: 'Health', value: 'HEALTH' },
+    { label: 'Liability', value: 'LIABILITY' },
+    { label: 'Engineering', value: 'ENGINEERING' },
+    { label: 'Bonds', value: 'BONDS' },
+    { label: 'Travel', value: 'TRAVEL' },
+    { label: 'Agriculture', value: 'AGRICULTURE' },
+    { label: 'Oil & Gas', value: 'OIL_GAS' },
+    { label: 'Aviation', value: 'AVIATION' },
+    { label: 'Professional Indemnity', value: 'PROFESSIONAL_INDEMNITY' },
+    { label: 'Other', value: 'OTHER' },
 ];
 
 function exportToCsv(policies: any[]) {
@@ -68,7 +68,7 @@ function exportToCsv(policies: any[]) {
 export default function PoliciesPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const typeParam = searchParams.get('type') as 'motor' | 'non-motor' | null;
+    const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
     const { data: policiesData, isLoading } = usePolicies();
     const policies = policiesData?.data || [];
     
@@ -86,8 +86,8 @@ export default function PoliciesPage() {
     // base filtering on 'type' query param
     const baseData = useMemo(() => policies.filter((p) => {
         if (!typeParam) return true;
-        if (typeParam === 'motor') return p.insuranceType === 'motor';
-        if (typeParam === 'non-motor') return p.insuranceType !== 'motor';
+        if (typeParam === 'MOTOR') return p.insuranceType === 'MOTOR';
+        if (typeParam === 'non-motor') return p.insuranceType !== 'MOTOR';
         return true;
     }), [typeParam]);
 
@@ -101,11 +101,11 @@ export default function PoliciesPage() {
     }), [baseData, filterStatus, filterType, filterBroker, filterDateFrom, filterDateTo]);
 
     // KPI Calculations
-    const activePolicies = baseData.filter((p) => p.status === 'active');
+    const activePolicies = baseData.filter((p) => p.status === 'ACTIVE');
     const totalPremium = baseData.reduce((s, p) => s + p.premiumAmount, 0);
-    const expiringSoon = baseData.filter((p) => ((p.daysToExpiry as number) ?? 999) <= 30 && p.status === 'active');
-    const pendingDraft = baseData.filter((p) => p.status === 'pending' || p.status === 'draft');
-    const lapsedPolicies = baseData.filter((p) => p.status === 'lapsed');
+    const expiringSoon = baseData.filter((p) => ((p.daysToExpiry as number) ?? 999) <= 30 && p.status === 'ACTIVE');
+    const pendingDraft = baseData.filter((p) => p.status === 'PENDING' || p.status === 'DRAFT');
+    const lapsedPolicies = baseData.filter((p) => p.status === 'LAPSED');
     const now = new Date();
     const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
     const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -114,7 +114,7 @@ export default function PoliciesPage() {
 
     const kpis = [
         {
-            label: `Active ${typeParam ? (typeParam === 'motor' ? 'Motor' : 'Non-Motor') : ''} Policies`,
+            label: `Active ${typeParam ? (typeParam === 'MOTOR' ? 'Motor' : 'Non-Motor') : ''} Policies`,
             value: activePolicies.length,
             icon: <FileText size={20} />,
             color: 'text-primary-500 bg-primary-50',
@@ -211,10 +211,10 @@ export default function PoliciesPage() {
             render: (row: Policy) => (
                 <div>
                     <span className="text-sm font-semibold text-surface-700">{formatCurrency(row.premiumAmount)}</span>
-                    {row.paymentStatus === 'overdue' && (
+                    {row.paymentStatus === 'OVERDUE' && (
                         <span className="ml-1 text-[10px] font-semibold text-danger-600 bg-danger-50 px-1 py-0.5 rounded">OVERDUE</span>
                     )}
-                    {row.paymentStatus === 'partial' && (
+                    {row.paymentStatus === 'PARTIAL' && (
                         <span className="ml-1 text-[10px] font-semibold text-warning-600 bg-warning-50 px-1 py-0.5 rounded">PARTIAL</span>
                     )}
                 </div>
@@ -236,7 +236,7 @@ export default function PoliciesPage() {
                     <span className="text-xs text-surface-500">
                         {formatDate(row.inceptionDate)} → {formatDate(row.expiryDate)}
                     </span>
-                    {row.status === 'active' && row.daysToExpiry !== undefined && row.daysToExpiry <= 60 && (
+                    {row.status === 'ACTIVE' && row.daysToExpiry !== undefined && row.daysToExpiry <= 60 && (
                         <p className={cn('text-[10px] font-semibold', row.daysToExpiry <= 30 ? 'text-danger-600' : 'text-warning-600')}>
                             {row.daysToExpiry}d remaining
                         </p>
@@ -264,7 +264,7 @@ export default function PoliciesPage() {
                     >
                         <Eye size={15} />
                     </button>
-                    {row.status === 'active' && (
+                    {row.status === 'ACTIVE' && (
                         <button
                             className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-success-600 transition-colors cursor-pointer"
                             title="Renew"
@@ -273,7 +273,7 @@ export default function PoliciesPage() {
                             <RotateCcw size={15} />
                         </button>
                     )}
-                    {(row.status === 'active' || row.status === 'pending') && (
+                    {(row.status === 'ACTIVE' || row.status === 'PENDING') && (
                         <button
                             className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-danger-600 transition-colors cursor-pointer"
                             title="Cancel"
@@ -288,7 +288,7 @@ export default function PoliciesPage() {
     ];
 
     const getPageTitle = () => {
-        if (typeParam === 'motor') return 'Motor Policies';
+        if (typeParam === 'MOTOR') return 'Motor Policies';
         if (typeParam === 'non-motor') return 'Non-Motor Policies';
         return 'All Policies';
     };
@@ -311,7 +311,7 @@ export default function PoliciesPage() {
                 <div>
                     <h1 className="text-2xl font-bold text-surface-900 tracking-tight">{getPageTitle()}</h1>
                     <p className="text-sm text-surface-500 mt-1">
-                        Manage {typeParam ? (typeParam === 'motor' ? 'motor' : 'non-motor') : 'insurance'} policies and renewals.
+                        Manage {typeParam ? (typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor') : 'insurance'} policies and renewals.
                     </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -359,13 +359,13 @@ export default function PoliciesPage() {
                 <CustomSelect
                     label="Status"
                     options={[
-                        { label: 'Active', value: 'active' },
-                        { label: 'Pending', value: 'pending' },
-                        { label: 'Draft', value: 'draft' },
-                        { label: 'Expired', value: 'expired' },
-                        { label: 'Cancelled', value: 'cancelled' },
-                        { label: 'Lapsed', value: 'lapsed' },
-                        { label: 'Suspended', value: 'suspended' },
+                        { label: 'Active', value: 'ACTIVE' },
+                        { label: 'Pending', value: 'PENDING' },
+                        { label: 'Draft', value: 'DRAFT' },
+                        { label: 'Expired', value: 'EXPIRED' },
+                        { label: 'Cancelled', value: 'CANCELLED' },
+                        { label: 'Lapsed', value: 'LAPSED' },
+                        { label: 'Suspended', value: 'SUSPENDED' },
                     ]}
                     value={filterStatus}
                     onChange={(v) => setFilterStatus(String(v || '') as PolicyStatus | '')}
@@ -424,7 +424,7 @@ export default function PoliciesPage() {
                 onRowClick={(row) => router.push(`/dashboard/policies/${row.id}`)}
                 emptyMessage={
                     typeParam
-                        ? `No ${typeParam === 'motor' ? 'motor' : 'non-motor'} policies found.`
+                        ? `No ${typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor'} policies found.`
                         : 'No policies found.'
                 }
             />

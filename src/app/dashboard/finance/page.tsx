@@ -19,9 +19,8 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { useFinanceDashboard, useInvoices } from '@/hooks/api/use-finance';
-import { invoices, receipts, financeSummary } from '@/hooks/api';
-import { commissionSummary } from '@/hooks/api';
+import { useFinanceDashboard, useInvoices, useTransactions } from '@/hooks/api/use-finance';
+import { useCommissions } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -64,6 +63,15 @@ const MODULE_CARDS = [
         border: 'border-rose-100',
     },
     {
+        label: 'Remittances',
+        desc: 'Premium remittance to carriers',
+        href: '/dashboard/finance/remittances',
+        icon: DollarSign,
+        color: 'text-teal-600',
+        bg: 'bg-teal-50',
+        border: 'border-teal-100',
+    },
+    {
         label: 'Reports',
         desc: 'Financial analytics & trends',
         href: '/dashboard/finance/reports',
@@ -74,57 +82,42 @@ const MODULE_CARDS = [
     },
 ];
 
-const KPI_STATS = [
-    {
-        label: 'Total Revenue',
-        value: formatCurrency(financeSummary.totalRevenue),
-        icon: TrendingUp,
-        color: 'text-primary-600',
-        bg: 'bg-primary-50',
-    },
-    {
-        label: 'Collected',
-        value: formatCurrency(financeSummary.collected),
-        icon: CheckCircle2,
-        color: 'text-success-600',
-        bg: 'bg-success-50',
-    },
-    {
-        label: 'Outstanding',
-        value: formatCurrency(financeSummary.outstanding),
-        icon: Clock,
-        color: 'text-warning-600',
-        bg: 'bg-warning-50',
-    },
-    {
-        label: 'Overdue',
-        value: formatCurrency(financeSummary.overdue),
-        icon: AlertTriangle,
-        color: 'text-danger-600',
-        bg: 'bg-danger-50',
-    },
-    {
-        label: 'Commissions Earned',
-        value: formatCurrency(commissionSummary.totalEarned),
-        icon: DollarSign,
-        color: 'text-amber-600',
-        bg: 'bg-amber-50',
-    },
-];
-
 const STATUS_LABEL: Record<string, string> = {
     paid: 'Paid',
-    outstanding: 'Outstanding',
+    OUTSTANDING: 'Outstanding',
     overdue: 'Overdue',
     partial: 'Partial',
-    cancelled: 'Cancelled',
+    CANCELLED: 'Cancelled',
 };
 
 export default function FinanceOverviewPage() {
     const router = useRouter();
-    const recentInvoices = invoices.slice(-5).reverse();
-    const recentPayments = receipts.slice(-5).reverse();
-    const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+    const { data: dashboardData } = useFinanceDashboard();
+    const dashboard = dashboardData as any;
+    const { data: invoicesData } = useInvoices();
+    const allInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
+    const { data: transactionsData } = useTransactions();
+    const allPayments = ((transactionsData as any)?.items ?? transactionsData ?? []) as any[];
+    const { data: commissionsData } = useCommissions();
+    const allCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+
+    const totalRevenue = dashboard?.totalRevenue ?? allInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const collected = dashboard?.collected ?? allInvoices.filter((i: any) => i.status === 'PAID').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const outstanding = dashboard?.outstanding ?? allInvoices.filter((i: any) => i.status === 'OUTSTANDING').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const overdue = dashboard?.overdue ?? allInvoices.filter((i: any) => i.status === 'OVERDUE').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const totalCommissionsEarned = dashboard?.totalCommissionsEarned ?? allCommissions.filter((c: any) => c.status === 'EARNED' || c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+
+    const recentInvoices = allInvoices.slice(-5).reverse();
+    const recentPayments = allPayments.slice(-5).reverse();
+    const overdueInvoices = allInvoices.filter((i: any) => i.status === 'OVERDUE');
+
+    const KPI_STATS = [
+        { label: 'Total Revenue', value: formatCurrency(totalRevenue), icon: TrendingUp, color: 'text-primary-600', bg: 'bg-primary-50' },
+        { label: 'Collected', value: formatCurrency(collected), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Outstanding', value: formatCurrency(outstanding), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
+        { label: 'Overdue', value: formatCurrency(overdue), icon: AlertTriangle, color: 'text-danger-600', bg: 'bg-danger-50' },
+        { label: 'Commissions Earned', value: formatCurrency(totalCommissionsEarned), icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
+    ];
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -146,7 +139,7 @@ export default function FinanceOverviewPage() {
                     <AlertTriangle className="text-danger-600 shrink-0" size={18} />
                     <div className="flex-1">
                         <p className="text-sm font-bold text-danger-800">{overdueInvoices.length} overdue invoice{overdueInvoices.length > 1 ? 's' : ''} require attention</p>
-                        <p className="text-xs text-danger-700 mt-0.5">Total overdue: {formatCurrency(financeSummary.overdue)}</p>
+                        <p className="text-xs text-danger-700 mt-0.5">Total overdue: {formatCurrency(overdue)}</p>
                     </div>
                     <Link href="/dashboard/finance/invoices?status=overdue">
                         <Button variant="outline" size="sm" className="text-danger-700 border-danger-200 hover:bg-danger-100">View Overdue</Button>

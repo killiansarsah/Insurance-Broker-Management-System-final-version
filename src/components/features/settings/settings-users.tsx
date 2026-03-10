@@ -3,7 +3,8 @@
 import { useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useUsers } from '@/hooks/api/use-users';
+import { useUsers, useUpdateUser } from '@/hooks/api/use-users';
+import { useCreateInvitation } from '@/hooks/api/use-invitations';
 import { User } from '@/types';
 import { TeamFilters } from '@/components/features/team/team-filters';
 import { PermissionsMatrix } from '@/components/features/team/permissions-matrix';
@@ -43,12 +44,15 @@ export function SettingsUsers() {
         return matchesSearch && matchesRole && matchesBranch;
     }), [apiUsers, searchQuery, roleFilter, branchFilter]);
 
+    const updateUserMutation = useUpdateUser();
+    const createInvitationMutation = useCreateInvitation();
+
     const handleUpdateDelegation = (staffId: string, backupId: string | null) => {
-        // TODO: Call API to update delegation
+        updateUserMutation.mutate({ id: staffId, data: { delegatedTo: backupId } });
     };
 
     const handleAddStaff = (newStaff: User) => {
-        // TODO: Call API to add staff
+        createInvitationMutation.mutate({ email: newStaff.email, role: (newStaff as any).role || 'BROKER' });
     };
 
     return (

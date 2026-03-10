@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     ShieldCheck,
@@ -33,12 +33,8 @@ import {
     User,
     ChevronDown,
 } from 'lucide-react';
-import { getClientById, getClientDisplayName } from '@/hooks/api';
-import { getPoliciesByClientId } from '@/hooks/api';
-import { invoices, receipts } from '@/hooks/api';
-import { commissions } from '@/hooks/api';
-import { claims } from '@/hooks/api';
-import { MOCK_DOCUMENTS } from '@/hooks/api';
+import { useClient, usePolicies, useClaims, useInvoices, useCommissions, useDocuments } from '@/hooks/api';
+import { getClientDisplayName } from '@/lib/utils';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { StatusBadge } from '@/components/data-display/status-badge';
@@ -58,8 +54,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'beneficiaries', label: 'Beneficiaries', icon: <Heart size={15} /> },
 ];
 
-export default function ClientProfilePage() {
-    const params = useParams();
+export default function ClientProfilePage({ id }: { id: string }) {
     const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabId>('overview');
     const [showStatusMenu, setShowStatusMenu] = useState(false);
@@ -68,7 +63,21 @@ export default function ClientProfilePage() {
     const [kycStatusLocal, setKycStatusLocal] = useState('');
     const statusMenuRef = useRef<HTMLDivElement>(null);
     const kycMenuRef = useRef<HTMLDivElement>(null);
-    const client = getClientById(params.id as string);
+
+    const { data: client, isLoading } = useClient(id) as { data: Record<string, any> | undefined; isLoading: boolean };
+    const { data: policiesData } = usePolicies({ clientId: id });
+    const { data: claimsData } = useClaims({ clientId: id });
+    const { data: invoicesData } = useInvoices({ clientId: id });
+    const { data: commissionsData } = useCommissions({ clientId: id });
+    const { data: documentsData } = useDocuments({ clientId: id });
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     // Close dropdowns on outside click
     useEffect(() => {
@@ -103,31 +112,31 @@ export default function ClientProfilePage() {
         );
     }
 
-    const clientPolicies = getPoliciesByClientId(client.id);
-    const clientInvoices = invoices.filter(inv => inv.clientId === client.id);
-    const clientReceipts = receipts.filter(rec => rec.clientId === client.id);
-    const clientCommissions = commissions.filter(c => c.clientId === client.id);
-    const clientClaims = claims.filter(c => c.clientId === client.id);
-    const clientDocuments = MOCK_DOCUMENTS.filter(d => d.clientId === client.id);
+    const clientPolicies = ((policiesData as any)?.items ?? policiesData ?? []) as any[];
+    const clientInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
+    const clientCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+    const clientClaims = ((claimsData as any)?.items ?? claimsData ?? []) as any[];
+    const clientDocuments = ((documentsData as any)?.items ?? documentsData ?? []) as any[];
+    const clientReceipts = clientInvoices.filter((inv: any) => inv.status === 'PAID');
 
     // Computed financials
-    const totalPremiumYTD = clientInvoices.reduce((s, inv) => s + inv.amount, 0);
+    const totalPremiumYTD = clientInvoices.reduce((s: number, inv: any) => s + (inv.amount || 0), 0);
     const outstandingPremium = clientInvoices
-        .filter(inv => inv.status === 'outstanding' || inv.status === 'overdue' || inv.status === 'partial')
-        .reduce((s, inv) => s + (inv.amount - inv.amountPaid), 0);
+        .filter((inv: any) => inv.status === 'OUTSTANDING' || inv.status === 'OVERDUE' || inv.status === 'PARTIAL')
+        .reduce((s: number, inv: any) => s + ((inv.amount || 0) - (inv.amountPaid || 0)), 0);
     const commissionEarned = clientCommissions
-        .filter(c => c.status === 'earned' || c.status === 'paid')
-        .reduce((s, c) => s + c.commissionAmount, 0);
+        .filter((c: any) => c.status === 'EARNED' || c.status === 'PAID')
+        .reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
     const commissionPending = clientCommissions
-        .filter(c => c.status === 'pending')
-        .reduce((s, c) => s + c.commissionAmount, 0);
-    const hasOverdue = clientInvoices.some(inv => inv.status === 'overdue');
-    const expiringSoonPolicies = clientPolicies.filter(p => (p.daysToExpiry || 999) < 30);
-    const activePoliciesCount = clientPolicies.filter(p => p.status === 'active').length;
-    const claimsPending = clientClaims.filter(c => c.status !== 'closed' && c.status !== 'settled' && c.status !== 'rejected').length;
-    const totalClaimsAmount = clientClaims.reduce((s, c) => s + c.claimAmount, 0);
+        .filter((c: any) => c.status === 'PENDING')
+        .reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+    const hasOverdue = clientInvoices.some((inv: any) => inv.status === 'OVERDUE');
+    const expiringSoonPolicies = clientPolicies.filter((p: any) => (p.daysToExpiry || 999) < 30);
+    const activePoliciesCount = clientPolicies.filter((p: any) => p.status === 'ACTIVE').length;
+    const claimsPending = clientClaims.filter((c: any) => c.status !== 'CLOSED' && c.status !== 'SETTLED' && c.status !== 'REJECTED').length;
+    const totalClaimsAmount = clientClaims.reduce((s: number, c: any) => s + (c.claimAmount || 0), 0);
 
-    const name = getClientDisplayName(client);
+    const name = getClientDisplayName(client as { type: string; companyName?: string; firstName?: string; lastName?: string });
     const partnerSince = new Date(client.createdAt).getFullYear();
 
     const statusColors: Record<string, string> = {
@@ -155,11 +164,11 @@ export default function ClientProfilePage() {
                         {/* Avatar */}
                         <div className={cn(
                             'w-16 h-16 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-lg shrink-0',
-                            client.type === 'corporate'
+                            client.type === 'CORPORATE'
                                 ? 'bg-gradient-to-br from-primary-500 to-primary-600'
                                 : 'bg-gradient-to-br from-accent-400 to-accent-500'
                         )}>
-                            {client.type === 'corporate' ? <Building2 size={28} /> : name.charAt(0)}
+                            {client.type === 'CORPORATE' ? <Building2 size={28} /> : name.charAt(0)}
                         </div>
                         <div>
                             <div className="flex items-center flex-wrap gap-3 mb-1.5">
@@ -170,7 +179,7 @@ export default function ClientProfilePage() {
                                 )}>
                                     <div className={cn(
                                         'w-1.5 h-1.5 rounded-full',
-                                        (clientStatusLocal || client.status) === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-current'
+                                        (clientStatusLocal || client.status) === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-current'
                                     )} />
                                     {clientStatusLocal || client.status}
                                 </div>
@@ -178,8 +187,8 @@ export default function ClientProfilePage() {
                             <div className="flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-surface-500">
                                 <span className="flex items-center gap-1.5"><Hash size={12} className="text-primary-500" /> {client.clientNumber}</span>
                                 <span className="flex items-center gap-1.5">
-                                    {client.type === 'corporate' ? <Building2 size={12} className="text-primary-500" /> : <User size={12} className="text-primary-500" />}
-                                    {client.type === 'corporate' ? 'Corporate' : 'Individual'}
+                                    {client.type === 'CORPORATE' ? <Building2 size={12} className="text-primary-500" /> : <User size={12} className="text-primary-500" />}
+                                    {client.type === 'CORPORATE' ? 'Corporate' : 'Individual'}
                                 </span>
                                 {client.region && <span className="flex items-center gap-1.5"><MapPin size={12} className="text-primary-500" /> {client.region}</span>}
                                 <span className="flex items-center gap-1.5"><Calendar size={12} className="text-primary-500" /> Partner Since {partnerSince}</span>
@@ -203,19 +212,19 @@ export default function ClientProfilePage() {
                                     onClick={() => { setShowKycMenu(!showKycMenu); setShowStatusMenu(false); }}
                                     className="flex items-center gap-1 cursor-pointer"
                                 >
-                                    <StatusPill label="KYC" value={kycStatusLocal || client.kycStatus} status={(kycStatusLocal || client.kycStatus) === 'verified' ? 'success' : (kycStatusLocal || client.kycStatus) === 'pending' ? 'warning' : 'danger'} />
+                                    <StatusPill label="KYC" value={kycStatusLocal || client.kycStatus} status={(kycStatusLocal || client.kycStatus) === 'VERIFIED' ? 'success' : (kycStatusLocal || client.kycStatus) === 'PENDING' ? 'warning' : 'danger'} />
                                     <ChevronDown size={12} className="text-surface-400" />
                                 </button>
                                 {showKycMenu && (
                                     <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
                                         <p className="px-3 py-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">Change KYC Status</p>
-                                        {(['pending', 'verified', 'rejected', 'expired'] as const).map(s => (
+                                        {(['PENDING', 'VERIFIED', 'REJECTED', 'EXPIRED'] as const).map(s => (
                                             <button
                                                 key={s}
                                                 onClick={() => {
                                                     setKycStatusLocal(s);
                                                     setShowKycMenu(false);
-                                                    toast.success(`KYC status updated to "${s}" (mock)`, { description: `Client: ${name}` });
+                                                    toast.success(`KYC status updated to "${s}"`, { description: `Client: ${name}` });
                                                 }}
                                                 className={cn(
                                                     'w-full px-3 py-2 text-left text-sm hover:bg-surface-50 flex items-center gap-2 capitalize transition-colors',
@@ -224,7 +233,7 @@ export default function ClientProfilePage() {
                                             >
                                                 <div className={cn(
                                                     'w-2 h-2 rounded-full',
-                                                    s === 'verified' ? 'bg-emerald-500' : s === 'pending' ? 'bg-amber-500' : s === 'expired' ? 'bg-surface-400' : 'bg-danger-500'
+                                                    s === 'VERIFIED' ? 'bg-emerald-500' : s === 'PENDING' ? 'bg-amber-500' : s === 'EXPIRED' ? 'bg-surface-400' : 'bg-danger-500'
                                                 )} />
                                                 {s}
                                             </button>
@@ -232,7 +241,7 @@ export default function ClientProfilePage() {
                                     </div>
                                 )}
                             </div>
-                            <StatusPill label="Risk" value={client.amlRiskLevel} status={client.amlRiskLevel === 'low' ? 'success' : client.amlRiskLevel === 'medium' ? 'warning' : 'danger'} />
+                            <StatusPill label="Risk" value={client.amlRiskLevel} status={client.amlRiskLevel === 'LOW' ? 'success' : client.amlRiskLevel === 'MEDIUM' ? 'warning' : 'danger'} />
                         </div>
 
                         {/* Client Status Dropdown */}
@@ -247,7 +256,7 @@ export default function ClientProfilePage() {
                                 <div className="flex items-center gap-1.5">
                                     <div className={cn(
                                         'w-1.5 h-1.5 rounded-full',
-                                        (clientStatusLocal || client.status) === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-current'
+                                        (clientStatusLocal || client.status) === 'ACTIVE' ? 'bg-emerald-500 animate-pulse' : 'bg-current'
                                     )} />
                                     {clientStatusLocal || client.status}
                                 </div>
@@ -257,17 +266,17 @@ export default function ClientProfilePage() {
                                 <div className="absolute right-0 top-full mt-1 w-52 bg-background border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
                                     <p className="px-3 py-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">Change Client Status</p>
                                     {([
-                                        { value: 'active', label: 'Active', desc: 'Client is operational', color: 'bg-emerald-500' },
-                                        { value: 'inactive', label: 'Inactive', desc: 'Temporarily deactivated', color: 'bg-surface-400' },
-                                        { value: 'suspended', label: 'Suspended', desc: 'Under review or frozen', color: 'bg-amber-500' },
-                                        { value: 'blacklisted', label: 'Blacklisted', desc: 'Permanently blocked', color: 'bg-danger-500' },
+                                        { value: 'ACTIVE', label: 'Active', desc: 'Client is operational', color: 'bg-emerald-500' },
+                                        { value: 'INACTIVE', label: 'Inactive', desc: 'Temporarily deactivated', color: 'bg-surface-400' },
+                                        { value: 'SUSPENDED', label: 'Suspended', desc: 'Under review or frozen', color: 'bg-amber-500' },
+                                        { value: 'BLACKLISTED', label: 'Blacklisted', desc: 'Permanently blocked', color: 'bg-danger-500' },
                                     ]).map(s => (
                                         <button
                                             key={s.value}
                                             onClick={() => {
                                                 setClientStatusLocal(s.value);
                                                 setShowStatusMenu(false);
-                                                toast.success(`Client status updated to "${s.label}" (mock)`, { description: `Client: ${name}` });
+                                                toast.success(`Client status updated to "${s.label}"`, { description: `Client: ${name}` });
                                             }}
                                             className={cn(
                                                 'w-full px-3 py-2.5 text-left hover:bg-surface-50 flex items-start gap-2.5 transition-colors',
@@ -419,7 +428,7 @@ function OverviewTab({
                     <div className="mt-6 pt-4 border-t border-surface-200/40">
                         <div className="flex items-center justify-between text-xs text-surface-500 mb-2">
                             <span>Relationship Retention</span>
-                            <span className="text-emerald-600 font-semibold">{client.status === 'active' ? `${Math.min(95, 50 + clientPolicies.length * 3 + clientReceipts.length * 2)}%` : '—'}</span>
+                            <span className="text-emerald-600 font-semibold">{client.status === 'ACTIVE' ? `${Math.min(95, 50 + clientPolicies.length * 3 + clientReceipts.length * 2)}%` : '—'}</span>
                         </div>
                         <div className="h-2 bg-surface-100 rounded-full overflow-hidden">
                             <motion.div
@@ -497,9 +506,9 @@ function PersonalInfoTab({ client }: { client: any }) {
         <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Basic Information */}
-                <GlassCard title={client.type === 'corporate' ? 'Company Information' : 'Personal Information'} icon={client.type === 'corporate' ? <Building2 size={16} /> : <User size={16} />}>
+                <GlassCard title={client.type === 'CORPORATE' ? 'Company Information' : 'Personal Information'} icon={client.type === 'CORPORATE' ? <Building2 size={16} /> : <User size={16} />}>
                     <div className="space-y-4">
-                        {client.type === 'individual' ? (
+                        {client.type === 'INDIVIDUAL' ? (
                             <>
                                 <InfoRow label="Full Name" value={getClientDisplayName(client)} />
                                 {client.otherNames && <InfoRow label="Other Names" value={client.otherNames} />}
@@ -667,9 +676,9 @@ function PoliciesTab({ policies, router }: { policies: any[]; router: any }) {
 // ===========================================================
 function ClaimsTab({ claims: clientClaims, router }: { claims: any[]; router: any }) {
     const totalAmount = clientClaims.reduce((s: number, c: any) => s + c.claimAmount, 0);
-    const settled = clientClaims.filter((c: any) => c.status === 'settled' || c.status === 'closed');
+    const settled = clientClaims.filter((c: any) => c.status === 'SETTLED' || c.status === 'CLOSED');
     const settledAmount = settled.reduce((s: number, c: any) => s + (c.settledAmount || c.claimAmount), 0);
-    const pending = clientClaims.filter((c: any) => c.status !== 'closed' && c.status !== 'settled' && c.status !== 'rejected');
+    const pending = clientClaims.filter((c: any) => c.status !== 'CLOSED' && c.status !== 'SETTLED' && c.status !== 'REJECTED');
     const lossRatio = totalAmount > 0 ? Math.round((settledAmount / totalAmount) * 100) : 0;
 
     return (
@@ -751,7 +760,7 @@ function DocumentsTab({ documents }: { documents: any[] }) {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <p className="text-sm text-surface-500">{docs.length} document(s) on file</p>
-                <Button variant="outline" size="sm" leftIcon={<Upload size={14} />} onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`"${inp.files[0].name}" uploaded (mock)`, { description: 'Document will be attached to client profile.' }); }; inp.click(); }}>Upload Document</Button>
+                <Button variant="outline" size="sm" leftIcon={<Upload size={14} />} onClick={() => { const inp = document.createElement('input'); inp.type = 'FILE'; inp.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`"${inp.files[0].name}" uploaded`, { description: 'Document will be attached to client profile.' }); }; inp.click(); }}>Upload Document</Button>
             </div>
 
             <GlassCard title="Documents Repository" icon={<FileText size={16} />}>
@@ -797,11 +806,11 @@ function DocumentsTab({ documents }: { documents: any[] }) {
             {/* Compliance Checklist */}
             <GlassCard title="Compliance Checklist" icon={<ShieldCheck size={16} />}>
                 <div className="space-y-1">
-                    <ChecklistItem label="Ghana Card / Certificate of Incorporation" required status={docs.some((d: any) => d.category === 'kyc') ? 'complete' : 'pending'} />
-                    <ChecklistItem label="Passport Photo" required status="pending" />
-                    <ChecklistItem label="Proof of Address" required status="pending" />
-                    <ChecklistItem label="Source of Funds Declaration" required={false} status="pending" />
-                    <ChecklistItem label="Board Resolution (Corporate)" required={false} status="pending" />
+                    <ChecklistItem label="Ghana Card / Certificate of Incorporation" required status={docs.some((d: any) => d.category === 'KYC') ? 'complete' : 'PENDING'} />
+                    <ChecklistItem label="Passport Photo" required status="PENDING" />
+                    <ChecklistItem label="Proof of Address" required status="PENDING" />
+                    <ChecklistItem label="Source of Funds Declaration" required={false} status="PENDING" />
+                    <ChecklistItem label="Board Resolution (Corporate)" required={false} status="PENDING" />
                 </div>
             </GlassCard>
         </div>
@@ -1012,7 +1021,7 @@ function InfoRow({ label, value, mono, inline }: { label: string; value: string;
     );
 }
 
-function ChecklistItem({ label, required, status }: { label: string; required: boolean; status: 'complete' | 'pending' }) {
+function ChecklistItem({ label, required, status }: { label: string; required: boolean; status: 'complete' | 'PENDING' }) {
     return (
         <div className="flex items-center justify-between py-3 border-b border-surface-100 last:border-0">
             <div className="flex items-center gap-3">

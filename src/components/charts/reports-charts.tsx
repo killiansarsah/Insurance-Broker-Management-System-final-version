@@ -16,7 +16,10 @@ import {
     Line
 } from 'recharts';
 import { Card, CardHeader } from '@/components/ui/card';
-import { monthlyData, portfolioMix } from '@/hooks/api';
+
+// TODO: Wire to real finance data via useFinanceDashboard() or useInvoices()
+const monthlyData: { month: string; premium: number; claims: number; sales: number }[] = [];
+const portfolioMix: { name: string; value: number; color: string }[] = [];
 
 export function ReportsCharts() {
     return (

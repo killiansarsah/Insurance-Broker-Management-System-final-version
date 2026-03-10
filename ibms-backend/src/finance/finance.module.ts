@@ -12,6 +12,8 @@ import { PremiumFinancingService } from './premium-financing/premium-financing.s
 import { PremiumFinancingController } from './premium-financing/premium-financing.controller';
 import { FinanceDashboardService } from './dashboard/finance-dashboard.service';
 import { FinanceDashboardController } from './dashboard/finance-dashboard.controller';
+import { RemittancesService } from './remittances/remittances.service';
+import { RemittancesController } from './remittances/remittances.controller';
 
 @Module({
   imports: [PrismaModule],
@@ -22,6 +24,7 @@ import { FinanceDashboardController } from './dashboard/finance-dashboard.contro
     ExpensesController,
     PremiumFinancingController,
     FinanceDashboardController,
+    RemittancesController,
   ],
   providers: [
     InvoicesService,
@@ -30,7 +33,8 @@ import { FinanceDashboardController } from './dashboard/finance-dashboard.contro
     ExpensesService,
     PremiumFinancingService,
     FinanceDashboardService,
+    RemittancesService,
   ],
-  exports: [InvoicesService, CommissionsService],
+  exports: [InvoicesService, CommissionsService, RemittancesService],
 })
 export class FinanceModule {}

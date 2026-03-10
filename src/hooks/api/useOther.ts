@@ -60,7 +60,7 @@ export function useNotifications() {
 // Compliance
 export function useComplianceSummary() {
   return useQuery({
-    queryKey: ['compliance', 'summary'],
+    queryKey: ['COMPLIANCE', 'summary'],
     queryFn: () => apiClient.get('/compliance/summary'),
   });
 }

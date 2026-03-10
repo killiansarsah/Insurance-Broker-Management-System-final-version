@@ -41,7 +41,7 @@ export default function CalendarPage() {
 
         setConnectionStatus('connecting');
 
-        // Mock OAuth flow
+        // OAuth flow placeholder
         setTimeout(() => {
             setConnectionStatus('connected');
             toast.success('Successfully connected to Google Calendar', {

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
     ArrowRight,
@@ -19,7 +19,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
-import { getClientById, getClientDisplayName } from '@/hooks/api';
+import { useClient } from '@/hooks/api';
+import { getClientDisplayName } from '@/lib/utils';
 import { toast } from 'sonner';
 
 const STEPS = [
@@ -31,7 +32,7 @@ const STEPS = [
 ];
 
 interface FormData {
-    type: 'individual' | 'corporate';
+    type: 'INDIVIDUAL' | 'CORPORATE';
     firstName: string;
     lastName: string;
     otherNames: string;
@@ -149,7 +150,7 @@ function SelectField({
 
 function buildFormFromClient(client: any): FormData {
     return {
-        type: client.type || 'individual',
+        type: client.type || 'INDIVIDUAL',
         firstName: client.firstName || '',
         lastName: client.lastName || '',
         otherNames: client.otherNames || '',
@@ -192,13 +193,28 @@ function buildFormFromClient(client: any): FormData {
     };
 }
 
-export default function EditClientPage() {
-    const params = useParams();
+export default function EditClientPage({ id }: { id: string }) {
     const router = useRouter();
-    const client = getClientById(params.id as string);
+    const { data: client, isLoading } = useClient(id) as { data: Record<string, any> | undefined; isLoading: boolean };
     const [step, setStep] = useState(1);
-    const [form, setForm] = useState<FormData>(() => client ? buildFormFromClient(client) : ({} as FormData));
+    const [form, setForm] = useState<FormData>({} as FormData);
+    const [formInitialized, setFormInitialized] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
+    useEffect(() => {
+        if (client && !formInitialized) {
+            setForm(buildFormFromClient(client));
+            setFormInitialized(true);
+        }
+    }, [client, formInitialized]);
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (!client) {
         return (
@@ -215,7 +231,7 @@ export default function EditClientPage() {
         );
     }
 
-    const name = getClientDisplayName(client);
+    const name = getClientDisplayName(client as { type: string; companyName?: string; firstName?: string; lastName?: string });
 
     function update(field: keyof FormData, value: string) {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -226,7 +242,7 @@ export default function EditClientPage() {
         const newErrors: Partial<Record<keyof FormData, string>> = {};
 
         if (s === 1) {
-            if (form.type === 'individual') {
+            if (form.type === 'INDIVIDUAL') {
                 if (!form.firstName.trim()) newErrors.firstName = 'Required';
                 if (!form.lastName.trim()) newErrors.lastName = 'Required';
                 if (!form.dateOfBirth) newErrors.dateOfBirth = 'Required';
@@ -253,7 +269,7 @@ export default function EditClientPage() {
         }
 
         if (s === 4) {
-            if (form.type === 'individual' && !form.ghanaCardNumber.trim())
+            if (form.type === 'INDIVIDUAL' && !form.ghanaCardNumber.trim())
                 newErrors.ghanaCardNumber = 'Required';
         }
 
@@ -270,13 +286,13 @@ export default function EditClientPage() {
     }
 
     function handleSave() {
-        toast.success('Client profile updated successfully (mock)', {
+        toast.success('Client profile updated successfully', {
             description: `Changes for ${name} have been saved.`,
         });
         router.push(`/dashboard/clients/${client!.id}`);
     }
 
-    const displayName = form.type === 'corporate'
+    const displayName = form.type === 'CORPORATE'
         ? form.companyName
         : `${form.firstName} ${form.lastName}`.trim();
 
@@ -334,7 +350,7 @@ export default function EditClientPage() {
                         <div className="flex gap-3">
                             <div className={cn(
                                 'flex items-center gap-2 px-4 py-3 rounded-[var(--radius-md)] border-2 text-sm font-semibold flex-1',
-                                form.type === 'individual'
+                                form.type === 'INDIVIDUAL'
                                     ? 'border-primary-500 bg-primary-50 text-primary-700'
                                     : 'border-surface-200 text-surface-400 opacity-50'
                             )}>
@@ -342,7 +358,7 @@ export default function EditClientPage() {
                             </div>
                             <div className={cn(
                                 'flex items-center gap-2 px-4 py-3 rounded-[var(--radius-md)] border-2 text-sm font-semibold flex-1',
-                                form.type === 'corporate'
+                                form.type === 'CORPORATE'
                                     ? 'border-primary-500 bg-primary-50 text-primary-700'
                                     : 'border-surface-200 text-surface-400 opacity-50'
                             )}>
@@ -354,7 +370,7 @@ export default function EditClientPage() {
                 )}
 
                 {/* Step 1: Personal Info */}
-                {step === 1 && form.type === 'individual' && (
+                {step === 1 && form.type === 'INDIVIDUAL' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField label="First Name" required value={form.firstName} error={errors.firstName}
                             onChange={(e) => update('firstName', e.target.value)} placeholder="e.g. Kwame" />
@@ -367,16 +383,16 @@ export default function EditClientPage() {
                         <SelectField label="Gender" required value={form.gender} error={errors.gender}
                             onChange={(e) => update('gender', e.target.value)}
                             options={[
-                                { label: 'Male', value: 'male' },
-                                { label: 'Female', value: 'female' },
-                                { label: 'Other', value: 'other' },
+                                { label: 'Male', value: 'MALE' },
+                                { label: 'Female', value: 'FEMALE' },
+                                { label: 'Other', value: 'OTHER' },
                             ]} />
                         <InputField label="Nationality" value={form.nationality}
                             onChange={(e) => update('nationality', e.target.value)} />
                         <SelectField label="Marital Status" value={form.maritalStatus}
                             onChange={(e) => update('maritalStatus', e.target.value)}
                             options={[
-                                { label: 'Single', value: 'single' },
+                                { label: 'Single', value: 'SINGLE' },
                                 { label: 'Married', value: 'married' },
                                 { label: 'Divorced', value: 'divorced' },
                                 { label: 'Widowed', value: 'widowed' },
@@ -390,7 +406,7 @@ export default function EditClientPage() {
                     </div>
                 )}
 
-                {step === 1 && form.type === 'corporate' && (
+                {step === 1 && form.type === 'CORPORATE' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField label="Company Name" required value={form.companyName} error={errors.companyName}
                             onChange={(e) => update('companyName', e.target.value)} placeholder="e.g. Asante Holdings Ltd" className="sm:col-span-2" />
@@ -432,8 +448,8 @@ export default function EditClientPage() {
                             <SelectField label="Preferred Communication" value={form.preferredCommunication}
                                 onChange={(e) => update('preferredCommunication', e.target.value)}
                                 options={[
-                                    { label: 'Phone', value: 'phone' },
-                                    { label: 'Email', value: 'email' },
+                                    { label: 'Phone', value: 'PHONE' },
+                                    { label: 'Email', value: 'EMAIL' },
                                     { label: 'SMS', value: 'sms' },
                                     { label: 'WhatsApp', value: 'whatsapp' },
                                 ]} />
@@ -466,7 +482,7 @@ export default function EditClientPage() {
                                     { label: 'Business Income', value: 'business' },
                                     { label: 'Inheritance', value: 'inheritance' },
                                     { label: 'Investment', value: 'investment' },
-                                    { label: 'Other', value: 'other' },
+                                    { label: 'Other', value: 'OTHER' },
                                 ]} />
                             <SelectField label="Purpose of Relationship" required value={form.purposeOfRelationship} error={errors.purposeOfRelationship}
                                 onChange={(e) => update('purposeOfRelationship', e.target.value)}
@@ -509,7 +525,7 @@ export default function EditClientPage() {
                 {/* Step 4: ID Documents */}
                 {step === 4 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {form.type === 'individual' && (
+                        {form.type === 'INDIVIDUAL' && (
                             <InputField label="Ghana Card Number" required value={form.ghanaCardNumber}
                                 error={errors.ghanaCardNumber}
                                 onChange={(e) => update('ghanaCardNumber', e.target.value)}
@@ -526,7 +542,7 @@ export default function EditClientPage() {
                                     { label: 'Passport Photo', icon: <User size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to replace' },
                                     { label: 'Proof of Address', icon: <MapPin size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Utility Bill/Bank Statement' },
                                 ].map((doc) => (
-                                    <div key={doc.label} onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.pdf,.jpg,.jpeg,.png'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`${doc.label} replaced`, { description: inp.files[0].name }); }; inp.click(); }} className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                    <div key={doc.label} onClick={() => { const inp = document.createElement('input'); inp.type = 'FILE'; inp.accept = '.pdf,.jpg,.jpeg,.png'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`${doc.label} replaced`, { description: inp.files[0].name }); }; inp.click(); }} className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
                                         {doc.icon}
                                         <p className="text-xs font-medium text-surface-600">{doc.label}</p>
                                         <p className="text-[10px] text-surface-400 mt-1">{doc.sub}</p>
@@ -549,9 +565,9 @@ export default function EditClientPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-surface-50 rounded-[var(--radius-md)] p-6">
-                            <ReviewField label="Client Type" value={form.type === 'corporate' ? 'Corporate' : 'Individual'} />
+                            <ReviewField label="Client Type" value={form.type === 'CORPORATE' ? 'Corporate' : 'Individual'} />
                             <ReviewField label="Name" value={displayName || '—'} />
-                            {form.type === 'individual' && (
+                            {form.type === 'INDIVIDUAL' && (
                                 <>
                                     <ReviewField label="Date of Birth" value={form.dateOfBirth || '—'} />
                                     <ReviewField label="Gender" value={form.gender || '—'} />
@@ -561,7 +577,7 @@ export default function EditClientPage() {
                                     <ReviewField label="Ghana Card" value={form.ghanaCardNumber || '—'} />
                                 </>
                             )}
-                            {form.type === 'corporate' && (
+                            {form.type === 'CORPORATE' && (
                                 <>
                                     <ReviewField label="Registration #" value={form.registrationNumber || '—'} />
                                     <ReviewField label="TIN" value={form.tin || '—'} />

@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 interface Task {
     id: string;
     title: string;
-    priority: 'hot' | 'warm' | 'cold';
-    status: 'pending' | 'under_review' | 'registered';
+    priority: 'HOT' | 'WARM' | 'COLD';
+    status: 'PENDING' | 'UNDER_REVIEW' | 'REGISTERED';
     due: string;
     type: string;
     description: string;
@@ -42,15 +42,15 @@ export function StickyNoteTask({
     const y = useMotionValue(0);
 
     const priorityColors = {
-        hot: 'bg-danger-50 border-danger-100 text-danger-900 shadow-danger-500/10',
-        warm: 'bg-accent-50 border-accent-100 text-accent-900 shadow-accent-500/10',
-        cold: 'bg-primary-50 border-primary-100 text-primary-900 shadow-primary-500/10',
+        HOT: 'bg-danger-50 border-danger-100 text-danger-900 shadow-danger-500/10',
+        WARM: 'bg-accent-50 border-accent-100 text-accent-900 shadow-accent-500/10',
+        COLD: 'bg-primary-50 border-primary-100 text-primary-900 shadow-primary-500/10',
     };
 
     const stickyColors = {
-        hot: 'bg-[#fee2e2] dark:bg-red-900/30',
-        warm: 'bg-[#fef9c3] dark:bg-yellow-900/30',
-        cold: 'bg-[#dcfce7] dark:bg-green-900/30',
+        HOT: 'bg-[#fee2e2] dark:bg-red-900/30',
+        WARM: 'bg-[#fef9c3] dark:bg-yellow-900/30',
+        COLD: 'bg-[#dcfce7] dark:bg-green-900/30',
     };
 
     return (
@@ -131,7 +131,7 @@ export function StickyNoteTask({
                             "text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border",
                             priorityColors[task.priority]
                         )}>
-                            {task.priority === 'hot' ? 'Urgent' : task.priority}
+                            {task.priority === 'HOT' ? 'Urgent' : task.priority}
                         </span>
                         <button
                             onClick={(e) => { e.stopPropagation(); onDelete?.(task.id); }}

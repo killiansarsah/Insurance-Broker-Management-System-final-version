@@ -34,8 +34,8 @@ import { formatCurrency, formatDate } from '@/lib/utils';
 import { useRenewals } from '@/hooks/api/use-renewals';
 
 // ─── Local Types & Config ───
-type UrgencyLevel = 'critical' | 'urgent' | 'important' | 'upcoming';
-type RenewalWorkflowStatus = 'pending' | 'contacted' | 'quoted' | 'renewed' | 'lost';
+type UrgencyLevel = 'CRITICAL' | 'URGENT' | 'IMPORTANT' | 'UPCOMING';
+type RenewalWorkflowStatus = 'PENDING' | 'CONTACTED' | 'QUOTED' | 'RENEWED' | 'LOST';
 
 interface Renewal {
     id: string;
@@ -65,18 +65,18 @@ interface Renewal {
 }
 
 const URGENCY_CONFIG: Record<UrgencyLevel, { label: string; bg: string; color: string; border: string; dot: string }> = {
-    critical: { label: 'Critical', bg: 'bg-danger-50', color: 'text-danger-700', border: 'border-danger-200', dot: 'bg-danger-500' },
-    urgent: { label: 'Urgent', bg: 'bg-warning-50', color: 'text-warning-700', border: 'border-warning-200', dot: 'bg-warning-500' },
-    important: { label: 'Important', bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
-    upcoming: { label: 'Upcoming', bg: 'bg-blue-50', color: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' },
+    CRITICAL: { label: 'Critical', bg: 'bg-danger-50', color: 'text-danger-700', border: 'border-danger-200', dot: 'bg-danger-500' },
+    URGENT: { label: 'Urgent', bg: 'bg-warning-50', color: 'text-warning-700', border: 'border-warning-200', dot: 'bg-warning-500' },
+    IMPORTANT: { label: 'Important', bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
+    UPCOMING: { label: 'Upcoming', bg: 'bg-blue-50', color: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' },
 };
 
 const WORKFLOW_STATUS_CONFIG: Record<RenewalWorkflowStatus, { label: string; bg: string; color: string }> = {
-    pending: { label: 'Pending', bg: 'bg-surface-100', color: 'text-surface-700' },
-    contacted: { label: 'Contacted', bg: 'bg-blue-50', color: 'text-blue-700' },
-    quoted: { label: 'Quoted', bg: 'bg-amber-50', color: 'text-amber-700' },
-    renewed: { label: 'Renewed', bg: 'bg-success-50', color: 'text-success-700' },
-    lost: { label: 'Lost', bg: 'bg-danger-50', color: 'text-danger-700' },
+    PENDING: { label: 'Pending', bg: 'bg-surface-100', color: 'text-surface-700' },
+    CONTACTED: { label: 'Contacted', bg: 'bg-blue-50', color: 'text-blue-700' },
+    QUOTED: { label: 'Quoted', bg: 'bg-amber-50', color: 'text-amber-700' },
+    RENEWED: { label: 'Renewed', bg: 'bg-success-50', color: 'text-success-700' },
+    LOST: { label: 'Lost', bg: 'bg-danger-50', color: 'text-danger-700' },
 };
 
 const LOST_REASON_LABEL: Record<string, string> = {
@@ -88,10 +88,10 @@ const LOST_REASON_LABEL: Record<string, string> = {
 };
 
 function getUrgencyLevel(daysToExpiry: number): UrgencyLevel {
-    if (daysToExpiry < 0 || daysToExpiry <= 7) return 'critical';
-    if (daysToExpiry <= 30) return 'urgent';
-    if (daysToExpiry <= 60) return 'important';
-    return 'upcoming';
+    if (daysToExpiry < 0 || daysToExpiry <= 7) return 'CRITICAL';
+    if (daysToExpiry <= 30) return 'URGENT';
+    if (daysToExpiry <= 60) return 'IMPORTANT';
+    return 'UPCOMING';
 }
 
 function mapApiToRenewal(r: any): Renewal {
@@ -100,8 +100,8 @@ function mapApiToRenewal(r: any): Renewal {
     return {
         id: r.id,
         policyNumber: r.policyNumber || '',
-        insuranceType: (r.insuranceType || 'general').toLowerCase(),
-        policyType: (r.policyType || 'non-life').toLowerCase(),
+        insuranceType: (r.insuranceType || 'GENERAL'),
+        policyType: (r.policyType || 'NON_LIFE'),
         clientName,
         clientPhone: r.client?.phone || '',
         clientEmail: r.client?.email || '',
@@ -113,7 +113,7 @@ function mapApiToRenewal(r: any): Renewal {
         expiryDate: r.expiryDate,
         daysToExpiry: days,
         urgencyLevel: getUrgencyLevel(days),
-        renewalStatus: 'pending',
+        renewalStatus: 'PENDING',
         assignedAgent: r.broker ? `${r.broker.firstName} ${r.broker.lastName}` : 'Unassigned',
         contactAttempts: 0,
         coverageType: r.product?.name || r.insuranceType,
@@ -123,7 +123,7 @@ function mapApiToRenewal(r: any): Renewal {
 }
 
 // ─── Pipeline Tab Types ───
-type PipelineTab = 'all' | 'overdue' | '0-30' | '31-60' | '61-90';
+type PipelineTab = 'all' | 'OVERDUE' | '0-30' | '31-60' | '61-90';
 
 // ─── Urgency Badge Component ───
 function UrgencyBadge({ level }: { level: UrgencyLevel }) {
@@ -213,7 +213,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                         <InfoCard label="Client" value={renewal.clientName} icon={<User size={16} />} />
                         <InfoCard label="Insurer" value={renewal.insurerName} icon={<Shield size={16} />} />
                         <InfoCard label="Coverage" value={renewal.coverageType || renewal.insuranceType} icon={<FileText size={16} />} />
-                        <InfoCard label="Policy Type" value={renewal.policyType === 'life' ? 'Life' : 'Non-Life'} icon={<BarChart3 size={16} />} />
+                        <InfoCard label="Policy Type" value={renewal.policyType === 'LIFE' ? 'Life' : 'Non-Life'} icon={<BarChart3 size={16} />} />
                         <InfoCard label="Expiry Date" value={formatDate(renewal.expiryDate)} icon={<CalendarDays size={16} />} />
                         <InfoCard label="Days to Expiry" value={renewal.daysToExpiry < 0 ? `${Math.abs(renewal.daysToExpiry)} overdue` : `${renewal.daysToExpiry} days`} icon={<Clock size={16} />} />
                     </div>
@@ -289,7 +289,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                     </Card>
 
                     {/* Lost Reason (if applicable) */}
-                    {renewal.renewalStatus === 'lost' && renewal.lostReason && (
+                    {renewal.renewalStatus === 'LOST' && renewal.lostReason && (
                         <Card padding="none" className="p-4 border-danger-200 bg-danger-50/50">
                             <h3 className="text-sm font-semibold text-danger-700 mb-2 flex items-center gap-2">
                                 <XCircle size={16} />
@@ -312,14 +312,14 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                             {renewal.reminders.map((rem) => (
                                 <div key={rem.id} className="flex items-center justify-between py-2 px-3 bg-surface-50 rounded-lg text-sm">
                                     <div className="flex items-center gap-2">
-                                        <span className={`w-2 h-2 rounded-full ${rem.status === 'sent' ? 'bg-success-500' : rem.status === 'scheduled' ? 'bg-blue-500' : 'bg-surface-400'}`} />
+                                        <span className={`w-2 h-2 rounded-full ${rem.status === 'SENT' ? 'bg-success-500' : rem.status === 'scheduled' ? 'bg-blue-500' : 'bg-surface-400'}`} />
                                         <span className="font-medium text-surface-700 capitalize">{rem.type.replace(/_/g, ' ')}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-surface-500">
                                         <span className="capitalize text-xs bg-surface-100 px-2 py-0.5 rounded">{rem.channel}</span>
                                         <span className="text-xs">{formatDate(rem.scheduledDate)}</span>
-                                        <span className={`text-xs font-semibold ${rem.status === 'sent' ? 'text-success-600' : rem.status === 'scheduled' ? 'text-blue-600' : 'text-surface-400'}`}>
-                                            {rem.status === 'sent' ? '✓ Sent' : rem.status === 'scheduled' ? 'Scheduled' : rem.status}
+                                        <span className={`text-xs font-semibold ${rem.status === 'SENT' ? 'text-success-600' : rem.status === 'scheduled' ? 'text-blue-600' : 'text-surface-400'}`}>
+                                            {rem.status === 'SENT' ? '✓ Sent' : rem.status === 'scheduled' ? 'Scheduled' : rem.status}
                                         </span>
                                     </div>
                                 </div>
@@ -344,12 +344,12 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                         {/* Dot */}
                                         <div className={`mt-1 w-[22px] h-[22px] rounded-full flex items-center justify-center flex-shrink-0 ${note.type === 'contact' ? 'bg-blue-100 text-blue-600' :
                                             note.type === 'escalation' ? 'bg-danger-100 text-danger-600' :
-                                                note.type === 'system' ? 'bg-surface-100 text-surface-500' :
+                                                note.type === 'SYSTEM' ? 'bg-surface-100 text-surface-500' :
                                                     'bg-primary-100 text-primary-600'
                                             }`}>
                                             {note.type === 'contact' ? <Phone size={11} /> :
                                                 note.type === 'escalation' ? <AlertCircle size={11} /> :
-                                                    note.type === 'system' ? <Zap size={11} /> :
+                                                    note.type === 'SYSTEM' ? <Zap size={11} /> :
                                                         <MessageSquare size={11} />}
                                         </div>
                                         {/* Content */}
@@ -368,7 +368,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                     )}
 
                     {/* Action Buttons */}
-                    {renewal.renewalStatus !== 'renewed' && renewal.renewalStatus !== 'lost' && (
+                    {renewal.renewalStatus !== 'RENEWED' && renewal.renewalStatus !== 'LOST' && (
                         <div className="flex flex-wrap gap-2 pt-2 border-t border-surface-200">
                             <Button
                                 variant="primary"
@@ -463,17 +463,17 @@ export default function RenewalsPage() {
             next90: next90.length, next90Amount: next90.reduce((s, r) => s + r.currentPremium, 0),
             totalPremiumAtRisk: totalPremium, renewedCount: 0, renewedPremium: 0,
             lostCount: 0, lostPremium: 0, renewalRate: 0,
-            critical: allRenewals.filter(r => r.urgencyLevel === 'critical').length,
-            urgent: allRenewals.filter(r => r.urgencyLevel === 'urgent').length,
-            important: allRenewals.filter(r => r.urgencyLevel === 'important').length,
-            upcoming: allRenewals.filter(r => r.urgencyLevel === 'upcoming').length,
+            critical: allRenewals.filter(r => r.urgencyLevel === 'CRITICAL').length,
+            urgent: allRenewals.filter(r => r.urgencyLevel === 'URGENT').length,
+            important: allRenewals.filter(r => r.urgencyLevel === 'IMPORTANT').length,
+            upcoming: allRenewals.filter(r => r.urgencyLevel === 'UPCOMING').length,
         };
     }, [allRenewals]);
 
     // Pipeline tabs configuration
     const pipelineTabs: { id: PipelineTab; label: string; count: number; color: string; amount?: number }[] = useMemo(() => [
         { id: 'all', label: 'All', count: renewalSummary.total, color: 'text-surface-700' },
-        { id: 'overdue', label: 'Overdue', count: renewalSummary.overdue, color: 'text-danger-600', amount: renewalSummary.overdueAmount },
+        { id: 'OVERDUE', label: 'Overdue', count: renewalSummary.overdue, color: 'text-danger-600', amount: renewalSummary.overdueAmount },
         { id: '0-30', label: '0\u201330 Days', count: renewalSummary.next30, color: 'text-warning-600', amount: renewalSummary.next30Amount },
         { id: '31-60', label: '31\u201360 Days', count: renewalSummary.next60, color: 'text-amber-600', amount: renewalSummary.next60Amount },
         { id: '61-90', label: '61\u201390 Days', count: renewalSummary.next90, color: 'text-blue-600', amount: renewalSummary.next90Amount },
@@ -483,7 +483,7 @@ export default function RenewalsPage() {
     const filteredRenewals = useMemo(() => {
         let data = [...allRenewals];
         switch (activeTab) {
-            case 'overdue': data = data.filter(r => r.daysToExpiry < 0); break;
+            case 'OVERDUE': data = data.filter(r => r.daysToExpiry < 0); break;
             case '0-30': data = data.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30); break;
             case '31-60': data = data.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60); break;
             case '61-90': data = data.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90); break;
@@ -611,7 +611,7 @@ export default function RenewalsPage() {
             </Card>
 
             {/* Urgency Summary Badges (when showing "all" or active tabs) */}
-            {!['renewed', 'lost'].includes(activeTab) && (
+            {!['RENEWED', 'LOST'].includes(activeTab) && (
                 <div className="flex flex-wrap items-center gap-3">
                     <span className="text-xs font-semibold text-surface-500 uppercase tracking-wide">Urgency:</span>
                     {renewalSummary.critical > 0 && (
@@ -767,11 +767,11 @@ export default function RenewalsPage() {
                             label="Status"
                             options={[
                                 { label: 'All Statuses', value: 'all' },
-                                { label: 'Pending', value: 'pending' },
-                                { label: 'Contacted', value: 'contacted' },
-                                { label: 'Quoted', value: 'quoted' },
-                                { label: 'Renewed', value: 'renewed' },
-                                { label: 'Lost', value: 'lost' },
+                                { label: 'Pending', value: 'PENDING' },
+                                { label: 'Contacted', value: 'CONTACTED' },
+                                { label: 'Quoted', value: 'QUOTED' },
+                                { label: 'Renewed', value: 'RENEWED' },
+                                { label: 'Lost', value: 'LOST' },
                             ]}
                             value={workflowFilter}
                             onChange={(v) => setWorkflowFilter(v as RenewalWorkflowStatus | 'all')}

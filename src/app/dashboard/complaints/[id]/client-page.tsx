@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     FileText,
@@ -22,7 +22,7 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { MOCK_COMPLAINTS } from '@/hooks/api';
+import { useComplaint } from '@/hooks/api';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
@@ -65,21 +65,28 @@ function TimelineStep({ date, title, desc, icon, active, warning, isLast }: { da
 
 
 
-export default function ComplaintDetailPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
+export default function ComplaintDetailPage({ id }: { id: string }) {
     const router = useRouter();
-    const complaint = MOCK_COMPLAINTS.find((c) => c.id === id) || MOCK_COMPLAINTS[0];
+    const { data: complaintData, isLoading } = useComplaint(id);
+    const complaint = complaintData as Complaint | undefined;
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
     if (!complaint) return <div>Complaint not found</div>;
 
-    const currentStep = complaint.status === 'resolved' ? 5 : 3; // Mocking current step based on status
+    const currentStep = complaint.status === 'RESOLVED' ? 5 : 3;
 
     const steps = [
         { title: 'Registration', desc: 'Complaint logged and ID generated', icon: <ClipboardList size={14} />, active: true },
         { title: 'Assignment', desc: 'Assigned to relevant department', icon: <UserCheck size={14} />, active: true },
         { title: 'Investigation', desc: 'Facts gathering and stakeholder consultation', icon: <Search size={14} />, active: true },
-        { title: 'Resolution', desc: 'Decision reached and communicated', icon: <CheckCircle size={14} />, active: complaint.status === 'resolved' },
-        { title: 'Closure', desc: 'Final documentation and case closed', icon: <CheckCircle2 size={14} />, active: complaint.status === 'resolved', isLast: true },
+        { title: 'Resolution', desc: 'Decision reached and communicated', icon: <CheckCircle size={14} />, active: complaint.status === 'RESOLVED' },
+        { title: 'Closure', desc: 'Final documentation and case closed', icon: <CheckCircle2 size={14} />, active: complaint.status === 'RESOLVED', isLast: true },
     ];
 
     return (

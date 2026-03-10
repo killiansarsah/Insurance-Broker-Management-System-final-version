@@ -3,11 +3,11 @@ import { formatCurrency } from '@/lib/utils';
 import { format } from 'date-fns';
 
 const METHOD_LABELS: Record<string, string> = {
-    bank_transfer: 'Bank Transfer',
-    mobile_money: 'Mobile Money',
-    cash: 'Cash',
-    cheque: 'Cheque',
-    card: 'Card Payment',
+    BANK_TRANSFER: 'Bank Transfer',
+    MOBILE_MONEY: 'Mobile Money',
+    CASH: 'Cash',
+    CHEQUE: 'Cheque',
+    CARD: 'Card Payment',
 };
 
 function escapeHtml(str: string): string {

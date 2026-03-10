@@ -29,7 +29,7 @@ const STEPS = [
 ];
 
 interface FormData {
-    type: 'individual' | 'corporate';
+    type: 'INDIVIDUAL' | 'CORPORATE';
     firstName: string;
     lastName: string;
     otherNames: string;
@@ -67,7 +67,7 @@ interface FormData {
 }
 
 const INITIAL_FORM: FormData = {
-    type: 'individual',
+    type: 'INDIVIDUAL',
     firstName: '',
     lastName: '',
     otherNames: '',
@@ -188,14 +188,14 @@ export default function NewClientPage() {
         const type = searchParams.get('type');
         const firstName = searchParams.get('firstName');
         const lastName = searchParams.get('lastName');
-        const email = searchParams.get('email');
-        const phone = searchParams.get('phone');
+        const email = searchParams.get('EMAIL');
+        const phone = searchParams.get('PHONE');
         const companyName = searchParams.get('companyName');
 
         if (type || firstName || lastName || email || phone || companyName) {
             return {
                 ...INITIAL_FORM,
-                type: (type === 'corporate' ? 'corporate' : 'individual') as 'individual' | 'corporate',
+                type: (type === 'CORPORATE' ? 'CORPORATE' : 'INDIVIDUAL') as 'INDIVIDUAL' | 'CORPORATE',
                 firstName: firstName || INITIAL_FORM.firstName,
                 lastName: lastName || INITIAL_FORM.lastName,
                 email: email || INITIAL_FORM.email,
@@ -217,7 +217,7 @@ export default function NewClientPage() {
         const newErrors: Partial<Record<keyof FormData, string>> = {};
 
         if (s === 1) {
-            if (form.type === 'individual') {
+            if (form.type === 'INDIVIDUAL') {
                 if (!form.firstName.trim()) newErrors.firstName = 'Required';
                 if (!form.lastName.trim()) newErrors.lastName = 'Required';
                 if (!form.dateOfBirth) newErrors.dateOfBirth = 'Required';
@@ -253,9 +253,9 @@ export default function NewClientPage() {
         }
 
         if (s === 4) {
-            if (form.type === 'individual' && !form.ghanaCardNumber.trim())
+            if (form.type === 'INDIVIDUAL' && !form.ghanaCardNumber.trim())
                 newErrors.ghanaCardNumber = 'Required';
-            else if (form.type === 'individual' && form.ghanaCardNumber.trim() && !/^GHA-\d{9}-\d$/.test(form.ghanaCardNumber.trim()))
+            else if (form.type === 'INDIVIDUAL' && form.ghanaCardNumber.trim() && !/^GHA-\d{9}-\d$/.test(form.ghanaCardNumber.trim()))
                 newErrors.ghanaCardNumber = 'Use format GHA-XXXXXXXXX-X';
         }
 
@@ -279,7 +279,7 @@ export default function NewClientPage() {
         router.push('/dashboard/clients');
     }
 
-    const displayName = form.type === 'corporate'
+    const displayName = form.type === 'CORPORATE'
         ? form.companyName
         : `${form.firstName} ${form.lastName}`.trim();
 
@@ -333,10 +333,10 @@ export default function NewClientPage() {
                         <label className="block text-xs font-semibold text-surface-600 mb-2">Client Type</label>
                         <div className="flex gap-3">
                             <button
-                                onClick={() => update('type', 'individual')}
+                                onClick={() => update('type', 'INDIVIDUAL')}
                                 className={cn(
                                     'flex items-center gap-2 px-4 py-3 rounded-[var(--radius-md)] border-2 text-sm font-semibold cursor-pointer transition-all flex-1',
-                                    form.type === 'individual'
+                                    form.type === 'INDIVIDUAL'
                                         ? 'border-primary-500 bg-primary-50 text-primary-700'
                                         : 'border-surface-200 text-surface-500 hover:border-surface-300'
                                 )}
@@ -344,10 +344,10 @@ export default function NewClientPage() {
                                 <UsersIcon size={18} /> Individual
                             </button>
                             <button
-                                onClick={() => update('type', 'corporate')}
+                                onClick={() => update('type', 'CORPORATE')}
                                 className={cn(
                                     'flex items-center gap-2 px-4 py-3 rounded-[var(--radius-md)] border-2 text-sm font-semibold cursor-pointer transition-all flex-1',
-                                    form.type === 'corporate'
+                                    form.type === 'CORPORATE'
                                         ? 'border-primary-500 bg-primary-50 text-primary-700'
                                         : 'border-surface-200 text-surface-500 hover:border-surface-300'
                                 )}
@@ -359,7 +359,7 @@ export default function NewClientPage() {
                 )}
 
                 {/* Step 1: Personal Info */}
-                {step === 1 && form.type === 'individual' && (
+                {step === 1 && form.type === 'INDIVIDUAL' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField label="First Name" required value={form.firstName} error={errors.firstName}
                             onChange={(e) => update('firstName', e.target.value)} placeholder="e.g. Kwame" />
@@ -372,9 +372,9 @@ export default function NewClientPage() {
                         <SelectField label="Gender" required value={form.gender} error={errors.gender}
                             onChange={(e) => update('gender', e.target.value)}
                             options={[
-                                { label: 'Male', value: 'male' },
-                                { label: 'Female', value: 'female' },
-                                { label: 'Other', value: 'other' },
+                                { label: 'Male', value: 'MALE' },
+                                { label: 'Female', value: 'FEMALE' },
+                                { label: 'Other', value: 'OTHER' },
                             ]} />
                         <InputField label="Nationality" value={form.nationality}
                             onChange={(e) => update('nationality', e.target.value)} />
@@ -387,7 +387,7 @@ export default function NewClientPage() {
                     </div>
                 )}
 
-                {step === 1 && form.type === 'corporate' && (
+                {step === 1 && form.type === 'CORPORATE' && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <InputField label="Company Name" required value={form.companyName} error={errors.companyName}
                             onChange={(e) => update('companyName', e.target.value)} placeholder="e.g. Asante Holdings Ltd" className="sm:col-span-2" />
@@ -445,7 +445,7 @@ export default function NewClientPage() {
                                     { label: 'Business Income', value: 'business' },
                                     { label: 'Inheritance', value: 'inheritance' },
                                     { label: 'Investment', value: 'investment' },
-                                    { label: 'Other', value: 'other' },
+                                    { label: 'Other', value: 'OTHER' },
                                 ]} />
                             <SelectField label="Purpose of Relationship" required value={form.purposeOfRelationship} error={errors.purposeOfRelationship}
                                 onChange={(e) => update('purposeOfRelationship', e.target.value)}
@@ -488,7 +488,7 @@ export default function NewClientPage() {
                 {/* Step 4: ID Documents */}
                 {step === 4 && (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {form.type === 'individual' && (
+                        {form.type === 'INDIVIDUAL' && (
                             <InputField label="Ghana Card Number" required value={form.ghanaCardNumber}
                                 error={errors.ghanaCardNumber}
                                 onChange={(e) => update('ghanaCardNumber', e.target.value)}
@@ -505,7 +505,7 @@ export default function NewClientPage() {
                                     { label: 'Passport Photo', icon: <User size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to upload' },
                                     { label: 'Proof of Address', icon: <MapPin size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Utility Bill/Bank Statement' },
                                 ].map((doc) => (
-                                    <div key={doc.label} onClick={() => { const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.pdf,.jpg,.jpeg,.png'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`${doc.label} uploaded`, { description: inp.files[0].name }); }; inp.click(); }} className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
+                                    <div key={doc.label} onClick={() => { const inp = document.createElement('input'); inp.type = 'FILE'; inp.accept = '.pdf,.jpg,.jpeg,.png'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`${doc.label} uploaded`, { description: inp.files[0].name }); }; inp.click(); }} className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
                                         {doc.icon}
                                         <p className="text-xs font-medium text-surface-600">{doc.label}</p>
                                         <p className="text-[10px] text-surface-400 mt-1">{doc.sub}</p>
@@ -528,9 +528,9 @@ export default function NewClientPage() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-surface-50 rounded-[var(--radius-md)] p-6">
-                            <ReviewField label="Client Type" value={form.type === 'corporate' ? 'Corporate' : 'Individual'} />
+                            <ReviewField label="Client Type" value={form.type === 'CORPORATE' ? 'Corporate' : 'Individual'} />
                             <ReviewField label="Name" value={displayName || '—'} />
-                            {form.type === 'individual' && (
+                            {form.type === 'INDIVIDUAL' && (
                                 <>
                                     <ReviewField label="Date of Birth" value={form.dateOfBirth || '—'} />
                                     <ReviewField label="Gender" value={form.gender || '—'} />

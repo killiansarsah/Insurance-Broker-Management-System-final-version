@@ -58,8 +58,49 @@ export class ReportsController {
     return this.reportsService.financialReport(req.user.tenantId, from, to);
   }
 
+  @Get('nic-quarterly')
+  nicQuarterlyReturn(
+    @Request() req: RequestWithUser,
+    @Query('year') year: string,
+    @Query('quarter') quarter: string,
+  ) {
+    const y = parseInt(year) || new Date().getFullYear();
+    const q = Math.min(4, Math.max(1, parseInt(quarter) || Math.ceil((new Date().getMonth() + 1) / 3)));
+    return this.reportsService.nicQuarterlyReturn(req.user.tenantId, y, q);
+  }
+
   @Get('compliance')
   complianceReport(@Request() req: RequestWithUser) {
     return this.reportsService.complianceReport(req.user.tenantId);
+  }
+
+  @Get('nic-premium-register')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER', 'FINANCE_MANAGER')
+  nicPremiumRegister(
+    @Request() req: RequestWithUser,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.reportsService.nicPremiumRegister(req.user.tenantId, from, to);
+  }
+
+  @Get('nic-claims-register')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER', 'FINANCE_MANAGER')
+  nicClaimsRegister(
+    @Request() req: RequestWithUser,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.reportsService.nicClaimsRegister(req.user.tenantId, from, to);
+  }
+
+  @Get('fic-str')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER')
+  ficSuspiciousTransactions(
+    @Request() req: RequestWithUser,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+  ) {
+    return this.reportsService.ficSuspiciousTransactions(req.user.tenantId, from, to);
   }
 }

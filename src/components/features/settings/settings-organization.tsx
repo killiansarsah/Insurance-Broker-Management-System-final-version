@@ -5,43 +5,69 @@ import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useProfileStore } from '@/stores/profile-store';
+import { useTenantSettings, useUpdateTenantSettings } from '@/hooks/api/use-settings';
+import { toast } from 'sonner';
 
 export function SettingsOrganization() {
     const logoInputRef = useRef<HTMLInputElement>(null);
 
-    const {
-        companyName, companyEmail, corporatePhone, mobileNumber, tin,
-        street, city, region, gps, postal,
-        businessHours, fiscalYear, commission, gracePeriod,
-        polPrefix, clmPrefix, cliPrefix, ledPrefix,
-        primaryColor, accentColor, logoUrl,
-        updateProfile,
-    } = useProfileStore();
+    const { logoUrl, updateProfile } = useProfileStore();
+    const { data: tenant } = useTenantSettings();
+    const updateTenantMutation = useUpdateTenantSettings();
 
     // Local editable copies
-    const [lCompanyName, setLCompanyName] = useState(companyName);
-    const [lCompanyEmail, setLCompanyEmail] = useState(companyEmail);
-    const [lCorporatePhone, setLCorporatePhone] = useState(corporatePhone);
-    const [lMobileNumber, setLMobileNumber] = useState(mobileNumber);
-    const [lTin, setLTin] = useState(tin);
-    const [lStreet, setLStreet] = useState(street);
-    const [lCity, setLCity] = useState(city);
-    const [lRegion, setLRegion] = useState(region);
-    const [lGps, setLGps] = useState(gps);
-    const [lPostal, setLPostal] = useState(postal);
-    const [lBusinessHours, setLBusinessHours] = useState(businessHours);
-    const [lFiscalYear, setLFiscalYear] = useState(fiscalYear);
-    const [lCommission, setLCommission] = useState(commission);
-    const [lGracePeriod, setLGracePeriod] = useState(gracePeriod);
-    const [lPolPrefix, setLPolPrefix] = useState(polPrefix);
-    const [lClmPrefix, setLClmPrefix] = useState(clmPrefix);
-    const [lCliPrefix, setLCliPrefix] = useState(cliPrefix);
-    const [lLedPrefix, setLLedPrefix] = useState(ledPrefix);
-    const [lPrimaryColor, setLPrimaryColor] = useState(primaryColor);
-    const [lAccentColor, setLAccentColor] = useState(accentColor);
+    const [lCompanyName, setLCompanyName] = useState('');
+    const [lCompanyEmail, setLCompanyEmail] = useState('');
+    const [lCorporatePhone, setLCorporatePhone] = useState('');
+    const [lMobileNumber, setLMobileNumber] = useState('');
+    const [lTin, setLTin] = useState('');
+    const [lNicLicense, setLNicLicense] = useState('');
+    const [lStreet, setLStreet] = useState('');
+    const [lCity, setLCity] = useState('');
+    const [lRegion, setLRegion] = useState('');
+    const [lGps, setLGps] = useState('');
+    const [lPostal, setLPostal] = useState('');
+    const [lBusinessHours, setLBusinessHours] = useState('');
+    const [lFiscalYear, setLFiscalYear] = useState('');
+    const [lCommission, setLCommission] = useState('');
+    const [lGracePeriod, setLGracePeriod] = useState('');
+    const [lPolPrefix, setLPolPrefix] = useState('');
+    const [lClmPrefix, setLClmPrefix] = useState('');
+    const [lCliPrefix, setLCliPrefix] = useState('');
+    const [lLedPrefix, setLLedPrefix] = useState('');
+    const [lPrimaryColor, setLPrimaryColor] = useState('#c28532');
+    const [lAccentColor, setLAccentColor] = useState('#2563eb');
 
     const [isSaving, setIsSaving] = useState(false);
     const [showToast, setShowToast] = useState(false);
+
+    // Populate local state from API data
+    useEffect(() => {
+        if (tenant) {
+            const t = tenant as Record<string, any>;
+            setLCompanyName(t.name || '');
+            setLCompanyEmail(t.email || '');
+            setLCorporatePhone(t.phone || '');
+            setLMobileNumber(t.mobileNumber || '');
+            setLTin(t.tin || '');
+            setLNicLicense(t.nicLicense || '');
+            setLStreet(t.street || t.address || '');
+            setLCity(t.city || '');
+            setLRegion(t.region || '');
+            setLGps(t.gps || '');
+            setLPostal(t.postal || '');
+            setLBusinessHours(t.businessHours || '');
+            setLFiscalYear(t.fiscalYear || '');
+            setLCommission(t.commission || '');
+            setLGracePeriod(t.gracePeriod || '');
+            setLPolPrefix(t.polPrefix || '');
+            setLClmPrefix(t.clmPrefix || '');
+            setLCliPrefix(t.cliPrefix || '');
+            setLLedPrefix(t.ledPrefix || '');
+            setLPrimaryColor(t.primaryColor || '#c28532');
+            setLAccentColor(t.accentColor || '#2563eb');
+        }
+    }, [tenant]);
 
     // Apply branding colors as CSS custom properties live
     useEffect(() => {
@@ -51,20 +77,31 @@ export function SettingsOrganization() {
 
     const handleSave = () => {
         setIsSaving(true);
-        updateProfile({
-            companyName: lCompanyName, companyEmail: lCompanyEmail,
-            corporatePhone: lCorporatePhone, mobileNumber: lMobileNumber, tin: lTin,
-            street: lStreet, city: lCity, region: lRegion, gps: lGps, postal: lPostal,
-            businessHours: lBusinessHours, fiscalYear: lFiscalYear,
-            commission: lCommission, gracePeriod: lGracePeriod,
-            polPrefix: lPolPrefix, clmPrefix: lClmPrefix, cliPrefix: lCliPrefix, ledPrefix: lLedPrefix,
-            primaryColor: lPrimaryColor, accentColor: lAccentColor,
+        const payload: Record<string, unknown> = {
+            name: lCompanyName,
+            email: lCompanyEmail,
+            phone: lCorporatePhone,
+            primaryColor: lPrimaryColor,
+        };
+        updateTenantMutation.mutate(payload, {
+            onSuccess: () => {
+                updateProfile({
+                    companyName: lCompanyName, companyEmail: lCompanyEmail,
+                    corporatePhone: lCorporatePhone, mobileNumber: lMobileNumber, tin: lTin,
+                    street: lStreet, city: lCity, region: lRegion, gps: lGps, postal: lPostal,
+                    businessHours: lBusinessHours, fiscalYear: lFiscalYear,
+                    commission: lCommission, gracePeriod: lGracePeriod,
+                    polPrefix: lPolPrefix, clmPrefix: lClmPrefix, cliPrefix: lCliPrefix, ledPrefix: lLedPrefix,
+                    primaryColor: lPrimaryColor, accentColor: lAccentColor,
+                });
+                setIsSaving(false);
+                toast.success('Organization Saved', { description: 'Your organization settings have been updated.' });
+            },
+            onError: () => {
+                setIsSaving(false);
+                toast.error('Save Failed', { description: 'Could not update organization settings. Please try again.' });
+            },
         });
-        setTimeout(() => {
-            setIsSaving(false);
-            setShowToast(true);
-            setTimeout(() => setShowToast(false), 3000);
-        }, 800);
     };
 
     const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +153,9 @@ export function SettingsOrganization() {
                     <div className="flex flex-col gap-4 text-center md:text-left">
                         <div>
                             <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">{lCompanyName}</h3>
-                            <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">Licensed Insurance Brokerage Firm</p>
+                            <p className="text-sm font-medium text-slate-500 mt-1 leading-relaxed">
+                                {(tenant as any)?.type || 'Licensed Insurance Brokerage Firm'}
+                            </p>
                         </div>
                         <div className="flex flex-wrap gap-2 justify-center md:justify-start">
                             <Badge variant="success" className="px-4 py-1.5 rounded-lg font-black uppercase text-[10px] tracking-widest bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 border-green-100 dark:border-green-800/30">NIC Verified</Badge>
@@ -134,7 +173,7 @@ export function SettingsOrganization() {
                             <OrgInput label="Company Name" value={lCompanyName} onChange={setLCompanyName} />
                         </div>
                         <OrgInput label="Corporate Email Address" value={lCompanyEmail} onChange={setLCompanyEmail} type="email" />
-                        <OrgInput label="NIC Registration Number" value="NIC/BRK/ACC-2024/09921" disabled />
+                        <OrgInput label="NIC Registration Number" value={lNicLicense || 'Not registered'} disabled />
                         <OrgInput label="Corporate Phone Number" value={lCorporatePhone} onChange={setLCorporatePhone} />
                         <OrgInput label="Mobile Phone Number" value={lMobileNumber} onChange={setLMobileNumber} />
                     </div>
@@ -230,7 +269,7 @@ export function SettingsOrganization() {
     );
 }
 
-function OrgInput({ label, value, onChange, type = "text", disabled = false, badge }: {
+function OrgInput({ label, value, onChange, type = "TEXT", disabled = false, badge }: {
     label: string; value: string; onChange?: (v: string) => void; type?: string; disabled?: boolean; badge?: string;
 }) {
     return (

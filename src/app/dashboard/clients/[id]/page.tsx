@@ -1,34 +1,16 @@
 import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { useClient } from '@/hooks/api/use-clients';
-import { mockClients, getClientDisplayName } from '@/hooks/api';
 import ClientProfilePage from './client-page';
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const { id } = await params;
-    const client = mockClients.find((c) => c.id === id);
-    if (!client) return { title: 'Client not found' };
     return {
-        title: getClientDisplayName(client),
-        description: `View profile and policies for ${getClientDisplayName(client)}.`,
-        openGraph: {
-            title: getClientDisplayName(client),
-            description: `View profile and policies for ${getClientDisplayName(client)}.`,
-            type: 'article',
-        },
+        title: 'Client Profile',
+        description: 'View client profile and policies.',
         alternates: { canonical: `/dashboard/clients/${id}` },
     };
 }
 
-export async function generateStaticParams() {
-    return mockClients.map((client) => ({
-        id: client.id,
-    }));
-}
-
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    const client = mockClients.find((c) => c.id === id);
-    if (!client) notFound();
-    return <ClientProfilePage />;
+    return <ClientProfilePage id={id} />;
 }

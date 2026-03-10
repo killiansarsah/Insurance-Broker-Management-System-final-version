@@ -6,29 +6,46 @@ import { Search, Building2, Shield, RefreshCw, Globe, Trophy, ArrowRight, Extern
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCarriers } from '@/hooks/api/use-carriers';
-import { carriers, getCarriersByType, type CarrierType, type Carrier } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+type CarrierType = 'NON_LIFE' | 'LIFE' | 'REINSURER';
+
+interface Carrier {
+    id: string;
+    name: string;
+    shortName: string;
+    type: CarrierType;
+    slug: string;
+    hq: string;
+    brandColor: string;
+    logoUrl?: string;
+    status: string;
+    revenueRank: number;
+    productCategories: string[];
+    website?: string;
+    [key: string]: any;
+}
 
 type Tab = 'all' | CarrierType;
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
     { key: 'all', label: 'All Carriers', icon: Building2 },
-    { key: 'non-life', label: 'Non-Life', icon: Shield },
-    { key: 'life', label: 'Life', icon: Shield },
-    { key: 'reinsurer', label: 'Reinsurers', icon: RefreshCw },
+    { key: 'NON_LIFE', label: 'Non-Life', icon: Shield },
+    { key: 'LIFE', label: 'Life', icon: Shield },
+    { key: 'REINSURER', label: 'Reinsurers', icon: RefreshCw },
 ];
 
 const TYPE_BADGE: Record<CarrierType, string> = {
-    'non-life': 'bg-blue-100/80 text-blue-700 border-blue-200 backdrop-blur-md',
-    'life': 'bg-violet-100/80 text-violet-700 border-violet-200 backdrop-blur-md',
-    'reinsurer': 'bg-emerald-100/80 text-emerald-700 border-emerald-200 backdrop-blur-md',
+    'NON_LIFE': 'bg-blue-100/80 text-blue-700 border-blue-200 backdrop-blur-md',
+    'LIFE': 'bg-violet-100/80 text-violet-700 border-violet-200 backdrop-blur-md',
+    'REINSURER': 'bg-emerald-100/80 text-emerald-700 border-emerald-200 backdrop-blur-md',
 };
 
 const TYPE_LABEL: Record<CarrierType, string> = {
-    'non-life': 'Non-Life',
-    'life': 'Life',
-    'reinsurer': 'Reinsurer',
+    'NON_LIFE': 'Non-Life',
+    'LIFE': 'Life',
+    'REINSURER': 'Reinsurer',
 };
 
 function CarrierLogo({ carrier }: { carrier: Carrier }) {
@@ -57,7 +74,7 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
                         className="w-full h-full rounded-2xl flex items-center justify-center text-white font-black text-2xl"
                         style={{ backgroundColor: carrier.brandColor }}
                     >
-                        {carrier.shortName.split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
+                        {(carrier.shortName || carrier.name || '').split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
                     </div>
                 )}
             </div>
@@ -69,21 +86,36 @@ export default function CarriersPage() {
     const [tab, setTab] = useState<Tab>('all');
     const [search, setSearch] = useState('');
 
+    const { data: carriersData, isLoading } = useCarriers();
+    const carriers: Carrier[] = ((carriersData as any)?.items ?? carriersData ?? []) as Carrier[];
+    const getCarriersByType = (type: CarrierType) => carriers.filter((c: Carrier) => c.type === type);
+
     const baseList = tab === 'all' ? carriers : getCarriersByType(tab);
     const filtered = search
         ? baseList.filter(c =>
             c.name.toLowerCase().includes(search.toLowerCase()) ||
-            c.shortName.toLowerCase().includes(search.toLowerCase()) ||
-            c.hq.toLowerCase().includes(search.toLowerCase())
+            (c.shortName || '').toLowerCase().includes(search.toLowerCase()) ||
+            (c.hq || '').toLowerCase().includes(search.toLowerCase())
         )
         : baseList;
 
     const kpis = [
         { label: 'Total Carriers', value: carriers.length, color: 'text-primary-600', bg: 'bg-primary-50/50' },
-        { label: 'Non-Life', value: getCarriersByType('non-life').length, color: 'text-blue-600', bg: 'bg-blue-50/50' },
-        { label: 'Life', value: getCarriersByType('life').length, color: 'text-violet-600', bg: 'bg-violet-50/50' },
-        { label: 'Reinsurers', value: getCarriersByType('reinsurer').length, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
+        { label: 'Non-Life', value: getCarriersByType('NON_LIFE').length, color: 'text-blue-600', bg: 'bg-blue-50/50' },
+        { label: 'Life', value: getCarriersByType('LIFE').length, color: 'text-violet-600', bg: 'bg-violet-50/50' },
+        { label: 'Reinsurers', value: getCarriersByType('REINSURER').length, color: 'text-emerald-600', bg: 'bg-emerald-50/50' },
     ];
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="mt-4 text-sm text-surface-500">Loading carriers...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-8 animate-fade-in pb-10">

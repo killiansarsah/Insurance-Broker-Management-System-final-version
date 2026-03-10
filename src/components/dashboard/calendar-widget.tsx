@@ -14,7 +14,7 @@ export function CalendarWidget() {
     const upcomingEvents = React.useMemo(() => {
         if (!eventsData) return [];
         return eventsData
-            .map((e: any) => ({ ...e, start: new Date(e.startDate || e.start), end: new Date(e.endDate || e.end), type: (e.type || '').toLowerCase() }))
+            .map((e: any) => ({ ...e, start: new Date(e.startDate || e.start), end: new Date(e.endDate || e.end), type: (e.type || '') }))
             .filter(event => isAfter(event.start, today) || format(event.start, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd'))
             .sort((a: any, b: any) => a.start.getTime() - b.start.getTime())
             .slice(0, 4);
@@ -56,9 +56,9 @@ export function CalendarWidget() {
                                 <div className="flex items-center gap-2 mt-0.5">
                                     <span className={cn(
                                         "w-2 h-2 rounded-full",
-                                        event.type === 'policy' && "bg-blue-500",
+                                        event.type === 'POLICY' && "bg-blue-500",
                                         event.type === 'meeting' && "bg-amber-500",
-                                        event.type === 'claim' && "bg-red-500",
+                                        event.type === 'CLAIM' && "bg-red-500",
                                         event.type === 'team' && "bg-emerald-500"
                                     )} />
                                     <span className="text-xs text-surface-500 italic">

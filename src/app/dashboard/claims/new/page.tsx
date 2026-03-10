@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
 import { cn, formatCurrency } from '@/lib/utils';
-import { policies } from '@/hooks/api';
+import { usePolicies } from '@/hooks/api/use-policies';
 import { Policy } from '@/types';
 const UploadDocumentModal = dynamic(
     () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
@@ -36,6 +36,8 @@ const STEPS = [
 export default function NewClaimPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
+    const { data: policiesData } = usePolicies();
+    const allPolicies: any[] = (policiesData as any)?.items ?? policiesData ?? [];
 
     // Form State
     const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
@@ -47,9 +49,9 @@ export default function NewClaimPage() {
     const [showDocUpload, setShowDocUpload] = useState(false);
 
     // Filter policies for Step 1
-    const filteredPolicies = policies.filter(p =>
-        p.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.clientName.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredPolicies = allPolicies.filter((p: any) =>
+        (p.policyNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.clientName || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     function next() {

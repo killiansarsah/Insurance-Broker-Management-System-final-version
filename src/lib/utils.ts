@@ -83,7 +83,7 @@ export function sleep(ms: number): Promise<void> {
 }
 
 export function getClientDisplayName(client: { type: string; companyName?: string; firstName?: string; lastName?: string }): string {
-    if (client.type === 'corporate') return client.companyName || '';
+    if (client.type === 'CORPORATE') return client.companyName || '';
     return `${client.firstName || ''} ${client.lastName || ''}`.trim();
 }
 

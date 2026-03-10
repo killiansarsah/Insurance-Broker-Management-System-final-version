@@ -13,8 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useComplianceReport } from '@/hooks/api/use-reports';
-import { mockClients } from '@/hooks/api';
+import { useComplianceSummary, useKycQueue, useAmlScreening } from '@/hooks/api/use-compliance';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -23,8 +22,16 @@ export default function CompliancePage() {
     const [pepResult, setPepResult] = useState<null | 'clean' | 'match'>(null);
     const [isSearching, setIsSearching] = useState(false);
 
-    const pendingKyc = mockClients.filter(c => c.kycStatus === 'pending');
-    const highRisk = mockClients.filter(c => c.amlRiskLevel === 'high' || c.amlRiskLevel === 'critical');
+    const { data: summary } = useComplianceSummary();
+    const { data: kycQueue } = useKycQueue();
+    const { data: amlData } = useAmlScreening();
+
+    const pendingKyc = (kycQueue as Record<string, unknown>[] | undefined) ?? [];
+    const highRisk = (amlData as Record<string, unknown>[] | undefined) ?? [];
+    const summaryData = summary as { kyc?: { pending?: number; verified?: number; rejected?: number; expired?: number }; aml?: { high?: number; critical?: number }; complaintSla?: { breached?: number } } | undefined;
+
+    const totalClients = summaryData ? (summaryData.kyc?.pending ?? 0) + (summaryData.kyc?.verified ?? 0) + (summaryData.kyc?.rejected ?? 0) + (summaryData.kyc?.expired ?? 0) : 0;
+    const verifiedPct = totalClients > 0 ? Math.round(((summaryData?.kyc?.verified ?? 0) / totalClients) * 100) : 0;
 
     function handlePepSearch() {
         if (!pepSearch) return;
@@ -32,7 +39,7 @@ export default function CompliancePage() {
         setPepResult(null);
         setTimeout(() => {
             setIsSearching(false);
-            setPepResult(Math.random() > 0.7 ? 'match' : 'clean'); // Mock logic
+            setPepResult(Math.random() > 0.7 ? 'match' : 'clean'); // PEP screening placeholder
         }, 1500);
     }
 
@@ -56,7 +63,7 @@ export default function CompliancePage() {
                     <div className="p-3 rounded-full bg-primary-50 text-primary-600"><UserCheck size={20} /></div>
                     <div>
                         <p className="text-xs font-semibold text-surface-500 uppercase">Verified Clients</p>
-                        <p className="text-xl font-bold text-surface-900">{((mockClients.filter(c => c.kycStatus === 'verified').length / mockClients.length) * 100).toFixed(0)}%</p>
+                        <p className="text-xl font-bold text-surface-900">{verifiedPct}%</p>
                     </div>
                 </Card>
                 <Card padding="md" className="flex items-center gap-4">
@@ -90,22 +97,22 @@ export default function CompliancePage() {
                         action={<Button variant="outline" size="sm" onClick={() => toast.info('All pending KYC reviews', { description: 'Navigate to Clients to see full KYC status.' })}>View All</Button>}
                     />
                     <div className="divide-y divide-surface-100">
-                        {pendingKyc.slice(0, 5).map(client => (
-                            <div key={client.id} className="p-4 flex items-center justify-between hover:bg-surface-50 transition-colors">
+                        {pendingKyc.slice(0, 5).map((client: Record<string, unknown>) => (
+                            <div key={client.id as string} className="p-4 flex items-center justify-between hover:bg-surface-50 transition-colors">
                                 <div className="flex items-center gap-3">
                                     <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-surface-500 font-bold text-xs">
-                                        {client.firstName?.[0] || client.companyName?.[0]}
+                                        {((client.clientName as string) ?? '?')[0]}
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-surface-900">{client.firstName ? `${client.firstName} ${client.lastName}` : client.companyName}</p>
-                                        <p className="text-xs text-surface-400">ID: {client.clientNumber}</p>
+                                        <p className="text-sm font-medium text-surface-900">{client.clientName as string}</p>
+                                        <p className="text-xs text-surface-400">ID: {client.clientNumber as string}</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-warning-50 text-warning-700 border border-warning-200">
-                                        Submit: {new Date(client.createdAt).toLocaleDateString()}
+                                        {client.daysPending as number} days pending
                                     </span>
-                                    <Button size="sm" variant="outline" onClick={() => toast.info('KYC Review', { description: `Opening review for ${client.firstName ? client.firstName + ' ' + client.lastName : client.companyName}.` })}>Review</Button>
+                                    <Button size="sm" variant="outline" onClick={() => toast.info('KYC Review', { description: `Opening review for ${client.clientName as string}.` })}>Review</Button>
                                 </div>
                             </div>
                         ))}
@@ -155,12 +162,12 @@ export default function CompliancePage() {
                     <Card padding="lg">
                         <CardHeader title="High Risk Clients" />
                         <div className="mt-4 space-y-3">
-                            {highRisk.slice(0, 3).map(client => (
-                                <div key={client.id} className="flex items-start gap-3 p-2 bg-danger-50/50 rounded-[var(--radius-md)]">
+                            {highRisk.slice(0, 3).map((client: Record<string, unknown>) => (
+                                <div key={client.id as string} className="flex items-start gap-3 p-2 bg-danger-50/50 rounded-[var(--radius-md)]">
                                     <AlertTriangle size={16} className="text-danger-500 mt-0.5 shrink-0" />
                                     <div>
-                                        <p className="text-sm font-semibold text-danger-900">{client.firstName ? `${client.firstName} ${client.lastName}` : client.companyName}</p>
-                                        <p className="text-xs text-danger-700">Risk Level: {client.amlRiskLevel}</p>
+                                        <p className="text-sm font-semibold text-danger-900">{client.clientName as string}</p>
+                                        <p className="text-xs text-danger-700">Risk Level: {client.amlRiskLevel as string}</p>
                                     </div>
                                 </div>
                             ))}

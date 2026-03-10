@@ -9,6 +9,7 @@ const ConfirmationModal = dynamic(
     { ssr: false }
 );
 import { toast } from 'sonner';
+import { useChangePassword } from '@/hooks/api/use-settings';
 
 export function SettingsSecurityDetails() {
     const [isSavingPw, setIsSavingPw] = useState(false);
@@ -19,6 +20,8 @@ export function SettingsSecurityDetails() {
     const [is2faEnabled, setIs2faEnabled] = useState(false);
     const [isSignOutAllOpen, setIsSignOutAllOpen] = useState(false);
     const [twoFaCode, setTwoFaCode] = useState('');
+
+    const changePasswordMutation = useChangePassword();
 
     const handleSavePassword = () => {
         if (!currentPassword.trim()) {
@@ -43,13 +46,23 @@ export function SettingsSecurityDetails() {
         }
 
         setIsSavingPw(true);
-        setTimeout(() => {
-            setIsSavingPw(false);
-            setCurrentPassword('');
-            setPassword('');
-            setConfirmPassword('');
-            toast.success('Password Updated', { description: 'Your password has been changed successfully.' });
-        }, 1500);
+        changePasswordMutation.mutate(
+            { currentPassword, newPassword: password, confirmPassword },
+            {
+                onSuccess: () => {
+                    setIsSavingPw(false);
+                    setCurrentPassword('');
+                    setPassword('');
+                    setConfirmPassword('');
+                    toast.success('Password Updated', { description: 'Your password has been changed successfully.' });
+                },
+                onError: (error: any) => {
+                    setIsSavingPw(false);
+                    const msg = error?.response?.data?.message || 'Could not update password. Please check your current password and try again.';
+                    toast.error('Password Update Failed', { description: msg });
+                },
+            }
+        );
     };
 
     const calculateStrength = () => {
@@ -59,11 +72,8 @@ export function SettingsSecurityDetails() {
         return 100;
     };
 
-    const loginSessions = [
-        { device: 'MacBook Pro 14"', browser: 'Chrome', location: 'Accra, Ghana', ip: '197.251.144.102', date: 'Today, 10:45 AM', current: true },
-        { device: 'iPhone 15 Pro', browser: 'Mobile Safari', location: 'Accra, Ghana', ip: '197.251.144.102', date: 'Today, 08:22 AM', current: false },
-        { device: 'Windows Desktop', browser: 'Edge', location: 'Lagos, Nigeria', ip: '41.218.231.10', date: 'Feb 24, 2026, 04:15 PM', current: false },
-        { device: 'iPad Air', browser: 'Safari', location: 'Accra, Ghana', ip: '102.176.1.45', date: 'Feb 22, 2026, 11:30 AM', current: false },
+    const loginSessions: { device: string; browser: string; location: string; ip: string; date: string; current: boolean }[] = [
+        // Login sessions will be populated from the audit/session API when available
     ];
 
     return (

@@ -19,96 +19,96 @@ type StatusType =
     | LeadPriority
     | ClaimStatus
     | ComplaintStatus
-    | 'earned' | 'paid' | 'clawback' | 'clawed_back'
-    | 'outstanding' | 'overdue' | 'partial' | 'refunded'
-    | 'approved' | 'pending'
-    | 'renewed'
-    | 'completed' | 'defaulted' | 'submitted' | 'disbursed';
+    | 'EARNED' | 'PAID' | 'clawback' | 'CLAWED_BACK'
+    | 'OUTSTANDING' | 'OVERDUE' | 'PARTIAL' | 'REFUNDED'
+    | 'APPROVED' | 'PENDING'
+    | 'RENEWED'
+    | 'COMPLETED' | 'DEFAULTED' | 'SUBMITTED' | 'DISBURSED';
 
 const STATUS_STYLES: Record<string, string> = {
     // Client
-    active: 'bg-success-50 text-success-700 ring-success-200',
-    inactive: 'bg-surface-100 text-surface-600 ring-surface-200',
-    suspended: 'bg-accent-50 text-accent-700 ring-accent-200',
-    blacklisted: 'bg-danger-50 text-danger-700 ring-danger-200',
+    ACTIVE: 'bg-success-50 text-success-700 ring-success-200',
+    INACTIVE: 'bg-surface-100 text-surface-600 ring-surface-200',
+    SUSPENDED: 'bg-accent-50 text-accent-700 ring-accent-200',
+    BLACKLISTED: 'bg-danger-50 text-danger-700 ring-danger-200',
 
     // KYC
-    pending: 'bg-accent-50 text-accent-700 ring-accent-200',
-    verified: 'bg-success-50 text-success-700 ring-success-200',
-    rejected: 'bg-danger-50 text-danger-700 ring-danger-200',
-    expired: 'bg-surface-100 text-surface-600 ring-surface-200',
+    PENDING: 'bg-accent-50 text-accent-700 ring-accent-200',
+    VERIFIED: 'bg-success-50 text-success-700 ring-success-200',
+    REJECTED: 'bg-danger-50 text-danger-700 ring-danger-200',
+    EXPIRED: 'bg-surface-100 text-surface-600 ring-surface-200',
 
     // AML Risk
-    low: 'bg-success-50 text-success-700 ring-success-200',
-    medium: 'bg-accent-50 text-accent-700 ring-accent-200',
-    high: 'bg-danger-50 text-danger-700 ring-danger-200',
-    critical: 'bg-danger-100 text-danger-800 ring-danger-300',
+    LOW: 'bg-success-50 text-success-700 ring-success-200',
+    MEDIUM: 'bg-accent-50 text-accent-700 ring-accent-200',
+    HIGH: 'bg-danger-50 text-danger-700 ring-danger-200',
+    CRITICAL: 'bg-danger-100 text-danger-800 ring-danger-300',
 
     // Policy
-    draft: 'bg-surface-100 text-surface-600 ring-surface-200',
-    lapsed: 'bg-danger-50 text-danger-700 ring-danger-200',
-    cancelled: 'bg-danger-50 text-danger-700 ring-danger-200',
+    DRAFT: 'bg-surface-100 text-surface-600 ring-surface-200',
+    LAPSED: 'bg-danger-50 text-danger-700 ring-danger-200',
+    CANCELLED: 'bg-danger-50 text-danger-700 ring-danger-200',
 
     // Lead
-    new: 'bg-primary-50 text-primary-700 ring-primary-200',
-    contacted: 'bg-accent-50 text-accent-700 ring-accent-200',
-    qualified: 'bg-success-50 text-success-700 ring-success-200',
-    quoted: 'bg-primary-100 text-primary-700 ring-primary-200',
-    negotiation: 'bg-accent-100 text-accent-700 ring-accent-200',
-    converted: 'bg-success-100 text-success-700 ring-success-200',
-    lost: 'bg-danger-50 text-danger-700 ring-danger-200',
-    nurturing: 'bg-surface-200 text-surface-700 ring-surface-300',
+    NEW: 'bg-primary-50 text-primary-700 ring-primary-200',
+    CONTACTED: 'bg-accent-50 text-accent-700 ring-accent-200',
+    QUALIFIED: 'bg-success-50 text-success-700 ring-success-200',
+    QUOTED: 'bg-primary-100 text-primary-700 ring-primary-200',
+    NEGOTIATION: 'bg-accent-100 text-accent-700 ring-accent-200',
+    CONVERTED: 'bg-success-100 text-success-700 ring-success-200',
+    LOST: 'bg-danger-50 text-danger-700 ring-danger-200',
+    NURTURING: 'bg-surface-200 text-surface-700 ring-surface-300',
 
     // Lead Priority
-    hot: 'bg-danger-50 text-danger-700 ring-danger-200',
-    warm: 'bg-accent-50 text-accent-700 ring-accent-200',
-    cold: 'bg-primary-50 text-primary-700 ring-primary-200',
+    HOT: 'bg-danger-50 text-danger-700 ring-danger-200',
+    WARM: 'bg-accent-50 text-accent-700 ring-accent-200',
+    COLD: 'bg-primary-50 text-primary-700 ring-primary-200',
 
     // Claim
-    intimated: 'bg-primary-50 text-primary-700 ring-primary-200',
-    registered: 'bg-primary-100 text-primary-700 ring-primary-200',
-    documents_pending: 'bg-accent-50 text-accent-700 ring-accent-200',
-    under_review: 'bg-accent-100 text-accent-700 ring-accent-200',
-    assessed: 'bg-primary-50 text-primary-700 ring-primary-200',
-    approved: 'bg-success-50 text-success-700 ring-success-200',
-    settled: 'bg-success-100 text-success-700 ring-success-200',
-    closed: 'bg-surface-100 text-surface-600 ring-surface-200',
+    INTIMATED: 'bg-primary-50 text-primary-700 ring-primary-200',
+    REGISTERED: 'bg-primary-100 text-primary-700 ring-primary-200',
+    DOCUMENTS_PENDING: 'bg-accent-50 text-accent-700 ring-accent-200',
+    UNDER_REVIEW: 'bg-accent-100 text-accent-700 ring-accent-200',
+    ASSESSED: 'bg-primary-50 text-primary-700 ring-primary-200',
+    APPROVED: 'bg-success-50 text-success-700 ring-success-200',
+    SETTLED: 'bg-success-100 text-success-700 ring-success-200',
+    CLOSED: 'bg-surface-100 text-surface-600 ring-surface-200',
 
     // Complaint
-    assigned: 'bg-primary-50 text-primary-700 ring-primary-200',
-    under_investigation: 'bg-accent-50 text-accent-700 ring-accent-200',
-    resolved: 'bg-success-50 text-success-700 ring-success-200',
-    escalated: 'bg-danger-50 text-danger-700 ring-danger-200',
+    ASSIGNED: 'bg-primary-50 text-primary-700 ring-primary-200',
+    UNDER_INVESTIGATION: 'bg-accent-50 text-accent-700 ring-accent-200',
+    RESOLVED: 'bg-success-50 text-success-700 ring-success-200',
+    ESCALATED: 'bg-danger-50 text-danger-700 ring-danger-200',
 
     // Commission
-    earned: 'bg-success-50 text-success-700 ring-success-200',
-    paid: 'bg-primary-50 text-primary-700 ring-primary-200',
-    clawback: 'bg-danger-50 text-danger-700 ring-danger-200',
-    clawed_back: 'bg-danger-50 text-danger-700 ring-danger-200',
+    EARNED: 'bg-success-50 text-success-700 ring-success-200',
+    PAID: 'bg-primary-50 text-primary-700 ring-primary-200',
+    CLAWBACK: 'bg-danger-50 text-danger-700 ring-danger-200',
+    CLAWED_BACK: 'bg-danger-50 text-danger-700 ring-danger-200',
 
     // Finance / Payment
-    outstanding: 'bg-accent-50 text-accent-700 ring-accent-200',
-    overdue: 'bg-danger-50 text-danger-700 ring-danger-200',
-    partial: 'bg-warning-50 text-warning-700 ring-warning-200',
-    refunded: 'bg-primary-50 text-primary-700 ring-primary-200',
+    OUTSTANDING: 'bg-accent-50 text-accent-700 ring-accent-200',
+    OVERDUE: 'bg-danger-50 text-danger-700 ring-danger-200',
+    PARTIAL: 'bg-warning-50 text-warning-700 ring-warning-200',
+    REFUNDED: 'bg-primary-50 text-primary-700 ring-primary-200',
 
     // Renewal workflow
-    renewed: 'bg-success-100 text-success-700 ring-success-200',
+    RENEWED: 'bg-success-100 text-success-700 ring-success-200',
 
     // Premium Financing
-    completed: 'bg-success-100 text-success-800 ring-success-300',
-    defaulted: 'bg-danger-100 text-danger-800 ring-danger-300',
-    submitted: 'bg-blue-50 text-blue-700 ring-blue-200',
-    disbursed: 'bg-primary-50 text-primary-700 ring-primary-200',
+    COMPLETED: 'bg-success-100 text-success-800 ring-success-300',
+    DEFAULTED: 'bg-danger-100 text-danger-800 ring-danger-300',
+    SUBMITTED: 'bg-blue-50 text-blue-700 ring-blue-200',
+    DISBURSED: 'bg-primary-50 text-primary-700 ring-primary-200',
 };
 
 const STATUS_LABELS: Record<string, string> = {
-    documents_pending: 'Docs Pending',
-    under_review: 'Under Review',
-    under_investigation: 'Investigating',
-    clawed_back: 'Clawed Back',
-    professional_indemnity: 'Prof. Indemnity',
-    oil_gas: 'Oil & Gas',
+    DOCUMENTS_PENDING: 'Docs Pending',
+    UNDER_REVIEW: 'Under Review',
+    UNDER_INVESTIGATION: 'Investigating',
+    CLAWED_BACK: 'Clawed Back',
+    PROFESSIONAL_INDEMNITY: 'Prof. Indemnity',
+    OIL_GAS: 'Oil & Gas',
 };
 
 interface StatusBadgeProps {

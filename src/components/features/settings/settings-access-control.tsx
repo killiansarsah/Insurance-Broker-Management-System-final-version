@@ -1,7 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Image from 'next/image';
+import { useState } from 'react';
 import {
     Users, ShieldCheck, Crown, UserCog, Briefcase, UserCheck,
     FileText, FilePen, Trash2, DollarSign, Settings, Download,
@@ -10,17 +9,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-
-interface User {
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-    status: 'Active' | 'Inactive' | 'Suspended';
-    active: string;
-    img?: string;
-    initial?: string;
-}
+import { useUsers, useUpdateUser, useDeactivateUser, useReactivateUser } from '@/hooks/api/use-users';
+import { useCreateInvitation } from '@/hooks/api/use-invitations';
 
 interface Permission {
     id: string;
@@ -42,15 +32,52 @@ interface Role {
 
 type ModalType = 'edit' | 'terminate' | 'invite' | 'new-role' | null;
 
+// Map backend roles to display-friendly labels
+const ROLE_DISPLAY: Record<string, string> = {
+    PLATFORM_SUPER_ADMIN: 'Workspace owner',
+    SUPER_ADMIN: 'Workspace owner',
+    TENANT_ADMIN: 'Administrator',
+    ADMIN: 'Administrator',
+    BRANCH_MANAGER: 'Manager',
+    COMPLIANCE_OFFICER: 'Supervisor',
+    FINANCE_MANAGER: 'Manager',
+    SENIOR_BROKER: 'Supervisor',
+    BROKER: 'Agent',
+    UNDERWRITER: 'Agent',
+    AGENT: 'Agent',
+    SECRETARY: 'Agent',
+    DATA_ENTRY: 'Agent',
+    VIEWER: 'Agent',
+};
+
+// Map display roles to backend roles for updates
+const ROLE_TO_BACKEND: Record<string, string> = {
+    'Workspace owner': 'TENANT_ADMIN',
+    'Administrator': 'ADMIN',
+    'Manager': 'BRANCH_MANAGER',
+    'Supervisor': 'SENIOR_BROKER',
+    'Agent': 'BROKER',
+};
+
+interface DisplayUser {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    backendRole: string;
+    status: 'Active' | 'Inactive' | 'Suspended';
+    active: string;
+    img?: string;
+    initial?: string;
+}
+
 export function SettingsAccessControl() {
     const [subTab, setSubTab] = useState<'users' | 'roles'>('users');
-    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [selectedUser, setSelectedUser] = useState<DisplayUser | null>(null);
     const [modalType, setModalType] = useState<ModalType>(null);
     const [editName, setEditName] = useState('');
     const [editRole, setEditRole] = useState('');
     const [isSaving, setIsSaving] = useState(false);
-    const [showToast, setShowToast] = useState(false);
-    const [toastMsg, setToastMsg] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [inviteName, setInviteName] = useState('');
     const [inviteEmail, setInviteEmail] = useState('');
@@ -61,14 +88,34 @@ export function SettingsAccessControl() {
 
     const roleOptions = ['Workspace owner', 'Administrator', 'Manager', 'Supervisor', 'Agent'];
 
-    const openEditModal = (user: User) => {
+    // API hooks
+    const { data: usersData } = useUsers();
+    const updateUserMutation = useUpdateUser();
+    const deactivateUserMutation = useDeactivateUser();
+    const reactivateUserMutation = useReactivateUser();
+    const createInvitationMutation = useCreateInvitation();
+
+    // Transform API users to display format
+    const apiUsers = usersData?.data || [];
+    const users: DisplayUser[] = (apiUsers as any[]).map((u: any) => ({
+        id: u.id,
+        name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,
+        email: u.email,
+        role: ROLE_DISPLAY[u.role] || 'Agent',
+        backendRole: u.role,
+        status: u.isActive === false ? 'Suspended' : 'Active',
+        active: u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Never',
+        initial: `${(u.firstName || '?')[0]}${(u.lastName || '?')[0]}`.toUpperCase(),
+    }));
+
+    const openEditModal = (user: DisplayUser) => {
         setSelectedUser(user);
         setEditName(user.name);
         setEditRole(user.role);
         setModalType('edit');
     };
 
-    const openTerminateModal = (user: User) => {
+    const openTerminateModal = (user: DisplayUser) => {
         setSelectedUser(user);
         setModalType('terminate');
     };
@@ -78,42 +125,47 @@ export function SettingsAccessControl() {
         setSelectedUser(null);
     };
 
-    const triggerToast = (msg: string) => {
-        setToastMsg(msg);
-        setShowToast(true);
-    };
-
-    useEffect(() => {
-        if (!showToast) return;
-        const t = setTimeout(() => setShowToast(false), 3000);
-        return () => clearTimeout(t);
-    }, [showToast]);
-
     const confirmEdit = () => {
         if (!selectedUser) return;
         setIsSaving(true);
-        setTimeout(() => {
-            setUsers(prev => prev.map(u =>
-                u.id === selectedUser.id ? { ...u, name: editName, role: editRole } : u
-            ));
-            setIsSaving(false);
-            closeModal();
-            triggerToast(`${editName} updated successfully`);
-        }, 600);
+        const [firstName, ...rest] = editName.split(' ');
+        const lastName = rest.join(' ');
+        const backendRole = ROLE_TO_BACKEND[editRole] || selectedUser.backendRole;
+        updateUserMutation.mutate(
+            { id: selectedUser.id, data: { firstName, lastName, role: backendRole } },
+            {
+                onSuccess: () => {
+                    setIsSaving(false);
+                    closeModal();
+                    toast.success('Member Updated', { description: `${editName} updated successfully.` });
+                },
+                onError: () => {
+                    setIsSaving(false);
+                    toast.error('Update Failed', { description: 'Could not update member. Please try again.' });
+                },
+            }
+        );
     };
 
     const confirmTerminate = () => {
         if (!selectedUser) return;
         setIsSaving(true);
         const isSuspended = selectedUser.status === 'Suspended';
-        setTimeout(() => {
-            setUsers(prev => prev.map(u =>
-                u.id === selectedUser.id ? { ...u, status: isSuspended ? 'Active' : 'Suspended' } : u
-            ));
-            setIsSaving(false);
-            closeModal();
-            triggerToast(isSuspended ? `${selectedUser.name} has been restored` : `${selectedUser.name} has been suspended`);
-        }, 600);
+        const mutation = isSuspended ? reactivateUserMutation : deactivateUserMutation;
+        mutation.mutate(selectedUser.id, {
+            onSuccess: () => {
+                setIsSaving(false);
+                closeModal();
+                toast.success(
+                    isSuspended ? 'Access Restored' : 'User Suspended',
+                    { description: isSuspended ? `${selectedUser.name} has been restored.` : `${selectedUser.name} has been suspended.` }
+                );
+            },
+            onError: () => {
+                setIsSaving(false);
+                toast.error('Action Failed', { description: 'Could not update user status. Please try again.' });
+            },
+        });
     };
 
     const roleIconOptions: Array<{ key: string; icon: React.ElementType; label: string }> = [
@@ -140,53 +192,44 @@ export function SettingsAccessControl() {
     };
 
     const confirmInvite = () => {
-        if (!inviteName.trim() || !inviteEmail.trim()) return;
+        if (!inviteEmail.trim()) return;
         setIsSaving(true);
-        setTimeout(() => {
-            const newUser: User = {
-                id: String(Date.now()),
-                name: inviteName.trim(),
-                email: inviteEmail.trim(),
-                role: inviteRole,
-                status: 'Active',
-                active: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                initial: inviteName.trim().split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
-            };
-            setUsers(prev => [...prev, newUser]);
-            setIsSaving(false);
-            closeModal();
-            triggerToast(`Invite sent to ${inviteName.trim()}`);
-        }, 600);
+        const backendRole = ROLE_TO_BACKEND[inviteRole] || 'BROKER';
+        createInvitationMutation.mutate(
+            { email: inviteEmail.trim(), role: backendRole },
+            {
+                onSuccess: () => {
+                    setIsSaving(false);
+                    closeModal();
+                    toast.success('Invitation Sent', { description: `Invite sent to ${inviteEmail.trim()}.` });
+                },
+                onError: () => {
+                    setIsSaving(false);
+                    toast.error('Invite Failed', { description: 'Could not send invitation. Please try again.' });
+                },
+            }
+        );
     };
 
     const confirmNewRole = () => {
         if (!newRoleName.trim()) return;
         setIsSaving(true);
         const icon = roleIconOptions.find(o => o.key === newRoleIconKey)?.icon ?? UserCheck;
-        setTimeout(() => {
-            const newRole: Role = {
-                id: String(Date.now()),
-                name: newRoleName.trim(),
-                userCount: 0,
-                permissions: [],
-                color: newRoleColor,
-                icon,
-            };
-            setRoles(prev => [...prev, newRole]);
-            setSelectedRoleId(newRole.id);
-            setIsSaving(false);
-            closeModal();
-            triggerToast(`Role "${newRoleName.trim()}" created`);
-        }, 600);
+        // Roles are managed locally until a roles API is available
+        const newRole: Role = {
+            id: String(Date.now()),
+            name: newRoleName.trim(),
+            userCount: 0,
+            permissions: [],
+            color: newRoleColor,
+            icon,
+        };
+        setRoles(prev => [...prev, newRole]);
+        setSelectedRoleId(newRole.id);
+        setIsSaving(false);
+        closeModal();
+        toast.success('Role Created', { description: `Role "${newRoleName.trim()}" created.` });
     };
-
-    const [users, setUsers] = useState<User[]>([
-        { id: '1', name: 'Amara Ndiaye', email: 'amara.ndiaye@ibms.africa', role: 'Workspace owner', status: 'Active', active: 'Feb 24, 2026', img: '12' },
-        { id: '2', name: 'David Osei', email: 'david.osei@ibms.africa', role: 'Administrator', status: 'Active', active: 'Feb 24, 2026', img: '15' },
-        { id: '3', name: 'Sarah Smith', email: 'sarah.smith@ibms.africa', role: 'Manager', status: 'Inactive', active: 'Feb 20, 2026', initial: 'SS' },
-        { id: '4', name: 'Kwame Mensah', email: 'kwame.m@ibms.africa', role: 'Supervisor', status: 'Active', active: 'Feb 23, 2026', img: '18' },
-        { id: '5', name: 'Zainab Oladipo', email: 'zainab.o@ibms.africa', role: 'Agent', status: 'Suspended', active: 'Jan 12, 2026', initial: 'ZO' },
-    ]);
 
     const [permissions] = useState<Permission[]>([
         { id: 'view_policies', name: 'View Policies', category: 'Policies', description: 'Can view motor and non-motor policy lists', icon: FileText, color: 'blue' },
@@ -318,13 +361,9 @@ export function SettingsAccessControl() {
                                 key={u.id}
                                 className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-surface-100 dark:border-slate-800 hover:border-surface-200 dark:hover:border-slate-700 hover:shadow-sm transition-all"
                             >
-                                {u.img ? (
-                                    <Image src={`https://picsum.photos/seed/${u.img}/80/80`} alt={u.name} width={44} height={44} className="size-11 rounded-xl object-cover shrink-0" />
-                                ) : (
-                                    <div className="size-11 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/40 dark:to-primary-800/40 text-primary-700 dark:text-primary-300 flex items-center justify-center text-sm font-bold shrink-0">
-                                        {u.initial}
-                                    </div>
-                                )}
+                                <div className="size-11 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900/40 dark:to-primary-800/40 text-primary-700 dark:text-primary-300 flex items-center justify-center text-sm font-bold shrink-0">
+                                    {u.initial}
+                                </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-semibold text-surface-900 dark:text-white truncate">{u.name}</p>
                                     <p className="text-xs text-surface-400 truncate">{u.email}</p>
@@ -706,12 +745,6 @@ export function SettingsAccessControl() {
             )}
 
             {/* Toast */}
-            {showToast && (
-                <div className="fixed bottom-6 right-6 z-[60] flex items-center gap-3 px-5 py-3.5 rounded-xl bg-surface-900 dark:bg-white text-white dark:text-surface-900 shadow-2xl animate-fade-in">
-                    <CheckCircle size={16} className="text-emerald-400 dark:text-emerald-600 shrink-0" />
-                    <span className="text-sm font-medium">{toastMsg}</span>
-                </div>
-            )}
         </div>
     );
 }

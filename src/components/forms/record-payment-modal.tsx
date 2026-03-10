@@ -31,11 +31,11 @@ interface RecordPaymentModalProps {
 }
 
 const PAYMENT_METHODS: { id: PaymentMethod; label: string; icon: React.ReactNode; description: string }[] = [
-    { id: 'mobile_money', label: 'Mobile Money', icon: <Smartphone size={20} />, description: 'MTN MoMo, Telecel Cash, AT Money' },
-    { id: 'bank_transfer', label: 'Bank Transfer', icon: <Building size={20} />, description: 'Direct bank deposit or transfer' },
-    { id: 'cash', label: 'Cash', icon: <Banknote size={20} />, description: 'Cash payment at office' },
-    { id: 'cheque', label: 'Cheque', icon: <FileCheck size={20} />, description: 'Bank cheque payment' },
-    { id: 'card', label: 'Card', icon: <CreditCard size={20} />, description: 'Visa / Mastercard' },
+    { id: 'MOBILE_MONEY', label: 'Mobile Money', icon: <Smartphone size={20} />, description: 'MTN MoMo, Telecel Cash, AT Money' },
+    { id: 'BANK_TRANSFER', label: 'Bank Transfer', icon: <Building size={20} />, description: 'Direct bank deposit or transfer' },
+    { id: 'CASH', label: 'Cash', icon: <Banknote size={20} />, description: 'Cash payment at office' },
+    { id: 'CHEQUE', label: 'Cheque', icon: <FileCheck size={20} />, description: 'Bank cheque payment' },
+    { id: 'CARD', label: 'Card', icon: <CreditCard size={20} />, description: 'Visa / Mastercard' },
 ];
 
 export function RecordPaymentModal({
@@ -52,14 +52,14 @@ export function RecordPaymentModal({
     const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
 
     const [step, setStep] = useState<'method' | 'details' | 'confirm' | 'success'>('method');
-    const [method, setMethod] = useState<PaymentMethod>('mobile_money');
+    const [method, setMethod] = useState<PaymentMethod>('MOBILE_MONEY');
     const [amount, setAmount] = useState(outstandingBalance > 0 ? outstandingBalance.toString() : '');
     const [reference, setReference] = useState('');
     const [description, setDescription] = useState('Premium Payment');
     const [isProcessing, setIsProcessing] = useState(false);
 
     // MoMo-specific
-    const [momoNetwork, setMomoNetwork] = useState<MoMoNetwork>('mtn');
+    const [momoNetwork, setMomoNetwork] = useState<MoMoNetwork>('MTN');
     const [phoneNumber, setPhoneNumber] = useState('');
 
     // Bank-specific
@@ -74,11 +74,11 @@ export function RecordPaymentModal({
 
     function resetForm() {
         setStep('method');
-        setMethod('mobile_money');
+        setMethod('MOBILE_MONEY');
         setAmount(outstandingBalance > 0 ? outstandingBalance.toString() : '');
         setReference('');
         setDescription('Premium Payment');
-        setMomoNetwork('mtn');
+        setMomoNetwork('MTN');
         setPhoneNumber('');
         setBankName('');
         setChequeNumber('');
@@ -101,17 +101,17 @@ export function RecordPaymentModal({
             newErrors.amount = 'Amount exceeds outstanding balance';
         }
 
-        if (method === 'mobile_money') {
+        if (method === 'MOBILE_MONEY') {
             if (!phoneNumber.trim()) newErrors.phoneNumber = 'Phone number is required';
             else if (!/^0[2-5]\d{8}$/.test(phoneNumber.replace(/\s/g, '')))
                 newErrors.phoneNumber = 'Use format 0XX XXX XXXX';
         }
 
-        if (method === 'bank_transfer' && !bankName.trim()) {
+        if (method === 'BANK_TRANSFER' && !bankName.trim()) {
             newErrors.bankName = 'Bank name is required';
         }
 
-        if (method === 'cheque' && !chequeNumber.trim()) {
+        if (method === 'CHEQUE' && !chequeNumber.trim()) {
             newErrors.chequeNumber = 'Cheque number is required';
         }
 
@@ -137,10 +137,10 @@ export function RecordPaymentModal({
             clientName,
             amount: parsedAmount,
             currency,
-            status: 'paid',
+            status: 'PAID',
             method,
-            momoNetwork: method === 'mobile_money' ? momoNetwork : undefined,
-            phoneNumber: method === 'mobile_money' ? phoneNumber : undefined,
+            momoNetwork: method === 'MOBILE_MONEY' ? momoNetwork : undefined,
+            phoneNumber: method === 'MOBILE_MONEY' ? phoneNumber : undefined,
             reference,
             description,
             processedAt: new Date().toISOString(),
@@ -270,7 +270,7 @@ export function RecordPaymentModal({
                                     'w-full px-4 py-2.5 text-sm rounded-xl border bg-surface-50 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all font-mono',
                                     errors.reference ? 'border-danger-400' : 'border-surface-200'
                                 )}
-                                placeholder={method === 'mobile_money' ? 'MOMO-2026-XXX' : method === 'bank_transfer' ? 'BNK-2026-XXX' : 'REF-XXX'}
+                                placeholder={method === 'MOBILE_MONEY' ? 'MOMO-2026-XXX' : method === 'BANK_TRANSFER' ? 'BNK-2026-XXX' : 'REF-XXX'}
                             />
                             {errors.reference && <p className="text-xs text-danger-500 mt-1">{errors.reference}</p>}
                         </div>
@@ -290,7 +290,7 @@ export function RecordPaymentModal({
                         </div>
 
                         {/* Method-specific fields */}
-                        {method === 'mobile_money' && (
+                        {method === 'MOBILE_MONEY' && (
                             <div className="space-y-4 pt-2 border-t border-surface-100">
                                 <MoMoPaymentForm
                                     network={momoNetwork}
@@ -302,7 +302,7 @@ export function RecordPaymentModal({
                             </div>
                         )}
 
-                        {method === 'bank_transfer' && (
+                        {method === 'BANK_TRANSFER' && (
                             <div>
                                 <label className="block text-xs font-semibold text-surface-600 mb-1.5">
                                     Bank Name <span className="text-danger-500">*</span>
@@ -321,7 +321,7 @@ export function RecordPaymentModal({
                             </div>
                         )}
 
-                        {method === 'cheque' && (
+                        {method === 'CHEQUE' && (
                             <div>
                                 <label className="block text-xs font-semibold text-surface-600 mb-1.5">
                                     Cheque Number <span className="text-danger-500">*</span>
@@ -370,20 +370,20 @@ export function RecordPaymentModal({
                                     <p className="text-xs text-surface-500">Method</p>
                                     <p className="font-semibold text-surface-900 capitalize">
                                         {PAYMENT_METHODS.find(m => m.id === method)?.label}
-                                        {method === 'mobile_money' && ` (${momoNetwork.toUpperCase()})`}
+                                        {method === 'MOBILE_MONEY' && ` (${momoNetwork.toUpperCase()})`}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-surface-500">Reference</p>
                                     <p className="font-semibold text-surface-900 font-mono">{reference}</p>
                                 </div>
-                                {method === 'mobile_money' && (
+                                {method === 'MOBILE_MONEY' && (
                                     <div>
                                         <p className="text-xs text-surface-500">Phone</p>
                                         <p className="font-semibold text-surface-900">{phoneNumber}</p>
                                     </div>
                                 )}
-                                {method === 'bank_transfer' && (
+                                {method === 'BANK_TRANSFER' && (
                                     <div>
                                         <p className="text-xs text-surface-500">Bank</p>
                                         <p className="font-semibold text-surface-900">{bankName}</p>

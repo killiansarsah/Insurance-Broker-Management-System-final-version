@@ -46,7 +46,14 @@ export function useFinancialReport(params: { from: string; to: string }) {
 
 export function useComplianceReport() {
     return useQuery({
-        queryKey: ['reports', 'compliance'],
+        queryKey: ['reports', 'COMPLIANCE'],
         queryFn: () => apiClient.get('/reports/compliance'),
+    });
+}
+
+export function useNicQuarterlyReturn(year?: number, quarter?: number) {
+    return useQuery({
+        queryKey: ['reports', 'nic-quarterly', year, quarter],
+        queryFn: () => apiClient.get('/reports/nic-quarterly', { year, quarter }),
     });
 }

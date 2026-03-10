@@ -42,11 +42,11 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
     const clients = Array.isArray(clientsData) ? clientsData : (clientsData as any)?.data ?? [];
     const policies = Array.isArray(policiesData) ? policiesData : (policiesData as any)?.data ?? [];
 
-    // Build client options from mock data
+    // Build client options from API data
     const clientOptions = useMemo(
         () =>
             clients
-                .filter((c: any) => c.status === 'active' || c.isActive)
+                .filter((c: any) => c.status === 'ACTIVE' || c.isActive)
                 .slice(0, 50)
                 .map((c: any) => ({
                     label: c.companyName || `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || c.clientNumber || c.id,
@@ -59,7 +59,7 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
     const policyOptions = useMemo(() => {
         if (!clientId) return [];
         return policies
-            .filter((p: any) => p.clientId === clientId && (p.status === 'ACTIVE' || p.status === 'active' || p.status === 'DRAFT'))
+            .filter((p: any) => p.clientId === clientId && (p.status === 'ACTIVE' || p.status === 'ACTIVE' || p.status === 'DRAFT'))
             .map((p: any) => ({
                 label: `${p.policyNumber} — ${p.insuranceType}`,
                 value: p.id,

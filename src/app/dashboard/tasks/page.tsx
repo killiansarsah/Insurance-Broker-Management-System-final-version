@@ -40,8 +40,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 interface Task {
     id: string;
     title: string;
-    priority: 'hot' | 'warm' | 'cold';
-    status: 'pending' | 'under_review' | 'registered';
+    priority: 'HOT' | 'WARM' | 'COLD';
+    status: 'PENDING' | 'UNDER_REVIEW' | 'REGISTERED';
     due: string;
     type: string;
     description: string;
@@ -51,8 +51,8 @@ interface Task {
 
 // ─── Map backend record → UI Task ───
 function mapApiTask(raw: Record<string, any>): Task {
-    const priorityMap: Record<string, 'hot' | 'warm' | 'cold'> = { HOT: 'hot', WARM: 'warm', COLD: 'cold' };
-    const statusMap: Record<string, 'pending' | 'under_review' | 'registered'> = { PENDING: 'pending', UNDER_REVIEW: 'under_review', REGISTERED: 'registered' };
+    const priorityMap: Record<string, 'HOT' | 'WARM' | 'COLD'> = { HOT: 'HOT', WARM: 'WARM', COLD: 'COLD' };
+    const statusMap: Record<string, 'PENDING' | 'UNDER_REVIEW' | 'REGISTERED'> = { PENDING: 'PENDING', UNDER_REVIEW: 'UNDER_REVIEW', REGISTERED: 'REGISTERED' };
 
     let due = '';
     if (raw.dueDate) {
@@ -68,8 +68,8 @@ function mapApiTask(raw: Record<string, any>): Task {
     return {
         id: raw.id,
         title: raw.title ?? '',
-        priority: priorityMap[raw.priority] ?? 'warm',
-        status: statusMap[raw.status] ?? 'pending',
+        priority: priorityMap[raw.priority] ?? 'WARM',
+        status: statusMap[raw.status] ?? 'PENDING',
         due,
         type: raw.type ?? 'General',
         description: raw.description ?? '',
@@ -86,7 +86,7 @@ function MetricCard({ label, value, icon, colorClass, status, trend }: { label: 
                     <p className="text-[10px] font-bold text-surface-500 uppercase tracking-widest">{label}</p>
                     <h3 className={cn("text-3xl font-bold mt-1 tracking-tight", colorClass)}>{value}</h3>
                 </div>
-                <div className={cn("p-2 rounded-lg bg-surface-50 group-hover:bg-primary-50 transition-colors", status === 'urgent' ? 'text-danger-500' : status === 'pending' ? 'text-accent-500' : 'text-success-500')}>
+                <div className={cn("p-2 rounded-lg bg-surface-50 group-hover:bg-primary-50 transition-colors", status === 'urgent' ? 'text-danger-500' : status === 'PENDING' ? 'text-accent-500' : 'text-success-500')}>
                     {icon}
                 </div>
             </div>
@@ -107,7 +107,7 @@ export default function TasksPage() {
 
     // Map API data into UI shape; separate active vs completed
     const allTasks = useMemo(() => {
-        const raw = tasksResponse?.items ?? tasksResponse?.data ?? tasksResponse ?? [];
+        const raw = (tasksResponse as unknown as Record<string, unknown>)?.items ?? tasksResponse?.data ?? tasksResponse ?? [];
         if (!Array.isArray(raw)) return [];
         return (raw as Record<string, any>[]).map(mapApiTask);
     }, [tasksResponse]);
@@ -125,7 +125,7 @@ export default function TasksPage() {
     const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
     const [showScrollIndicator, setShowScrollIndicator] = useState(false);
     const [justTrashed, setJustTrashed] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState<{ type: 'single' | 'bulk' | 'empty-bin'; id?: string } | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ type: 'SINGLE' | 'bulk' | 'empty-bin'; id?: string } | null>(null);
     const binRef = useRef<HTMLDivElement>(null);
     const deskScrollRef = useRef<HTMLDivElement>(null);
     // Filters State
@@ -140,13 +140,13 @@ export default function TasksPage() {
     // New Task Form State
     const [newTask, setNewTask] = useState<{
         title: string;
-        priority: 'hot' | 'warm' | 'cold';
+        priority: 'HOT' | 'WARM' | 'COLD';
         type: string;
         description: string;
         due: string;
     }>({
         title: '',
-        priority: 'warm',
+        priority: 'WARM',
         type: '',
         description: '',
         due: ''
@@ -198,12 +198,12 @@ export default function TasksPage() {
     };
 
     const handleDelete = (taskId: string) => {
-        setDeleteTarget({ type: 'single', id: taskId });
+        setDeleteTarget({ type: 'SINGLE', id: taskId });
     };
 
     const confirmDelete = () => {
         if (!deleteTarget) return;
-        if (deleteTarget.type === 'single' && deleteTarget.id) {
+        if (deleteTarget.type === 'SINGLE' && deleteTarget.id) {
             const task = taskList.find(t => t.id === deleteTarget.id);
             updateTask.mutate(
                 { id: deleteTarget.id, data: { isCompleted: true } },
@@ -376,7 +376,7 @@ export default function TasksPage() {
             {
                 onSuccess: () => {
                     setIsCreateModalOpen(false);
-                    setNewTask({ title: '', priority: 'warm', type: '', description: '', due: '' });
+                    setNewTask({ title: '', priority: 'WARM', type: '', description: '', due: '' });
                     toast.success('New task created', { description: newTask.title });
                 },
                 onError: () => {
@@ -458,7 +458,7 @@ export default function TasksPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <MetricCard
                     label="Urgent Tasks"
-                    value={taskList.filter(t => t.priority === 'hot' && !t.isCompleted).length.toString().padStart(2, '0')}
+                    value={taskList.filter(t => t.priority === 'HOT' && !t.isCompleted).length.toString().padStart(2, '0')}
                     status="urgent"
                     icon={<AlertCircle size={20} />}
                     colorClass="text-danger-600"
@@ -466,14 +466,14 @@ export default function TasksPage() {
                 <MetricCard
                     label="Pending Review"
                     value={taskList.filter(t => !t.isCompleted).length.toString().padStart(2, '0')}
-                    status="pending"
+                    status="PENDING"
                     icon={<Clock size={20} />}
                     colorClass="text-accent-600"
                 />
                 <MetricCard
                     label="Closed (Monthly)"
                     value={completedCount.toString()}
-                    status="completed"
+                    status="COMPLETED"
                     icon={<CheckCircle2 size={20} />}
                     colorClass="text-success-600"
                     trend="5%"
@@ -700,7 +700,7 @@ export default function TasksPage() {
                                         <div className="col-span-5 flex items-center gap-3">
                                             <div className={cn(
                                                 "w-1 h-8 rounded-full flex-shrink-0",
-                                                task.priority === 'hot' ? "bg-danger-500" : task.priority === 'warm' ? "bg-accent-500" : "bg-primary-500"
+                                                task.priority === 'HOT' ? "bg-danger-500" : task.priority === 'WARM' ? "bg-accent-500" : "bg-primary-500"
                                             )} />
                                             <div className="min-w-0">
                                                 <h4 className="font-bold text-surface-900 leading-none truncate">{task.title}</h4>
@@ -825,12 +825,12 @@ export default function TasksPage() {
                             </label>
                             <CustomSelect
                                 options={[
-                                    { label: '🔥 Hot (Urgent)', value: 'hot' },
-                                    { label: '⚡ Warm (Normal)', value: 'warm' },
-                                    { label: '❄️ Cold (Low)', value: 'cold' },
+                                    { label: '🔥 Hot (Urgent)', value: 'HOT' },
+                                    { label: '⚡ Warm (Normal)', value: 'WARM' },
+                                    { label: '❄️ Cold (Low)', value: 'COLD' },
                                 ]}
                                 value={newTask.priority}
-                                onChange={(v) => setNewTask({ ...newTask, priority: v as 'hot' | 'warm' | 'cold' })}
+                                onChange={(v) => setNewTask({ ...newTask, priority: v as 'HOT' | 'WARM' | 'COLD' })}
                             />
                         </div>
                         <div className="space-y-2">
@@ -892,10 +892,10 @@ export default function TasksPage() {
                     <div className="space-y-3">
                         <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1">Priority Level</label>
                         <div className="grid grid-cols-4 gap-2">
-                            {['all', 'hot', 'warm', 'cold'].map(p => (
+                            {['all', 'HOT', 'WARM', 'COLD'].map(p => (
                                 <button
                                     key={p}
-                                    onClick={() => setActiveFilters({ ...activeFilters, priority: p as 'all' | 'hot' | 'warm' | 'cold' })}
+                                    onClick={() => setActiveFilters({ ...activeFilters, priority: p as 'all' | 'HOT' | 'WARM' | 'COLD' })}
                                     className={cn(
                                         "px-3 py-2.5 text-xs font-black rounded-xl border transition-all uppercase tracking-tight",
                                         activeFilters.priority === p
@@ -912,10 +912,10 @@ export default function TasksPage() {
                     <div className="space-y-3">
                         <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1">Process State</label>
                         <div className="grid grid-cols-2 gap-2">
-                            {['all', 'pending', 'under_review', 'registered'].map(s => (
+                            {['all', 'PENDING', 'UNDER_REVIEW', 'REGISTERED'].map(s => (
                                 <button
                                     key={s}
-                                    onClick={() => setActiveFilters({ ...activeFilters, status: s as 'all' | 'pending' | 'under_review' | 'registered' })}
+                                    onClick={() => setActiveFilters({ ...activeFilters, status: s as 'all' | 'PENDING' | 'UNDER_REVIEW' | 'REGISTERED' })}
                                     className={cn(
                                         "px-4 py-3 text-xs font-black rounded-xl border transition-all uppercase tracking-tight text-left flex justify-between items-center",
                                         activeFilters.status === s

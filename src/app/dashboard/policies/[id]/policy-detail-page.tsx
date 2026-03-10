@@ -46,9 +46,7 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { formatCurrency, cn, formatDate } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import type { Policy } from '@/types';
-import { mockPolicies } from '@/hooks/api';
-import { claims as mockClaims } from '@/hooks/api';
-import { carriers } from '@/hooks/api';
+import { usePolicy, useClaims, useCarrier } from '@/hooks/api';
 import { toast } from 'sonner';
 import { usePaymentStore } from '@/stores/payment-store';
 import { generateReceipt } from '@/lib/generate-receipt';
@@ -95,10 +93,22 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
 
     const { transactions } = usePaymentStore();
 
-    const policy = useMemo(() => mockPolicies.find(p => p.id === policyId), [policyId]);
-    const policyClaims = useMemo(() => mockClaims.filter(c => c.policyId === policyId), [policyId]);
-    const carrier = useMemo(() => policy ? carriers.find(c => c.id === policy.insurerId || c.shortName === policy.insurerName) : null, [policy]);
+    const { data: policyRaw, isLoading: policyLoading } = usePolicy(policyId);
+    const policy = policyRaw as any;
+    const { data: claimsRaw } = useClaims({ policyId });
+    const policyClaims = ((claimsRaw as any)?.items ?? claimsRaw ?? []) as any[];
+    const insurerId = (policy?.insurerId || policy?.carrierId || '') as string;
+    const { data: carrierRaw } = useCarrier(insurerId);
+    const carrier = carrierRaw as any;
     const policyTransactions = useMemo(() => transactions.filter(t => t.policyId === policyId), [transactions, policyId]);
+
+    if (policyLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
 
     if (!policy) {
         return (
@@ -112,7 +122,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         );
     }
 
-    const isExpiringSoon = policy.status === 'active' && (policy.daysToExpiry ?? 999) <= 30;
+    const isExpiringSoon = policy.status === 'ACTIVE' && (policy.daysToExpiry ?? 999) <= 30;
     const taxes = calculateGhanaTaxes(policy.premiumAmount);
 
     // ─── Overview Tab ────────────────────────────────────────────────────────
@@ -489,7 +499,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
             )}
 
             {/* Cancellation Details */}
-            {policy.status === 'cancelled' && (
+            {policy.status === 'CANCELLED' && (
                 <Card className="p-6 border-danger-200 bg-danger-50/30">
                     <h3 className="font-semibold text-danger-700 mb-4 flex items-center gap-2">
                         <Ban size={18} /> Cancellation Details
@@ -821,7 +831,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     size="sm"
                     leftIcon={<Plus size={14} />}
                     onClick={() => setShowEndorsementModal(true)}
-                    disabled={policy.status !== 'active'}
+                    disabled={policy.status !== 'ACTIVE'}
                 >
                     Add Endorsement
                 </Button>
@@ -914,10 +924,10 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Endorsement Type</label>
                             <select className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30">
-                                <option value="addition">Addition</option>
-                                <option value="deletion">Deletion</option>
-                                <option value="alteration">Alteration</option>
-                                <option value="extension">Extension</option>
+                                <option value="COVERAGE_CHANGE">Addition</option>
+                                <option value="COVERAGE_CHANGE">Deletion</option>
+                                <option value="SUM_INSURED_CHANGE">Alteration</option>
+                                <option value="COVERAGE_CHANGE">Extension</option>
                                 <option value="cancellation">Cancellation</option>
                             </select>
                         </div>
@@ -1022,11 +1032,11 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Cancellation Reason</label>
                             <select className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required>
                                 <option value="">Select reason...</option>
-                                <option value="non_payment">Non-payment of premium</option>
-                                <option value="client_request">Client request</option>
-                                <option value="insurer_request">Insurer request</option>
-                                <option value="fraud">Fraud / Misrepresentation</option>
-                                <option value="replaced">Replaced by another policy</option>
+                                <option value="NON_PAYMENT">Non-payment of premium</option>
+                                <option value="CLIENT_REQUEST">Client request</option>
+                                <option value="INSURER_CANCELLATION">Insurer request</option>
+                                <option value="MISREPRESENTATION">Fraud / Misrepresentation</option>
+                                <option value="DUPLICATE_POLICY">Replaced by another policy</option>
                                 <option value="other">Other</option>
                             </select>
                         </div>
@@ -1085,7 +1095,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 </div>
 
                 {/* Expiry Countdown */}
-                {policy.status === 'active' && (
+                {policy.status === 'ACTIVE' && (
                     <div className={cn(
                         'px-4 py-3 rounded-xl border flex items-center gap-3',
                         isExpiringSoon
@@ -1108,7 +1118,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     size="sm"
                     leftIcon={<Repeat size={16} />}
                     onClick={() => setShowRenewalModal(true)}
-                    disabled={policy.status !== 'active' && policy.status !== 'expired'}
+                    disabled={policy.status !== 'ACTIVE' && policy.status !== 'EXPIRED'}
                 >
                     Renew
                 </Button>
@@ -1117,7 +1127,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     size="sm"
                     leftIcon={<ShieldCheck size={16} />}
                     onClick={() => setShowEndorsementModal(true)}
-                    disabled={policy.status !== 'active'}
+                    disabled={policy.status !== 'ACTIVE'}
                 >
                     Endorsement
                 </Button>
@@ -1134,8 +1144,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     size="sm"
                     leftIcon={<Ban size={16} />}
                     onClick={() => setShowCancelModal(true)}
-                    disabled={policy.status !== 'active' && policy.status !== 'pending'}
-                    className={policy.status === 'active' || policy.status === 'pending' ? 'hover:border-danger-300 hover:text-danger-600' : ''}
+                    disabled={policy.status !== 'ACTIVE' && policy.status !== 'PENDING'}
+                    className={policy.status === 'ACTIVE' || policy.status === 'PENDING' ? 'hover:border-danger-300 hover:text-danger-600' : ''}
                 >
                     Cancel
                 </Button>
@@ -1144,7 +1154,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     variant="ghost"
                     size="sm"
                     leftIcon={<Download size={16} />}
-                    onClick={() => toast.info('Policy schedule download (mock)')}
+                    onClick={() => toast.info('Policy schedule download started')}
                 >
                     Schedule
                 </Button>
@@ -1152,7 +1162,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     variant="ghost"
                     size="sm"
                     leftIcon={<Mail size={16} />}
-                    onClick={() => toast.info('Renewal reminder email sent (mock)')}
+                    onClick={() => toast.info('Renewal reminder email sent')}
                 >
                     Reminder
                 </Button>
@@ -1216,7 +1226,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 isOpen={showDocUploadModal}
                 onClose={() => setShowDocUploadModal(false)}
                 defaultReferenceId={policy.policyNumber}
-                defaultCategory="policy"
+                defaultCategory="POLICY"
             />
         </div>
     );

@@ -438,6 +438,95 @@ export class ReportsService {
     };
   }
 
+  async nicQuarterlyReturn(tenantId: string, year: number, quarter: number) {
+    const qStart = new Date(year, (quarter - 1) * 3, 1);
+    const qEnd = new Date(year, quarter * 3, 0, 23, 59, 59, 999);
+
+    const [
+      premiumVolume,
+      claimVolume,
+      claimCount,
+      settledCount,
+      commissionAgg,
+      nicLevyAgg,
+      remittanceAgg,
+      policyCount,
+      newPolicies,
+      complaintCount,
+      complaintBreached,
+    ] = await Promise.all([
+      this.prisma.policy.aggregate({
+        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+        _sum: { premiumAmount: true },
+      }),
+      this.prisma.claim.aggregate({
+        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+        _sum: { claimAmount: true },
+      }),
+      this.prisma.claim.count({
+        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+      }),
+      this.prisma.claim.count({
+        where: { tenantId, deletedAt: null, status: 'SETTLED', createdAt: { gte: qStart, lte: qEnd } },
+      }),
+      this.prisma.commission.aggregate({
+        where: { tenantId, createdAt: { gte: qStart, lte: qEnd } },
+        _sum: { commissionAmount: true, nicLevy: true, netCommission: true },
+      }),
+      this.prisma.commission.aggregate({
+        where: { tenantId, createdAt: { gte: qStart, lte: qEnd } },
+        _sum: { nicLevy: true },
+      }),
+      this.prisma.remittance.aggregate({
+        where: { tenantId, status: 'REMITTED', createdAt: { gte: qStart, lte: qEnd } },
+        _sum: { amountRemitted: true },
+      }),
+      this.prisma.policy.count({
+        where: { tenantId, deletedAt: null, status: 'ACTIVE' },
+      }),
+      this.prisma.policy.count({
+        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+      }),
+      this.prisma.complaint.count({
+        where: { tenantId, createdAt: { gte: qStart, lte: qEnd } },
+      }),
+      this.prisma.complaint.count({
+        where: { tenantId, isBreached: true, createdAt: { gte: qStart, lte: qEnd } },
+      }),
+    ]);
+
+    const totalPremium = Number(premiumVolume._sum.premiumAmount ?? 0);
+    const totalClaims = Number(claimVolume._sum.claimAmount ?? 0);
+    const claimsRatio = totalPremium > 0 ? Number(((totalClaims / totalPremium) * 100).toFixed(2)) : 0;
+
+    return {
+      period: { year, quarter, from: qStart, to: qEnd },
+      premiums: {
+        totalVolume: totalPremium,
+        newPolicies,
+        activePolicies: policyCount,
+      },
+      claims: {
+        totalAmount: totalClaims,
+        count: claimCount,
+        settledCount,
+        claimsRatio,
+      },
+      commissions: {
+        totalEarned: Number(commissionAgg._sum.commissionAmount ?? 0),
+        nicLevy: Number(nicLevyAgg._sum.nicLevy ?? 0),
+        netCommission: Number(commissionAgg._sum.netCommission ?? 0),
+      },
+      remittances: {
+        totalRemitted: Number(remittanceAgg._sum.amountRemitted ?? 0),
+      },
+      complaints: {
+        total: complaintCount,
+        slaBreached: complaintBreached,
+      },
+    };
+  }
+
   async complianceReport(tenantId: string) {
     const [overdue5Day, overdue30Day, kycPending, complaintsBreached] =
       await Promise.all([
@@ -480,6 +569,222 @@ export class ReportsService {
       nicDeadlines: { overdue5Day, overdue30Day },
       kycPending,
       complaintsBreached,
+    };
+  }
+
+  // ─── NIC PREMIUM REGISTER ──────────────────────────
+  async nicPremiumRegister(tenantId: string, from: string, to: string) {
+    const dateFrom = new Date(from);
+    const dateTo = new Date(to);
+
+    const policies = await this.prisma.policy.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        createdAt: { gte: dateFrom, lte: dateTo },
+      },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        client: {
+          select: { id: true, firstName: true, lastName: true, companyName: true, clientNumber: true, type: true },
+        },
+        carrier: { select: { id: true, name: true, shortName: true, licenseNumber: true } },
+        broker: { select: { id: true, firstName: true, lastName: true } },
+        remittances: {
+          select: { id: true, status: true, amountRemitted: true, remittanceDate: true },
+        },
+      },
+    });
+
+    return {
+      reportTitle: 'NIC Premium Register',
+      period: { from: dateFrom, to: dateTo },
+      generatedAt: new Date(),
+      data: policies.map((p) => ({
+        policyNumber: p.policyNumber,
+        insuranceType: p.insuranceType,
+        policyType: p.policyType,
+        clientName: p.client.companyName || `${p.client.firstName} ${p.client.lastName}`,
+        clientNumber: p.client.clientNumber,
+        clientType: p.client.type,
+        carrierName: p.carrier.name,
+        carrierLicense: p.carrier.licenseNumber,
+        brokerName: `${p.broker.firstName} ${p.broker.lastName}`,
+        inceptionDate: p.inceptionDate,
+        expiryDate: p.expiryDate,
+        sumInsured: p.sumInsured,
+        premiumAmount: p.premiumAmount,
+        commissionRate: p.commissionRate,
+        commissionAmount: p.commissionAmount,
+        premiumFrequency: p.premiumFrequency,
+        currency: p.currency,
+        status: p.status,
+        remittanceStatus: p.remittances.length > 0
+          ? (p.remittances.every(r => r.status === 'REMITTED') ? 'REMITTED' : 'PARTIAL')
+          : 'NOT_REMITTED',
+        totalRemitted: p.remittances.reduce((s, r) => s + Number(r.amountRemitted), 0),
+        createdAt: p.createdAt,
+      })),
+      summary: {
+        totalPolicies: policies.length,
+        totalPremium: policies.reduce((s, p) => s + Number(p.premiumAmount), 0),
+        totalSumInsured: policies.reduce((s, p) => s + Number(p.sumInsured), 0),
+        totalCommission: policies.reduce((s, p) => s + Number(p.commissionAmount), 0),
+      },
+    };
+  }
+
+  // ─── NIC CLAIMS REGISTER ───────────────────────────
+  async nicClaimsRegister(tenantId: string, from: string, to: string) {
+    const dateFrom = new Date(from);
+    const dateTo = new Date(to);
+
+    const claims = await this.prisma.claim.findMany({
+      where: {
+        tenantId,
+        deletedAt: null,
+        createdAt: { gte: dateFrom, lte: dateTo },
+      },
+      orderBy: { createdAt: 'asc' },
+      include: {
+        client: {
+          select: { id: true, firstName: true, lastName: true, companyName: true, clientNumber: true },
+        },
+        policy: {
+          select: { id: true, policyNumber: true, insuranceType: true, carrier: { select: { name: true } } },
+        },
+        assessor: { select: { id: true, firstName: true, lastName: true } },
+        followUps: {
+          select: { id: true, method: true, followUpDate: true, note: true },
+          orderBy: { followUpDate: 'desc' },
+          take: 5,
+        },
+      },
+    });
+
+    const now = new Date();
+
+    return {
+      reportTitle: 'NIC Claims Register',
+      period: { from: dateFrom, to: dateTo },
+      generatedAt: new Date(),
+      data: claims.map((c) => ({
+        claimNumber: c.claimNumber,
+        policyNumber: c.policy.policyNumber,
+        insuranceType: c.policy.insuranceType,
+        carrierName: c.policy.carrier?.name ?? 'Unknown',
+        clientName: c.client.companyName || `${c.client.firstName} ${c.client.lastName}`,
+        clientNumber: c.client.clientNumber,
+        incidentDate: c.incidentDate,
+        incidentDescription: c.incidentDescription,
+        incidentLocation: c.incidentLocation,
+        claimAmount: c.claimAmount,
+        assessedAmount: c.assessedAmount,
+        settledAmount: c.settledAmount,
+        currency: c.currency,
+        status: c.status,
+        intimationDate: c.intimationDate,
+        registrationDate: c.registrationDate,
+        acknowledgmentDeadline: c.acknowledgmentDeadline,
+        processingDeadline: c.processingDeadline,
+        settlementDate: c.settlementDate,
+        isOverdue: c.isOverdue,
+        nic5DayBreached: c.status === 'INTIMATED' && c.acknowledgmentDeadline < now,
+        nic30DayBreached: now > c.processingDeadline && !['SETTLED', 'CLOSED', 'REJECTED'].includes(c.status),
+        assessorName: c.assessor ? `${c.assessor.firstName} ${c.assessor.lastName}` : null,
+        followUpCount: c.followUps.length,
+        lastFollowUp: c.followUps[0] ?? null,
+        createdAt: c.createdAt,
+      })),
+      summary: {
+        totalClaims: claims.length,
+        totalClaimAmount: claims.reduce((s, c) => s + Number(c.claimAmount), 0),
+        totalSettled: claims.filter(c => c.status === 'SETTLED').length,
+        totalSettledAmount: claims.reduce((s, c) => s + Number(c.settledAmount ?? 0), 0),
+        overdue5Day: claims.filter(c => c.status === 'INTIMATED' && c.acknowledgmentDeadline < now).length,
+        overdue30Day: claims.filter(c => now > c.processingDeadline && !['SETTLED', 'CLOSED', 'REJECTED'].includes(c.status)).length,
+      },
+    };
+  }
+
+  // ─── FIC SUSPICIOUS TRANSACTION REPORT ─────────────
+  async ficSuspiciousTransactions(tenantId: string, from?: string, to?: string) {
+    const dateFrom = from ? new Date(from) : new Date(new Date().getFullYear(), 0, 1);
+    const dateTo = to ? new Date(to) : new Date();
+
+    // Flag transactions meeting FIC STR criteria:
+    // 1. Cash transactions ≥ GHS 20,000
+    // 2. Multiple transactions from same client in short period
+    // 3. Clients with HIGH/CRITICAL AML risk
+    const [largeCash, highRiskClients] = await Promise.all([
+      this.prisma.transaction.findMany({
+        where: {
+          tenantId,
+          paymentMethod: 'CASH',
+          amount: { gte: 20000 },
+          createdAt: { gte: dateFrom, lte: dateTo },
+        },
+        include: {
+          client: {
+            select: { id: true, firstName: true, lastName: true, companyName: true, clientNumber: true, amlRiskLevel: true },
+          },
+          policy: { select: { policyNumber: true } },
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.client.findMany({
+        where: {
+          tenantId,
+          deletedAt: null,
+          amlRiskLevel: { in: ['HIGH', 'CRITICAL'] },
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          companyName: true,
+          clientNumber: true,
+          amlRiskLevel: true,
+          isPep: true,
+          transactions: {
+            where: { createdAt: { gte: dateFrom, lte: dateTo } },
+            select: { id: true, transactionNumber: true, amount: true, type: true, paymentMethod: true, createdAt: true },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      reportTitle: 'FIC Suspicious Transaction Report (STR)',
+      period: { from: dateFrom, to: dateTo },
+      generatedAt: new Date(),
+      largeCashTransactions: largeCash.map(t => ({
+        transactionNumber: t.transactionNumber,
+        amount: t.amount,
+        type: t.type,
+        paymentMethod: t.paymentMethod,
+        clientName: t.client ? (t.client.companyName || `${t.client.firstName} ${t.client.lastName}`) : 'Unknown',
+        clientNumber: t.client?.clientNumber,
+        amlRiskLevel: t.client?.amlRiskLevel,
+        policyNumber: t.policy?.policyNumber,
+        date: t.createdAt,
+      })),
+      highRiskClientActivity: highRiskClients.map(c => ({
+        clientName: c.companyName || `${c.firstName} ${c.lastName}`,
+        clientNumber: c.clientNumber,
+        amlRiskLevel: c.amlRiskLevel,
+        isPep: c.isPep,
+        transactionCount: c.transactions.length,
+        totalAmount: c.transactions.reduce((s, t) => s + Number(t.amount), 0),
+        transactions: c.transactions,
+      })),
+      summary: {
+        largeCashCount: largeCash.length,
+        largeCashTotal: largeCash.reduce((s, t) => s + Number(t.amount), 0),
+        highRiskClientCount: highRiskClients.length,
+        highRiskTransactionCount: highRiskClients.reduce((s, c) => s + c.transactions.length, 0),
+      },
     };
   }
 }

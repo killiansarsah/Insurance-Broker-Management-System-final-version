@@ -35,6 +35,7 @@ import { AuditModule } from './audit/audit.module';
 import { DepartmentsModule } from './departments/departments.module';
 import { SettingsModule } from './settings/settings.module';
 import { EmailModule } from './email/email.module';
+import { QuotesModule } from './quotes/quotes.module';
 
 @Module({
   imports: [
@@ -94,9 +95,10 @@ import { EmailModule } from './email/email.module';
     // Health check
     HealthModule,
 
-    // Phase 6: Policies & Renewals
+    // Phase 6: Policies, Renewals & Quotes
     PoliciesModule,
     RenewalsModule,
+    QuotesModule,
 
     // Phase 7: Claims & Complaints
     ClaimsModule,

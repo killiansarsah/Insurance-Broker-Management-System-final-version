@@ -90,7 +90,7 @@ function ResetPasswordContent() {
                             <Input
                                 label="New Password"
                                 placeholder="••••••••"
-                                type={showPassword ? 'text' : 'password'}
+                                type={showPassword ? 'TEXT' : 'password'}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -110,7 +110,7 @@ function ResetPasswordContent() {
                             <Input
                                 label="Confirm Password"
                                 placeholder="••••••••"
-                                type={showPassword ? 'text' : 'password'}
+                                type={showPassword ? 'TEXT' : 'password'}
                                 required
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}

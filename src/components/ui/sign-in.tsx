@@ -256,7 +256,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 placeholder:text-surface-400 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10"
                                         placeholder="name@insurance-firm.com"
                                         required
-                                        autoComplete="email"
+                                        autoComplete="EMAIL"
                                     />
                                 </div>
                             </div>
@@ -271,7 +271,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         <Lock size={18} />
                                     </div>
                                     <input
-                                        type={showPassword ? 'text' : 'password'}
+                                        type={showPassword ? 'TEXT' : 'password'}
                                         id="signin-password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}

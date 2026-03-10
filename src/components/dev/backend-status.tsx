@@ -27,7 +27,7 @@ export function BackendStatus() {
             const dbComp = data?.components?.database;
 
             setDetail({
-                dbStatus: dbComp?.status || 'unknown',
+                dbStatus: (dbComp?.status as 'up' | 'down' | 'unknown') || 'unknown',
                 dbLatency: dbComp?.latencyMs,
                 uptime: data?.uptime,
             });

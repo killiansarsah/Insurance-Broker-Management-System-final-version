@@ -24,8 +24,6 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { useCreatePolicy } from '@/hooks/api/use-policies';
 import { useClients } from '@/hooks/api/use-clients';
 import { useCarriers } from '@/hooks/api/use-carriers';
-import { mockClients } from '@/hooks/api';
-import { carriers } from '@/hooks/api';
 import type { InsuranceType, PremiumFrequency } from '@/types';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
@@ -40,42 +38,36 @@ const STEPS = [
 ];
 
 const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
-    { label: 'Motor', value: 'motor' },
-    { label: 'Fire / Property', value: 'fire' },
-    { label: 'Marine', value: 'marine' },
-    { label: 'Health', value: 'health' },
-    { label: 'Life', value: 'life' },
-    { label: 'Liability', value: 'liability' },
-    { label: 'Engineering', value: 'engineering' },
-    { label: 'Bonds / Guarantees', value: 'bonds' },
-    { label: 'Travel', value: 'travel' },
-    { label: 'Agriculture', value: 'agriculture' },
-    { label: 'Professional Indemnity', value: 'professional_indemnity' },
-    { label: 'Oil & Gas', value: 'oil_gas' },
-    { label: 'Aviation', value: 'aviation' },
-    { label: 'Other', value: 'other' },
+    { label: 'Motor', value: 'MOTOR' },
+    { label: 'Fire / Property', value: 'FIRE' },
+    { label: 'Marine', value: 'MARINE' },
+    { label: 'Health', value: 'HEALTH' },
+    { label: 'Life', value: 'LIFE' },
+    { label: 'Liability', value: 'LIABILITY' },
+    { label: 'Engineering', value: 'ENGINEERING' },
+    { label: 'Bonds / Guarantees', value: 'BONDS' },
+    { label: 'Travel', value: 'TRAVEL' },
+    { label: 'Agriculture', value: 'AGRICULTURE' },
+    { label: 'Professional Indemnity', value: 'PROFESSIONAL_INDEMNITY' },
+    { label: 'Oil & Gas', value: 'OIL_GAS' },
+    { label: 'Aviation', value: 'AVIATION' },
+    { label: 'Other', value: 'OTHER' },
 ];
 
 const PREMIUM_FREQUENCIES: { label: string; value: PremiumFrequency }[] = [
-    { label: 'Annual (Single)', value: 'annual' },
-    { label: 'Semi-Annual', value: 'semi_annual' },
-    { label: 'Quarterly', value: 'quarterly' },
-    { label: 'Monthly', value: 'monthly' },
-    { label: 'Single Premium', value: 'single' },
+    { label: 'Annual (Single)', value: 'ANNUAL' },
+    { label: 'Semi-Annual', value: 'SEMI_ANNUAL' },
+    { label: 'Quarterly', value: 'QUARTERLY' },
+    { label: 'Monthly', value: 'MONTHLY' },
+    { label: 'Single Premium', value: 'SINGLE' },
 ];
 
 const MOTOR_COVER_TYPES = [
-    { label: 'Comprehensive', value: 'comprehensive' },
-    { label: 'Third Party Only', value: 'third_party' },
-    { label: 'Third Party Fire & Theft', value: 'third_party_fire_theft' },
-    { label: 'Commercial Vehicle', value: 'commercial' },
+    { label: 'Comprehensive', value: 'COMPREHENSIVE' },
+    { label: 'Third Party Only', value: 'THIRD_PARTY' },
+    { label: 'Third Party Fire & Theft', value: 'THIRD_PARTY_FIRE_THEFT' },
+    { label: 'Commercial Vehicle', value: 'COMMERCIAL' },
 ];
-
-// Build insurer options from carriers mock
-const INSURER_OPTIONS = carriers
-    .filter(c => c.status === 'active')
-    .map(c => ({ label: c.shortName || c.name, value: c.shortName || c.name }))
-    .sort((a, b) => a.label.localeCompare(b.label));
 
 interface FormData {
     clientId: string;
@@ -124,8 +116,8 @@ const INITIAL_FORM: FormData = {
     coverageDetails: '',
     currency: 'GHS',
     commissionRate: 10,
-    premiumFrequency: 'annual',
-    motorCoverType: 'comprehensive',
+    premiumFrequency: 'ANNUAL',
+    motorCoverType: 'COMPREHENSIVE',
     vehicleRegNumber: '',
     vehicleMake: '',
     vehicleModel: '',
@@ -163,7 +155,7 @@ function validateStep(step: number, form: FormData): string | null {
             if (!form.inceptionDate) return 'Please set inception date';
             if (!form.expiryDate) return 'Please set expiry date';
             if (new Date(form.expiryDate) <= new Date(form.inceptionDate)) return 'Expiry must be after inception';
-            if (form.insuranceType === 'motor' && form.vehicleYear) {
+            if (form.insuranceType === 'MOTOR' && form.vehicleYear) {
                 const yr = parseInt(form.vehicleYear, 10);
                 if (isNaN(yr) || yr < 1900 || yr > new Date().getFullYear() + 1) return `Vehicle year must be between 1900 and ${new Date().getFullYear() + 1}`;
             }
@@ -186,12 +178,25 @@ export default function NewPolicyPage() {
     const [errors, setErrors] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const { data: clientsData } = useClients();
+    const allClients: any[] = (clientsData as any)?.items ?? clientsData ?? [];
+    const { data: carriersData } = useCarriers();
+    const allCarriers: any[] = (carriersData as any)?.items ?? carriersData ?? [];
+
+    const INSURER_OPTIONS = useMemo(() =>
+        allCarriers
+            .filter((c: any) => c.status === 'ACTIVE')
+            .map((c: any) => ({ label: c.shortName || c.name, value: c.shortName || c.name }))
+            .sort((a: any, b: any) => a.label.localeCompare(b.label)),
+        [allCarriers]
+    );
+
     const filteredClients = clientSearch
-        ? mockClients.filter(c =>
+        ? allClients.filter((c: any) =>
             c.firstName?.toLowerCase().includes(clientSearch.toLowerCase()) ||
             c.lastName?.toLowerCase().includes(clientSearch.toLowerCase()) ||
             c.companyName?.toLowerCase().includes(clientSearch.toLowerCase()) ||
-            c.clientNumber.toLowerCase().includes(clientSearch.toLowerCase())
+            (c.clientNumber || '').toLowerCase().includes(clientSearch.toLowerCase())
         ).slice(0, 6)
         : [];
 
@@ -243,9 +248,9 @@ export default function NewPolicyPage() {
         router.push('/dashboard/policies');
     }
 
-    const isMotor = form.insuranceType === 'motor';
-    const isProperty = form.insuranceType === 'fire';
-    const isMarine = form.insuranceType === 'marine';
+    const isMotor = form.insuranceType === 'MOTOR';
+    const isProperty = form.insuranceType === 'FIRE';
+    const isMarine = form.insuranceType === 'MARINE';
     return (
         <div className="w-full space-y-6 animate-fade-in pb-10 max-w-4xl mx-auto">
             {/* Header */}
@@ -418,7 +423,7 @@ export default function NewPolicyPage() {
                                     <CustomSelect
                                         options={MOTOR_COVER_TYPES}
                                         value={form.motorCoverType}
-                                        onChange={(v) => update('motorCoverType', String(v || 'comprehensive'))}
+                                        onChange={(v) => update('motorCoverType', String(v || 'COMPREHENSIVE'))}
                                     />
                                 </div>
                             )}
@@ -486,7 +491,7 @@ export default function NewPolicyPage() {
                                         <CustomSelect
                                             options={[
                                                 { label: 'Private', value: 'private' },
-                                                { label: 'Commercial', value: 'commercial' },
+                                                { label: 'Commercial', value: 'COMMERCIAL' },
                                                 { label: 'Hiring', value: 'hiring' },
                                             ]}
                                             value={form.vehicleUsageType}
@@ -517,7 +522,7 @@ export default function NewPolicyPage() {
                                         <CustomSelect
                                             options={[
                                                 { label: 'Residential', value: 'residential' },
-                                                { label: 'Commercial', value: 'commercial' },
+                                                { label: 'Commercial', value: 'COMMERCIAL' },
                                                 { label: 'Industrial', value: 'industrial' },
                                                 { label: 'Warehouse', value: 'warehouse' },
                                             ]}
@@ -622,7 +627,7 @@ export default function NewPolicyPage() {
                                 <CustomSelect
                                     options={PREMIUM_FREQUENCIES}
                                     value={form.premiumFrequency}
-                                    onChange={(v) => update('premiumFrequency', (v || 'annual') as PremiumFrequency)}
+                                    onChange={(v) => update('premiumFrequency', (v || 'ANNUAL') as PremiumFrequency)}
                                 />
                             </div>
                         </div>
@@ -665,14 +670,14 @@ export default function NewPolicyPage() {
                             </div>
 
                             {/* Frequency Note */}
-                            {form.premiumFrequency !== 'annual' && form.premiumFrequency !== 'single' && (
+                            {form.premiumFrequency !== 'ANNUAL' && form.premiumFrequency !== 'SINGLE' && (
                                 <div className="bg-primary-50 p-3 rounded-lg border border-primary-100 text-xs text-primary-700">
                                     Installment amount per {form.premiumFrequency.replace(/_/g, '-')}: ~
                                     <strong>
                                         {formatCurrency(
                                             Math.round(form.premiumAmount / (
-                                                form.premiumFrequency === 'monthly' ? 12 :
-                                                    form.premiumFrequency === 'quarterly' ? 4 : 2
+                                                form.premiumFrequency === 'MONTHLY' ? 12 :
+                                                    form.premiumFrequency === 'QUARTERLY' ? 4 : 2
                                             )),
                                             form.currency
                                         )}

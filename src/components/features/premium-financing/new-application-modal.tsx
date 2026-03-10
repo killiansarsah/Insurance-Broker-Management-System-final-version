@@ -324,7 +324,7 @@ export function NewPFAModal({ isOpen, onClose, onSuccess }: NewPFAModalProps) {
                                 <motion.div variants={ITEM_VARIANTS} className="flex items-center gap-2 px-1">
                                     <ShieldCheck size={14} className="text-primary-500" />
                                     <p className="text-xs font-semibold text-surface-500">
-                                        {clientPolicies.length} active {clientPolicies.length === 1 ? 'policy' : 'policies'} found
+                                        {clientPolicies.length} active {clientPolicies.length === 1 ? 'POLICY' : 'policies'} found
                                     </p>
                                 </motion.div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     CheckCircle2,
     XCircle,
@@ -19,14 +19,14 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { mockPolicies } from '@/hooks/api';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useApprovals, useApproveRequest, useRejectRequest } from '@/hooks/api/use-approvals';
 
-type ApprovalType = 'policy' | 'endorsement' | 'claim_settlement' | 'cancellation' | 'refund';
-type ApprovalStatus = 'pending' | 'approved' | 'rejected';
-type Priority = 'low' | 'medium' | 'high' | 'urgent';
+type ApprovalType = 'POLICY' | 'ENDORSEMENT' | 'CLAIM_SETTLEMENT' | 'CANCELLATION' | 'REFUND';
+type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+type Priority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
 
 interface ApprovalItem {
     id: string;
@@ -45,149 +45,41 @@ interface ApprovalItem {
     linkedId?: string;
 }
 
-const MOCK_APPROVALS: ApprovalItem[] = [
-    {
-        id: 'apr-001',
-        refNumber: 'APR-2026-001',
-        type: 'policy',
-        status: 'pending',
-        priority: 'high',
-        subject: 'New Motor Policy Issuance — Radiance Petroleum Fleet',
-        clientName: 'Radiance Petroleum',
-        amount: 185000,
-        requestedBy: 'Esi Donkor',
-        requestedAt: new Date(Date.now() - 86400000 * 1).toISOString(),
-        dueDate: new Date(Date.now() + 86400000 * 1).toISOString(),
-        isOverdue: false,
-        notes: 'Fleet of 14 commercial vehicles. Premium above threshold requires manager sign-off.',
-        linkedId: 'pol-001',
-    },
-    {
-        id: 'apr-002',
-        refNumber: 'APR-2026-002',
-        type: 'claim_settlement',
-        status: 'pending',
-        priority: 'urgent',
-        subject: 'Major Claim Settlement — CLM-2025-0003',
-        clientName: 'Ghana Shippers\' Authority',
-        amount: 75555,
-        requestedBy: 'Kofi Asante',
-        requestedAt: new Date(Date.now() - 86400000 * 3).toISOString(),
-        dueDate: new Date(Date.now() - 86400000 * 1).toISOString(),
-        isOverdue: true,
-        notes: 'Settlement amount exceeds GHS 50,000 threshold. Awaiting management approval.',
-    },
-    {
-        id: 'apr-003',
-        refNumber: 'APR-2026-003',
-        type: 'endorsement',
-        status: 'pending',
-        priority: 'medium',
-        subject: 'Policy Endorsement — Additional Vehicle',
-        clientName: 'DM Pharmaceuticals',
-        amount: 4200,
-        requestedBy: 'Abena Nyarko',
-        requestedAt: new Date(Date.now() - 86400000 * 0.5).toISOString(),
-        dueDate: new Date(Date.now() + 86400000 * 3).toISOString(),
-        isOverdue: false,
-        notes: 'Adding 1 Toyota HiLux to existing fleet policy.',
-    },
-    {
-        id: 'apr-004',
-        refNumber: 'APR-2026-004',
-        type: 'cancellation',
-        status: 'pending',
-        priority: 'medium',
-        subject: 'Policy Cancellation Request — Client Request',
-        clientName: 'Samuel Adjei',
-        amount: 3500,
-        requestedBy: 'Esi Donkor',
-        requestedAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-        dueDate: new Date(Date.now() + 86400000 * 2).toISOString(),
-        isOverdue: false,
-        notes: 'Client sold vehicle. Requesting mid-term cancellation & pro-rata refund.',
-    },
-    {
-        id: 'apr-005',
-        refNumber: 'APR-2026-005',
-        type: 'refund',
-        status: 'pending',
-        priority: 'low',
-        subject: 'Premium Refund — Overpayment',
-        clientName: 'CAPP Global Limited',
-        amount: 1250,
-        requestedBy: 'Kofi Asante',
-        requestedAt: new Date(Date.now() - 86400000 * 4).toISOString(),
-        dueDate: new Date(Date.now() + 86400000 * 4).toISOString(),
-        isOverdue: false,
-        notes: 'Double payment detected. GHS 1,250 refund to be processed.',
-    },
-    {
-        id: 'apr-006',
-        refNumber: 'APR-2026-006',
-        type: 'policy',
-        status: 'approved',
-        priority: 'high',
-        subject: 'New Fire Policy — Agroterrum Ghana Warehouse',
-        clientName: 'Agroterrum Ghana LTD',
-        amount: 36185,
-        requestedBy: 'Kofi Asante',
-        requestedAt: new Date(Date.now() - 86400000 * 5).toISOString(),
-        dueDate: new Date(Date.now() - 86400000 * 2).toISOString(),
-        isOverdue: false,
-    },
-    {
-        id: 'apr-007',
-        refNumber: 'APR-2026-007',
-        type: 'claim_settlement',
-        status: 'rejected',
-        priority: 'medium',
-        subject: 'Claim Settlement — Disputed Amount',
-        clientName: 'Radiance Petroleum',
-        amount: 22000,
-        requestedBy: 'Abena Nyarko',
-        requestedAt: new Date(Date.now() - 86400000 * 7).toISOString(),
-        dueDate: new Date(Date.now() - 86400000 * 5).toISOString(),
-        isOverdue: false,
-        notes: 'Rejected: Assessment report not attached. Please resubmit with surveyor report.',
-    },
-];
-
 const TYPE_LABELS: Record<ApprovalType, string> = {
-    policy: 'New Policy',
-    endorsement: 'Endorsement',
-    claim_settlement: 'Claim Settlement',
-    cancellation: 'Cancellation',
-    refund: 'Refund',
+    POLICY: 'New Policy',
+    ENDORSEMENT: 'Endorsement',
+    CLAIM_SETTLEMENT: 'Claim Settlement',
+    CANCELLATION: 'Cancellation',
+    REFUND: 'Refund',
 };
 
 const TYPE_COLORS: Record<ApprovalType, string> = {
-    policy: 'bg-primary-50 text-primary-700',
-    endorsement: 'bg-blue-50 text-blue-700',
-    claim_settlement: 'bg-orange-50 text-orange-700',
-    cancellation: 'bg-warning-50 text-warning-700',
-    refund: 'bg-purple-50 text-purple-700',
+    POLICY: 'bg-primary-50 text-primary-700',
+    ENDORSEMENT: 'bg-blue-50 text-blue-700',
+    CLAIM_SETTLEMENT: 'bg-orange-50 text-orange-700',
+    CANCELLATION: 'bg-warning-50 text-warning-700',
+    REFUND: 'bg-purple-50 text-purple-700',
 };
 
 const PRIORITY_COLORS: Record<Priority, string> = {
-    low: 'bg-surface-100 text-surface-600',
-    medium: 'bg-blue-50 text-blue-700',
-    high: 'bg-warning-50 text-warning-700',
-    urgent: 'bg-danger-50 text-danger-700',
+    LOW: 'bg-surface-100 text-surface-600',
+    MEDIUM: 'bg-blue-50 text-blue-700',
+    HIGH: 'bg-warning-50 text-warning-700',
+    URGENT: 'bg-danger-50 text-danger-700',
 };
 
 function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApprove: (id: string) => void; onReject: (id: string) => void }) {
     const router = useRouter();
 
     return (
-        <Card padding="none" className={cn('overflow-hidden transition-shadow hover:shadow-md', item.isOverdue && item.status === 'pending' && 'border-danger-200')}>
+        <Card padding="none" className={cn('overflow-hidden transition-shadow hover:shadow-md', item.isOverdue && item.status === 'PENDING' && 'border-danger-200')}>
             <div className="p-4 flex flex-col sm:flex-row sm:items-start gap-4">
                 {/* Left: icon */}
                 <div className={cn('shrink-0 p-2.5 rounded-lg', TYPE_COLORS[item.type])}>
-                    {item.type === 'policy' ? <FileText size={18} /> :
-                        item.type === 'claim_settlement' ? <DollarSign size={18} /> :
-                            item.type === 'endorsement' ? <Shield size={18} /> :
-                                item.type === 'cancellation' ? <XCircle size={18} /> :
+                    {item.type === 'POLICY' ? <FileText size={18} /> :
+                        item.type === 'CLAIM_SETTLEMENT' ? <DollarSign size={18} /> :
+                            item.type === 'ENDORSEMENT' ? <Shield size={18} /> :
+                                item.type === 'CANCELLATION' ? <XCircle size={18} /> :
                                     <DollarSign size={18} />}
                 </div>
 
@@ -217,7 +109,7 @@ function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApp
 
                 {/* Right: status / actions */}
                 <div className="flex items-center gap-2 shrink-0">
-                    {item.status === 'pending' ? (
+                    {item.status === 'PENDING' ? (
                         <>
                             <Button size="sm" variant="outline" className="text-danger-600 border-danger-200 hover:bg-danger-50" onClick={() => onReject(item.id)}>
                                 <XCircle size={14} className="mr-1" /> Reject
@@ -226,7 +118,7 @@ function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApp
                                 <CheckCircle2 size={14} className="mr-1" /> Approve
                             </Button>
                         </>
-                    ) : item.status === 'approved' ? (
+                    ) : item.status === 'APPROVED' ? (
                         <span className="flex items-center gap-1 text-xs font-semibold text-success-600 bg-success-50 px-3 py-1.5 rounded-full">
                             <CheckCircle2 size={14} /> Approved
                         </span>
@@ -244,8 +136,30 @@ function ApprovalCard({ item, onApprove, onReject }: { item: ApprovalItem; onApp
 export default function ApprovalsPage() {
     const [search, setSearch] = useState('');
     const [typeFilter, setTypeFilter] = useState<ApprovalType | 'all'>('all');
-    const [statusFilter, setStatusFilter] = useState<ApprovalStatus | 'all'>('pending');
-    const [items, setItems] = useState<ApprovalItem[]>(MOCK_APPROVALS);
+    const [statusFilter, setStatusFilter] = useState<ApprovalStatus | 'all'>('PENDING');
+    const { data: approvalsData } = useApprovals();
+    const approveMutation = useApproveRequest();
+    const rejectMutation = useRejectRequest();
+
+    const items: ApprovalItem[] = useMemo(() => {
+        const raw = (approvalsData as any)?.data || [];
+        return raw.map((a: any) => ({
+            id: a.id,
+            refNumber: a.approvalNumber || a.id.slice(0, 8),
+            type: (a.type ?? 'POLICY') as ApprovalType,
+            status: (a.status ?? 'PENDING') as ApprovalStatus,
+            priority: (a.priority ?? 'MEDIUM') as Priority,
+            subject: a.description || a.title || 'Approval Request',
+            clientName: a.clientName || '',
+            amount: a.amount ? Number(a.amount) : undefined,
+            requestedBy: a.requestedBy?.firstName ? `${a.requestedBy.firstName} ${a.requestedBy.lastName}` : a.requestedByName || '',
+            requestedAt: a.createdAt,
+            dueDate: a.dueDate || a.createdAt,
+            isOverdue: a.isOverdue ?? false,
+            notes: a.notes || a.comment,
+            linkedId: a.entityId,
+        }));
+    }, [approvalsData]);
 
     const filtered = items.filter(item => {
         const matchSearch = search === '' ||
@@ -257,17 +171,19 @@ export default function ApprovalsPage() {
         return matchSearch && matchType && matchStatus;
     });
 
-    const pending = items.filter(i => i.status === 'pending');
-    const overdue = items.filter(i => i.isOverdue && i.status === 'pending');
+    const pending = items.filter(i => i.status === 'PENDING');
+    const overdue = items.filter(i => i.isOverdue && i.status === 'PENDING');
 
     function handleApprove(id: string) {
-        setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'approved' as const, isOverdue: false } : i));
-        toast.success('Approved', { description: 'The request has been approved successfully.' });
+        approveMutation.mutate({ id }, {
+            onSuccess: () => toast.success('Approved', { description: 'The request has been approved successfully.' }),
+        });
     }
 
     function handleReject(id: string) {
-        setItems(prev => prev.map(i => i.id === id ? { ...i, status: 'rejected' as const } : i));
-        toast.error('Rejected', { description: 'The request has been rejected.' });
+        rejectMutation.mutate({ id, reason: 'Rejected by reviewer' }, {
+            onSuccess: () => toast.error('Rejected', { description: 'The request has been rejected.' }),
+        });
     }
 
     return (
@@ -328,9 +244,9 @@ export default function ApprovalsPage() {
                         className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option value="all">All Statuses</option>
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="rejected">Rejected</option>
+                        <option value="PENDING">Pending</option>
+                        <option value="APPROVED">Approved</option>
+                        <option value="REJECTED">Rejected</option>
                     </select>
 
                     <select
@@ -339,11 +255,11 @@ export default function ApprovalsPage() {
                         className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option value="all">All Types</option>
-                        <option value="policy">New Policy</option>
-                        <option value="endorsement">Endorsement</option>
-                        <option value="claim_settlement">Claim Settlement</option>
-                        <option value="cancellation">Cancellation</option>
-                        <option value="refund">Refund</option>
+                        <option value="POLICY">New Policy</option>
+                        <option value="ENDORSEMENT">Endorsement</option>
+                        <option value="CLAIM_SETTLEMENT">Claim Settlement</option>
+                        <option value="CANCELLATION">Cancellation</option>
+                        <option value="REFUND">Refund</option>
                     </select>
                 </div>
             </Card>

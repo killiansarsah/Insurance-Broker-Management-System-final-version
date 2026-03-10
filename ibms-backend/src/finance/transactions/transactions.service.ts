@@ -62,6 +62,7 @@ export class TransactionsService {
           tenantId,
           transactionNumber,
           type: dto.type,
+          accountType: dto.accountType ?? 'CLIENT_ACCOUNT',
           amount: dto.amount,
           currency: 'GHS',
           paymentMethod: dto.paymentMethod,
@@ -139,6 +140,7 @@ export class TransactionsService {
       ...(status && { paymentStatus: status }),
       ...(clientId && { clientId }),
       ...(policyId && { policyId }),
+      ...(query.accountType && { accountType: query.accountType }),
       ...((dateFrom || dateTo) && {
         createdAt: {
           ...(dateFrom && { gte: new Date(dateFrom) }),
@@ -210,6 +212,26 @@ export class TransactionsService {
         totalInflow: inflowAgg._sum.amount || 0,
         totalOutflow: outflowAgg._sum.amount || 0,
       },
+    };
+  }
+
+  // ─── LEDGER SUMMARY ─────────────────────────────────
+  async ledgerSummary(tenantId: string) {
+    const [clientAcc, agencyAcc] = await Promise.all([
+      this.prisma.transaction.aggregate({
+        where: { tenantId, accountType: 'CLIENT_ACCOUNT', paymentStatus: 'PAID' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+      this.prisma.transaction.aggregate({
+        where: { tenantId, accountType: 'AGENCY_ACCOUNT', paymentStatus: 'PAID' },
+        _sum: { amount: true },
+        _count: { id: true },
+      }),
+    ]);
+    return {
+      clientAccount: { total: clientAcc._sum.amount || 0, count: clientAcc._count.id },
+      agencyAccount: { total: agencyAcc._sum.amount || 0, count: agencyAcc._count.id },
     };
   }
 
