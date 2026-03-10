@@ -9,14 +9,14 @@ interface UserProfile { id: string; firstName: string; lastName: string; email: 
 export function useTenantSettings() {
     return useQuery({
         queryKey: ['settings', 'tenant'],
-        queryFn: () => apiClient.get<TenantSettings>('/settings/tenant'),
+        queryFn: () => apiClient.get<TenantSettings>('/settings'),
     });
 }
 
 export function useUpdateTenantSettings() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (data: Record<string, unknown>) => apiClient.patch<TenantSettings>('/settings/tenant', data),
+        mutationFn: (data: Record<string, unknown>) => apiClient.patch<TenantSettings>('/settings', data),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['settings', 'tenant'] }),
     });
 }

@@ -9,8 +9,8 @@ export function ThemeProvider() {
     useEffect(() => {
         const root = document.documentElement;
 
-        // Remove existing theme classes
-        root.classList.remove('theme-gold', 'theme-glass', 'theme-compact');
+        // Remove all theme classes before applying the new one
+        root.classList.remove('theme-light', 'theme-dark', 'theme-glass', 'theme-gold', 'theme-compact');
 
         // Add new theme class
         root.classList.add(`theme-${currentTheme}`);

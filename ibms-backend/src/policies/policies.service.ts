@@ -606,7 +606,7 @@ export class PoliciesService {
       if (policy.status !== 'LAPSED')
         throw new BadRequestException('Only LAPSED policies can be reinstated');
 
-      if (policy.endDate && new Date(policy.endDate) < new Date())
+      if (policy.expiryDate && new Date(policy.expiryDate) < new Date())
         throw new BadRequestException(
           'Cannot reinstate a policy past its expiry date – create a renewal instead',
         );

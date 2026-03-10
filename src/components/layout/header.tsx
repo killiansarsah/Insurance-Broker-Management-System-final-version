@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
+import { useProfileStore } from '@/stores/profile-store';
 import { useNotificationStore } from '@/stores/notification-store';
 import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
@@ -24,6 +25,7 @@ export function Header() {
     const router = useRouter();
     const { sidebarCollapsed, setSidebarMobileOpen } = useUiStore();
     const { user, logout } = useAuthStore();
+    const avatarUrl = useProfileStore((s) => s.avatarUrl);
     const { notifications: allNotifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
     const [searchOpen, setSearchOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
@@ -244,6 +246,7 @@ export function Header() {
                     >
                         <Avatar
                             name={user ? `${user.firstName} ${user.lastName}` : 'User'}
+                            src={user?.avatarUrl || avatarUrl || undefined}
                             size="sm"
                         />
                         <div className="hidden md:block text-left">

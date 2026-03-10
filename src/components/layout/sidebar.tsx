@@ -181,7 +181,7 @@ function SidebarCompanyHeader() {
     const { companyName } = useProfileStore();
     return (
         <div className="min-w-0">
-            <h2 className="text-surface-900 font-bold text-base tracking-tight truncate">{companyName}</h2>
+            <h2 className="text-surface-900 dark:text-white font-bold text-base tracking-tight truncate">{companyName || 'Organization'}</h2>
             <p className="text-[11px] text-surface-500 font-medium uppercase tracking-wider">Broker [MID 899597]</p>
         </div>
     );
@@ -193,6 +193,7 @@ function SidebarCompanyHeader() {
 function GlobalRail() {
     const [searchOpen, setSearchOpen] = useState(false);
     const { currentTheme, setTheme } = useUiStore();
+    const { logoUrl } = useProfileStore();
     const isDark = currentTheme === 'dark';
 
     return (
@@ -200,16 +201,14 @@ function GlobalRail() {
             {/* Global Search Dialog */}
             <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
-            {/* Logo Icon */}
-            <button className="relative w-8 h-8 mb-6 cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-none p-0" onClick={() => setSearchOpen(true)} aria-label="Open search">
-                <Image
-                    src="/logo.png"
-                    alt="IBMS Logo"
-                    fill
-                    className="object-contain"
-                    sizes="32px"
-                />
-            </button>
+            {/* Organization Logo */}
+            <Link href="/dashboard/settings?tab=organization" className="relative w-8 h-8 mb-6 rounded-lg overflow-hidden hover:opacity-80 transition-opacity ring-2 ring-surface-200 dark:ring-slate-700 flex items-center justify-center bg-surface-100 dark:bg-slate-800" title="Organization Settings">
+                {logoUrl ? (
+                    <Image src={logoUrl} alt="Organization" fill className="object-cover" sizes="32px" />
+                ) : (
+                    <Building2 size={16} className="text-surface-500" />
+                )}
+            </Link>
 
             {/* Quick Actions (High Frequency) */}
             <div className="flex flex-col gap-3 w-full items-center">
@@ -448,7 +447,7 @@ export function Sidebar() {
                         sidebarCollapsed ? 'justify-center' : 'px-6'
                     )}>
                         {sidebarCollapsed ? (
-                            <div className="relative w-8 h-8">
+                            <Link href="/dashboard/settings?tab=organization" className="relative w-8 h-8 hover:opacity-80 transition-opacity" title="Organization Settings">
                                 <Image
                                     src="/logo.png"
                                     alt="IBMS Logo"
@@ -456,7 +455,7 @@ export function Sidebar() {
                                     className="object-contain"
                                     sizes="32px"
                                 />
-                            </div>
+                            </Link>
                         ) : (
                             <SidebarCompanyHeader />
                         )}

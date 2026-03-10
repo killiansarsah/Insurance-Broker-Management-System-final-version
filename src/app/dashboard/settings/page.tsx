@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { SettingsProfile } from '@/components/features/settings/settings-profile';
 import { SettingsOrganization } from '@/components/features/settings/settings-organization';
@@ -24,7 +25,16 @@ const tabTitles: Record<Tab, { heading: string; subtitle: string }> = {
 };
 
 export default function SettingsPage() {
+    const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<Tab>('overview');
+
+    // Sync tab from URL query parameter
+    useEffect(() => {
+        const tab = searchParams.get('tab');
+        if (tab && tab in tabTitles) {
+            setActiveTab(tab as Tab);
+        }
+    }, [searchParams]);
 
     const settingGroups = [
         {

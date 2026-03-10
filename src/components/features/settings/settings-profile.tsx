@@ -2,6 +2,7 @@
 
 import { useRef, useCallback, useState, useEffect } from 'react';
 import { useProfileStore } from '@/stores/profile-store';
+import { useAuthStore } from '@/stores/auth-store';
 import { useProfile, useUpdateProfile } from '@/hooks/api/use-settings';
 import Image from 'next/image';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ export function SettingsProfile() {
     const { avatarUrl, updateProfile: updateStore } = useProfileStore();
     const { data: profile } = useProfile();
     const updateProfileMutation = useUpdateProfile();
+    const authUser = useAuthStore((s) => s.user);
 
     const [localFirstName, setLocalFirstName] = useState('');
     const [localLastName, setLocalLastName] = useState('');
@@ -42,6 +44,12 @@ export function SettingsProfile() {
         if (!file.type.startsWith('image/')) { toast.error('Invalid File Type', { description: 'Please select an image file (PNG, JPG, etc.).' }); return; }
         const url = URL.createObjectURL(file);
         updateStore({ avatarUrl: url });
+        // Sync avatar to auth store so the header/nav shows the new photo
+        const currentUser = useAuthStore.getState().user;
+        if (currentUser) {
+            useAuthStore.setState({ user: { ...currentUser, avatarUrl: url } });
+        }
+        toast.success('Photo Updated', { description: 'Your profile photo has been updated.' });
     }, [updateStore]);
 
     const handleSave = () => {
@@ -61,6 +69,12 @@ export function SettingsProfile() {
                         jobTitle: localJobTitle,
                         location: localLocation,
                     });
+                    // Update auth store so the header/nav reflects the new name
+                    if (authUser) {
+                        useAuthStore.setState({
+                            user: { ...authUser, firstName: localFirstName, lastName: localLastName },
+                        });
+                    }
                     setIsSaving(false);
                     toast.success('Profile Saved', { description: 'Your profile has been updated successfully.' });
                 },
@@ -122,7 +136,14 @@ export function SettingsProfile() {
                         >
                             Change Photo
                         </button>
-                        <button onClick={() => toast.success('Photo Removed', { description: 'Your profile photo has been removed.' })} className="px-6 h-10 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-600 transition-colors cursor-pointer">
+                        <button onClick={() => {
+                            updateStore({ avatarUrl: null });
+                            const currentUser = useAuthStore.getState().user;
+                            if (currentUser) {
+                                useAuthStore.setState({ user: { ...currentUser, avatarUrl: undefined } });
+                            }
+                            toast.success('Photo Removed', { description: 'Your profile photo has been removed.' });
+                        }} className="px-6 h-10 rounded-xl border border-slate-200 dark:border-slate-800 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-rose-600 transition-colors cursor-pointer">
                             Remove
                         </button>
                     </div>
