@@ -3,6 +3,7 @@ import { Inter, Caveat } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { QueryProvider } from '@/lib/query-provider';
+import { BackendConnectionStatus } from '@/components/dev/backend-connection-status';
 import './globals.css';
 
 const inter = Inter({
@@ -56,6 +57,7 @@ export default function RootLayout({
                 <QueryProvider>
                     {children}
                 </QueryProvider>
+                <BackendConnectionStatus />
                 <Toaster
                     position="top-right"
                     richColors

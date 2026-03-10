@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
 import { useClient } from '@/hooks/api';
+import { useUpdateClient } from '@/hooks/api/use-clients';
 import { getClientDisplayName } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -196,6 +197,7 @@ function buildFormFromClient(client: any): FormData {
 export default function EditClientPage({ id }: { id: string }) {
     const router = useRouter();
     const { data: client, isLoading } = useClient(id) as { data: Record<string, any> | undefined; isLoading: boolean };
+    const updateClientMutation = useUpdateClient();
     const [step, setStep] = useState(1);
     const [form, setForm] = useState<FormData>({} as FormData);
     const [formInitialized, setFormInitialized] = useState(false);
@@ -286,10 +288,40 @@ export default function EditClientPage({ id }: { id: string }) {
     }
 
     function handleSave() {
-        toast.success('Client profile updated successfully', {
-            description: `Changes for ${name} have been saved.`,
-        });
-        router.push(`/dashboard/clients/${client!.id}`);
+        updateClientMutation.mutate(
+            {
+                id: client!.id,
+                data: {
+                    type: form.type,
+                    firstName: form.firstName || undefined,
+                    lastName: form.lastName || undefined,
+                    companyName: form.companyName || undefined,
+                    phone: form.phone,
+                    email: form.email || undefined,
+                    region: form.region || undefined,
+                    city: form.city || undefined,
+                    digitalAddress: form.digitalAddress || undefined,
+                    ghanaCardNumber: form.ghanaCardNumber || undefined,
+                    dateOfBirth: form.dateOfBirth || undefined,
+                    gender: form.gender || undefined,
+                    occupation: form.occupation || undefined,
+                    tin: form.tin || undefined,
+                    registrationNumber: form.registrationNumber || undefined,
+                    isPep: form.isPep,
+                },
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Client profile updated successfully', {
+                        description: `Changes for ${name} have been saved.`,
+                    });
+                    router.push(`/dashboard/clients/${client!.id}`);
+                },
+                onError: (error: any) => {
+                    toast.error('Update Failed', { description: error?.response?.data?.message || 'Could not update client. Please try again.' });
+                },
+            }
+        );
     }
 
     const displayName = form.type === 'CORPORATE'

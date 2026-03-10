@@ -177,6 +177,7 @@ export default function NewPolicyPage() {
     const [clientSearch, setClientSearch] = useState('');
     const [errors, setErrors] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const createPolicyMutation = useCreatePolicy();
 
     const { data: clientsData } = useClients();
     const allClients: any[] = (clientsData as any)?.items ?? clientsData ?? [];
@@ -186,7 +187,7 @@ export default function NewPolicyPage() {
     const INSURER_OPTIONS = useMemo(() =>
         allCarriers
             .filter((c: any) => c.status === 'ACTIVE')
-            .map((c: any) => ({ label: c.shortName || c.name, value: c.shortName || c.name }))
+            .map((c: any) => ({ label: c.shortName || c.name, value: c.id }))
             .sort((a: any, b: any) => a.label.localeCompare(b.label)),
         [allCarriers]
     );
@@ -235,11 +236,59 @@ export default function NewPolicyPage() {
             const err = validateStep(4, form);
             if (err) { setErrors(err); toast.error(err); return; }
             setIsSubmitting(true);
-            setTimeout(() => {
-                setIsSubmitting(false);
-                toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.insurerName}` });
-                router.push('/dashboard/policies');
-            }, 1200);
+
+            const payload: Record<string, unknown> = {
+                clientId: form.clientId,
+                carrierId: form.insurerName, // now stores carrier UUID
+                insuranceType: form.insuranceType,
+                startDate: form.inceptionDate,
+                endDate: form.expiryDate,
+                premiumAmount: form.premiumAmount,
+                sumInsured: form.sumInsured,
+                premiumFrequency: form.premiumFrequency,
+                currency: form.currency,
+                commission: form.commissionRate ? (form.premiumAmount * form.commissionRate / 100) : undefined,
+                coverageDetails: form.coverageDetails || undefined,
+            };
+
+            if (form.insuranceType === 'MOTOR') {
+                payload.vehicleDetails = {
+                    registrationNumber: form.vehicleRegNumber,
+                    make: form.vehicleMake,
+                    model: form.vehicleModel,
+                    year: parseInt(form.vehicleYear) || new Date().getFullYear(),
+                    chassisNumber: form.vehicleChassisNumber || undefined,
+                    engineNumber: form.vehicleEngineNumber || undefined,
+                    usageType: form.vehicleUsageType || undefined,
+                    motorCoverType: form.motorCoverType || undefined,
+                };
+            }
+            if (form.insuranceType === 'FIRE') {
+                payload.propertyDetails = {
+                    address: form.propertyAddress,
+                    propertyType: form.propertyType || undefined,
+                };
+            }
+            if (form.insuranceType === 'MARINE') {
+                payload.marineDetails = {
+                    vesselName: form.vesselName,
+                    voyageFrom: form.voyageFrom || undefined,
+                    voyageTo: form.voyageTo || undefined,
+                    cargoDescription: form.cargoDescription || undefined,
+                };
+            }
+
+            createPolicyMutation.mutate(payload, {
+                onSuccess: () => {
+                    setIsSubmitting(false);
+                    toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.insurerName}` });
+                    router.push('/dashboard/policies');
+                },
+                onError: (error: any) => {
+                    setIsSubmitting(false);
+                    toast.error('Policy Creation Failed', { description: error?.response?.data?.message || 'Could not create policy. Please try again.' });
+                },
+            });
         }
     }
 

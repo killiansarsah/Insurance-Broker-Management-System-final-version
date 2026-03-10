@@ -8,11 +8,14 @@ import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
+import { useCreateLead } from '@/hooks/api/use-leads';
 
 export default function NewLeadPage() {
     const router = useRouter();
+    const createLeadMutation = useCreateLead();
     const [isLoading, setIsLoading] = useState(false);
     const [contactName, setContactName] = useState('');
+    const [source, setSource] = useState<string | null>('PHONE');
     const [company, setCompany] = useState('');
     const [phone, setPhone] = useState('');
     const [email, setEmail] = useState('');
@@ -24,6 +27,7 @@ export default function NewLeadPage() {
     const validate = () => {
         const errs: Record<string, string> = {};
         if (!contactName.trim()) errs.contactName = 'Contact name is required.';
+        if (!source) errs.source = 'Lead source is required.';
         if (!phone.trim()) errs.phone = 'Phone number is required.';
         else if (!/^\+?[0-9\s\-]{9,15}$/.test(phone.replace(/\s/g, '')))
             errs.phone = 'Please enter a valid phone number.';
@@ -32,7 +36,7 @@ export default function NewLeadPage() {
         return errs;
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const validationErrors = validate();
         setErrors(validationErrors);
@@ -43,14 +47,29 @@ export default function NewLeadPage() {
 
         setIsLoading(true);
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        toast.success('Lead Created', {
-            description: `${contactName} has been added to the pipeline.`
+        createLeadMutation.mutate({
+            contactName: contactName.trim(),
+            source,
+            phone: phone.trim(),
+            ...(email && { email: email.trim() }),
+            ...(company && { companyName: company.trim() }),
+            ...(productInterest && { productInterest: [productInterest] }),
+            ...(priority && { priority }),
+            ...(notes.trim() && { notes: notes.trim() }),
+        }, {
+            onSuccess: () => {
+                toast.success('Lead Created', {
+                    description: `${contactName} has been added to the pipeline.`
+                });
+                router.push('/dashboard/leads');
+            },
+            onError: (error: any) => {
+                toast.error('Failed to create lead', {
+                    description: error?.response?.data?.message || 'Please try again.'
+                });
+                setIsLoading(false);
+            }
         });
-
-        router.push('/dashboard/leads');
     };
 
     
@@ -145,6 +164,30 @@ export default function NewLeadPage() {
                 <Card padding="none" className="overflow-hidden">
                     <CardHeader title="Interest & Status" className="border-b border-surface-100 bg-surface-50/40" />
                     <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">
+                                Lead Source <span className="text-red-500">*</span>
+                            </label>
+                            <CustomSelect
+                                placeholder="Select Source..."
+                                options={[
+                                    { label: 'Referral', value: 'REFERRAL' },
+                                    { label: 'Website', value: 'WEBSITE' },
+                                    { label: 'Walk-in', value: 'WALK_IN' },
+                                    { label: 'Phone Call', value: 'PHONE' },
+                                    { label: 'Email', value: 'EMAIL' },
+                                    { label: 'Social Media', value: 'SOCIAL_MEDIA' },
+                                    { label: 'Event', value: 'EVENT' },
+                                    { label: 'Partner', value: 'PARTNER' },
+                                    { label: 'Other', value: 'OTHER' },
+                                ]}
+                                value={source}
+                                onChange={(v) => setSource(v as string | null)}
+                                className="w-full"
+                            />
+                            {errors.source && <p className="text-xs text-red-500 mt-1">{errors.source}</p>}
+                        </div>
 
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-surface-500 uppercase tracking-wider flex items-center gap-2">

@@ -20,6 +20,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
 import { cn, formatCurrency } from '@/lib/utils';
 import { usePolicies } from '@/hooks/api/use-policies';
+import { useCreateClaim } from '@/hooks/api/use-claims';
 import { Policy } from '@/types';
 const UploadDocumentModal = dynamic(
     () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
@@ -37,6 +38,7 @@ export default function NewClaimPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
     const { data: policiesData } = usePolicies();
+    const createClaimMutation = useCreateClaim();
     const allPolicies: any[] = (policiesData as any)?.items ?? policiesData ?? [];
 
     // Form State
@@ -67,8 +69,24 @@ export default function NewClaimPage() {
     }
 
     function handleSubmit() {
-        toast.success('Claim Submitted', { description: 'Your FNOL claim has been submitted and is now pending review.' });
-        router.push('/dashboard/claims');
+        createClaimMutation.mutate(
+            {
+                policyId: selectedPolicy!.id,
+                description,
+                incidentDate,
+                claimAmount: estimatedAmount ? parseFloat(estimatedAmount) : undefined,
+                location: location || undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Claim Submitted', { description: 'Your FNOL claim has been submitted and is now pending review.' });
+                    router.push('/dashboard/claims');
+                },
+                onError: (error: any) => {
+                    toast.error('Claim Submission Failed', { description: error?.response?.data?.message || 'Could not submit claim. Please try again.' });
+                },
+            }
+        );
     }
     return (
         <div className="space-y-6 animate-fade-in w-full max-w-4xl">

@@ -83,8 +83,29 @@ export class PoliciesService {
     });
     if (!carrier) throw new NotFoundException('Carrier not found');
 
+    let productId = dto.productId;
+    if (!productId) {
+      // Auto-select a product matching the insurance type from this carrier
+      const autoProduct = await this.prisma.product.findFirst({
+        where: { carrierId: dto.carrierId, insuranceType: dto.insuranceType },
+      });
+      if (!autoProduct) {
+        // Fall back to any product from this carrier
+        const fallback = await this.prisma.product.findFirst({
+          where: { carrierId: dto.carrierId },
+        });
+        if (!fallback)
+          throw new NotFoundException(
+            'No products found for this carrier. Please add a product first.',
+          );
+        productId = fallback.id;
+      } else {
+        productId = autoProduct.id;
+      }
+    }
+
     const product = await this.prisma.product.findUnique({
-      where: { id: dto.productId, carrierId: dto.carrierId },
+      where: { id: productId, carrierId: dto.carrierId },
     });
     if (!product)
       throw new NotFoundException(
@@ -107,7 +128,7 @@ export class PoliciesService {
           tenant: { connect: { id: tenantId } },
           client: { connect: { id: dto.clientId } },
           carrier: { connect: { id: dto.carrierId } },
-          product: { connect: { id: dto.productId } },
+          product: { connect: { id: productId } },
           broker: { connect: { id: userId } },
           insuranceType: dto.insuranceType,
           policyType: 'NON_LIFE',

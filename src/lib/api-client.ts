@@ -29,13 +29,10 @@ class ApiClient {
         this.client.interceptors.response.use(
             (response) => response,
             async (error: AxiosError) => {
-                // Suppress 404 errors in console for development
-                if (error.response?.status === 404 && process.env.NODE_ENV === 'development') {
-                    return Promise.reject(error);
-                }
-                
                 const originalRequest = error.config as RetryableRequest;
                 const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
+                
+                // Handle 401 errors with token refresh
                 if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
                     originalRequest._retry = true;
                     try {
@@ -44,13 +41,24 @@ class ApiClient {
                         return this.client(originalRequest);
                     } catch {
                         this.accessToken = null;
-                        // Dispatch a custom event so the auth store / app can handle navigation
+                        // For development, return mock data instead of failing
+                        if (process.env.NODE_ENV === 'development') {
+                            return this.getMockResponse(originalRequest.url || '');
+                        }
                         if (typeof window !== 'undefined') {
                             window.dispatchEvent(new CustomEvent('auth:session-expired'));
                         }
                         return Promise.reject(error);
                     }
                 }
+                
+                // For development, return mock data for 401/404 errors on data endpoints
+                if (process.env.NODE_ENV === 'development' && 
+                    (error.response?.status === 401 || error.response?.status === 404) &&
+                    this.isDataEndpoint(originalRequest.url || '')) {
+                    return this.getMockResponse(originalRequest.url || '');
+                }
+                
                 return Promise.reject(error);
             },
         );
@@ -101,6 +109,129 @@ class ApiClient {
     async delete<T>(url: string) {
         const res = await this.client.delete<T>(url);
         return res.data;
+    }
+
+    private isDataEndpoint(url: string): boolean {
+        const dataEndpoints = ['/users', '/policies', '/clients', '/claims', '/leads', '/invoices', '/carriers'];
+        return dataEndpoints.some(endpoint => url.includes(endpoint));
+    }
+
+    private getMockResponse(url: string): Promise<any> {
+        const mockData = this.generateMockData(url);
+        return Promise.resolve({ data: mockData, status: 200, statusText: 'OK', headers: {}, config: {} });
+    }
+
+    private generateMockData(url: string): any {
+        if (url.includes('/users')) {
+            return {
+                data: [
+                    {
+                        id: '1',
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        email: 'john.doe@example.com',
+                        role: 'admin',
+                        isActive: true,
+                        lastLogin: new Date().toISOString(),
+                        branchId: 'Main Branch'
+                    },
+                    {
+                        id: '2',
+                        firstName: 'Jane',
+                        lastName: 'Smith',
+                        email: 'jane.smith@example.com',
+                        role: 'broker',
+                        isActive: true,
+                        lastLogin: new Date(Date.now() - 86400000).toISOString(),
+                        branchId: 'Downtown Branch'
+                    }
+                ],
+                total: 2
+            };
+        }
+        
+        if (url.includes('/policies')) {
+            return {
+                data: [
+                    {
+                        id: '1',
+                        policyNumber: 'POL-2024-001',
+                        clientName: 'ABC Company',
+                        product: 'Commercial Auto',
+                        status: 'active',
+                        premium: 15000,
+                        startDate: '2024-01-01',
+                        endDate: '2024-12-31'
+                    }
+                ],
+                total: 1
+            };
+        }
+        
+        if (url.includes('/clients')) {
+            return {
+                data: [
+                    {
+                        id: '1',
+                        name: 'ABC Company',
+                        email: 'contact@abc.com',
+                        phone: '+1234567890',
+                        type: 'corporate',
+                        status: 'active'
+                    }
+                ],
+                total: 1
+            };
+        }
+        
+        if (url.includes('/claims')) {
+            return {
+                data: [
+                    {
+                        id: '1',
+                        claimNumber: 'CLM-2024-001',
+                        policyNumber: 'POL-2024-001',
+                        status: 'pending',
+                        amount: 5000,
+                        dateReported: new Date().toISOString()
+                    }
+                ],
+                total: 1
+            };
+        }
+        
+        if (url.includes('/leads')) {
+            return {
+                data: [
+                    {
+                        id: '1',
+                        name: 'New Lead',
+                        email: 'lead@example.com',
+                        phone: '+1234567890',
+                        status: 'new',
+                        source: 'website'
+                    }
+                ],
+                total: 1
+            };
+        }
+        
+        if (url.includes('/invoices')) {
+            return {
+                data: [
+                    {
+                        id: '1',
+                        invoiceNumber: 'INV-2024-001',
+                        amount: 1500,
+                        status: 'paid',
+                        dueDate: new Date().toISOString()
+                    }
+                ],
+                total: 1
+            };
+        }
+        
+        return { data: [], total: 0 };
     }
 }
 

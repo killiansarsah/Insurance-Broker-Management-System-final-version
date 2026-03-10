@@ -21,7 +21,8 @@ export class CreatePolicyDto {
   carrierId!: string;
 
   @IsUUID()
-  productId!: string;
+  @IsOptional()
+  productId?: string;
 
   @IsEnum(InsuranceType)
   insuranceType!: InsuranceType;

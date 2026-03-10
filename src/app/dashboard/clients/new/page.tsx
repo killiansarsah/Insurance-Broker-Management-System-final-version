@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
+import { useCreateClient } from '@/hooks/api/use-clients';
 
 const STEPS = [
     { id: 1, label: 'Basic Info', icon: <User size={16} /> },
@@ -207,6 +208,7 @@ export default function NewClientPage() {
     });
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const createClientMutation = useCreateClient();
 
     function update(field: keyof FormData, value: string) {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -273,10 +275,37 @@ export default function NewClientPage() {
 
     async function handleSubmit() {
         setIsSubmitting(true);
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        setIsSubmitting(false);
-        toast.success('Client Registered', { description: 'New client profile has been created successfully.' });
-        router.push('/dashboard/clients');
+        createClientMutation.mutate(
+            {
+                type: form.type,
+                firstName: form.firstName || undefined,
+                lastName: form.lastName || undefined,
+                companyName: form.companyName || undefined,
+                phone: form.phone,
+                email: form.email || undefined,
+                region: form.region || undefined,
+                city: form.city || undefined,
+                digitalAddress: form.digitalAddress || undefined,
+                ghanaCardNumber: form.ghanaCardNumber || undefined,
+                dateOfBirth: form.dateOfBirth || undefined,
+                gender: form.gender || undefined,
+                occupation: form.occupation || undefined,
+                tin: form.tin || undefined,
+                registrationNumber: form.registrationNumber || undefined,
+                isPep: form.isPep,
+            },
+            {
+                onSuccess: () => {
+                    setIsSubmitting(false);
+                    toast.success('Client Registered', { description: 'New client profile has been created successfully.' });
+                    router.push('/dashboard/clients');
+                },
+                onError: (error: any) => {
+                    setIsSubmitting(false);
+                    toast.error('Registration Failed', { description: error?.response?.data?.message || 'Could not create client. Please try again.' });
+                },
+            }
+        );
     }
 
     const displayName = form.type === 'CORPORATE'
