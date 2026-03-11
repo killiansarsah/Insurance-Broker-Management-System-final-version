@@ -20,6 +20,12 @@ import {
     useUpdateIntegration,
     useSyncIntegration,
 } from '@/hooks/api/use-integrations';
+import {
+    useGoogleAuthUrl,
+    useGoogleCalendarSync,
+    useGoogleSheetsExport,
+    useGoogleDriveMirror,
+} from '@/hooks/api/use-google-integration';
 import { useImportFile, type ImportResult, type MixedImportResult } from '@/hooks/api/use-imports';
 
 // ─── Types ──────────────────────────────────────────────────
@@ -213,6 +219,10 @@ export function SettingsIntegrations() {
     const disconnectMutation = useDisconnectIntegration();
     const updateMutation = useUpdateIntegration();
     const syncMutation = useSyncIntegration();
+    const googleAuthUrl = useGoogleAuthUrl();
+    const calendarSync = useGoogleCalendarSync();
+    const sheetsExport = useGoogleSheetsExport();
+    const driveMirror = useGoogleDriveMirror();
 
     // Merge static catalog with API data
     const services = useMemo(() => {
@@ -228,6 +238,7 @@ export function SettingsIntegrations() {
     const [syncing, setSyncing] = useState<string | null>(null);
     const [apiKeyInput, setApiKeyInput] = useState('');
     const [apiSecretInput, setApiSecretInput] = useState('');
+    const [sheetsExportType, setSheetsExportType] = useState<string>('clients');
 
     // ── Upload state ──
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -282,16 +293,43 @@ export function SettingsIntegrations() {
             if (svc?.apiKeyRequired) {
                 if (!apiKeyInput.trim()) { toast.error('API key is required'); return; }
             }
+            // For Google services, open real OAuth popup
+            const isGoogle = connectingId?.startsWith('google-');
+            if (isGoogle) {
+                setConnectionStep('connecting');
+                googleAuthUrl.mutate(undefined, {
+                    onSuccess: (data) => {
+                        // Open Google consent in a popup
+                        const popup = window.open(data.url, 'google-auth', 'width=500,height=600,left=200,top=100');
+
+                        // Listen for the callback redirect
+                        const checkClosed = setInterval(() => {
+                            if (popup?.closed) {
+                                clearInterval(checkClosed);
+                                // Refetch integrations to check if connection succeeded
+                                setTimeout(() => {
+                                    setConnectionStep('success');
+                                    toast.success(`Connected to ${svc?.name}!`);
+                                }, 1000);
+                            }
+                        }, 500);
+                    },
+                    onError: () => {
+                        setConnectionStep('signin');
+                        toast.error('Failed to start Google sign-in. Check backend configuration.');
+                    },
+                });
+                return;
+            }
             setConnectionStep('permissions');
         } else if (connectionStep === 'permissions') {
             setConnectionStep('connecting');
             const svc = services.find(s => s.id === connectingId);
-            const emails = ['alex.johnson@dezag.com', 'sarah.kwame@dezag.com', 'admin@dezagbrokers.com'];
             connectMutation.mutate({
                 serviceKey: connectingId!,
                 apiKey: apiKeyInput || undefined,
                 apiSecret: apiSecretInput || undefined,
-                connectedEmail: svc?.apiKeyRequired ? `••••${apiKeyInput.slice(-4)}` : emails[Math.floor(Math.random() * emails.length)],
+                connectedEmail: svc?.apiKeyRequired ? `••••${apiKeyInput.slice(-4)}` : undefined,
             }, {
                 onSuccess: () => {
                     setConnectionStep('success');
@@ -323,6 +361,39 @@ export function SettingsIntegrations() {
     const handleSync = (id: string) => {
         setSyncing(id);
         const svc = services.find(s => s.id === id);
+
+        // For Google Calendar, use the real bi-directional sync
+        if (id === 'google-calendar') {
+            toast.info('Syncing Google Calendar...');
+            calendarSync.mutate(undefined, {
+                onSuccess: (r) => {
+                    setSyncing(null);
+                    toast.success(`Calendar synced: ${r.push.pushed} pushed, ${r.pull.pulled} pulled`);
+                },
+                onError: () => {
+                    setSyncing(null);
+                    toast.error('Calendar sync failed');
+                },
+            });
+            return;
+        }
+
+        // For Google Drive, use mirror
+        if (id === 'google-drive') {
+            toast.info('Mirroring documents to Google Drive...');
+            driveMirror.mutate(undefined, {
+                onSuccess: (r) => {
+                    setSyncing(null);
+                    toast.success(`Drive: ${r.mirrored} mirrored, ${r.skipped} skipped`);
+                },
+                onError: () => {
+                    setSyncing(null);
+                    toast.error('Drive sync failed');
+                },
+            });
+            return;
+        }
+
         toast.info(`Syncing ${svc?.name}...`);
         syncMutation.mutate(id, {
             onSuccess: () => {
@@ -832,6 +903,75 @@ export function SettingsIntegrations() {
                                     <div className="p-3 rounded-xl bg-surface-50 dark:bg-slate-800 border border-surface-100 dark:border-slate-700">
                                         <code className="text-[11px] text-surface-600 dark:text-surface-300 break-all">{configService.webhookUrl}</code>
                                     </div>
+                                </div>
+                            )}
+
+                            {/* Google Calendar Actions */}
+                            {configService.id === 'google-calendar' && configService.connected && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-2 block">Calendar Sync</label>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <Button variant="outline" size="sm" className="w-full justify-center"
+                                            leftIcon={<RefreshCw size={14} className={cn(calendarSync.isPending && 'animate-spin')} />}
+                                            onClick={() => {
+                                                calendarSync.mutate(undefined, {
+                                                    onSuccess: (r) => toast.success(`Pushed ${r.push.pushed} events, pulled ${r.pull.pulled} events`),
+                                                    onError: () => toast.error('Calendar sync failed'),
+                                                });
+                                            }}
+                                            disabled={calendarSync.isPending}>
+                                            {calendarSync.isPending ? 'Syncing...' : 'Full Bi-directional Sync'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Google Sheets Actions */}
+                            {configService.id === 'google-sheets' && configService.connected && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-2 block">Export to Sheets</label>
+                                    <div className="grid grid-cols-3 gap-2 mb-3">
+                                        {['clients', 'policies', 'claims', 'commissions', 'financial', 'renewals'].map(t => (
+                                            <button key={t} onClick={() => setSheetsExportType(t)}
+                                                className={cn('px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all capitalize',
+                                                    sheetsExportType === t ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-slate-800 text-surface-600 border-surface-200 dark:border-slate-700 hover:border-primary-300'
+                                                )}>
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <Button variant="outline" size="sm" className="w-full justify-center"
+                                        leftIcon={<ExternalLink size={14} />}
+                                        onClick={() => {
+                                            sheetsExport.mutate({ type: sheetsExportType }, {
+                                                onSuccess: (r) => {
+                                                    toast.success(`Exported ${r.rowCount} rows to Google Sheets`);
+                                                    window.open(r.spreadsheetUrl, '_blank');
+                                                },
+                                                onError: () => toast.error('Sheets export failed'),
+                                            });
+                                        }}
+                                        disabled={sheetsExport.isPending}>
+                                        {sheetsExport.isPending ? 'Exporting...' : `Export ${sheetsExportType}`}
+                                    </Button>
+                                </div>
+                            )}
+
+                            {/* Google Drive Actions */}
+                            {configService.id === 'google-drive' && configService.connected && (
+                                <div>
+                                    <label className="text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-2 block">Drive Mirror</label>
+                                    <Button variant="outline" size="sm" className="w-full justify-center"
+                                        leftIcon={<Cloud size={14} />}
+                                        onClick={() => {
+                                            driveMirror.mutate(undefined, {
+                                                onSuccess: (r) => toast.success(`Mirrored ${r.mirrored} documents, ${r.skipped} skipped`),
+                                                onError: () => toast.error('Drive mirror failed'),
+                                            });
+                                        }}
+                                        disabled={driveMirror.isPending}>
+                                        {driveMirror.isPending ? 'Mirroring...' : 'Mirror Documents to Drive'}
+                                    </Button>
                                 </div>
                             )}
 

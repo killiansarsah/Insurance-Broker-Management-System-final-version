@@ -1341,19 +1341,20 @@ model Notification {
 // ─── CALENDAR ─────────────────────────────────────
 
 model CalendarEvent {
-  id          String              @id @default(uuid()) @db.Uuid
-  tenantId    String              @db.Uuid
-  title       String
-  description String?
-  startDate   DateTime
-  endDate     DateTime
-  type        CalendarEventType   @default(MEETING)
-  priority    String?
-  status      CalendarEventStatus @default(UPCOMING)
-  location    String?
-  createdById String              @db.Uuid
-  createdAt   DateTime            @default(now())
-  updatedAt   DateTime            @updatedAt
+  id            String              @id @default(uuid()) @db.Uuid
+  tenantId      String              @db.Uuid
+  title         String
+  description   String?
+  startDate     DateTime
+  endDate       DateTime
+  type          CalendarEventType   @default(MEETING)
+  priority      String?
+  status        CalendarEventStatus @default(UPCOMING)
+  location      String?
+  googleEventId String?
+  createdById   String              @db.Uuid
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
 
   tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdBy User               @relation("EventCreator", fields: [createdById], references: [id])

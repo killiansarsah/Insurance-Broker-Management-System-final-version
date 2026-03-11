@@ -40,6 +40,11 @@ const envSchema = z.object({
   // Email (optional — logs only if not configured)
   RESEND_API_KEY: z.string().optional(),
   EMAIL_FROM: z.string().default('IBMS <noreply@ibms.app>'),
+
+  // Google OAuth2 (optional — required for Google integrations)
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_REDIRECT_URI: z.string().optional(),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
