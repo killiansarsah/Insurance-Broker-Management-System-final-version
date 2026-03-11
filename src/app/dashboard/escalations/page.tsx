@@ -69,8 +69,8 @@ export default function EscalationsPage() {
 
     const { data: claimsData, isLoading: claimsLoading } = useClaims();
     const { data: complaintsData, isLoading: complaintsLoading } = useComplaints();
-    const allClaims: any[] = (claimsData as any)?.items ?? claimsData ?? [];
-    const allComplaints: any[] = (complaintsData as any)?.items ?? complaintsData ?? [];
+    const allClaims: any[] = (claimsData as any)?.items ?? (claimsData as any)?.data ?? (Array.isArray(claimsData) ? claimsData : []);
+    const allComplaints: any[] = (complaintsData as any)?.items ?? (complaintsData as any)?.data ?? (Array.isArray(complaintsData) ? complaintsData : []);
 
     const ESCALATED_ITEMS = useMemo(() => {
         const fromClaims = allClaims.filter((c: any) => c.isOverdue).map((c: any) => ({

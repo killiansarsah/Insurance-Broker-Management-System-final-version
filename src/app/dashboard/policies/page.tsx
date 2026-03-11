@@ -70,7 +70,7 @@ export default function PoliciesPage() {
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
     const { data: policiesData, isLoading } = usePolicies();
-    const policies = policiesData?.data || [];
+    const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
     
     const BROKERS = useMemo(() => 
         Array.from(new Set(policies.map((p: any) => p.brokerName))).sort().map(b => ({ label: b, value: b })),
@@ -102,7 +102,7 @@ export default function PoliciesPage() {
 
     // KPI Calculations
     const activePolicies = baseData.filter((p) => p.status === 'ACTIVE');
-    const totalPremium = baseData.reduce((s, p) => s + p.premiumAmount, 0);
+    const totalPremium = baseData.reduce((s, p) => s + Number(p.premiumAmount || 0), 0);
     const expiringSoon = baseData.filter((p) => ((p.daysToExpiry as number) ?? 999) <= 30 && p.status === 'ACTIVE');
     const pendingDraft = baseData.filter((p) => p.status === 'PENDING' || p.status === 'DRAFT');
     const lapsedPolicies = baseData.filter((p) => p.status === 'LAPSED');

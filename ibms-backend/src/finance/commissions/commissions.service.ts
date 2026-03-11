@@ -39,6 +39,7 @@ export class CommissionsService {
       limit = 20,
       search,
       status,
+      clientId,
       carrierId,
       brokerId,
       dateFrom,
@@ -52,6 +53,7 @@ export class CommissionsService {
     const where: Prisma.CommissionWhereInput = {
       tenantId,
       ...(status && { status }),
+      ...(clientId && { clientId }),
       ...(brokerId && { brokerId }),
       ...(carrierId && { policy: { carrierId } }),
       ...((dateFrom || dateTo) && {

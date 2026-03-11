@@ -51,7 +51,7 @@ export default function PaymentsPage() {
     const [methodFilter, setMethodFilter] = useState<string>('all');
 
     const { data: transactionsData } = useTransactions();
-    const allReceipts = ((transactionsData as any)?.items ?? transactionsData ?? []) as any[];
+    const allReceipts: any[] = ((transactionsData as any)?.items ?? (transactionsData as any)?.data ?? (Array.isArray(transactionsData) ? transactionsData : []));
 
     const totalCollected = allReceipts.reduce((s: number, r: any) => s + (r.amount || 0), 0);
     const currentMonthStart = (() => {

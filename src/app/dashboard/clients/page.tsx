@@ -36,7 +36,7 @@ import Link from 'next/link';
 export default function ClientsPage() {
     const router = useRouter();
     const { data: clientsData, isLoading } = useClients();
-    const clients = clientsData?.data || [];
+    const clients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
     
     const totalClients = clients.length;
     const kycVerified = clients.filter((c) => c.kycStatus === 'VERIFIED').length;

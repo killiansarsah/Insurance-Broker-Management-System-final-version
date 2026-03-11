@@ -71,7 +71,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
     const { data: carrierData, isLoading } = useCarrier(carrierId);
     const carrier = carrierData as Carrier | undefined;
     const { data: productsData } = useCarrierProducts(carrierId);
-    const products = ((productsData as unknown as Record<string, unknown>)?.items as CarrierProduct[] ?? productsData ?? []) as CarrierProduct[];
+    const products: CarrierProduct[] = ((productsData as any)?.items ?? (productsData as any)?.data ?? (Array.isArray(productsData) ? productsData : [])) as CarrierProduct[];
 
     const groupedProducts = useMemo(() => {
         return (products || []).reduce((acc: Record<string, CarrierProduct[]>, product: CarrierProduct) => {

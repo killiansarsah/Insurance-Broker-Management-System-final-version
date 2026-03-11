@@ -46,7 +46,7 @@ export default function LeadsPage() {
     const router = useRouter();
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const { data: leadsData, isLoading } = useLeads();
-    const apiLeads = leadsData?.data || [];
+    const apiLeads = (leadsData as any)?.items ?? (leadsData as any)?.data ?? (Array.isArray(leadsData) ? leadsData : []);
     const [leads, setLeads] = useState<any[]>([]);
     
     useEffect(() => {

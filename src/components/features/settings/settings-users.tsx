@@ -21,7 +21,7 @@ import { cn } from '@/lib/utils';
 
 export function SettingsUsers() {
     const { data: usersData } = useUsers();
-    const apiUsers = usersData?.data || [];
+    const apiUsers: any[] = (usersData as any)?.items ?? (usersData as any)?.data ?? (Array.isArray(usersData) ? usersData : []);
     
     const [searchQuery, setSearchQuery] = useState('');
     const [roleFilter, setRoleFilter] = useState<string | null>(null);

@@ -69,7 +69,7 @@ export default function UsersPage() {
     const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
     const { data: usersData } = useUsers();
-    const users = usersData?.data || [];
+    const users: any[] = (usersData as any)?.items ?? (usersData as any)?.data ?? (Array.isArray(usersData) ? usersData : []);
 
     const filteredUsers = roleFilter === 'all'
         ? users

@@ -24,7 +24,7 @@ export default function CommissionsPage() {
     const [brokerFilter, setBrokerFilter] = useState<string>('all');
 
     const { data: commissionsData } = useCommissions();
-    const allCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+    const allCommissions: any[] = ((commissionsData as any)?.items ?? (commissionsData as any)?.data ?? (Array.isArray(commissionsData) ? commissionsData : []));
 
     const totalEarned = allCommissions.filter((c: any) => c.status === 'EARNED' || c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
     const totalPaid = allCommissions.filter((c: any) => c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);

@@ -9,6 +9,10 @@ export class DocumentQueryDto extends PaginationDto {
 
   @IsString()
   @IsOptional()
+  clientId?: string;
+
+  @IsString()
+  @IsOptional()
   linkedEntityType?: string;
 
   @IsString()

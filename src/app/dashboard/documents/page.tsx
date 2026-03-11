@@ -38,7 +38,7 @@ export default function DocumentsPage() {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
     const [previewDoc, setPreviewDoc] = useState<Document | null>(null);
     const { data: docsData, isLoading } = useDocuments();
-    const allDocs: any[] = (docsData as any)?.items ?? docsData ?? [];
+    const allDocs: any[] = (docsData as any)?.items ?? (docsData as any)?.data ?? (Array.isArray(docsData) ? docsData : []);
 
     const filteredDocs = allDocs.filter((doc: any) => {
         const matchesSearch = (doc.name || doc.fileName || '').toLowerCase().includes(searchTerm.toLowerCase());

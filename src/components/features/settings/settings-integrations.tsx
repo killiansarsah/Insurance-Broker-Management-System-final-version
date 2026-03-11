@@ -20,6 +20,7 @@ import {
     useUpdateIntegration,
     useSyncIntegration,
 } from '@/hooks/api/use-integrations';
+import { useImportFile, type ImportResult, type MixedImportResult } from '@/hooks/api/use-imports';
 
 // ─── Types ──────────────────────────────────────────────────
 
@@ -232,13 +233,16 @@ export function SettingsIntegrations() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadModal, setUploadModal] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [uploadDataType, setUploadDataType] = useState('clients');
+    const [uploadDataType, setUploadDataType] = useState('all');
     const [uploadProgress, setUploadProgress] = useState(0);
     const [uploading, setUploading] = useState(false);
     const [dragOver, setDragOver] = useState(false);
     const [recentImports, setRecentImports] = useState<ImportRecord[]>([]);
+    const [importResult, setImportResult] = useState<ImportResult | MixedImportResult | null>(null);
+    const importMutation = useImportFile();
 
     const DATA_TYPES = [
+        { value: 'all', label: 'Import All' },
         { value: 'clients', label: 'Clients' },
         { value: 'policies', label: 'Policies' },
         { value: 'claims', label: 'Claims' },
@@ -350,9 +354,10 @@ export function SettingsIntegrations() {
         const error = validateFile(file);
         if (error) { toast.error(error); return; }
         setSelectedFile(file);
-        setUploadDataType('clients');
+        setUploadDataType('all');
         setUploadProgress(0);
         setUploading(false);
+        setImportResult(null);
         setUploadModal(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -374,29 +379,69 @@ export function SettingsIntegrations() {
         if (!selectedFile) return;
         setUploading(true);
         setUploadProgress(0);
+        setImportResult(null);
+
+        // Simulate progress while the API call is in flight
         const interval = setInterval(() => {
             setUploadProgress(prev => {
-                if (prev >= 100) { clearInterval(interval); return 100; }
-                return prev + Math.random() * 15 + 5;
+                if (prev >= 90) { clearInterval(interval); return 90; }
+                return prev + Math.random() * 10 + 3;
             });
-        }, 200);
-        setTimeout(() => {
-            clearInterval(interval);
-            setUploadProgress(100);
-            setTimeout(() => {
-                const newImport: ImportRecord = {
-                    name: selectedFile.name,
-                    date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                    by: 'Current User', status: 'Success', ok: true,
-                };
-                setRecentImports(prev => [newImport, ...prev]);
-                setUploadModal(false);
-                setSelectedFile(null);
-                setUploading(false);
-                setUploadProgress(0);
-                toast.success(`Imported ${selectedFile.name} as ${DATA_TYPES.find(d => d.value === uploadDataType)?.label}`);
-            }, 500);
-        }, 2000);
+        }, 300);
+
+        importMutation.mutate(
+            { file: selectedFile, dataType: uploadDataType as any },
+            {
+                onSuccess: (result) => {
+                    clearInterval(interval);
+                    setUploadProgress(100);
+                    setImportResult(result);
+
+                    // Determine counts for toast
+                    const isMixed = 'summary' in result;
+                    const created = isMixed
+                        ? (result as MixedImportResult).summary.totalCreated
+                        : (result as ImportResult).created;
+                    const errors = isMixed
+                        ? (result as MixedImportResult).summary.totalErrors
+                        : (result as ImportResult).errors.length;
+
+                    const newImport: ImportRecord = {
+                        name: selectedFile.name,
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        by: 'Current User',
+                        status: errors > 0 ? `${created} created, ${errors} errors` : `${created} created`,
+                        ok: errors === 0,
+                    };
+                    setRecentImports(prev => [newImport, ...prev]);
+
+                    if (errors > 0) {
+                        toast.warning(`Imported ${created} records with ${errors} errors`);
+                    } else {
+                        toast.success(`Successfully imported ${created} records`);
+                    }
+
+                    setTimeout(() => {
+                        setUploading(false);
+                    }, 500);
+                },
+                onError: (error: any) => {
+                    clearInterval(interval);
+                    setUploadProgress(0);
+                    setUploading(false);
+                    const msg = error?.response?.data?.message || error?.message || 'Import failed';
+                    const newImport: ImportRecord = {
+                        name: selectedFile.name,
+                        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                        by: 'Current User',
+                        status: 'Failed',
+                        ok: false,
+                    };
+                    setRecentImports(prev => [newImport, ...prev]);
+                    toast.error(typeof msg === 'string' ? msg : 'Import failed');
+                },
+            },
+        );
     };
 
     // ── Render ──
@@ -860,23 +905,29 @@ export function SettingsIntegrations() {
                             {/* Data type */}
                             <div>
                                 <label className="text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-2 block">Import As</label>
-                                <div className="grid grid-cols-3 gap-2">
+                                <div className="grid grid-cols-4 gap-2">
                                     {DATA_TYPES.map(dt => (
-                                        <button key={dt.value} onClick={() => !uploading && setUploadDataType(dt.value)} disabled={uploading}
+                                        <button key={dt.value} onClick={() => !uploading && !importResult && setUploadDataType(dt.value)} disabled={uploading || !!importResult}
                                             className={cn('px-3 py-2 rounded-xl text-xs font-medium border transition-all',
-                                                uploadDataType === dt.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-slate-800 text-surface-600 border-surface-200 dark:border-slate-700 hover:border-primary-300'
+                                                uploadDataType === dt.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-slate-800 text-surface-600 border-surface-200 dark:border-slate-700 hover:border-primary-300',
+                                                dt.value === 'all' && uploadDataType === dt.value && 'bg-amber-600 border-amber-600',
                                             )}>
                                             {dt.label}
                                         </button>
                                     ))}
                                 </div>
+                                {uploadDataType === 'all' && !importResult && (
+                                    <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
+                                        <AlertTriangle size={10} /> Auto-detects data types from column headers
+                                    </p>
+                                )}
                             </div>
 
                             {/* Progress */}
-                            {uploading && (
+                            {uploading && !importResult && (
                                 <div className="space-y-2">
                                     <div className="flex justify-between">
-                                        <span className="text-xs text-surface-500">{uploadProgress >= 100 ? 'Processing...' : 'Uploading...'}</span>
+                                        <span className="text-xs text-surface-500">{uploadProgress >= 90 ? 'Processing rows...' : 'Uploading file...'}</span>
                                         <span className="text-xs font-bold tabular-nums">{Math.min(100, Math.round(uploadProgress))}%</span>
                                     </div>
                                     <div className="w-full h-2 bg-surface-100 dark:bg-slate-800 rounded-full overflow-hidden">
@@ -884,13 +935,87 @@ export function SettingsIntegrations() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Import Results */}
+                            {importResult && (
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-2 text-sm font-bold text-emerald-600">
+                                        <CheckCircle2 size={16} /> Import Complete
+                                    </div>
+
+                                    {'summary' in importResult ? (
+                                        // Mixed import results
+                                        <div className="space-y-3">
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center">
+                                                    <p className="text-lg font-bold text-emerald-600 tabular-nums">{importResult.summary.totalCreated}</p>
+                                                    <p className="text-[10px] font-bold text-emerald-600/70 uppercase">Created</p>
+                                                </div>
+                                                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-center">
+                                                    <p className="text-lg font-bold text-amber-600 tabular-nums">{importResult.summary.totalSkipped}</p>
+                                                    <p className="text-[10px] font-bold text-amber-600/70 uppercase">Skipped</p>
+                                                </div>
+                                                <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 text-center">
+                                                    <p className="text-lg font-bold text-red-600 tabular-nums">{importResult.summary.totalErrors}</p>
+                                                    <p className="text-[10px] font-bold text-red-600/70 uppercase">Errors</p>
+                                                </div>
+                                            </div>
+                                            {importResult.results.map((r: ImportResult, i: number) => (
+                                                <div key={i} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-surface-50 dark:bg-slate-800">
+                                                    <span className="font-medium text-surface-700 dark:text-surface-300 capitalize">{r.dataType}</span>
+                                                    <span className="text-surface-500">{r.created} created, {r.skipped} skipped{r.errors.length > 0 && `, ${r.errors.length} errors`}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        // Single-type import results
+                                        <div className="space-y-3">
+                                            <div className="grid grid-cols-3 gap-2">
+                                                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center">
+                                                    <p className="text-lg font-bold text-emerald-600 tabular-nums">{importResult.created}</p>
+                                                    <p className="text-[10px] font-bold text-emerald-600/70 uppercase">Created</p>
+                                                </div>
+                                                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-center">
+                                                    <p className="text-lg font-bold text-amber-600 tabular-nums">{importResult.skipped}</p>
+                                                    <p className="text-[10px] font-bold text-amber-600/70 uppercase">Skipped</p>
+                                                </div>
+                                                <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 text-center">
+                                                    <p className="text-lg font-bold text-red-600 tabular-nums">{importResult.errors.length}</p>
+                                                    <p className="text-[10px] font-bold text-red-600/70 uppercase">Errors</p>
+                                                </div>
+                                            </div>
+                                            {importResult.errors.length > 0 && (
+                                                <div className="max-h-32 overflow-y-auto space-y-1">
+                                                    {importResult.errors.slice(0, 10).map((err, i) => (
+                                                        <div key={i} className="flex gap-2 text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400">
+                                                            <span className="font-mono shrink-0">Row {err.row}:</span>
+                                                            <span className="truncate">{err.message}</span>
+                                                        </div>
+                                                    ))}
+                                                    {importResult.errors.length > 10 && (
+                                                        <p className="text-[10px] text-red-500 px-3">...and {importResult.errors.length - 10} more errors</p>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         <div className="px-6 py-4 border-t border-surface-100 dark:border-slate-800 flex justify-end gap-3 bg-surface-50/50 dark:bg-slate-800/30">
-                            <Button variant="outline" onClick={() => { setUploadModal(false); setSelectedFile(null); }} disabled={uploading}>Cancel</Button>
-                            <Button variant="primary" onClick={handleUpload} disabled={uploading} leftIcon={uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}>
-                                {uploading ? 'Importing...' : 'Start Import'}
-                            </Button>
+                            {importResult ? (
+                                <Button variant="primary" onClick={() => { setUploadModal(false); setSelectedFile(null); setImportResult(null); setUploadProgress(0); setUploading(false); }} leftIcon={<Check size={14} />}>
+                                    Done
+                                </Button>
+                            ) : (
+                                <>
+                                    <Button variant="outline" onClick={() => { setUploadModal(false); setSelectedFile(null); }} disabled={uploading}>Cancel</Button>
+                                    <Button variant="primary" onClick={handleUpload} disabled={uploading} leftIcon={uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}>
+                                        {uploading ? 'Importing...' : 'Start Import'}
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -185,9 +185,10 @@ function StatusDot({ status }: { status: 'PAID' | 'PENDING' | 'OVERDUE' }) {
 }
 
 function formatCompact(n: number): string {
-    if (n >= 1000000) return `₵${(n / 1000000).toFixed(1)}M`;
-    if (n >= 1000) return `₵${(n / 1000).toFixed(0)}k`;
-    return `₵${n}`;
+    const v = Number(n) || 0;
+    if (v >= 1000000) return `₵${(v / 1000000).toFixed(1)}M`;
+    if (v >= 1000) return `₵${(v / 1000).toFixed(0)}k`;
+    return `₵${v.toFixed(2)}`;
 }
 
 
@@ -196,18 +197,18 @@ function formatCompact(n: number): string {
 // =====================================================================
 export default function DashboardPage() {
     const { user } = useAuthStore();
-    const { data: policiesData = { data: [] } } = usePolicies();
-    const { data: clientsData = { data: [] } } = useClients();
-    const { data: claimsApiData = { data: [] } } = useClaims();
-    const { data: leadsData = { data: [] } } = useLeads();
-    const { data: invoicesData = { data: [] } } = useInvoices();
+    const { data: policiesData } = usePolicies();
+    const { data: clientsData } = useClients();
+    const { data: claimsApiData } = useClaims();
+    const { data: leadsData } = useLeads();
+    const { data: invoicesData } = useInvoices();
     const { data: dashboardReport } = useDashboardReport();
 
-    const policies = policiesData.data || [];
-    const clients = clientsData.data || [];
-    const claims = claimsApiData.data || [];
-    const leads = leadsData.data || [];
-    const invoices = invoicesData.data || [];
+    const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
+    const clients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
+    const claims: any[] = (claimsApiData as any)?.items ?? (claimsApiData as any)?.data ?? (Array.isArray(claimsApiData) ? claimsApiData : []);
+    const leads: any[] = (leadsData as any)?.items ?? (leadsData as any)?.data ?? (Array.isArray(leadsData) ? leadsData : []);
+    const invoices: any[] = (invoicesData as any)?.items ?? (invoicesData as any)?.data ?? (Array.isArray(invoicesData) ? invoicesData : []);
 
     const [period, setPeriod] = useState<Period>('mtd');
     const [selectedYear, setSelectedYear] = useState<number>(2026);
@@ -277,7 +278,7 @@ export default function DashboardPage() {
     }, [policies]);
 
     const insurerPerformance = useMemo(() => {
-        const insurers = Array.from(new Set(policies.map(p => p.insurerName))).slice(0, 4);
+        const insurers = Array.from(new Set(policies.map(p => p.insurerName).filter(Boolean))).slice(0, 4);
         return insurers.map((name, i) => ({
             name: name.length > 18 ? name.slice(0, 18) + '…' : name,
             avgDays: +(1.5 + (i * 0.7)).toFixed(1),
@@ -306,8 +307,8 @@ export default function DashboardPage() {
     const claimsRatioData = useMemo(() => {
         const totalClaimsPaid = filteredClaims
             .filter(c => c.status === 'SETTLED')
-            .reduce((sum, c) => sum + (c.settledAmount || c.claimAmount || 0), 0);
-        const totalPremium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+            .reduce((sum, c) => sum + Number(c.settledAmount || c.claimAmount || 0), 0);
+        const totalPremium = filteredPolicies.reduce((sum, p) => sum + Number(p.premiumAmount || 0), 0);
         const ratio = totalPremium > 0 ? (totalClaimsPaid / totalPremium) * 100 : 0;
         return { ratio: Math.min(ratio, 100), claimsPaid: totalClaimsPaid, premiumReceived: totalPremium };
     }, [filteredClaims, filteredPolicies]);
@@ -317,11 +318,11 @@ export default function DashboardPage() {
     // --- Lapsed Policies (must be before kpiData) ---
     const lapsedPolicies = useMemo(() => policies.filter(p => p.status === 'LAPSED'), [policies]);
     const lapsedCount = lapsedPolicies.length;
-    const lapsedPremium = lapsedPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+    const lapsedPremium = lapsedPolicies.reduce((sum, p) => sum + Number(p.premiumAmount || 0), 0);
 
     const kpiData = useMemo(() => {
-        const premium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
-        const commission = filteredPolicies.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
+        const premium = filteredPolicies.reduce((sum, p) => sum + Number(p.premiumAmount || 0), 0);
+        const commission = filteredPolicies.reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0);
         const policyCount = filteredPolicies.length;
         const clientCount = filteredClients.length;
         const expiringCount = filteredPolicies.filter(p => {
@@ -335,17 +336,17 @@ export default function DashboardPage() {
             { label: 'Active Clients', value: clientCount.toString(), change: 3, direction: 'up' as const, icon: <Users size={20} />, color: 'text-success-600 bg-success-50', subtitle: 'Target: 1,000' },
             { label: 'Active Policies', value: policyCount.toString(), change: 5, direction: 'up' as const, icon: <FileText size={20} />, color: 'text-primary-600 bg-primary-50', subtitle: `${(policyCount / (clientCount || 1)).toFixed(1)} per client` },
             { label: 'Expiring (7d)', value: expiringCount.toString(), change: 0, direction: 'down' as const, icon: <AlertCircle size={20} />, color: 'text-danger-600 bg-danger-50', subtitle: `${expiringCount > 5 ? 'High volume' : 'Manageable'}`, warn: expiringCount > 0 },
-            { label: 'Leads Pipeline', value: leads.filter(l => l.status !== 'CONVERTED' && l.status !== 'LOST').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(leads.reduce((s, l) => s + (l.estimatedPremium || 0), 0))} est. premium` },
+            { label: 'Leads Pipeline', value: leads.filter(l => l.status !== 'CONVERTED' && l.status !== 'LOST').length.toString(), change: 8, direction: 'up' as const, icon: <Target size={20} />, color: 'text-accent-600 bg-accent-50', subtitle: `${formatCompact(leads.reduce((s, l) => s + Number(l.estimatedPremium || 0), 0))} est. premium` },
             { label: 'Claims Ratio', value: `${claimsRatioValue.toFixed(1)}%`, change: 1.5, direction: claimsRatioValue > 50 ? 'up' as const : 'down' as const, icon: <PieChart size={20} />, color: claimsRatioValue > 70 ? 'text-danger-600 bg-danger-50' : claimsRatioValue > 50 ? 'text-warning-600 bg-warning-50' : 'text-success-600 bg-success-50', subtitle: claimsRatioValue > 70 ? 'Above threshold' : 'Within target', warn: claimsRatioValue > 70 },
             { label: 'Lapsed Policies', value: lapsedCount.toString(), change: 0, direction: 'down' as const, icon: <XCircle size={20} />, color: lapsedCount > 5 ? 'text-danger-600 bg-danger-50' : 'text-warning-600 bg-warning-50', subtitle: lapsedCount > 0 ? `${formatCompact(lapsedPremium)} at risk` : 'No lapsed policies', warn: lapsedCount > 0 },
         ];
     }, [filteredPolicies, filteredClients, period, claimsRatioValue, lapsedCount, lapsedPremium]);
 
     const commissionData = useMemo(() => {
-        const expected = filteredPolicies.reduce((sum, p) => sum + (p.commissionAmount || 0), 0);
+        const expected = filteredPolicies.reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0);
         const byInsurer = Array.from(new Set(filteredPolicies.map(p => p.insurerName))).map((name, idx) => ({
             name: name || 'Unknown',
-            amount: filteredPolicies.filter(p => p.insurerName === name).reduce((sum, p) => sum + (p.commissionAmount || 0), 0),
+            amount: filteredPolicies.filter(p => p.insurerName === name).reduce((sum, p) => sum + Number(p.commissionAmount || 0), 0),
             status: (['PAID', 'PENDING', 'OVERDUE'][idx % 3]) as 'PAID' | 'PENDING' | 'OVERDUE'
         })).slice(0, 5);
 
@@ -356,7 +357,7 @@ export default function DashboardPage() {
         const byProduct = Array.from(new Set(filteredPolicies.map(p => p.insuranceType))).map(type => ({
             product: type || 'Unknown',
             count: filteredPolicies.filter(p => p.insuranceType === type).length,
-            premium: filteredPolicies.filter(p => p.insuranceType === type).reduce((sum, p) => sum + p.premiumAmount, 0),
+            premium: filteredPolicies.filter(p => p.insuranceType === type).reduce((sum, p) => sum + Number(p.premiumAmount || 0), 0),
             urgency: 'default' as const
         }));
         return byProduct;
@@ -378,14 +379,14 @@ export default function DashboardPage() {
     }, [filteredClaims]);
 
     const salesData = useMemo(() => {
-        const newBizPremium = filteredPolicies.reduce((sum, p) => sum + p.premiumAmount, 0);
+        const newBizPremium = filteredPolicies.reduce((sum, p) => sum + Number(p.premiumAmount || 0), 0);
         const quotesIssued = filteredPolicies.length * 3;
         const converted = leads.filter((l: any) => l.status === 'CONVERTED').length;
         const totalLeads = leads.length || 1;
         const conversionRate = Math.round((converted / totalLeads) * 100);
         const pipelineValue = leads
             .filter((l: any) => l.status !== 'CONVERTED' && l.status !== 'LOST')
-            .reduce((s, l: any) => s + (l.estimatedPremium || 0), 0);
+            .reduce((s, l: any) => s + Number(l.estimatedPremium || 0), 0);
         return { quotesIssued, newBizPremium, conversionRate, topOfficer: '', pipelineValue };
     }, [filteredPolicies, leads]);
 

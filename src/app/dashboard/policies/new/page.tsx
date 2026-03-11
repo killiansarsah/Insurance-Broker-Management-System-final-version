@@ -180,9 +180,9 @@ export default function NewPolicyPage() {
     const createPolicyMutation = useCreatePolicy();
 
     const { data: clientsData } = useClients();
-    const allClients: any[] = (clientsData as any)?.items ?? clientsData ?? [];
+    const allClients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
     const { data: carriersData } = useCarriers();
-    const allCarriers: any[] = (carriersData as any)?.items ?? carriersData ?? [];
+    const allCarriers: any[] = Array.isArray(carriersData) ? carriersData : (carriersData as any)?.items ?? (carriersData as any)?.data ?? [];
 
     const INSURER_OPTIONS = useMemo(() =>
         allCarriers

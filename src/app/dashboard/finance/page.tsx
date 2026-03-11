@@ -95,11 +95,11 @@ export default function FinanceOverviewPage() {
     const { data: dashboardData } = useFinanceDashboard();
     const dashboard = dashboardData as any;
     const { data: invoicesData } = useInvoices();
-    const allInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
+    const allInvoices: any[] = ((invoicesData as any)?.items ?? (invoicesData as any)?.data ?? (Array.isArray(invoicesData) ? invoicesData : []));
     const { data: transactionsData } = useTransactions();
-    const allPayments = ((transactionsData as any)?.items ?? transactionsData ?? []) as any[];
+    const allPayments: any[] = ((transactionsData as any)?.items ?? (transactionsData as any)?.data ?? (Array.isArray(transactionsData) ? transactionsData : []));
     const { data: commissionsData } = useCommissions();
-    const allCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+    const allCommissions: any[] = ((commissionsData as any)?.items ?? (commissionsData as any)?.data ?? (Array.isArray(commissionsData) ? commissionsData : []));
 
     const totalRevenue = dashboard?.totalRevenue ?? allInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
     const collected = dashboard?.collected ?? allInvoices.filter((i: any) => i.status === 'PAID').reduce((s: number, i: any) => s + (i.amount || 0), 0);

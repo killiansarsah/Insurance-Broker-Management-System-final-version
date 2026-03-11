@@ -63,6 +63,7 @@ export class DocumentsService {
       limit = 20,
       search,
       category,
+      clientId,
       linkedEntityType,
       linkedEntityId,
       dateFrom,
@@ -77,6 +78,7 @@ export class DocumentsService {
       tenantId,
       isExpired: false,
       ...(category && { category }),
+      ...(clientId && { linkedEntityType: 'CLIENT', linkedEntityId: clientId }),
       ...(linkedEntityType && { linkedEntityType }),
       ...(linkedEntityId && { linkedEntityId }),
       ...((dateFrom || dateTo) && {

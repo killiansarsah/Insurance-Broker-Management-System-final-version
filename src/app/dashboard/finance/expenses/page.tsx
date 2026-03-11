@@ -399,9 +399,9 @@ function CellSelect({
 // â”€â”€â”€ Main component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 export default function ExpensesPage() {
     const { data: expensesData } = useExpenses();
-    const fetchedExpenses = ((expensesData as any)?.items ?? expensesData ?? []) as Expense[];
+    const fetchedExpenses: Expense[] = ((expensesData as any)?.items ?? (expensesData as any)?.data ?? (Array.isArray(expensesData) ? expensesData : []));
     const { data: commissionsRaw } = useCommissions();
-    const allCommissions = ((commissionsRaw as any)?.items ?? commissionsRaw ?? []) as any[];
+    const allCommissions: any[] = ((commissionsRaw as any)?.items ?? (commissionsRaw as any)?.data ?? (Array.isArray(commissionsRaw) ? commissionsRaw : []));
 
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [expensesInit, setExpensesInit] = useState(false);

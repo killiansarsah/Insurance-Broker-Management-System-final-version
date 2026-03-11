@@ -54,7 +54,7 @@ export default function InvoicesPage() {
     const [showNewInvoice, setShowNewInvoice] = useState(newParam === '1');
 
     const { data: invoicesData } = useInvoices();
-    const allInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
+    const allInvoices: any[] = ((invoicesData as any)?.items ?? (invoicesData as any)?.data ?? (Array.isArray(invoicesData) ? invoicesData : []));
 
     const filtered = statusFilter === 'all'
         ? allInvoices

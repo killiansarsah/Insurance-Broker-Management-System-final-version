@@ -39,7 +39,7 @@ export default function NewClaimPage() {
     const [step, setStep] = useState(1);
     const { data: policiesData } = usePolicies();
     const createClaimMutation = useCreateClaim();
-    const allPolicies: any[] = (policiesData as any)?.items ?? policiesData ?? [];
+    const allPolicies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
 
     // Form State
     const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);

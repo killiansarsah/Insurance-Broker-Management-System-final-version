@@ -33,7 +33,7 @@ export default function ComplaintsPage() {
     const [statusFilter, setStatusFilter] = useState('all');
     const [isNewModalOpen, setIsNewModalOpen] = useState(false);
     const { data: complaintsData, isLoading } = useComplaints();
-    const allComplaints: any[] = (complaintsData as any)?.items ?? complaintsData ?? [];
+    const allComplaints: any[] = (complaintsData as any)?.items ?? (complaintsData as any)?.data ?? (Array.isArray(complaintsData) ? complaintsData : []);
 
     const filtered = statusFilter === 'all'
         ? allComplaints

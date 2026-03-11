@@ -381,14 +381,15 @@ export default function QuotesPage() {
     const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
     // Wire to backend API
-    const { data: quotesData = { data: [] } } = useQuotes();
+    const { data: quotesData } = useQuotes();
     const sendQuoteMutation = useSendQuote();
     const acceptQuoteMutation = useAcceptQuote();
     const declineQuoteMutation = useDeclineQuote();
     const deleteQuoteMutation = useDeleteQuote();
 
     const allQuotes: Quote[] = useMemo(() => {
-        return ((quotesData as any).data || []).map((q: any) => ({
+        const rawQuotes = (quotesData as any)?.items ?? (quotesData as any)?.data ?? (Array.isArray(quotesData) ? quotesData : []);
+        return rawQuotes.map((q: any) => ({
             id: q.id,
             quoteNumber: q.quoteNumber,
             clientName: q.client?.companyName || `${q.client?.firstName ?? ''} ${q.client?.lastName ?? ''}`.trim(),

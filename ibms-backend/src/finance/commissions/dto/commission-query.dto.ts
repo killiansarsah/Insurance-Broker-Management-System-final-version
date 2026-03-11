@@ -9,6 +9,10 @@ export class CommissionQueryDto extends PaginationDto {
 
   @IsString()
   @IsOptional()
+  clientId?: string;
+
+  @IsString()
+  @IsOptional()
   carrierId?: string;
 
   @IsString()

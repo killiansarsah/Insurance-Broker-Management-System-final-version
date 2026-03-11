@@ -44,9 +44,9 @@ export default function FinanceReportsPage() {
     const { data: dashboardData } = useFinanceDashboard();
     const dashboard = dashboardData as any;
     const { data: invoicesData } = useInvoices();
-    const allInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
+    const allInvoices: any[] = ((invoicesData as any)?.items ?? (invoicesData as any)?.data ?? (Array.isArray(invoicesData) ? invoicesData : []));
     const { data: commissionsData } = useCommissions();
-    const allCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
+    const allCommissions: any[] = ((commissionsData as any)?.items ?? (commissionsData as any)?.data ?? (Array.isArray(commissionsData) ? commissionsData : []));
 
     // Build monthlyRevenue from invoices
     const monthlyRevenue = useMemo(() => {

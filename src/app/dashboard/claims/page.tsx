@@ -17,7 +17,7 @@ export default function ClaimsPage() {
     const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
     const [statusFilter, setStatusFilter] = useState<string>('all');
     const { data: claimsData, isLoading } = useClaims();
-    const claims = claimsData?.data || [];
+    const claims: any[] = (claimsData as any)?.items ?? (claimsData as any)?.data ?? (Array.isArray(claimsData) ? claimsData : []);
 
     // 1. Base Filter (Motor vs Non-Motor)
     const baseData = useMemo(() => {

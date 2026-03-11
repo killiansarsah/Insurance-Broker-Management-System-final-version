@@ -12,6 +12,7 @@ import { mkdirSync, existsSync } from 'fs';
 import { AppModule } from './app.module.js';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
 import { createGlobalValidationPipe } from './common/pipes/validation.pipe.js';
+import { DecimalSerializationInterceptor } from './common/interceptors/decimal-serialization.interceptor.js';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -65,6 +66,9 @@ async function bootstrap(): Promise<void> {
 
   // Global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // Global interceptor: convert Prisma Decimal objects to plain numbers
+  app.useGlobalInterceptors(new DecimalSerializationInterceptor());
 
   // Swagger — disabled in production
   const swaggerEnabled = configService.get<boolean>('swagger.enabled', false);

@@ -142,7 +142,7 @@ export default function ApprovalsPage() {
     const rejectMutation = useRejectRequest();
 
     const items: ApprovalItem[] = useMemo(() => {
-        const raw = (approvalsData as any)?.data || [];
+        const raw: any[] = (approvalsData as any)?.items ?? (approvalsData as any)?.data ?? (Array.isArray(approvalsData) ? approvalsData : []);
         return raw.map((a: any) => ({
             id: a.id,
             refNumber: a.approvalNumber || a.id.slice(0, 8),

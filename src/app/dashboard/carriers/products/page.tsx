@@ -60,7 +60,7 @@ export default function ProductsPage() {
     const [compulsoryOnly, setCompulsoryOnly] = useState(false);
 
     const { data: carriersData, isLoading } = useCarriers();
-    const carriers: Carrier[] = ((carriersData as any)?.items ?? carriersData ?? []) as Carrier[];
+    const carriers: Carrier[] = ((carriersData as any)?.items ?? (carriersData as any)?.data ?? (Array.isArray(carriersData) ? carriersData : [])) as Carrier[];
 
     // Build a flat list of all products across all carriers
     const carrierProducts = useMemo(() => {

@@ -96,7 +96,7 @@ export function SettingsAccessControl() {
     const createInvitationMutation = useCreateInvitation();
 
     // Transform API users to display format
-    const apiUsers = usersData?.data || [];
+    const apiUsers: any[] = (usersData as any)?.items ?? (usersData as any)?.data ?? (Array.isArray(usersData) ? usersData : []);
     const users: DisplayUser[] = (apiUsers as any[]).map((u: any) => ({
         id: u.id,
         name: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email,

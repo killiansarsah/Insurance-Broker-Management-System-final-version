@@ -33,7 +33,7 @@ import {
     User,
     ChevronDown,
 } from 'lucide-react';
-import { useClient, usePolicies, useClaims, useInvoices, useCommissions, useDocuments } from '@/hooks/api';
+import { useClient, useUpdateKyc, useUpdateClient, usePolicies, useClaims, useInvoices, useCommissions, useDocuments } from '@/hooks/api';
 import { getClientDisplayName } from '@/lib/utils';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
@@ -65,19 +65,13 @@ export default function ClientProfilePage({ id }: { id: string }) {
     const kycMenuRef = useRef<HTMLDivElement>(null);
 
     const { data: client, isLoading } = useClient(id) as { data: Record<string, any> | undefined; isLoading: boolean };
+    const updateKycMutation = useUpdateKyc();
+    const updateClientMutation = useUpdateClient();
     const { data: policiesData } = usePolicies({ clientId: id });
     const { data: claimsData } = useClaims({ clientId: id });
     const { data: invoicesData } = useInvoices({ clientId: id });
     const { data: commissionsData } = useCommissions({ clientId: id });
     const { data: documentsData } = useDocuments({ clientId: id });
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
-    }
 
     // Close dropdowns on outside click
     useEffect(() => {
@@ -97,6 +91,14 @@ export default function ClientProfilePage({ id }: { id: string }) {
         }
     }, [client]);
 
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-24 animate-fade-in">
+                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+            </div>
+        );
+    }
+
     if (!client) {
         return (
             <div className="flex flex-col items-center justify-center py-24 animate-fade-in text-center px-6">
@@ -112,29 +114,29 @@ export default function ClientProfilePage({ id }: { id: string }) {
         );
     }
 
-    const clientPolicies = ((policiesData as any)?.items ?? policiesData ?? []) as any[];
-    const clientInvoices = ((invoicesData as any)?.items ?? invoicesData ?? []) as any[];
-    const clientCommissions = ((commissionsData as any)?.items ?? commissionsData ?? []) as any[];
-    const clientClaims = ((claimsData as any)?.items ?? claimsData ?? []) as any[];
-    const clientDocuments = ((documentsData as any)?.items ?? documentsData ?? []) as any[];
+    const clientPolicies: any[] = ((policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []));
+    const clientInvoices: any[] = ((invoicesData as any)?.items ?? (invoicesData as any)?.data ?? (Array.isArray(invoicesData) ? invoicesData : []));
+    const clientCommissions: any[] = ((commissionsData as any)?.items ?? (commissionsData as any)?.data ?? (Array.isArray(commissionsData) ? commissionsData : []));
+    const clientClaims: any[] = ((claimsData as any)?.items ?? (claimsData as any)?.data ?? (Array.isArray(claimsData) ? claimsData : []));
+    const clientDocuments: any[] = ((documentsData as any)?.items ?? (documentsData as any)?.data ?? (Array.isArray(documentsData) ? documentsData : []));
     const clientReceipts = clientInvoices.filter((inv: any) => inv.status === 'PAID');
 
     // Computed financials
-    const totalPremiumYTD = clientInvoices.reduce((s: number, inv: any) => s + (inv.amount || 0), 0);
+    const totalPremiumYTD = clientInvoices.reduce((s: number, inv: any) => s + Number(inv.amount || 0), 0);
     const outstandingPremium = clientInvoices
         .filter((inv: any) => inv.status === 'OUTSTANDING' || inv.status === 'OVERDUE' || inv.status === 'PARTIAL')
-        .reduce((s: number, inv: any) => s + ((inv.amount || 0) - (inv.amountPaid || 0)), 0);
+        .reduce((s: number, inv: any) => s + (Number(inv.amount || 0) - Number(inv.amountPaid || 0)), 0);
     const commissionEarned = clientCommissions
         .filter((c: any) => c.status === 'EARNED' || c.status === 'PAID')
-        .reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+        .reduce((s: number, c: any) => s + Number(c.commissionAmount || 0), 0);
     const commissionPending = clientCommissions
         .filter((c: any) => c.status === 'PENDING')
-        .reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+        .reduce((s: number, c: any) => s + Number(c.commissionAmount || 0), 0);
     const hasOverdue = clientInvoices.some((inv: any) => inv.status === 'OVERDUE');
     const expiringSoonPolicies = clientPolicies.filter((p: any) => (p.daysToExpiry || 999) < 30);
     const activePoliciesCount = clientPolicies.filter((p: any) => p.status === 'ACTIVE').length;
     const claimsPending = clientClaims.filter((c: any) => c.status !== 'CLOSED' && c.status !== 'SETTLED' && c.status !== 'REJECTED').length;
-    const totalClaimsAmount = clientClaims.reduce((s: number, c: any) => s + (c.claimAmount || 0), 0);
+    const totalClaimsAmount = clientClaims.reduce((s: number, c: any) => s + Number(c.claimAmount || 0), 0);
 
     const name = getClientDisplayName(client as { type: string; companyName?: string; firstName?: string; lastName?: string });
     const partnerSince = new Date(client.createdAt).getFullYear();
@@ -222,9 +224,16 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                             <button
                                                 key={s}
                                                 onClick={() => {
-                                                    setKycStatusLocal(s);
-                                                    setShowKycMenu(false);
-                                                    toast.success(`KYC status updated to "${s}"`, { description: `Client: ${name}` });
+                                                    updateKycMutation.mutate({ id, data: { kycStatus: s } }, {
+                                                        onSuccess: () => {
+                                                            setKycStatusLocal(s);
+                                                            setShowKycMenu(false);
+                                                            toast.success(`KYC status updated to "${s}"`, { description: `Client: ${name}` });
+                                                        },
+                                                        onError: () => {
+                                                            toast.error('Failed to update KYC status');
+                                                        },
+                                                    });
                                                 }}
                                                 className={cn(
                                                     'w-full px-3 py-2 text-left text-sm hover:bg-surface-50 flex items-center gap-2 capitalize transition-colors',
@@ -274,9 +283,16 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                         <button
                                             key={s.value}
                                             onClick={() => {
-                                                setClientStatusLocal(s.value);
-                                                setShowStatusMenu(false);
-                                                toast.success(`Client status updated to "${s.label}"`, { description: `Client: ${name}` });
+                                                updateClientMutation.mutate({ id, data: { status: s.value } }, {
+                                                    onSuccess: () => {
+                                                        setClientStatusLocal(s.value);
+                                                        setShowStatusMenu(false);
+                                                        toast.success(`Client status updated to "${s.label}"`, { description: `Client: ${name}` });
+                                                    },
+                                                    onError: () => {
+                                                        toast.error('Failed to update client status');
+                                                    },
+                                                });
                                             }}
                                             className={cn(
                                                 'w-full px-3 py-2.5 text-left hover:bg-surface-50 flex items-start gap-2.5 transition-colors',

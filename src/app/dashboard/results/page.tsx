@@ -94,12 +94,12 @@ function ResultsContent() {
     const { data: complaintsData } = useComplaints();
     const { data: carriersData } = useCarriers();
 
-    const allClients: any[] = (clientsData as any)?.items ?? clientsData ?? [];
-    const allPolicies: any[] = (policiesData as any)?.items ?? policiesData ?? [];
-    const allClaims: any[] = (claimsData as any)?.items ?? claimsData ?? [];
-    const allLeads: any[] = (leadsData as any)?.items ?? leadsData ?? [];
-    const allComplaints: any[] = (complaintsData as any)?.items ?? complaintsData ?? [];
-    const allCarriers: any[] = (carriersData as any)?.items ?? carriersData ?? [];
+    const allClients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
+    const allPolicies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
+    const allClaims: any[] = (claimsData as any)?.items ?? (claimsData as any)?.data ?? (Array.isArray(claimsData) ? claimsData : []);
+    const allLeads: any[] = (leadsData as any)?.items ?? (leadsData as any)?.data ?? (Array.isArray(leadsData) ? leadsData : []);
+    const allComplaints: any[] = (complaintsData as any)?.items ?? (complaintsData as any)?.data ?? (Array.isArray(complaintsData) ? complaintsData : []);
+    const allCarriers: any[] = (carriersData as any)?.items ?? (carriersData as any)?.data ?? (Array.isArray(carriersData) ? carriersData : []);
 
     const results: SearchResult[] = useMemo(() => {
         if (!query || query.trim().length < 2) return [];

@@ -87,7 +87,7 @@ export default function CarriersPage() {
     const [search, setSearch] = useState('');
 
     const { data: carriersData, isLoading } = useCarriers();
-    const carriers: Carrier[] = ((carriersData as any)?.items ?? carriersData ?? []) as Carrier[];
+    const carriers: Carrier[] = ((carriersData as any)?.items ?? (carriersData as any)?.data ?? (Array.isArray(carriersData) ? carriersData : [])) as Carrier[];
     const getCarriersByType = (type: CarrierType) => carriers.filter((c: Carrier) => c.type === type);
 
     const baseList = tab === 'all' ? carriers : getCarriersByType(tab);

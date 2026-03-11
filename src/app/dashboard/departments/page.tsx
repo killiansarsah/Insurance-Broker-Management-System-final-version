@@ -43,7 +43,7 @@ export default function DepartmentsPage() {
     const [selectedDept, setSelectedDept] = useState<Department | null>(null);
     const { data: usersData } = useUsers();
     const { data: deptsData, isLoading } = useDepartments();
-    const allUsers: any[] = (usersData as any)?.items ?? usersData ?? [];
+    const allUsers: any[] = (usersData as any)?.items ?? (usersData as any)?.data ?? (Array.isArray(usersData) ? usersData : []);
 
     const departments: Department[] = ((deptsData as any[]) ?? []).map((d: any, i: number) => ({
         id: d.id,
