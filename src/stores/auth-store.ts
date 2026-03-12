@@ -217,11 +217,8 @@ export const useAuthStore = create<AuthState>()(
                 if (get().isAuthenticated && get().user) {
                     // Try to refresh token to ensure it's valid
                     try {
-                        const res = await apiClient.post<{ accessToken: string; user: User }>(
-                            '/auth/refresh',
-                        );
-                        apiClient.setAccessToken(res.accessToken);
-                        set({ user: res.user, isAuthenticated: true });
+                        const { accessToken, user } = await apiClient.refreshSession();
+                        set({ user, isAuthenticated: true });
                     } catch (err: unknown) {
                         // If refresh fails, clear auth
                         if (!isNetworkError(err)) {
@@ -234,11 +231,8 @@ export const useAuthStore = create<AuthState>()(
 
                 set({ isLoading: true });
                 try {
-                    const res = await apiClient.post<{ accessToken: string; user: User }>(
-                        '/auth/refresh',
-                    );
-                    apiClient.setAccessToken(res.accessToken);
-                    set({ user: res.user, isAuthenticated: true, isLoading: false });
+                    const { accessToken, user } = await apiClient.refreshSession();
+                    set({ user, isAuthenticated: true, isLoading: false });
                 } catch (err: unknown) {
                     // If backend unreachable and we have persisted auth, keep it
                     if (isNetworkError(err) && get().user) {

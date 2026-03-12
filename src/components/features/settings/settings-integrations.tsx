@@ -663,7 +663,7 @@ export function SettingsIntegrations() {
             </div>
 
             {/* ── Bulk Data Import ── */}
-            <section className="flex flex-col gap-6 mt-4">
+            <section id="bulk-import" className="flex flex-col gap-6 mt-4">
                 <h2 className="text-xs font-bold text-surface-400 uppercase tracking-widest">Bulk Data Import</h2>
                 <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.json" className="hidden" onChange={handleInputChange} />
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

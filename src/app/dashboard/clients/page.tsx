@@ -21,6 +21,7 @@ import {
     Edit,
     MessageSquare,
     Download,
+    Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -365,11 +366,32 @@ export default function ClientsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" leftIcon={<Download size={14} />} onClick={handleExport}>
+                    <Link href="/dashboard/integrations#bulk-import">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
+                            leftIcon={<Upload size={14} className="text-primary-500 group-hover:-translate-y-0.5 transition-transform" />}
+                        >
+                            Import
+                        </Button>
+                    </Link>
+                    <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-success-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
+                        leftIcon={<Download size={14} className="text-success-500 group-hover:translate-y-0.5 transition-transform" />} 
+                        onClick={handleExport}
+                    >
                         Export
                     </Button>
                     <Link href="/dashboard/clients/new">
-                        <Button variant="primary" leftIcon={<Plus size={16} />} rightIcon={<ArrowRight size={14} />}>
+                        <Button 
+                            variant="primary" 
+                            className="shadow-md shadow-primary-500/20 hover:shadow-lg hover:shadow-primary-500/40 hover:-translate-y-0.5 transition-all duration-300 font-bold rounded-full px-5"
+                            leftIcon={<Plus size={16} className="transition-transform group-hover:rotate-90" />} 
+                            rightIcon={<ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />}
+                        >
                             New Client
                         </Button>
                     </Link>

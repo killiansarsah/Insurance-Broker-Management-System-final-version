@@ -17,6 +17,7 @@ import {
     CalendarDays,
     ShieldAlert,
     Activity,
+    Upload,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -314,22 +315,41 @@ export default function PoliciesPage() {
                         Manage {typeParam ? (typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor') : 'insurance'} policies and renewals.
                     </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     {typeParam && (
                         <Link href="/dashboard/policies">
-                            <Button variant="outline" size="sm">View All</Button>
+                            <Button variant="outline" size="sm" className="bg-white hover:bg-surface-50 text-surface-700 shadow-sm font-semibold rounded-full px-4 hover:-translate-y-0.5 transition-all duration-300">
+                                View All
+                            </Button>
                         </Link>
                     )}
+                    <Link href="/dashboard/integrations#bulk-import">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
+                            leftIcon={<Upload size={14} className="text-primary-500 group-hover:-translate-y-0.5 transition-transform" />}
+                        >
+                            Import
+                        </Button>
+                    </Link>
                     <Button
                         variant="outline"
                         size="sm"
-                        leftIcon={<Download size={14} />}
+                        className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-success-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
+                        leftIcon={<Download size={14} className="text-success-500 group-hover:translate-y-0.5 transition-transform" />}
                         onClick={() => exportToCsv(filtered)}
                     >
                         Export CSV
                     </Button>
                     <Link href="/dashboard/policies/new">
-                        <Button variant="primary" leftIcon={<Plus size={16} />}>New Policy</Button>
+                        <Button 
+                            variant="primary" 
+                            className="shadow-md shadow-primary-500/20 hover:shadow-lg hover:shadow-primary-500/40 hover:-translate-y-0.5 transition-all duration-300 font-bold group rounded-full px-5"
+                            leftIcon={<Plus size={16} className="transition-transform group-hover:rotate-90" />}
+                        >
+                            New Policy
+                        </Button>
                     </Link>
                 </div>
             </div>

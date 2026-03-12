@@ -10,7 +10,7 @@ interface RetryableRequest extends InternalAxiosRequestConfig {
 class ApiClient {
     private client: AxiosInstance;
     private accessToken: string | null = null;
-    private refreshPromise: Promise<string> | null = null;
+    private refreshPromise: Promise<{ accessToken: string; user: any }> | null = null;
 
     constructor() {
         this.client = axios.create({
@@ -19,7 +19,12 @@ class ApiClient {
             headers: { 'Content-Type': 'application/json' },
         });
 
-        this.client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+        this.client.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
+            // Wait for token refresh to finish before sending new requests
+            if (this.refreshPromise && !config.url?.includes('/auth/refresh')) {
+                await this.refreshPromise;
+            }
+
             if (this.accessToken) {
                 config.headers.Authorization = `Bearer ${this.accessToken}`;
             } else if (process.env.NODE_ENV === 'development') {
@@ -38,8 +43,8 @@ class ApiClient {
                 if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
                     originalRequest._retry = true;
                     try {
-                        const newToken = await this.refreshAccessToken();
-                        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                        const { accessToken } = await this.refreshSession();
+                        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                         return this.client(originalRequest);
                     } catch {
                         this.accessToken = null;
@@ -67,13 +72,13 @@ class ApiClient {
         return this.accessToken;
     }
 
-    private async refreshAccessToken(): Promise<string> {
+    public async refreshSession(): Promise<{ accessToken: string; user: any }> {
         if (!this.refreshPromise) {
             this.refreshPromise = this.client
-                .post<{ accessToken: string }>('/auth/refresh')
+                .post<{ accessToken: string; user: any }>('/auth/refresh')
                 .then((res) => {
                     this.accessToken = res.data.accessToken;
-                    return res.data.accessToken;
+                    return res.data;
                 })
                 .finally(() => {
                     this.refreshPromise = null;
