@@ -226,11 +226,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
 
                         // Liquid Color Accents
                         !isOutsideMonth && primaryType === 'POLICY' && "bg-blue-500/5 border-blue-500/20",
-                        !isOutsideMonth && primaryType === 'meeting' && "bg-amber-500/5 border-amber-500/20",
+                        !isOutsideMonth && primaryType === 'MEETING' && "bg-amber-500/5 border-amber-500/20",
                         !isOutsideMonth && primaryType === 'CLAIM' && "bg-red-500/5 border-red-500/20",
-                        !isOutsideMonth && primaryType === 'team' && "bg-emerald-500/5 border-emerald-500/20",
+                        !isOutsideMonth && primaryType === 'TEAM' && "bg-emerald-500/5 border-emerald-500/20",
                         !isOutsideMonth && primaryType === 'COMPLIANCE' && "bg-purple-500/5 border-purple-500/20",
-                        !isOutsideMonth && primaryType === 'payment' && "bg-teal-500/5 border-teal-500/20",
+                        !isOutsideMonth && primaryType === 'PAYMENT' && "bg-teal-500/5 border-teal-500/20",
 
                         // Default border if no event
                         !isOutsideMonth && !primaryType && "border"
@@ -271,11 +271,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 className={cn(
                                     "px-1.5 py-0.5 rounded-md text-[9px] font-bold truncate transition-transform hover:scale-105",
                                     event.type === 'POLICY' && "bg-blue-500 text-white",
-                                    event.type === 'meeting' && "bg-amber-500 text-white",
+                                    event.type === 'MEETING' && "bg-amber-500 text-white",
                                     event.type === 'CLAIM' && "bg-red-500 text-white",
-                                    event.type === 'team' && "bg-emerald-500 text-white",
+                                    event.type === 'TEAM' && "bg-emerald-500 text-white",
                                     event.type === 'COMPLIANCE' && "bg-purple-500 text-white",
-                                    event.type === 'payment' && "bg-teal-500 text-white"
+                                    event.type === 'PAYMENT' && "bg-teal-500 text-white"
                                 )}
                             >
                                 {event.title}
@@ -358,11 +358,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                         className={cn(
                                             "p-3 rounded-xl border shadow-sm transition-all flex flex-col gap-1.5 relative overflow-hidden group/event",
                                             event.type === 'POLICY' && "bg-blue-500 text-white border-blue-400",
-                                            event.type === 'meeting' && "bg-amber-500 text-white border-amber-400",
+                                            event.type === 'MEETING' && "bg-amber-500 text-white border-amber-400",
                                             event.type === 'CLAIM' && "bg-red-500 text-white border-red-400",
-                                            event.type === 'team' && "bg-emerald-500 text-white border-emerald-400",
+                                            event.type === 'TEAM' && "bg-emerald-500 text-white border-emerald-400",
                                             event.type === 'COMPLIANCE' && "bg-purple-500 text-white border-purple-400",
-                                            event.type === 'payment' && "bg-teal-500 text-white border-teal-400"
+                                            event.type === 'PAYMENT' && "bg-teal-500 text-white border-teal-400"
                                         )}
                                     >
                                         <div className="text-[10px] font-black uppercase tracking-tight leading-tight line-clamp-2">{event.title}</div>
@@ -443,11 +443,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                     <div className={cn(
                                         "absolute left-0 top-1 w-10 h-10 rounded-full border-4 border-surface-50 flex items-center justify-center z-10 transition-transform group-hover/timeline:scale-110 shadow-lg shadow-surface-900/5",
                                         event.type === 'POLICY' && "bg-blue-500",
-                                        event.type === 'meeting' && "bg-amber-500",
+                                        event.type === 'MEETING' && "bg-amber-500",
                                         event.type === 'CLAIM' && "bg-red-500",
-                                        event.type === 'team' && "bg-emerald-500",
+                                        event.type === 'TEAM' && "bg-emerald-500",
                                         event.type === 'COMPLIANCE' && "bg-purple-500",
-                                        event.type === 'payment' && "bg-teal-500"
+                                        event.type === 'PAYMENT' && "bg-teal-500"
                                     )}>
                                         <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
                                     </div>
@@ -536,11 +536,11 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                             <div className={cn(
                                                 "w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 shadow-inner transition-transform group-hover:scale-110",
                                                 event.type === 'POLICY' && "bg-blue-500 text-white",
-                                                event.type === 'meeting' && "bg-amber-500 text-white",
+                                                event.type === 'MEETING' && "bg-amber-500 text-white",
                                                 event.type === 'CLAIM' && "bg-red-500 text-white",
-                                                event.type === 'team' && "bg-emerald-500 text-white",
+                                                event.type === 'TEAM' && "bg-emerald-500 text-white",
                                                 event.type === 'COMPLIANCE' && "bg-purple-500 text-white",
-                                                event.type === 'payment' && "bg-teal-500 text-white"
+                                                event.type === 'PAYMENT' && "bg-teal-500 text-white"
                                             )}>
                                                 <CalendarIcon size={28} strokeWidth={2.5} />
                                             </div>

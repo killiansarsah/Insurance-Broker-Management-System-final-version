@@ -11,6 +11,21 @@ import { SettingsAppearance } from '@/components/features/settings/settings-appe
 import { SettingsAccessControl } from '@/components/features/settings/settings-access-control';
 import { SettingsTerms } from '@/components/features/settings/settings-terms';
 
+// Lazy-load Material Symbols font only on this page (saves ~600KB on all other pages)
+const MATERIAL_SYMBOLS_HREF = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
+
+function useLoadMaterialSymbols() {
+    useEffect(() => {
+        const id = 'material-symbols-font';
+        if (document.getElementById(id)) return;
+        const link = document.createElement('link');
+        link.id = id;
+        link.rel = 'stylesheet';
+        link.href = MATERIAL_SYMBOLS_HREF;
+        document.head.appendChild(link);
+    }, []);
+}
+
 type Tab = 'overview' | 'profile' | 'organization' | 'communications' | 'security' | 'experience' | 'access' | 'terms';
 
 const tabTitles: Record<Tab, { heading: string; subtitle: string }> = {
@@ -25,6 +40,7 @@ const tabTitles: Record<Tab, { heading: string; subtitle: string }> = {
 };
 
 export default function SettingsPage() {
+    useLoadMaterialSymbols();
     const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState<Tab>('overview');
 

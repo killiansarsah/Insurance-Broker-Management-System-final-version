@@ -9,6 +9,7 @@ import { useProfileStore } from '@/stores/profile-store';
 import { useNotificationStore } from '@/stores/notification-store';
 import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
+import { GlobalSearch } from '@/components/features/global-search';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 const CalculatorModal = dynamic(
@@ -23,11 +24,10 @@ import { toast } from 'sonner';
 
 export function Header() {
     const router = useRouter();
-    const { sidebarCollapsed, setSidebarMobileOpen } = useUiStore();
+    const { sidebarCollapsed, setSidebarMobileOpen, searchOpen, setSearchOpen } = useUiStore();
     const { user, logout } = useAuthStore();
     const avatarUrl = useProfileStore((s) => s.avatarUrl);
     const { notifications: allNotifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
-    const [searchOpen, setSearchOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
@@ -108,27 +108,26 @@ export function Header() {
                     />
                 </div>
 
-                <div className="hidden md:block relative">
+                <div className="hidden md:block relative cursor-pointer" onClick={() => setSearchOpen(true)}>
                     <Search
                         size={16}
                         className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400"
                     />
-                    <input
-                        type="text"
-                        placeholder="Search clients, policies, claims..."
-                        aria-label="Search clients, policies, claims"
+                    <div
                         className={cn(
                             'h-9 pl-9 pr-4 w-72 text-sm bg-surface-50 dark:bg-slate-800 border border-surface-200 dark:border-slate-600 dark:text-slate-200',
                             'rounded-[var(--radius-full)]',
-                            'placeholder:text-surface-400',
-                            'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
+                            'flex items-center text-surface-400',
+                            'hover:border-primary-500/50 hover:ring-2 hover:ring-primary-500/10',
                             'transition-colors duration-[var(--transition-fast)]'
                         )}
-                    />
+                    >
+                        Search clients, policies, claims...
+                    </div>
                 </div>
 
                 <button
-                    onClick={() => setSearchOpen(!searchOpen)}
+                    onClick={() => setSearchOpen(true)}
                     className="md:hidden p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer"
                 >
                     <Search size={20} />
@@ -297,17 +296,7 @@ export function Header() {
                 </div>
             </div>
 
-            {searchOpen && (
-                <div className="absolute left-0 right-0 top-full bg-white dark:bg-slate-800 border-b border-surface-200 dark:border-slate-700 p-3 md:hidden animate-fade-in shadow-lg">
-                    <input
-                        type="text"
-                        placeholder="Search..."
-                        aria-label="Search"
-                        className="w-full h-10 px-4 text-sm border border-surface-200 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                        autoFocus
-                    />
-                </div>
-            )}
+            <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
             <CalculatorModal
                 isOpen={isCalculatorOpen}

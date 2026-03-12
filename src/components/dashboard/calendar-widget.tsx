@@ -57,9 +57,11 @@ export function CalendarWidget() {
                                     <span className={cn(
                                         "w-2 h-2 rounded-full",
                                         event.type === 'POLICY' && "bg-blue-500",
-                                        event.type === 'meeting' && "bg-amber-500",
+                                        event.type === 'MEETING' && "bg-amber-500",
                                         event.type === 'CLAIM' && "bg-red-500",
-                                        event.type === 'team' && "bg-emerald-500"
+                                        event.type === 'TEAM' && "bg-emerald-500",
+                                        event.type === 'COMPLIANCE' && "bg-purple-500",
+                                        event.type === 'PAYMENT' && "bg-teal-500"
                                     )} />
                                     <span className="text-xs text-surface-500 italic">
                                         {format(event.start, 'EEEE')} • {event.type}

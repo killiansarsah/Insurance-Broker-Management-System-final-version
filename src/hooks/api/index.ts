@@ -19,3 +19,4 @@ export * from './use-chat';
 export * from './use-remittances';
 export * from './use-compliance';
 export * from './use-quotes';
+export * from './use-dashboard-data';

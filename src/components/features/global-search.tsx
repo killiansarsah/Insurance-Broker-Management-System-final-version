@@ -22,6 +22,7 @@ import {
     MessageSquare,
     ArrowRight,
     Clock,
+    Loader2,
 } from "lucide-react"
 import {
     Command,
@@ -33,10 +34,19 @@ import {
     CommandSeparator,
     CommandShortcut,
 } from "@/components/ui/command"
+import { useGlobalSearch, useRecentItems } from "@/hooks/api/use-search"
 
 interface GlobalSearchProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
+}
+
+const TYPE_ICONS: Record<string, React.ElementType> = {
+    client: Users,
+    policy: FileText,
+    claim: Shield,
+    lead: TrendingUp,
+    quote: FileText,
 }
 
 const navItems = [
@@ -67,6 +77,10 @@ const recentItems = [
 export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
     const router = useRouter()
     const [mounted, setMounted] = React.useState(false)
+    const [searchQuery, setSearchQuery] = React.useState("")
+    
+    const { data: searchResults, isLoading: isSearching } = useGlobalSearch(searchQuery, open)
+    const { data: recentResults } = useRecentItems()
 
     React.useEffect(() => { setMounted(true) }, [])
 
@@ -86,6 +100,7 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 
     const handleSelect = (href: string) => {
         onOpenChange(false)
+        setSearchQuery("")
         router.push(href)
     }
 
@@ -101,13 +116,15 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
 
             {/* Panel */}
             <div className="relative w-full max-w-2xl mx-4 rounded-2xl border border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-2xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-150">
-                <Command className="bg-transparent">
+                <Command className="bg-transparent" shouldFilter={searchQuery.length < 2}>
                     {/* Header */}
                     <div className="flex items-center gap-3 px-4 py-3 border-b border-surface-200 dark:border-slate-700">
                         <Search className="h-5 w-5 text-surface-400 dark:text-slate-500 shrink-0" />
                         <CommandInput
                             placeholder="Search clients, policies, claims, or navigate..."
                             className="flex-1 h-auto border-0 bg-transparent p-0 text-base text-surface-900 dark:text-white placeholder:text-surface-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-0 shadow-none"
+                            value={searchQuery}
+                            onValueChange={setSearchQuery}
                         />
                         <button
                             onClick={() => onOpenChange(false)}
@@ -120,51 +137,95 @@ export function GlobalSearch({ open, onOpenChange }: GlobalSearchProps) {
                     <CommandList className="max-h-[420px] overflow-y-auto px-2 py-2">
                         <CommandEmpty>
                             <div className="flex flex-col items-center gap-2 py-8 text-surface-400 dark:text-slate-500">
-                                <Search className="h-8 w-8 opacity-40" />
-                                <p className="text-sm">No results found</p>
+                                {isSearching ? (
+                                    <>
+                                        <Loader2 className="h-8 w-8 animate-spin" />
+                                        <p className="text-sm">Searching...</p>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Search className="h-8 w-8 opacity-40" />
+                                        <p className="text-sm">No results found</p>
+                                    </>
+                                )}
                             </div>
                         </CommandEmpty>
 
-                        {/* Recent */}
-                        <CommandGroup heading="Recent">
-                            {recentItems.map((item) => (
-                                <CommandItem
-                                    key={item.href + item.label}
-                                    onSelect={() => handleSelect(item.href)}
-                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer text-surface-700 dark:text-slate-300 data-[selected=true]:bg-primary-50 dark:data-[selected=true]:bg-slate-800 data-[selected=true]:text-primary-700 dark:data-[selected=true]:text-white"
-                                >
-                                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-100 dark:bg-slate-800 shrink-0">
-                                        <Clock className="h-4 w-4 text-surface-400 dark:text-slate-500" />
-                                    </div>
-                                    <div className="flex flex-col min-w-0">
-                                        <span className="text-sm font-medium truncate">{item.label}</span>
-                                        <span className="text-xs text-surface-400 dark:text-slate-500">{item.sub}</span>
-                                    </div>
-                                    <ArrowRight className="ml-auto h-3.5 w-3.5 opacity-0 group-data-[selected=true]:opacity-100 text-primary-500 shrink-0" />
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
+                        {/* Search Results */}
+                        {searchQuery.length >= 2 && searchResults && searchResults.length > 0 && (
+                            <CommandGroup heading="Search Results">
+                                {searchResults.map((item) => {
+                                    const Icon = TYPE_ICONS[item.type] || FileText
+                                    return (
+                                        <CommandItem
+                                            key={item.id}
+                                            value={`${item.type}-${item.id}-${item.title}`}
+                                            onSelect={() => handleSelect(item.href)}
+                                            className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer text-surface-700 dark:text-slate-300 data-[selected=true]:bg-primary-50 dark:data-[selected=true]:bg-slate-800 data-[selected=true]:text-primary-700 dark:data-[selected=true]:text-white"
+                                        >
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-100 dark:bg-slate-800 shrink-0">
+                                                <Icon className="h-4 w-4 text-primary-500" />
+                                            </div>
+                                            <div className="flex flex-col min-w-0">
+                                                <span className="text-sm font-medium truncate">{item.title}</span>
+                                                <span className="text-xs text-surface-400 dark:text-slate-500">{item.subtitle}</span>
+                                            </div>
+                                            <ArrowRight className="ml-auto h-3.5 w-3.5 opacity-0 group-data-[selected=true]:opacity-100 text-primary-500 shrink-0" />
+                                        </CommandItem>
+                                    )
+                                })}
+                            </CommandGroup>
+                        )}
 
-                        <CommandSeparator className="my-1" />
+                        {searchQuery.length < 2 && (
+                            <>
+                                {/* Recent */}
+                                {recentResults && recentResults.length > 0 && (
+                                    <CommandGroup heading="Recent">
+                                        {recentResults.map((item) => {
+                                            const Icon = TYPE_ICONS[item.type] || Clock
+                                            return (
+                                                <CommandItem
+                                                    key={item.id}
+                                                    onSelect={() => handleSelect(item.href)}
+                                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer text-surface-700 dark:text-slate-300 data-[selected=true]:bg-primary-50 dark:data-[selected=true]:bg-slate-800 data-[selected=true]:text-primary-700 dark:data-[selected=true]:text-white"
+                                                >
+                                                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-100 dark:bg-slate-800 shrink-0">
+                                                        <Clock className="h-4 w-4 text-surface-400 dark:text-slate-500" />
+                                                    </div>
+                                                    <div className="flex flex-col min-w-0">
+                                                        <span className="text-sm font-medium truncate">{item.title}</span>
+                                                        <span className="text-xs text-surface-400 dark:text-slate-500">{item.subtitle}</span>
+                                                    </div>
+                                                    <ArrowRight className="ml-auto h-3.5 w-3.5 opacity-0 group-data-[selected=true]:opacity-100 text-primary-500 shrink-0" />
+                                                </CommandItem>
+                                            )
+                                        })}
+                                    </CommandGroup>
+                                )}
 
-                        {/* Navigate */}
-                        <CommandGroup heading="Navigate">
-                            {navItems.map((item) => (
-                                <CommandItem
-                                    key={item.href}
-                                    onSelect={() => handleSelect(item.href)}
-                                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer text-surface-700 dark:text-slate-300 data-[selected=true]:bg-primary-50 dark:data-[selected=true]:bg-slate-800 data-[selected=true]:text-primary-700 dark:data-[selected=true]:text-white"
-                                >
-                                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-100 dark:bg-slate-800 shrink-0">
-                                        <item.icon className="h-4 w-4 text-primary-500" />
-                                    </div>
-                                    <span className="text-sm font-medium">{item.label}</span>
-                                    {item.shortcut && (
-                                        <CommandShortcut>{item.shortcut}</CommandShortcut>
-                                    )}
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
+                                <CommandSeparator className="my-1" />
+
+                                {/* Navigate */}
+                                <CommandGroup heading="Navigate">
+                                    {navItems.map((item) => (
+                                        <CommandItem
+                                            key={item.href}
+                                            onSelect={() => handleSelect(item.href)}
+                                            className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer text-surface-700 dark:text-slate-300 data-[selected=true]:bg-primary-50 dark:data-[selected=true]:bg-slate-800 data-[selected=true]:text-primary-700 dark:data-[selected=true]:text-white"
+                                        >
+                                            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-surface-100 dark:bg-slate-800 shrink-0">
+                                                <item.icon className="h-4 w-4 text-primary-500" />
+                                            </div>
+                                            <span className="text-sm font-medium">{item.label}</span>
+                                            {item.shortcut && (
+                                                <CommandShortcut>{item.shortcut}</CommandShortcut>
+                                            )}
+                                        </CommandItem>
+                                    ))}
+                                </CommandGroup>
+                            </>
+                        )}
                     </CommandList>
 
                     {/* Footer */}

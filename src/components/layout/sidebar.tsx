@@ -191,8 +191,7 @@ function SidebarCompanyHeader() {
 
 
 function GlobalRail() {
-    const [searchOpen, setSearchOpen] = useState(false);
-    const { currentTheme, setTheme } = useUiStore();
+    const { searchOpen, setSearchOpen, currentTheme, setTheme } = useUiStore();
     const { logoUrl } = useProfileStore();
     const isDark = currentTheme === 'dark';
 

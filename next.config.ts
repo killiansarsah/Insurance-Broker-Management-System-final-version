@@ -8,7 +8,7 @@ const REPO_NAME = 'Insurance-Broker-Management-System-final-version';
 const nextConfig: NextConfig = {
   ...(isStaticExport ? { output: 'export' as const } : {}),
   images: {
-    unoptimized: true,
+    unoptimized: true, // Required for localhost dev + static export; enable with remotePatterns for production
   },
   basePath: isStaticExport ? `/${REPO_NAME}` : '',
   assetPrefix: isStaticExport ? `/${REPO_NAME}/` : '',
