@@ -188,7 +188,7 @@ export default function UsersPage() {
             <DataTable<any>
                 data={filteredUsers}
                 columns={columns}
-                searchKeys={['firstName', 'lastName', 'EMAIL', 'role']}
+                searchKeys={['firstName', 'lastName', 'email', 'role', 'branchId']}
                 emptyMessage="No team members found."
                 headerActions={
                     <div className="flex items-center gap-2">

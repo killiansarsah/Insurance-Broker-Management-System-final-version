@@ -1001,7 +1001,7 @@ export default function PremiumFinancingPage() {
                             ),
                         },
                     ]}
-                    searchKeys={['applicationNumber', 'clientName', 'insurerName', 'financier', 'assignedBroker']}
+                    searchKeys={['applicationNumber', 'clientName', 'insurerName', 'financier', 'assignedBroker', 'status', 'financedAmount', 'numberOfInstallments']}
                     onRowClick={(row) => setSelectedApp(row)}
                     emptyMessage="No financing applications found."
                     className="premium-glass-card"

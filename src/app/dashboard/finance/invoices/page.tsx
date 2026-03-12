@@ -194,7 +194,7 @@ export default function InvoicesPage() {
                         render: (inv) => <StatusBadge status={inv.status} />,
                     },
                 ]}
-                searchKeys={['invoiceNumber', 'clientName', 'policyNumber', 'description']}
+                searchKeys={['invoiceNumber', 'clientName', 'policyNumber', 'description', 'amount', 'status']}
                 emptyMessage="No invoices match the current filters."
                 headerActions={
                     <CustomSelect

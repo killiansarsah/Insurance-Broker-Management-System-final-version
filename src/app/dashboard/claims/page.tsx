@@ -27,7 +27,7 @@ export default function ClaimsPage() {
             if (typeParam === 'non-motor') return c.insuranceType !== 'MOTOR';
             return true;
         });
-    }, [typeParam]);
+    }, [claims, typeParam]);
 
     // 2. Status Filter
     const filteredClaims = useMemo(() => {
@@ -134,7 +134,7 @@ export default function ClaimsPage() {
                     { key: 'status', label: 'Status', sortable: true, render: (c) => <StatusBadge status={c.status as any} /> },
                     { key: 'claimAmount', label: 'Est. Amount', sortable: true, render: (c) => formatCurrency(c.claimAmount) },
                 ]}
-                searchKeys={['claimNumber', 'policyNumber', 'clientName']}
+                searchKeys={['claimNumber', 'policyNumber', 'clientName', 'insuranceType', 'status', 'incidentDate', 'claimAmount']}
                 onRowClick={(row) => router.push(`/dashboard/claims/${row.id}`)}
                 emptyMessage="No claims match the current filters."
                 headerActions={

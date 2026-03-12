@@ -122,7 +122,7 @@ export default function ComplaintsPage() {
                         },
                         { key: 'createdAt', label: 'Logged', render: (c) => formatDate(c.createdAt) },
                     ]}
-                    searchKeys={['subject', 'complainantName', 'complaintNumber']}
+                    searchKeys={['subject', 'complainantName', 'complaintNumber', 'status', 'priority']}
                     onRowClick={(c) => router.push(`/dashboard/complaints/${c.id}`)}
                     emptyMessage="No complaints found."
                 />

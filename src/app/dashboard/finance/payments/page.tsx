@@ -223,7 +223,7 @@ export default function PaymentsPage() {
                         render: (r) => <span className="text-xs text-surface-500">{formatDate(r.dateReceived)}</span>,
                     },
                 ]}
-                searchKeys={['receiptNumber', 'clientName', 'reference', 'policyNumber']}
+                searchKeys={['receiptNumber', 'clientName', 'reference', 'policyNumber', 'invoiceNumber', 'amount', 'paymentMethod']}
                 emptyMessage="No payment records found."
                 headerActions={
                     <CustomSelect

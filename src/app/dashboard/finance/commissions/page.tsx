@@ -205,7 +205,7 @@ export default function CommissionsPage() {
                         render: (c) => <span className="text-xs text-surface-500">{formatDate(c.datePolicyIssued)}</span>,
                     },
                 ]}
-                searchKeys={['policyNumber', 'clientName', 'brokerName', 'productType']}
+                searchKeys={['policyNumber', 'clientName', 'brokerName', 'productType', 'status', 'netCommission', 'premiumAmount']}
                 emptyMessage="No commission records found."
                 headerActions={
                     <div className="flex items-center gap-2">

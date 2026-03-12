@@ -269,7 +269,7 @@ export default function LeadsPage() {
                                 },
                             ]}
                             searchPlaceholder="Search leads..."
-                            searchKeys={['contactName', 'companyName', 'EMAIL', 'PHONE']}
+                            searchKeys={['contactName', 'companyName', 'EMAIL', 'PHONE', 'status', 'priority', 'leadNumber']}
                             onRowClick={(row) => router.push(`/dashboard/leads/${row.id}`)}
                             emptyMessage="No leads match the current filters."
                         />

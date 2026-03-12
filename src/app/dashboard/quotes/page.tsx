@@ -730,7 +730,7 @@ export default function QuotesPage() {
                 data={filtered}
                 columns={columns as any}
                 searchPlaceholder="Search by quote #, client, type, carrier…"
-                searchKeys={['quoteNumber', 'clientName', 'insuranceType', 'coverageType']}
+                searchKeys={['quoteNumber', 'clientName', 'insuranceType', 'coverageType', 'status', 'preparedBy']}
                 onRowClick={(row) => setSelectedQuote(row)}
                 emptyMessage="No quotes match the current filters."
             />

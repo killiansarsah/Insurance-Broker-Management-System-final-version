@@ -90,7 +90,7 @@ export default function PoliciesPage() {
         if (typeParam === 'MOTOR') return p.insuranceType === 'MOTOR';
         if (typeParam === 'non-motor') return p.insuranceType !== 'MOTOR';
         return true;
-    }), [typeParam]);
+    }), [policies, typeParam]);
 
     const filtered = useMemo(() => baseData.filter((p) => {
         if (filterStatus && p.status !== filterStatus) return false;
@@ -440,7 +440,7 @@ export default function PoliciesPage() {
                 data={filtered}
                 columns={columns}
                 searchPlaceholder="Search by policy number, client, insurer, coverage…"
-                searchKeys={['policyNumber', 'clientName', 'insurerName', 'insuranceType', 'coverageType']}
+                searchKeys={['policyNumber', 'clientName', 'insurerName', 'insuranceType', 'coverageType', 'status', 'premiumAmount', 'brokerName']}
                 onRowClick={(row) => router.push(`/dashboard/policies/${row.id}`)}
                 emptyMessage={
                     typeParam

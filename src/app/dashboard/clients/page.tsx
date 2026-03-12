@@ -616,7 +616,7 @@ export default function ClientsPage() {
                 data={filteredClients}
                 columns={columns}
                 searchPlaceholder="Search by name, client number, phone, email…"
-                searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'PHONE', 'EMAIL']}
+                searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'PHONE', 'EMAIL', 'status', 'kycStatus', 'amlRiskLevel', 'type', 'assignedBrokerName']}
                 onRowClick={(row) => router.push(`/dashboard/clients/${row.id}`)}
                 emptyMessage="No clients match the current filters."
             />

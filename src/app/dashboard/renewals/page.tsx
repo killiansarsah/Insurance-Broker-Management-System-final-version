@@ -758,7 +758,7 @@ export default function RenewalsPage() {
                         ),
                     },
                 ]}
-                searchKeys={['policyNumber', 'clientName', 'insurerName', 'assignedAgent']}
+                searchKeys={['policyNumber', 'clientName', 'insurerName', 'assignedAgent', 'insuranceType', 'status', 'premiumAmount', 'expiryDate']}
                 onRowClick={(row) => setSelectedRenewal(row)}
                 emptyMessage="No renewals match the current filters."
                 headerActions={
