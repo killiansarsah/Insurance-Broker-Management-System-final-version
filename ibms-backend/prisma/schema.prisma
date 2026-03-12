@@ -1,8 +1,3 @@
-// ============================================
-// IBMS — Complete Prisma Schema
-// Phase 2: Database Schema & Migrations
-// ============================================
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,7 +7,1120 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── ENUMS ─────────────────────────────────
+model Tenant {
+  id               String             @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String             @unique
+  nicLicense       String?
+  plan             TenantPlan         @default(BASIC)
+  isActive         Boolean            @default(true)
+  logoUrl          String?
+  primaryColor     String?            @default("#1E40AF")
+  address          String?
+  phone            String?
+  email            String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  nicLicenseExpiry DateTime?
+  approvals        Approval[]
+  auditLogs        AuditLog[]
+  branches         Branch[]
+  calendarEvents   CalendarEvent[]
+  carriers         Carrier[]
+  chatMessages     ChatMessage[]
+  chatRooms        ChatRoom[]
+  claimFollowUps   ClaimFollowUp[]
+  claims           Claim[]
+  clients          Client[]
+  commissions      Commission[]
+  complaints       Complaint[]
+  departments      Department[]
+  documents        Document[]
+  expenses         Expense[]
+  integrations     Integration[]
+  invitations      Invitation[]
+  invoices         Invoice[]
+  leads            Lead[]
+  notifications    Notification[]
+  policies         Policy[]
+  premiumFinancing PremiumFinancing[]
+  quotes           Quote[]
+  remittances      Remittance[]
+  tasks            Task[]
+  transactions     Transaction[]
+  users            User[]
+
+  @@map("tenants")
+}
+
+model Branch {
+  id          String       @id @default(uuid()) @db.Uuid
+  tenantId    String       @db.Uuid
+  name        String
+  code        String
+  address     String?
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  departments Department[]
+  users       User[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("branches")
+}
+
+model User {
+  id                    String              @id @default(uuid()) @db.Uuid
+  tenantId              String              @db.Uuid
+  email                 String
+  passwordHash          String
+  firstName             String
+  lastName              String
+  phone                 String?
+  role                  UserRole            @default(BROKER)
+  branchId              String?             @db.Uuid
+  departmentId          String?             @db.Uuid
+  avatarUrl             String?
+  isActive              Boolean             @default(true)
+  lastLoginAt           DateTime?
+  failedAttempts        Int                 @default(0)
+  lockedUntil           DateTime?
+  twoFactorEnabled      Boolean             @default(false)
+  twoFactorSecret       String?
+  delegatedTo           String?             @db.Uuid
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  deletedAt             DateTime?
+  mustChangePassword    Boolean             @default(false)
+  processedApprovals    Approval[]          @relation("ApprovalProcessor")
+  requestedApprovals    Approval[]          @relation("ApprovalRequester")
+  auditLogs             AuditLog[]
+  eventAttendances      CalendarAttendee[]
+  createdEvents         CalendarEvent[]     @relation("EventCreator")
+  sentMessages          ChatMessage[]       @relation("MessageSender")
+  chatParticipations    ChatParticipant[]
+  claimFollowUps        ClaimFollowUp[]     @relation("FollowUpBy")
+  assessedClaims        Claim[]             @relation("ClaimAssessor")
+  assignedClients       Client[]            @relation("AssignedBroker")
+  commissions           Commission[]        @relation("CommissionBroker")
+  assignedComplaints    Complaint[]         @relation("ComplaintAssignee")
+  headOfDepartments     Department[]        @relation("DepartmentHead")
+  uploadedDocuments     Document[]          @relation("DocumentUploader")
+  approvedExpenses      Expense[]           @relation("ExpenseApprover")
+  sentInvitations       Invitation[]        @relation("InvitedBy")
+  assignedLeads         Lead[]              @relation("LeadBroker")
+  notifications         Notification[]
+  assignedPolicies      Policy[]            @relation("PolicyBroker")
+  endorsementApprovals  PolicyEndorsement[] @relation("EndorsementApprover")
+  endorsementRequests   PolicyEndorsement[] @relation("EndorsementRequester")
+  preparedQuotes        Quote[]             @relation("QuotePreparer")
+  refreshTokens         RefreshToken[]
+  processedRemittances  Remittance[]        @relation("RemittanceProcessor")
+  assignedTasks         Task[]              @relation("TaskAssignee")
+  createdTasks          Task[]              @relation("TaskCreator")
+  processedTransactions Transaction[]       @relation("TransactionProcessor")
+  branch                Branch?             @relation(fields: [branchId], references: [id])
+  department            Department?         @relation("DepartmentMember", fields: [departmentId], references: [id])
+  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
+}
+
+model Invitation {
+  id          String           @id @default(uuid()) @db.Uuid
+  tenantId    String           @db.Uuid
+  email       String
+  role        UserRole         @default(BROKER)
+  branchId    String?          @db.Uuid
+  token       String           @unique
+  status      InvitationStatus @default(PENDING)
+  invitedById String           @db.Uuid
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  tokenFamily String?
+  invitedBy   User             @relation("InvitedBy", fields: [invitedById], references: [id])
+  tenant      Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([token])
+  @@index([tokenFamily])
+  @@index([email, tenantId])
+  @@map("invitations")
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+  replacedBy  String?   @db.Uuid
+  ipAddress   String?
+  userAgent   String?
+  tokenFamily String?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenFamily])
+  @@map("refresh_tokens")
+}
+
+model PasswordReset {
+  id          String    @id @default(uuid()) @db.Uuid
+  email       String
+  tenantId    String    @db.Uuid
+  token       String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+  tokenFamily String?
+
+  @@index([token])
+  @@index([tokenFamily])
+  @@map("password_resets")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  userId    String?  @db.Uuid
+  action    String
+  entity    String
+  entityId  String?
+  before    Json?
+  after     Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, entity])
+  @@map("audit_logs")
+}
+
+model Carrier {
+  id            String       @id @default(uuid()) @db.Uuid
+  tenantId      String       @db.Uuid
+  name          String
+  shortName     String
+  slug          String
+  type          CarrierType
+  licenseNumber String?
+  status        String       @default("active")
+  website       String?
+  logoUrl       String?
+  brandColor    String?
+  phone         String?
+  email         String?
+  contactPerson String?
+  address       String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+  tenant        Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  policies      Policy[]
+  products      Product[]
+  remittances   Remittance[]
+
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@map("carriers")
+}
+
+model Product {
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String        @db.Uuid
+  carrierId      String        @db.Uuid
+  name           String
+  code           String
+  insuranceType  InsuranceType
+  description    String?
+  commissionRate Decimal       @db.Decimal(5, 2)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  policies       Policy[]
+  carrier        Carrier       @relation(fields: [carrierId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("products")
+}
+
+model Client {
+  id                 String             @id @default(uuid()) @db.Uuid
+  tenantId           String             @db.Uuid
+  clientNumber       String
+  type               ClientType
+  status             ClientStatus       @default(ACTIVE)
+  firstName          String?
+  lastName           String?
+  companyName        String?
+  phone              String
+  email              String?
+  region             String?
+  city               String?
+  digitalAddress     String?
+  ghanaCardNumber    String?
+  dateOfBirth        DateTime?
+  gender             Gender?
+  occupation         String?
+  kycStatus          KycStatus          @default(PENDING)
+  amlRiskLevel       AmlRiskLevel       @default(LOW)
+  isPep              Boolean            @default(false)
+  eddRequired        Boolean            @default(false)
+  assignedBrokerId   String?            @db.Uuid
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+  registrationNumber String?
+  tin                String?
+  bankDetails        BankDetail[]
+  beneficiaries      Beneficiary[]
+  claims             Claim[]
+  assignedBroker     User?              @relation("AssignedBroker", fields: [assignedBrokerId], references: [id])
+  tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  commissions        Commission[]
+  invoices           Invoice[]
+  leads              Lead[]             @relation("ConvertedClient")
+  nextOfKin          NextOfKin[]
+  policies           Policy[]
+  premiumFinancing   PremiumFinancing[]
+  quotes             Quote[]
+  transactions       Transaction[]
+
+  @@unique([tenantId, clientNumber])
+  @@index([tenantId])
+  @@index([tenantId, type])
+  @@index([tenantId, status])
+  @@map("clients")
+}
+
+model Beneficiary {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @db.Uuid
+  clientId        String    @db.Uuid
+  fullName        String
+  relationship    String
+  dateOfBirth     DateTime?
+  ghanaCardNumber String?
+  phone           String?
+  percentage      Decimal   @db.Decimal(5, 2)
+  guardianName    String?
+  createdAt       DateTime  @default(now())
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("beneficiaries")
+}
+
+model NextOfKin {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @db.Uuid
+  clientId     String  @db.Uuid
+  fullName     String
+  relationship String
+  phone        String
+  address      String?
+  client       Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("next_of_kin")
+}
+
+model BankDetail {
+  id            String @id @default(uuid()) @db.Uuid
+  tenantId      String @db.Uuid
+  clientId      String @db.Uuid
+  bankName      String
+  accountName   String
+  accountNumber String
+  branch        String
+  client        Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId])
+  @@map("bank_details")
+}
+
+model Policy {
+  id                 String               @id @default(uuid()) @db.Uuid
+  tenantId           String               @db.Uuid
+  policyNumber       String
+  status             PolicyStatus         @default(DRAFT)
+  insuranceType      InsuranceType
+  policyType         PolicyType
+  coverageType       String?
+  nicClassOfBusiness String?
+  clientId           String               @db.Uuid
+  carrierId          String               @db.Uuid
+  productId          String?              @db.Uuid
+  brokerId           String               @db.Uuid
+  inceptionDate      DateTime
+  expiryDate         DateTime
+  issueDate          DateTime?
+  sumInsured         Decimal              @db.Decimal(15, 2)
+  premiumAmount      Decimal              @db.Decimal(15, 2)
+  commissionRate     Decimal              @db.Decimal(5, 2)
+  commissionAmount   Decimal              @db.Decimal(15, 2)
+  commissionStatus   CommissionStatus     @default(PENDING)
+  currency           String               @default("GHS")
+  premiumFrequency   PremiumFrequency     @default(ANNUAL)
+  paymentStatus      PaymentStatus        @default(PENDING)
+  coverageDetails    String?
+  isRenewal          Boolean              @default(false)
+  previousPolicyId   String?              @db.Uuid
+  cancellationReason CancellationReason?
+  cancellationDate   DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  deletedAt          DateTime?
+  claims             Claim[]
+  commissions        Commission[]
+  invoices           Invoice[]
+  marineDetails      MarineDetail?
+  broker             User                 @relation("PolicyBroker", fields: [brokerId], references: [id])
+  carrier            Carrier              @relation(fields: [carrierId], references: [id])
+  client             Client               @relation(fields: [clientId], references: [id])
+  product            Product?             @relation(fields: [productId], references: [id])
+  tenant             Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  policyDocuments    PolicyDocument[]
+  endorsements       PolicyEndorsement[]
+  premiumFinancing   PremiumFinancing[]
+  installments       PremiumInstallment[]
+  propertyDetails    PropertyDetail?
+  sourceQuotes       Quote[]              @relation("QuoteToPolicy")
+  remittances        Remittance[]
+  transactions       Transaction[]
+  vehicleDetails     VehicleDetail?
+
+  @@unique([tenantId, policyNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, insuranceType])
+  @@index([tenantId, clientId])
+  @@index([tenantId, expiryDate])
+  @@map("policies")
+}
+
+model VehicleDetail {
+  id                 String          @id @default(uuid()) @db.Uuid
+  policyId           String          @unique @db.Uuid
+  registrationNumber String?
+  chassisNumber      String?
+  engineNumber       String?
+  make               String?
+  model              String?
+  year               Int?
+  bodyType           String?
+  color              String?
+  engineCapacity     String?
+  seatingCapacity    Int?
+  usageType          String?
+  estimatedValue     Decimal?        @db.Decimal(15, 2)
+  motorCoverType     MotorCoverType?
+  policy             Policy          @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_details")
+}
+
+model PropertyDetail {
+  id               String   @id @default(uuid()) @db.Uuid
+  policyId         String   @unique @db.Uuid
+  propertyAddress  String?
+  propertyType     String?
+  constructionType String?
+  yearBuilt        Int?
+  estimatedValue   Decimal? @db.Decimal(15, 2)
+  occupancyType    String?
+  policy           Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("property_details")
+}
+
+model MarineDetail {
+  id               String   @id @default(uuid()) @db.Uuid
+  policyId         String   @unique @db.Uuid
+  vesselName       String?
+  imoNumber        String?
+  voyageRoute      String?
+  cargoDescription String?
+  cargoValue       Decimal? @db.Decimal(15, 2)
+  conveyanceType   String?
+  policy           Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@map("marine_details")
+}
+
+model PolicyEndorsement {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @db.Uuid
+  policyId          String            @db.Uuid
+  type              EndorsementType
+  status            EndorsementStatus @default(PENDING)
+  description       String?
+  effectiveDate     DateTime?
+  premiumAdjustment Decimal?          @db.Decimal(15, 2)
+  requestedById     String            @db.Uuid
+  approvedById      String?           @db.Uuid
+  createdAt         DateTime          @default(now())
+  approvedBy        User?             @relation("EndorsementApprover", fields: [approvedById], references: [id])
+  policy            Policy            @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  requestedBy       User              @relation("EndorsementRequester", fields: [requestedById], references: [id])
+
+  @@index([tenantId])
+  @@index([policyId])
+  @@map("policy_endorsements")
+}
+
+model PremiumInstallment {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @db.Uuid
+  policyId          String            @db.Uuid
+  installmentNumber Int
+  dueDate           DateTime
+  amount            Decimal           @db.Decimal(15, 2)
+  status            InstallmentStatus @default(PENDING)
+  paidDate          DateTime?
+  policy            Policy            @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([policyId])
+  @@map("premium_installments")
+}
+
+model PolicyDocument {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  policyId   String   @db.Uuid
+  name       String
+  type       String
+  url        String?
+  uploadedAt DateTime @default(now())
+  policy     Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([policyId])
+  @@map("policy_documents")
+}
+
+model Claim {
+  id                     String          @id @default(uuid()) @db.Uuid
+  tenantId               String          @db.Uuid
+  claimNumber            String
+  status                 ClaimStatus     @default(INTIMATED)
+  policyId               String          @db.Uuid
+  insuranceType          InsuranceType
+  clientId               String          @db.Uuid
+  incidentDate           DateTime
+  incidentDescription    String
+  incidentLocation       String?
+  claimAmount            Decimal         @db.Decimal(15, 2)
+  currency               String          @default("GHS")
+  intimationDate         DateTime        @default(now())
+  registrationDate       DateTime?
+  acknowledgmentDeadline DateTime
+  processingDeadline     DateTime
+  assessedAmount         Decimal?        @db.Decimal(15, 2)
+  settledAmount          Decimal?        @db.Decimal(15, 2)
+  settlementDate         DateTime?
+  rejectionReason        String?
+  isOverdue              Boolean         @default(false)
+  assessorId             String?         @db.Uuid
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  deletedAt              DateTime?
+  claimDocuments         ClaimDocument[]
+  followUps              ClaimFollowUp[]
+  assessor               User?           @relation("ClaimAssessor", fields: [assessorId], references: [id])
+  client                 Client          @relation(fields: [clientId], references: [id])
+  policy                 Policy          @relation(fields: [policyId], references: [id])
+  tenant                 Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, claimNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, policyId])
+  @@map("claims")
+}
+
+model ClaimDocument {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @db.Uuid
+  claimId    String   @db.Uuid
+  name       String
+  type       String
+  url        String?
+  uploadedAt DateTime @default(now())
+  claim      Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@map("claim_documents")
+}
+
+model Complaint {
+  id                String            @id @default(uuid()) @db.Uuid
+  tenantId          String            @db.Uuid
+  complaintNumber   String
+  status            ComplaintStatus   @default(REGISTERED)
+  priority          ComplaintPriority @default(MEDIUM)
+  complainantName   String
+  complainantPhone  String?
+  complainantEmail  String?
+  subject           String
+  category          String?
+  description       String
+  escalationLevel   Int               @default(0)
+  assignedToId      String?           @db.Uuid
+  slaDeadline       DateTime
+  isBreached        Boolean           @default(false)
+  resolutionDetails String?
+  resolvedAt        DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  assignedTo        User?             @relation("ComplaintAssignee", fields: [assignedToId], references: [id])
+  tenant            Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, complaintNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("complaints")
+}
+
+model Lead {
+  id                  String       @id @default(uuid()) @db.Uuid
+  tenantId            String       @db.Uuid
+  leadNumber          String
+  status              LeadStatus   @default(NEW)
+  priority            LeadPriority @default(WARM)
+  source              LeadSource   @default(OTHER)
+  contactName         String
+  companyName         String?
+  phone               String?
+  email               String?
+  productInterest     String[]
+  estimatedPremium    Decimal?     @db.Decimal(15, 2)
+  estimatedCommission Decimal?     @db.Decimal(15, 2)
+  assignedBrokerId    String?      @db.Uuid
+  score               Int          @default(0)
+  nextFollowUpDate    DateTime?
+  lastContactDate     DateTime?
+  notes               String?
+  convertedClientId   String?      @db.Uuid
+  convertedAt         DateTime?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  deletedAt           DateTime?
+  assignedBroker      User?        @relation("LeadBroker", fields: [assignedBrokerId], references: [id])
+  convertedClient     Client?      @relation("ConvertedClient", fields: [convertedClientId], references: [id])
+  tenant              Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, leadNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("leads")
+}
+
+model Document {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @db.Uuid
+  name             String
+  category         DocumentCategory
+  mimeType         String
+  sizeBytes        Int
+  url              String?
+  storagePath      String?
+  uploadedById     String           @db.Uuid
+  version          Int              @default(1)
+  isExpired        Boolean          @default(false)
+  expiresAt        DateTime?
+  linkedEntityType String?
+  linkedEntityId   String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  uploadedBy       User             @relation("DocumentUploader", fields: [uploadedById], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, category])
+  @@index([tenantId, linkedEntityType, linkedEntityId])
+  @@map("documents")
+}
+
+model Transaction {
+  id                String          @id @default(uuid()) @db.Uuid
+  tenantId          String          @db.Uuid
+  transactionNumber String
+  type              TransactionType
+  amount            Decimal         @db.Decimal(15, 2)
+  currency          String          @default("GHS")
+  paymentMethod     PaymentMethod
+  paymentStatus     PaymentStatus   @default(PENDING)
+  momoNetwork       MoMoNetwork?
+  momoPhone         String?
+  reference         String?
+  clientId          String?         @db.Uuid
+  policyId          String?         @db.Uuid
+  invoiceId         String?         @db.Uuid
+  processedById     String?         @db.Uuid
+  processedAt       DateTime?
+  notes             String?
+  createdAt         DateTime        @default(now())
+  accountType       AccountType     @default(CLIENT_ACCOUNT)
+  remittanceId      String?         @db.Uuid
+  client            Client?         @relation(fields: [clientId], references: [id])
+  invoice           Invoice?        @relation(fields: [invoiceId], references: [id])
+  policy            Policy?         @relation(fields: [policyId], references: [id])
+  processedBy       User?           @relation("TransactionProcessor", fields: [processedById], references: [id])
+  remittance        Remittance?     @relation(fields: [remittanceId], references: [id])
+  tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, transactionNumber])
+  @@index([tenantId])
+  @@index([tenantId, type])
+  @@index([tenantId, accountType])
+  @@map("transactions")
+}
+
+model Invoice {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @db.Uuid
+  invoiceNumber String
+  clientId      String        @db.Uuid
+  policyId      String?       @db.Uuid
+  description   String?
+  amount        Decimal       @db.Decimal(15, 2)
+  amountPaid    Decimal       @default(0) @db.Decimal(15, 2)
+  status        InvoiceStatus @default(OUTSTANDING)
+  currency      String        @default("GHS")
+  dateIssued    DateTime      @default(now())
+  dateDue       DateTime
+  datePaid      DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  client        Client        @relation(fields: [clientId], references: [id])
+  policy        Policy?       @relation(fields: [policyId], references: [id])
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactions  Transaction[]
+
+  @@unique([tenantId, invoiceNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("invoices")
+}
+
+model Commission {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @db.Uuid
+  policyId         String           @db.Uuid
+  clientId         String           @db.Uuid
+  insurerName      String
+  productType      String?
+  premiumAmount    Decimal          @db.Decimal(15, 2)
+  commissionRate   Decimal          @db.Decimal(5, 2)
+  commissionAmount Decimal          @db.Decimal(15, 2)
+  nicLevy          Decimal?         @db.Decimal(15, 2)
+  netCommission    Decimal?         @db.Decimal(15, 2)
+  status           CommissionStatus @default(PENDING)
+  brokerId         String           @db.Uuid
+  dateEarned       DateTime?
+  datePaid         DateTime?
+  createdAt        DateTime         @default(now())
+  remittanceId     String?          @db.Uuid
+  broker           User             @relation("CommissionBroker", fields: [brokerId], references: [id])
+  client           Client           @relation(fields: [clientId], references: [id])
+  policy           Policy           @relation(fields: [policyId], references: [id])
+  remittance       Remittance?      @relation(fields: [remittanceId], references: [id])
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, brokerId])
+  @@map("commissions")
+}
+
+model Expense {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @db.Uuid
+  date          DateTime
+  description   String
+  category      String
+  amount        Decimal       @db.Decimal(15, 2)
+  currency      String        @default("GHS")
+  vendor        String?
+  reference     String?
+  paymentMethod String?
+  status        ExpenseStatus @default(DRAFT)
+  approvedById  String?       @db.Uuid
+  department    String?
+  notes         String?
+  receiptUrl    String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  approvedBy    User?         @relation("ExpenseApprover", fields: [approvedById], references: [id])
+  tenant        Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("expenses")
+}
+
+model PremiumFinancing {
+  id                   String          @id @default(uuid()) @db.Uuid
+  tenantId             String          @db.Uuid
+  applicationNumber    String
+  clientId             String          @db.Uuid
+  policyId             String          @db.Uuid
+  totalPremium         Decimal         @db.Decimal(15, 2)
+  downPaymentPct       Decimal         @db.Decimal(5, 2)
+  downPayment          Decimal         @db.Decimal(15, 2)
+  financedAmount       Decimal         @db.Decimal(15, 2)
+  interestRateMonthly  Decimal         @db.Decimal(5, 4)
+  totalInterest        Decimal         @db.Decimal(15, 2)
+  totalRepayment       Decimal         @db.Decimal(15, 2)
+  monthlyInstallment   Decimal         @db.Decimal(15, 2)
+  numberOfInstallments Int
+  installmentsPaid     Int             @default(0)
+  amountPaid           Decimal         @default(0) @db.Decimal(15, 2)
+  outstandingBalance   Decimal         @db.Decimal(15, 2)
+  status               PFStatus        @default(SUBMITTED)
+  financier            String?
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  installments         PFInstallment[]
+  client               Client          @relation(fields: [clientId], references: [id])
+  policy               Policy          @relation(fields: [policyId], references: [id])
+  tenant               Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, applicationNumber])
+  @@index([tenantId])
+  @@map("premium_financing")
+}
+
+model PFInstallment {
+  id          String            @id @default(uuid()) @db.Uuid
+  tenantId    String            @db.Uuid
+  pfId        String            @db.Uuid
+  number      Int
+  dueDate     DateTime
+  amount      Decimal           @db.Decimal(15, 2)
+  status      InstallmentStatus @default(PENDING)
+  paidDate    DateTime?
+  application PremiumFinancing  @relation(fields: [pfId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([pfId])
+  @@map("pf_installments")
+}
+
+model ChatRoom {
+  id                 String            @id @default(uuid()) @db.Uuid
+  tenantId           String            @db.Uuid
+  name               String?
+  type               ChatRoomType      @default(DIRECT)
+  linkedResourceType String?
+  linkedResourceId   String?
+  createdAt          DateTime          @default(now())
+  messages           ChatMessage[]
+  participants       ChatParticipant[]
+  tenant             Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("chat_rooms")
+}
+
+model ChatParticipant {
+  id       String   @id @default(uuid()) @db.Uuid
+  roomId   String   @db.Uuid
+  userId   String   @db.Uuid
+  joinedAt DateTime @default(now())
+  room     ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([roomId, userId])
+  @@map("chat_participants")
+}
+
+model ChatMessage {
+  id         String          @id @default(uuid()) @db.Uuid
+  tenantId   String          @db.Uuid
+  roomId     String          @db.Uuid
+  senderId   String          @db.Uuid
+  content    String
+  type       ChatMessageType @default(TEXT)
+  readStatus ReadStatus      @default(SENT)
+  createdAt  DateTime        @default(now())
+  room       ChatRoom        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  sender     User            @relation("MessageSender", fields: [senderId], references: [id])
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([roomId, createdAt])
+  @@map("chat_messages")
+}
+
+model Notification {
+  id        String               @id @default(uuid()) @db.Uuid
+  tenantId  String               @db.Uuid
+  userId    String               @db.Uuid
+  title     String
+  message   String
+  type      NotificationType     @default(SYSTEM)
+  priority  NotificationPriority @default(MEDIUM)
+  read      Boolean              @default(false)
+  readAt    DateTime?
+  archived  Boolean              @default(false)
+  link      String?
+  createdAt DateTime             @default(now())
+  tenant    Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([userId, read])
+  @@map("notifications")
+}
+
+model CalendarEvent {
+  id            String              @id @default(uuid()) @db.Uuid
+  tenantId      String              @db.Uuid
+  title         String
+  description   String?
+  startDate     DateTime
+  endDate       DateTime
+  type          CalendarEventType   @default(MEETING)
+  priority      String?
+  status        CalendarEventStatus @default(UPCOMING)
+  location      String?
+  createdById   String              @db.Uuid
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  googleEventId String?
+  attendees     CalendarAttendee[]
+  createdBy     User                @relation("EventCreator", fields: [createdById], references: [id])
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, startDate])
+  @@map("calendar_events")
+}
+
+model CalendarAttendee {
+  id      String        @id @default(uuid()) @db.Uuid
+  eventId String        @db.Uuid
+  userId  String        @db.Uuid
+  event   CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([eventId, userId])
+  @@map("calendar_attendees")
+}
+
+model Task {
+  id           String       @id @default(uuid()) @db.Uuid
+  tenantId     String       @db.Uuid
+  title        String
+  description  String?
+  priority     TaskPriority @default(WARM)
+  status       TaskStatus   @default(PENDING)
+  dueDate      DateTime?
+  type         String?
+  link         String?
+  isCompleted  Boolean      @default(false)
+  assignedToId String?      @db.Uuid
+  createdById  String       @db.Uuid
+  completedAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  assignedTo   User?        @relation("TaskAssignee", fields: [assignedToId], references: [id])
+  createdBy    User         @relation("TaskCreator", fields: [createdById], references: [id])
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("tasks")
+}
+
+model Approval {
+  id               String         @id @default(uuid()) @db.Uuid
+  tenantId         String         @db.Uuid
+  refNumber        String
+  type             ApprovalType
+  status           ApprovalStatus @default(PENDING)
+  priority         String?
+  subject          String
+  clientName       String?
+  amount           Decimal?       @db.Decimal(15, 2)
+  requestedById    String         @db.Uuid
+  approvedById     String?        @db.Uuid
+  dueDate          DateTime?
+  isOverdue        Boolean        @default(false)
+  notes            String?
+  linkedEntityType String?
+  linkedEntityId   String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  approvedBy       User?          @relation("ApprovalProcessor", fields: [approvedById], references: [id])
+  requestedBy      User           @relation("ApprovalRequester", fields: [requestedById], references: [id])
+  tenant           Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, refNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("approvals")
+}
+
+model Department {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  name        String
+  code        String
+  description String?
+  headId      String?  @db.Uuid
+  branchId    String?  @db.Uuid
+  color       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  head        User?    @relation("DepartmentHead", fields: [headId], references: [id])
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  members     User[]   @relation("DepartmentMember")
+
+  @@unique([tenantId, code])
+  @@index([tenantId])
+  @@map("departments")
+}
+
+model Remittance {
+  id               String           @id @default(uuid()) @db.Uuid
+  tenantId         String           @db.Uuid
+  remittanceNumber String
+  carrierId        String           @db.Uuid
+  policyId         String           @db.Uuid
+  premiumAmount    Decimal          @db.Decimal(15, 2)
+  amountRemitted   Decimal          @db.Decimal(15, 2)
+  currency         String           @default("GHS")
+  status           RemittanceStatus @default(PENDING)
+  remittanceDate   DateTime?
+  paymentMethod    PaymentMethod?
+  reference        String?
+  notes            String?
+  processedById    String?          @db.Uuid
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  commissions      Commission[]
+  carrier          Carrier          @relation(fields: [carrierId], references: [id])
+  policy           Policy           @relation(fields: [policyId], references: [id])
+  processedBy      User?            @relation("RemittanceProcessor", fields: [processedById], references: [id])
+  tenant           Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactions     Transaction[]
+
+  @@unique([tenantId, remittanceNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([tenantId, carrierId])
+  @@map("remittances")
+}
+
+model ClaimFollowUp {
+  id           String      @id @default(uuid()) @db.Uuid
+  tenantId     String      @db.Uuid
+  claimId      String      @db.Uuid
+  userId       String      @db.Uuid
+  method       ChaseMethod
+  contactName  String?
+  note         String
+  nextAction   String?
+  followUpDate DateTime    @default(now())
+  createdAt    DateTime    @default(now())
+  claim        Claim       @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user         User        @relation("FollowUpBy", fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([claimId])
+  @@map("claim_follow_ups")
+}
+
+model Quote {
+  id                  String        @id @default(uuid()) @db.Uuid
+  tenantId            String        @db.Uuid
+  quoteNumber         String
+  clientId            String        @db.Uuid
+  insuranceType       InsuranceType
+  coverageType        String?
+  policyType          String        @default("non-life")
+  status              QuoteStatus   @default(DRAFT)
+  sumInsuredRequested Decimal       @db.Decimal(15, 2)
+  riskDescription     String?
+  requestDate         DateTime      @default(now())
+  validUntil          DateTime
+  sentDate            DateTime?
+  responseDate        DateTime?
+  preparedById        String?       @db.Uuid
+  convertedPolicyId   String?       @db.Uuid
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  deletedAt           DateTime?
+  options             QuoteOption[]
+  client              Client        @relation(fields: [clientId], references: [id])
+  convertedPolicy     Policy?       @relation("QuoteToPolicy", fields: [convertedPolicyId], references: [id])
+  preparedBy          User?         @relation("QuotePreparer", fields: [preparedById], references: [id])
+  tenant              Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, quoteNumber])
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("quotes")
+}
+
+model QuoteOption {
+  id                 String   @id @default(uuid()) @db.Uuid
+  quoteId            String   @db.Uuid
+  carrierName        String
+  premium            Decimal  @db.Decimal(15, 2)
+  sumInsured         Decimal  @db.Decimal(15, 2)
+  commissionRate     Decimal  @db.Decimal(5, 2)
+  commissionAmount   Decimal  @db.Decimal(15, 2)
+  excessOrDeductible String?
+  coverageNotes      String?
+  isRecommended      Boolean  @default(false)
+  isSelected         Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  quote              Quote    @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+  @@map("quote_options")
+}
+
+model Integration {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  serviceKey     String
+  connected      Boolean   @default(false)
+  connectedAt    DateTime?
+  connectedEmail String?
+  syncFrequency  String    @default("manual")
+  lastSyncAt     DateTime?
+  config         Json      @default("{}")
+  credentials    Json      @default("{}")
+  syncEvents     Json      @default("[]")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, serviceKey])
+  @@index([tenantId])
+  @@map("integrations")
+}
 
 enum TenantPlan {
   BASIC
@@ -26,15 +1134,15 @@ enum UserRole {
   TENANT_ADMIN
   ADMIN
   BRANCH_MANAGER
-  COMPLIANCE_OFFICER
-  FINANCE_MANAGER
   SENIOR_BROKER
   BROKER
-  UNDERWRITER
-  AGENT
   SECRETARY
   DATA_ENTRY
   VIEWER
+  COMPLIANCE_OFFICER
+  FINANCE_MANAGER
+  UNDERWRITER
+  AGENT
 }
 
 enum InvitationStatus {
@@ -78,13 +1186,13 @@ enum Gender {
 
 enum PolicyStatus {
   DRAFT
-  COVER_NOTE
   PENDING
   ACTIVE
   EXPIRED
   CANCELLED
   LAPSED
   SUSPENDED
+  COVER_NOTE
 }
 
 enum InsuranceType {
@@ -396,1300 +1504,4 @@ enum CalendarEventStatus {
   UPCOMING
   COMPLETED
   CANCELLED
-}
-
-// ─── MULTI-TENANCY ────────────────────────────────
-
-model Tenant {
-  id               String     @id @default(uuid()) @db.Uuid
-  name             String
-  slug             String     @unique
-  nicLicense       String?
-  plan             TenantPlan @default(BASIC)
-  isActive         Boolean    @default(true)
-  logoUrl          String?
-  primaryColor     String?    @default("#1E40AF")
-  address          String?
-  phone            String?
-  email            String?
-  nicLicenseExpiry DateTime?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-
-  users            User[]
-  remittances      Remittance[]
-  claimFollowUps   ClaimFollowUp[]
-  invitations      Invitation[]
-  branches         Branch[]
-  auditLogs        AuditLog[]
-  clients          Client[]
-  policies         Policy[]
-  claims           Claim[]
-  complaints       Complaint[]
-  leads            Lead[]
-  documents        Document[]
-  transactions     Transaction[]
-  invoices         Invoice[]
-  commissions      Commission[]
-  expenses         Expense[]
-  premiumFinancing PremiumFinancing[]
-  chatRooms        ChatRoom[]
-  chatMessages     ChatMessage[]
-  notifications    Notification[]
-  calendarEvents   CalendarEvent[]
-  tasks            Task[]
-  approvals        Approval[]
-  departments      Department[]
-  carriers         Carrier[]
-  quotes           Quote[]
-  integrations     Integration[]
-  emailLogs        EmailLog[]
-  emailTemplates   EmailTemplate[]
-  emailQueue       EmailQueue[]
-
-  @@map("tenants")
-}
-
-model Branch {
-  id        String   @id @default(uuid()) @db.Uuid
-  tenantId  String   @db.Uuid
-  name      String
-  code      String
-  address   String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  users       User[]
-  departments Department[]
-
-  @@unique([tenantId, code])
-  @@index([tenantId])
-  @@map("branches")
-}
-
-// ─── USERS & AUTH ─────────────────────────────────
-
-model User {
-  id                 String    @id @default(uuid()) @db.Uuid
-  tenantId           String    @db.Uuid
-  email              String
-  passwordHash       String
-  firstName          String
-  lastName           String
-  phone              String?
-  role               UserRole  @default(BROKER)
-  branchId           String?   @db.Uuid
-  departmentId       String?   @db.Uuid
-  avatarUrl          String?
-  isActive           Boolean   @default(true)
-  lastLoginAt        DateTime?
-  failedAttempts     Int       @default(0)
-  lockedUntil        DateTime?
-  twoFactorEnabled   Boolean   @default(false)
-  twoFactorSecret    String?
-  mustChangePassword Boolean   @default(false)
-  delegatedTo        String?   @db.Uuid
-  emailPreferences   Json      @default("{\"policyRenewal\": true, \"claimUpdates\": true, \"taskAssignments\": true, \"systemNotifications\": true, \"marketingEmails\": false}")
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  deletedAt          DateTime?
-
-  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  branch                Branch?             @relation(fields: [branchId], references: [id])
-  department            Department?         @relation("DepartmentMember", fields: [departmentId], references: [id])
-  refreshTokens         RefreshToken[]
-  auditLogs             AuditLog[]
-  sentInvitations       Invitation[]        @relation("InvitedBy")
-  assignedClients       Client[]            @relation("AssignedBroker")
-  assignedPolicies      Policy[]            @relation("PolicyBroker")
-  assessedClaims        Claim[]             @relation("ClaimAssessor")
-  assignedComplaints    Complaint[]         @relation("ComplaintAssignee")
-  assignedLeads         Lead[]              @relation("LeadBroker")
-  uploadedDocuments     Document[]          @relation("DocumentUploader")
-  processedTransactions Transaction[]       @relation("TransactionProcessor")
-  approvedExpenses      Expense[]           @relation("ExpenseApprover")
-  commissions           Commission[]        @relation("CommissionBroker")
-  sentMessages          ChatMessage[]       @relation("MessageSender")
-  notifications         Notification[]
-  createdTasks          Task[]              @relation("TaskCreator")
-  assignedTasks         Task[]              @relation("TaskAssignee")
-  requestedApprovals    Approval[]          @relation("ApprovalRequester")
-  processedApprovals    Approval[]          @relation("ApprovalProcessor")
-  createdEvents         CalendarEvent[]     @relation("EventCreator")
-  eventAttendances      CalendarAttendee[]
-  headOfDepartments     Department[]        @relation("DepartmentHead")
-  endorsementRequests   PolicyEndorsement[] @relation("EndorsementRequester")
-  endorsementApprovals  PolicyEndorsement[] @relation("EndorsementApprover")
-  chatParticipations    ChatParticipant[]
-  claimFollowUps        ClaimFollowUp[]     @relation("FollowUpBy")
-  processedRemittances  Remittance[]        @relation("RemittanceProcessor")
-  preparedQuotes        Quote[]             @relation("QuotePreparer")
-  emailLogs             EmailLog[]          @relation("EmailLogUser")
-  createdEmailTemplates EmailTemplate[]    @relation("EmailTemplateCreator")
-
-  @@unique([tenantId, email])
-  @@index([tenantId])
-  @@index([email])
-  @@map("users")
-}
-
-model Invitation {
-  id          String           @id @default(uuid()) @db.Uuid
-  tenantId    String           @db.Uuid
-  email       String
-  role        UserRole         @default(BROKER)
-  branchId    String?          @db.Uuid
-  token       String           @unique
-  tokenFamily String?
-  status      InvitationStatus @default(PENDING)
-  invitedById String           @db.Uuid
-  expiresAt   DateTime
-  acceptedAt  DateTime?
-  createdAt   DateTime         @default(now())
-
-  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  invitedBy User   @relation("InvitedBy", fields: [invitedById], references: [id])
-
-  @@index([tenantId])
-  @@index([token])
-  @@index([tokenFamily])
-  @@index([email, tenantId])
-  @@map("invitations")
-}
-
-model RefreshToken {
-  id          String    @id @default(uuid()) @db.Uuid
-  userId      String    @db.Uuid
-  tokenHash   String    @unique
-  tokenFamily String?
-  expiresAt   DateTime
-  createdAt   DateTime  @default(now())
-  revokedAt   DateTime?
-  replacedBy  String?   @db.Uuid
-  ipAddress   String?
-  userAgent   String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-  @@index([tokenFamily])
-  @@map("refresh_tokens")
-}
-
-model PasswordReset {
-  id          String    @id @default(uuid()) @db.Uuid
-  email       String
-  tenantId    String    @db.Uuid
-  token       String    @unique
-  tokenFamily String?
-  expiresAt   DateTime
-  usedAt      DateTime?
-  createdAt   DateTime  @default(now())
-
-  @@index([token])
-  @@index([tokenFamily])
-  @@map("password_resets")
-}
-
-model AuditLog {
-  id        String   @id @default(uuid()) @db.Uuid
-  tenantId  String   @db.Uuid
-  userId    String?  @db.Uuid
-  action    String
-  entity    String
-  entityId  String?
-  before    Json?
-  after     Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User?  @relation(fields: [userId], references: [id])
-
-  @@index([tenantId, createdAt])
-  @@index([tenantId, entity])
-  @@map("audit_logs")
-}
-
-// ─── CARRIERS & PRODUCTS ──────────────────────────
-
-model Carrier {
-  id            String      @id @default(uuid()) @db.Uuid
-  tenantId      String      @db.Uuid
-  name          String
-  shortName     String
-  slug          String
-  type          CarrierType
-  licenseNumber String?
-  status        String      @default("active")
-  website       String?
-  logoUrl       String?
-  brandColor    String?
-  phone         String?
-  email         String?
-  contactPerson String?
-  address       String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  deletedAt     DateTime?
-
-  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  products    Product[]
-  policies    Policy[]
-  remittances Remittance[]
-
-  @@unique([tenantId, slug])
-  @@index([tenantId])
-  @@map("carriers")
-}
-
-model Product {
-  id             String        @id @default(uuid()) @db.Uuid
-  tenantId       String        @db.Uuid
-  carrierId      String        @db.Uuid
-  name           String
-  code           String
-  insuranceType  InsuranceType
-  description    String?
-  commissionRate Decimal       @db.Decimal(5, 2)
-  isActive       Boolean       @default(true)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  carrier  Carrier  @relation(fields: [carrierId], references: [id], onDelete: Cascade)
-  policies Policy[]
-
-  @@unique([tenantId, code])
-  @@index([tenantId])
-  @@map("products")
-}
-
-// ─── CLIENTS ──────────────────────────────────────
-
-model Client {
-  id                 String       @id @default(uuid()) @db.Uuid
-  tenantId           String       @db.Uuid
-  clientNumber       String
-  type               ClientType
-  status             ClientStatus @default(ACTIVE)
-  firstName          String?
-  lastName           String?
-  companyName        String?
-  phone              String
-  email              String?
-  region             String?
-  city               String?
-  digitalAddress     String?
-  ghanaCardNumber    String?
-  tin                String?
-  registrationNumber String?
-  dateOfBirth        DateTime?
-  gender             Gender?
-  occupation         String?
-  kycStatus          KycStatus    @default(PENDING)
-  amlRiskLevel       AmlRiskLevel @default(LOW)
-  isPep              Boolean      @default(false)
-  eddRequired        Boolean      @default(false)
-  assignedBrokerId   String?      @db.Uuid
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  deletedAt          DateTime?
-
-  tenant           Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedBroker   User?              @relation("AssignedBroker", fields: [assignedBrokerId], references: [id])
-  beneficiaries    Beneficiary[]
-  nextOfKin        NextOfKin[]
-  bankDetails      BankDetail[]
-  policies         Policy[]
-  claims           Claim[]
-  leads            Lead[]             @relation("ConvertedClient")
-  transactions     Transaction[]
-  invoices         Invoice[]
-  commissions      Commission[]
-  premiumFinancing PremiumFinancing[]
-  quotes           Quote[]
-
-  @@unique([tenantId, clientNumber])
-  @@index([tenantId])
-  @@index([tenantId, type])
-  @@index([tenantId, status])
-  @@map("clients")
-}
-
-model Beneficiary {
-  id              String    @id @default(uuid()) @db.Uuid
-  tenantId        String    @db.Uuid
-  clientId        String    @db.Uuid
-  fullName        String
-  relationship    String
-  dateOfBirth     DateTime?
-  ghanaCardNumber String?
-  phone           String?
-  percentage      Decimal   @db.Decimal(5, 2)
-  guardianName    String?
-  createdAt       DateTime  @default(now())
-
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  @@index([clientId])
-  @@map("beneficiaries")
-}
-
-model NextOfKin {
-  id           String  @id @default(uuid()) @db.Uuid
-  tenantId     String  @db.Uuid
-  clientId     String  @db.Uuid
-  fullName     String
-  relationship String
-  phone        String
-  address      String?
-
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  @@index([clientId])
-  @@map("next_of_kin")
-}
-
-model BankDetail {
-  id            String @id @default(uuid()) @db.Uuid
-  tenantId      String @db.Uuid
-  clientId      String @db.Uuid
-  bankName      String
-  accountName   String
-  accountNumber String
-  branch        String
-
-  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
-
-  @@index([clientId])
-  @@map("bank_details")
-}
-
-// ─── POLICIES ─────────────────────────────────────
-
-model Policy {
-  id                 String              @id @default(uuid()) @db.Uuid
-  tenantId           String              @db.Uuid
-  policyNumber       String
-  status             PolicyStatus        @default(DRAFT)
-  insuranceType      InsuranceType
-  policyType         PolicyType
-  coverageType       String?
-  nicClassOfBusiness String?
-  clientId           String              @db.Uuid
-  carrierId          String              @db.Uuid
-  productId          String?             @db.Uuid
-  brokerId           String              @db.Uuid
-  inceptionDate      DateTime
-  expiryDate         DateTime
-  issueDate          DateTime?
-  sumInsured         Decimal             @db.Decimal(15, 2)
-  premiumAmount      Decimal             @db.Decimal(15, 2)
-  commissionRate     Decimal             @db.Decimal(5, 2)
-  commissionAmount   Decimal             @db.Decimal(15, 2)
-  commissionStatus   CommissionStatus    @default(PENDING)
-  currency           String              @default("GHS")
-  premiumFrequency   PremiumFrequency    @default(ANNUAL)
-  paymentStatus      PaymentStatus       @default(PENDING)
-  coverageDetails    String?
-  isRenewal          Boolean             @default(false)
-  previousPolicyId   String?             @db.Uuid
-  cancellationReason CancellationReason?
-  cancellationDate   DateTime?
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  deletedAt          DateTime?
-
-  tenant           Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client           Client               @relation(fields: [clientId], references: [id])
-  carrier          Carrier              @relation(fields: [carrierId], references: [id])
-  product          Product?             @relation(fields: [productId], references: [id])
-  broker           User                 @relation("PolicyBroker", fields: [brokerId], references: [id])
-  vehicleDetails   VehicleDetail?
-  propertyDetails  PropertyDetail?
-  marineDetails    MarineDetail?
-  endorsements     PolicyEndorsement[]
-  installments     PremiumInstallment[]
-  policyDocuments  PolicyDocument[]
-  claims           Claim[]
-  transactions     Transaction[]
-  invoices         Invoice[]
-  commissions      Commission[]
-  premiumFinancing PremiumFinancing[]
-  remittances      Remittance[]
-  sourceQuotes     Quote[]            @relation("QuoteToPolicy")
-
-  @@unique([tenantId, policyNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@index([tenantId, insuranceType])
-  @@index([tenantId, clientId])
-  @@index([tenantId, expiryDate])
-  @@map("policies")
-}
-
-model VehicleDetail {
-  id                 String          @id @default(uuid()) @db.Uuid
-  policyId           String          @unique @db.Uuid
-  registrationNumber String?
-  chassisNumber      String?
-  engineNumber       String?
-  make               String?
-  model              String?
-  year               Int?
-  bodyType           String?
-  color              String?
-  engineCapacity     String?
-  seatingCapacity    Int?
-  usageType          String?
-  estimatedValue     Decimal?        @db.Decimal(15, 2)
-  motorCoverType     MotorCoverType?
-
-  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-
-  @@map("vehicle_details")
-}
-
-model PropertyDetail {
-  id               String   @id @default(uuid()) @db.Uuid
-  policyId         String   @unique @db.Uuid
-  propertyAddress  String?
-  propertyType     String?
-  constructionType String?
-  yearBuilt        Int?
-  estimatedValue   Decimal? @db.Decimal(15, 2)
-  occupancyType    String?
-
-  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-
-  @@map("property_details")
-}
-
-model MarineDetail {
-  id               String   @id @default(uuid()) @db.Uuid
-  policyId         String   @unique @db.Uuid
-  vesselName       String?
-  imoNumber        String?
-  voyageRoute      String?
-  cargoDescription String?
-  cargoValue       Decimal? @db.Decimal(15, 2)
-  conveyanceType   String?
-
-  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-
-  @@map("marine_details")
-}
-
-model PolicyEndorsement {
-  id                String            @id @default(uuid()) @db.Uuid
-  tenantId          String            @db.Uuid
-  policyId          String            @db.Uuid
-  type              EndorsementType
-  status            EndorsementStatus @default(PENDING)
-  description       String?
-  effectiveDate     DateTime?
-  premiumAdjustment Decimal?          @db.Decimal(15, 2)
-  requestedById     String            @db.Uuid
-  approvedById      String?           @db.Uuid
-  createdAt         DateTime          @default(now())
-
-  policy      Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-  requestedBy User   @relation("EndorsementRequester", fields: [requestedById], references: [id])
-  approvedBy  User?  @relation("EndorsementApprover", fields: [approvedById], references: [id])
-
-  @@index([tenantId])
-  @@index([policyId])
-  @@map("policy_endorsements")
-}
-
-model PremiumInstallment {
-  id                String            @id @default(uuid()) @db.Uuid
-  tenantId          String            @db.Uuid
-  policyId          String            @db.Uuid
-  installmentNumber Int
-  dueDate           DateTime
-  amount            Decimal           @db.Decimal(15, 2)
-  status            InstallmentStatus @default(PENDING)
-  paidDate          DateTime?
-
-  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@index([policyId])
-  @@map("premium_installments")
-}
-
-model PolicyDocument {
-  id         String   @id @default(uuid()) @db.Uuid
-  tenantId   String   @db.Uuid
-  policyId   String   @db.Uuid
-  name       String
-  type       String
-  url        String?
-  uploadedAt DateTime @default(now())
-
-  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@index([policyId])
-  @@map("policy_documents")
-}
-
-// ─── CLAIMS ───────────────────────────────────────
-
-model Claim {
-  id                     String        @id @default(uuid()) @db.Uuid
-  tenantId               String        @db.Uuid
-  claimNumber            String
-  status                 ClaimStatus   @default(INTIMATED)
-  policyId               String        @db.Uuid
-  insuranceType          InsuranceType
-  clientId               String        @db.Uuid
-  incidentDate           DateTime
-  incidentDescription    String
-  incidentLocation       String?
-  claimAmount            Decimal       @db.Decimal(15, 2)
-  currency               String        @default("GHS")
-  intimationDate         DateTime      @default(now())
-  registrationDate       DateTime?
-  acknowledgmentDeadline DateTime
-  processingDeadline     DateTime
-  assessedAmount         Decimal?      @db.Decimal(15, 2)
-  settledAmount          Decimal?      @db.Decimal(15, 2)
-  settlementDate         DateTime?
-  rejectionReason        String?
-  isOverdue              Boolean       @default(false)
-  assessorId             String?       @db.Uuid
-  createdAt              DateTime      @default(now())
-  updatedAt              DateTime      @updatedAt
-  deletedAt              DateTime?
-
-  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  policy         Policy          @relation(fields: [policyId], references: [id])
-  client         Client          @relation(fields: [clientId], references: [id])
-  assessor       User?           @relation("ClaimAssessor", fields: [assessorId], references: [id])
-  claimDocuments ClaimDocument[]
-  followUps      ClaimFollowUp[]
-
-  @@unique([tenantId, claimNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@index([tenantId, policyId])
-  @@map("claims")
-}
-
-model ClaimDocument {
-  id         String   @id @default(uuid()) @db.Uuid
-  tenantId   String   @db.Uuid
-  claimId    String   @db.Uuid
-  name       String
-  type       String
-  url        String?
-  uploadedAt DateTime @default(now())
-
-  claim Claim @relation(fields: [claimId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@index([claimId])
-  @@map("claim_documents")
-}
-
-// ─── COMPLAINTS ───────────────────────────────────
-
-model Complaint {
-  id                String            @id @default(uuid()) @db.Uuid
-  tenantId          String            @db.Uuid
-  complaintNumber   String
-  status            ComplaintStatus   @default(REGISTERED)
-  priority          ComplaintPriority @default(MEDIUM)
-  complainantName   String
-  complainantPhone  String?
-  complainantEmail  String?
-  subject           String
-  category          String?
-  description       String
-  escalationLevel   Int               @default(0)
-  assignedToId      String?           @db.Uuid
-  slaDeadline       DateTime
-  isBreached        Boolean           @default(false)
-  resolutionDetails String?
-  resolvedAt        DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-
-  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedTo User?  @relation("ComplaintAssignee", fields: [assignedToId], references: [id])
-
-  @@unique([tenantId, complaintNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("complaints")
-}
-
-// ─── LEADS ────────────────────────────────────────
-
-model Lead {
-  id                  String       @id @default(uuid()) @db.Uuid
-  tenantId            String       @db.Uuid
-  leadNumber          String
-  status              LeadStatus   @default(NEW)
-  priority            LeadPriority @default(WARM)
-  source              LeadSource   @default(OTHER)
-  contactName         String
-  companyName         String?
-  phone               String?
-  email               String?
-  productInterest     String[]
-  estimatedPremium    Decimal?     @db.Decimal(15, 2)
-  estimatedCommission Decimal?     @db.Decimal(15, 2)
-  assignedBrokerId    String?      @db.Uuid
-  score               Int          @default(0)
-  nextFollowUpDate    DateTime?
-  lastContactDate     DateTime?
-  notes               String?
-  convertedClientId   String?      @db.Uuid
-  convertedAt         DateTime?
-  createdAt           DateTime     @default(now())
-  updatedAt           DateTime     @updatedAt
-  deletedAt           DateTime?
-
-  tenant          Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedBroker  User?   @relation("LeadBroker", fields: [assignedBrokerId], references: [id])
-  convertedClient Client? @relation("ConvertedClient", fields: [convertedClientId], references: [id])
-
-  @@unique([tenantId, leadNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("leads")
-}
-
-// ─── DOCUMENTS ────────────────────────────────────
-
-model Document {
-  id               String           @id @default(uuid()) @db.Uuid
-  tenantId         String           @db.Uuid
-  name             String
-  category         DocumentCategory
-  mimeType         String
-  sizeBytes        Int
-  url              String?
-  storagePath      String?
-  uploadedById     String           @db.Uuid
-  version          Int              @default(1)
-  isExpired        Boolean          @default(false)
-  expiresAt        DateTime?
-  linkedEntityType String?
-  linkedEntityId   String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  uploadedBy User   @relation("DocumentUploader", fields: [uploadedById], references: [id])
-
-  @@index([tenantId])
-  @@index([tenantId, category])
-  @@index([tenantId, linkedEntityType, linkedEntityId])
-  @@map("documents")
-}
-
-// ─── FINANCE ──────────────────────────────────────
-
-model Transaction {
-  id                String          @id @default(uuid()) @db.Uuid
-  tenantId          String          @db.Uuid
-  transactionNumber String
-  type              TransactionType
-  accountType       AccountType     @default(CLIENT_ACCOUNT)
-  amount            Decimal         @db.Decimal(15, 2)
-  currency          String          @default("GHS")
-  paymentMethod     PaymentMethod
-  paymentStatus     PaymentStatus   @default(PENDING)
-  momoNetwork       MoMoNetwork?
-  momoPhone         String?
-  reference         String?
-  clientId          String?         @db.Uuid
-  policyId          String?         @db.Uuid
-  invoiceId         String?         @db.Uuid
-  remittanceId      String?         @db.Uuid
-  processedById     String?         @db.Uuid
-  processedAt       DateTime?
-  notes             String?
-  createdAt         DateTime        @default(now())
-
-  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client      Client?     @relation(fields: [clientId], references: [id])
-  policy      Policy?     @relation(fields: [policyId], references: [id])
-  invoice     Invoice?    @relation(fields: [invoiceId], references: [id])
-  remittance  Remittance? @relation(fields: [remittanceId], references: [id])
-  processedBy User?       @relation("TransactionProcessor", fields: [processedById], references: [id])
-
-  @@unique([tenantId, transactionNumber])
-  @@index([tenantId])
-  @@index([tenantId, type])
-  @@index([tenantId, accountType])
-  @@map("transactions")
-}
-
-model Invoice {
-  id            String        @id @default(uuid()) @db.Uuid
-  tenantId      String        @db.Uuid
-  invoiceNumber String
-  clientId      String        @db.Uuid
-  policyId      String?       @db.Uuid
-  description   String?
-  amount        Decimal       @db.Decimal(15, 2)
-  amountPaid    Decimal       @default(0) @db.Decimal(15, 2)
-  status        InvoiceStatus @default(OUTSTANDING)
-  currency      String        @default("GHS")
-  dateIssued    DateTime      @default(now())
-  dateDue       DateTime
-  datePaid      DateTime?
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client       Client        @relation(fields: [clientId], references: [id])
-  policy       Policy?       @relation(fields: [policyId], references: [id])
-  transactions Transaction[]
-
-  @@unique([tenantId, invoiceNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("invoices")
-}
-
-model Commission {
-  id               String           @id @default(uuid()) @db.Uuid
-  tenantId         String           @db.Uuid
-  policyId         String           @db.Uuid
-  clientId         String           @db.Uuid
-  insurerName      String
-  productType      String?
-  premiumAmount    Decimal          @db.Decimal(15, 2)
-  commissionRate   Decimal          @db.Decimal(5, 2)
-  commissionAmount Decimal          @db.Decimal(15, 2)
-  nicLevy          Decimal?         @db.Decimal(15, 2)
-  netCommission    Decimal?         @db.Decimal(15, 2)
-  status           CommissionStatus @default(PENDING)
-  brokerId         String           @db.Uuid
-  remittanceId     String?          @db.Uuid
-  dateEarned       DateTime?
-  datePaid         DateTime?
-  createdAt        DateTime         @default(now())
-
-  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  policy     Policy      @relation(fields: [policyId], references: [id])
-  client     Client      @relation(fields: [clientId], references: [id])
-  broker     User        @relation("CommissionBroker", fields: [brokerId], references: [id])
-  remittance Remittance? @relation(fields: [remittanceId], references: [id])
-
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@index([tenantId, brokerId])
-  @@map("commissions")
-}
-
-model Expense {
-  id            String        @id @default(uuid()) @db.Uuid
-  tenantId      String        @db.Uuid
-  date          DateTime
-  description   String
-  category      String
-  amount        Decimal       @db.Decimal(15, 2)
-  currency      String        @default("GHS")
-  vendor        String?
-  reference     String?
-  paymentMethod String?
-  status        ExpenseStatus @default(DRAFT)
-  approvedById  String?       @db.Uuid
-  department    String?
-  notes         String?
-  receiptUrl    String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  approvedBy User?  @relation("ExpenseApprover", fields: [approvedById], references: [id])
-
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("expenses")
-}
-
-model PremiumFinancing {
-  id                   String   @id @default(uuid()) @db.Uuid
-  tenantId             String   @db.Uuid
-  applicationNumber    String
-  clientId             String   @db.Uuid
-  policyId             String   @db.Uuid
-  totalPremium         Decimal  @db.Decimal(15, 2)
-  downPaymentPct       Decimal  @db.Decimal(5, 2)
-  downPayment          Decimal  @db.Decimal(15, 2)
-  financedAmount       Decimal  @db.Decimal(15, 2)
-  interestRateMonthly  Decimal  @db.Decimal(5, 4)
-  totalInterest        Decimal  @db.Decimal(15, 2)
-  totalRepayment       Decimal  @db.Decimal(15, 2)
-  monthlyInstallment   Decimal  @db.Decimal(15, 2)
-  numberOfInstallments Int
-  installmentsPaid     Int      @default(0)
-  amountPaid           Decimal  @default(0) @db.Decimal(15, 2)
-  outstandingBalance   Decimal  @db.Decimal(15, 2)
-  status               PFStatus @default(SUBMITTED)
-  financier            String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-
-  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client       Client          @relation(fields: [clientId], references: [id])
-  policy       Policy          @relation(fields: [policyId], references: [id])
-  installments PFInstallment[]
-
-  @@unique([tenantId, applicationNumber])
-  @@index([tenantId])
-  @@map("premium_financing")
-}
-
-model PFInstallment {
-  id       String            @id @default(uuid()) @db.Uuid
-  tenantId String            @db.Uuid
-  pfId     String            @db.Uuid
-  number   Int
-  dueDate  DateTime
-  amount   Decimal           @db.Decimal(15, 2)
-  status   InstallmentStatus @default(PENDING)
-  paidDate DateTime?
-
-  application PremiumFinancing @relation(fields: [pfId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@index([pfId])
-  @@map("pf_installments")
-}
-
-// ─── CHAT ─────────────────────────────────────────
-
-model ChatRoom {
-  id                 String       @id @default(uuid()) @db.Uuid
-  tenantId           String       @db.Uuid
-  name               String?
-  type               ChatRoomType @default(DIRECT)
-  linkedResourceType String?
-  linkedResourceId   String?
-  createdAt          DateTime     @default(now())
-
-  tenant       Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  participants ChatParticipant[]
-  messages     ChatMessage[]
-
-  @@index([tenantId])
-  @@map("chat_rooms")
-}
-
-model ChatParticipant {
-  id       String   @id @default(uuid()) @db.Uuid
-  roomId   String   @db.Uuid
-  userId   String   @db.Uuid
-  joinedAt DateTime @default(now())
-
-  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([roomId, userId])
-  @@map("chat_participants")
-}
-
-model ChatMessage {
-  id         String          @id @default(uuid()) @db.Uuid
-  tenantId   String          @db.Uuid
-  roomId     String          @db.Uuid
-  senderId   String          @db.Uuid
-  content    String
-  type       ChatMessageType @default(TEXT)
-  readStatus ReadStatus      @default(SENT)
-  createdAt  DateTime        @default(now())
-
-  tenant Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  sender User     @relation("MessageSender", fields: [senderId], references: [id])
-
-  @@index([tenantId])
-  @@index([roomId, createdAt])
-  @@map("chat_messages")
-}
-
-// ─── NOTIFICATIONS ────────────────────────────────
-
-model Notification {
-  id        String               @id @default(uuid()) @db.Uuid
-  tenantId  String               @db.Uuid
-  userId    String               @db.Uuid
-  title     String
-  message   String
-  type      NotificationType     @default(SYSTEM)
-  priority  NotificationPriority @default(MEDIUM)
-  read      Boolean              @default(false)
-  readAt    DateTime?
-  archived  Boolean              @default(false)
-  link      String?
-  createdAt DateTime             @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([tenantId])
-  @@index([userId, read])
-  @@map("notifications")
-}
-
-// ─── CALENDAR ─────────────────────────────────────
-
-model CalendarEvent {
-  id            String              @id @default(uuid()) @db.Uuid
-  tenantId      String              @db.Uuid
-  title         String
-  description   String?
-  startDate     DateTime
-  endDate       DateTime
-  type          CalendarEventType   @default(MEETING)
-  priority      String?
-  status        CalendarEventStatus @default(UPCOMING)
-  location      String?
-  googleEventId String?
-  createdById   String              @db.Uuid
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-
-  tenant    Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdBy User               @relation("EventCreator", fields: [createdById], references: [id])
-  attendees CalendarAttendee[]
-
-  @@index([tenantId])
-  @@index([tenantId, startDate])
-  @@map("calendar_events")
-}
-
-model CalendarAttendee {
-  id      String @id @default(uuid()) @db.Uuid
-  eventId String @db.Uuid
-  userId  String @db.Uuid
-
-  event CalendarEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([eventId, userId])
-  @@map("calendar_attendees")
-}
-
-// ─── TASKS ────────────────────────────────────────
-
-model Task {
-  id           String       @id @default(uuid()) @db.Uuid
-  tenantId     String       @db.Uuid
-  title        String
-  description  String?
-  priority     TaskPriority @default(WARM)
-  status       TaskStatus   @default(PENDING)
-  dueDate      DateTime?
-  type         String?
-  link         String?
-  isCompleted  Boolean      @default(false)
-  assignedToId String?      @db.Uuid
-  createdById  String       @db.Uuid
-  completedAt  DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-
-  tenant     Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  assignedTo User?  @relation("TaskAssignee", fields: [assignedToId], references: [id])
-  createdBy  User   @relation("TaskCreator", fields: [createdById], references: [id])
-
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("tasks")
-}
-
-// ─── APPROVALS ────────────────────────────────────
-
-model Approval {
-  id               String         @id @default(uuid()) @db.Uuid
-  tenantId         String         @db.Uuid
-  refNumber        String
-  type             ApprovalType
-  status           ApprovalStatus @default(PENDING)
-  priority         String?
-  subject          String
-  clientName       String?
-  amount           Decimal?       @db.Decimal(15, 2)
-  requestedById    String         @db.Uuid
-  approvedById     String?        @db.Uuid
-  dueDate          DateTime?
-  isOverdue        Boolean        @default(false)
-  notes            String?
-  linkedEntityType String?
-  linkedEntityId   String?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-
-  tenant      Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  requestedBy User   @relation("ApprovalRequester", fields: [requestedById], references: [id])
-  approvedBy  User?  @relation("ApprovalProcessor", fields: [approvedById], references: [id])
-
-  @@unique([tenantId, refNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("approvals")
-}
-
-// ─── DEPARTMENTS ──────────────────────────────────
-
-model Department {
-  id          String   @id @default(uuid()) @db.Uuid
-  tenantId    String   @db.Uuid
-  name        String
-  code        String
-  description String?
-  headId      String?  @db.Uuid
-  branchId    String?  @db.Uuid
-  color       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  tenant  Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  head    User?   @relation("DepartmentHead", fields: [headId], references: [id])
-  branch  Branch? @relation(fields: [branchId], references: [id])
-  members User[]  @relation("DepartmentMember")
-
-  @@unique([tenantId, code])
-  @@index([tenantId])
-  @@map("departments")
-}
-
-// ─── PREMIUM REMITTANCE ───────────────────────────
-
-model Remittance {
-  id               String           @id @default(uuid()) @db.Uuid
-  tenantId         String           @db.Uuid
-  remittanceNumber String
-  carrierId        String           @db.Uuid
-  policyId         String           @db.Uuid
-  premiumAmount    Decimal          @db.Decimal(15, 2)
-  amountRemitted   Decimal          @db.Decimal(15, 2)
-  currency         String           @default("GHS")
-  status           RemittanceStatus @default(PENDING)
-  remittanceDate   DateTime?
-  paymentMethod    PaymentMethod?
-  reference        String?
-  notes            String?
-  processedById    String?          @db.Uuid
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-
-  tenant       Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  carrier      Carrier       @relation(fields: [carrierId], references: [id])
-  policy       Policy        @relation(fields: [policyId], references: [id])
-  processedBy  User?         @relation("RemittanceProcessor", fields: [processedById], references: [id])
-  transactions Transaction[]
-  commissions  Commission[]
-
-  @@unique([tenantId, remittanceNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@index([tenantId, carrierId])
-  @@map("remittances")
-}
-
-// ─── CLAIM FOLLOW-UPS ─────────────────────────────
-
-model ClaimFollowUp {
-  id           String      @id @default(uuid()) @db.Uuid
-  tenantId     String      @db.Uuid
-  claimId      String      @db.Uuid
-  userId       String      @db.Uuid
-  method       ChaseMethod
-  contactName  String?
-  note         String
-  nextAction   String?
-  followUpDate DateTime    @default(now())
-  createdAt    DateTime    @default(now())
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
-  user   User   @relation("FollowUpBy", fields: [userId], references: [id])
-
-  @@index([tenantId])
-  @@index([claimId])
-  @@map("claim_follow_ups")
-}
-
-// ─── QUOTES ───────────────────────────────────────
-
-model Quote {
-  id                 String        @id @default(uuid()) @db.Uuid
-  tenantId           String        @db.Uuid
-  quoteNumber        String
-  clientId           String        @db.Uuid
-  insuranceType      InsuranceType
-  coverageType       String?
-  policyType         String        @default("non-life")
-  status             QuoteStatus   @default(DRAFT)
-  sumInsuredRequested Decimal      @db.Decimal(15, 2)
-  riskDescription    String?
-  requestDate        DateTime      @default(now())
-  validUntil         DateTime
-  sentDate           DateTime?
-  responseDate       DateTime?
-  preparedById       String?       @db.Uuid
-  convertedPolicyId  String?       @db.Uuid
-  createdAt          DateTime      @default(now())
-  updatedAt          DateTime      @updatedAt
-  deletedAt          DateTime?
-
-  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  client          Client        @relation(fields: [clientId], references: [id])
-  preparedBy      User?         @relation("QuotePreparer", fields: [preparedById], references: [id])
-  convertedPolicy Policy?       @relation("QuoteToPolicy", fields: [convertedPolicyId], references: [id])
-  options         QuoteOption[]
-
-  @@unique([tenantId, quoteNumber])
-  @@index([tenantId])
-  @@index([tenantId, status])
-  @@map("quotes")
-}
-
-model QuoteOption {
-  id                String  @id @default(uuid()) @db.Uuid
-  quoteId           String  @db.Uuid
-  carrierName       String
-  premium           Decimal @db.Decimal(15, 2)
-  sumInsured        Decimal @db.Decimal(15, 2)
-  commissionRate    Decimal @db.Decimal(5, 2)
-  commissionAmount  Decimal @db.Decimal(15, 2)
-  excessOrDeductible String?
-  coverageNotes     String?
-  isRecommended     Boolean @default(false)
-  isSelected        Boolean @default(false)
-  createdAt         DateTime @default(now())
-
-  quote Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
-
-  @@index([quoteId])
-  @@map("quote_options")
-}
-// ─── INTEGRATIONS ─────────────────────────────────
-
-model Integration {
-  id              String   @id @default(uuid()) @db.Uuid
-  tenantId        String   @db.Uuid
-  serviceKey      String   // e.g. 'google-calendar', 'paystack'
-  connected       Boolean  @default(false)
-  connectedAt     DateTime?
-  connectedEmail  String?
-  syncFrequency   String   @default("manual") // 15m | 1h | 6h | 24h | manual
-  lastSyncAt      DateTime?
-  config          Json     @default("{}")
-  credentials     Json     @default("{}")
-  syncEvents      Json     @default("[]")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@unique([tenantId, serviceKey])
-  @@index([tenantId])
-  @@map("integrations")
-}
-
-// ─── EMAIL SYSTEM ─────────────────────────────────
-
-enum EmailStatus {
-  QUEUED
-  PROCESSING
-  SENT
-  FAILED
-  BOUNCED
-  CANCELLED
-}
-
-model EmailLog {
-  id                String      @id @default(uuid()) @db.Uuid
-  tenantId          String      @db.Uuid
-  userId            String?     @db.Uuid
-  recipientEmail    String
-  subject           String
-  templateName      String
-  templateData      Json        @default("{}")
-  status            EmailStatus @default(QUEUED)
-  provider          String      @default("console")
-  providerMessageId String?
-  errorMessage      String?
-  retryCount        Int         @default(0)
-  maxRetries        Int         @default(3)
-  scheduledAt       DateTime    @default(now())
-  sentAt            DateTime?
-  failedAt          DateTime?
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  user   User?  @relation("EmailLogUser", fields: [userId], references: [id])
-
-  @@index([tenantId])
-  @@index([status])
-  @@index([scheduledAt])
-  @@index([recipientEmail])
-  @@map("email_logs")
-}
-
-model EmailTemplate {
-  id           String    @id @default(uuid()) @db.Uuid
-  tenantId     String    @db.Uuid
-  name         String    // policy_renewal, claim_update, etc
-  displayName  String
-  subject      String
-  htmlContent  String
-  textContent  String?
-  variables    Json      @default("[]")
-  isActive     Boolean   @default(true)
-  isSystem     Boolean   @default(false)
-  createdById  String?   @db.Uuid
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-
-  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  createdBy User?  @relation("EmailTemplateCreator", fields: [createdById], references: [id])
-
-  @@unique([tenantId, name])
-  @@index([tenantId])
-  @@map("email_templates")
-}
-
-model EmailQueue {
-  id            String      @id @default(uuid()) @db.Uuid
-  tenantId      String      @db.Uuid
-  recipientEmail String
-  subject       String
-  htmlContent   String
-  textContent   String?
-  templateName  String?
-  templateData  Json        @default("{}")
-  priority      Int         @default(5)
-  status        EmailStatus @default(QUEUED)
-  retryCount    Int         @default(0)
-  maxRetries    Int         @default(3)
-  scheduledAt   DateTime    @default(now())
-  processedAt   DateTime?
-  errorMessage  String?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-
-  @@index([status])
-  @@index([scheduledAt])
-  @@index([priority])
-  @@index([tenantId])
-  @@map("email_queue")
 }

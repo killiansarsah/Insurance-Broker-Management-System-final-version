@@ -213,8 +213,22 @@ export const useAuthStore = create<AuthState>()(
             checkAuth: async () => {
                 if (get().isLoading) return;
 
-                // If already authenticated (from persisted state), don't break the session
+                // If already authenticated (from persisted state), try to restore token
                 if (get().isAuthenticated && get().user) {
+                    // Try to refresh token to ensure it's valid
+                    try {
+                        const res = await apiClient.post<{ accessToken: string; user: User }>(
+                            '/auth/refresh',
+                        );
+                        apiClient.setAccessToken(res.accessToken);
+                        set({ user: res.user, isAuthenticated: true });
+                    } catch (err: unknown) {
+                        // If refresh fails, clear auth
+                        if (!isNetworkError(err)) {
+                            apiClient.clearAccessToken();
+                            set({ user: null, isAuthenticated: false });
+                        }
+                    }
                     return;
                 }
 

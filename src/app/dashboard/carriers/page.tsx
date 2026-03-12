@@ -307,7 +307,7 @@ export default function CarriersPage() {
                                                 </div>
                                                 <div className="flex items-center justify-center gap-1.5 opacity-80">
                                                     <Building2 size={11} />
-                                                    <span>{carrier.productCategories.length} Products</span>
+                                                    <span>{carrier.productCategories?.length || 0} Products</span>
                                                 </div>
                                             </div>
 

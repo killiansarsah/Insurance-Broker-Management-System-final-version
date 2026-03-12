@@ -22,6 +22,8 @@ class ApiClient {
         this.client.interceptors.request.use((config: InternalAxiosRequestConfig) => {
             if (this.accessToken) {
                 config.headers.Authorization = `Bearer ${this.accessToken}`;
+            } else if (process.env.NODE_ENV === 'development') {
+                console.warn('⚠️ API Request without token:', config.url);
             }
             return config;
         });

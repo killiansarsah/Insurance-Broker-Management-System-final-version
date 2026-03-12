@@ -98,6 +98,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                     fill
                                     className="object-cover"
                                     sizes="(min-width: 768px) 30vw, 0px"
+                                    priority
                                 />
                             </div>
                             <div
@@ -120,6 +121,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                     fill
                                     className="object-cover"
                                     sizes="(min-width: 768px) 30vw, 0px"
+                                    priority
                                 />
                             </div>
                             <div className="overflow-hidden rounded-xl relative">
@@ -129,6 +131,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                     fill
                                     className="object-cover"
                                     sizes="(min-width: 768px) 30vw, 0px"
+                                    loading="lazy"
                                 />
                             </div>
 
@@ -151,6 +154,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                     fill
                                     className="object-cover"
                                     sizes="(min-width: 768px) 30vw, 0px"
+                                    loading="lazy"
                                 />
                             </div>
                         </div>

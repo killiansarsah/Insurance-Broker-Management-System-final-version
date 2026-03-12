@@ -36,6 +36,18 @@ export class RenewalsController {
     );
   }
 
+  @Get('renewals/upcoming')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  getUpcomingAlias(
+    @Request() req: RequestWithUser,
+    @Query('daysAhead') daysAhead?: string,
+  ) {
+    return this.renewalsService.getUpcomingRenewals(
+      req.user.tenantId,
+      daysAhead ? parseInt(daysAhead, 10) : 90,
+    );
+  }
+
   @Post('policies/:id/renew')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   renew(
