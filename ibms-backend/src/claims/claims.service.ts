@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateClaimDto } from './dto/create-claim.dto';
 import { ClaimQueryDto } from './dto/claim-query.dto';
 import {
@@ -22,7 +23,10 @@ import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ClaimsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   private async generateClaimNumber(tenantId: string, client?: { claim: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
     const db = client ?? this.prisma;
@@ -363,6 +367,7 @@ export class ClaimsService {
       where: { id, tenantId },
       include: {
         policy: { select: { sumInsured: true } },
+        client: { select: { firstName: true, lastName: true, email: true } },
       },
     });
     if (!claim) throw new NotFoundException('Claim not found');
@@ -383,6 +388,19 @@ export class ClaimsService {
       },
     });
 
+    if (claim.client?.email) {
+      const clientName = `${claim.client.firstName} ${claim.client.lastName}`;
+      await this.emailService.sendClaimStatusUpdate(
+        claim.client.email,
+        clientName,
+        claim.claimNumber,
+        'UNDER_REVIEW',
+        'APPROVED',
+        dto.approvedAmount,
+        dto.notes,
+      );
+    }
+
     await this.logAudit(tenantId, userId, 'claim.approved', id, {
       approvedAmount: dto.approvedAmount,
       notes: dto.notes,
@@ -397,7 +415,13 @@ export class ClaimsService {
     userId: string,
     dto: RejectClaimDto,
   ) {
-    const claim = await this.findOne(id, tenantId);
+    const claim = await this.prisma.claim.findUnique({
+      where: { id, tenantId },
+      include: {
+        client: { select: { firstName: true, lastName: true, email: true } },
+      },
+    });
+    if (!claim) throw new NotFoundException('Claim not found');
     if (claim.status !== 'UNDER_REVIEW') {
       throw new BadRequestException('Only claims UNDER_REVIEW can be rejected');
     }
@@ -409,6 +433,19 @@ export class ClaimsService {
         rejectionReason: dto.reason,
       },
     });
+
+    if (claim.client?.email) {
+      const clientName = `${claim.client.firstName} ${claim.client.lastName}`;
+      await this.emailService.sendClaimStatusUpdate(
+        claim.client.email,
+        clientName,
+        claim.claimNumber,
+        'UNDER_REVIEW',
+        'REJECTED',
+        claim.claimAmount,
+        dto.reason,
+      );
+    }
 
     await this.logAudit(tenantId, userId, 'claim.rejected', id, {
       reason: dto.reason,

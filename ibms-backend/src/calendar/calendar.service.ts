@@ -75,36 +75,78 @@ export class CalendarService {
   }
 
   async findAll(tenantId: string, userId: string, from: string, to: string) {
-    const fromDate = new Date(from);
-    const toDate = new Date(to);
+    try {
+      const fromDate = new Date(from);
+      const toDate = new Date(to);
 
-    const diffDays =
-      (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (diffDays > 90) {
-      throw new BadRequestException('Maximum date range is 90 days');
-    }
+      if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+        throw new BadRequestException('Invalid date format. Use ISO 8601 format (YYYY-MM-DD)');
+      }
 
-    return this.prisma.calendarEvent.findMany({
-      where: {
-        tenantId,
-        startDate: { gte: fromDate },
-        endDate: { lte: toDate },
-        OR: [{ createdById: userId }, { attendees: { some: { userId } } }],
-      },
-      orderBy: { startDate: 'asc' },
-      include: {
-        attendees: {
-          include: {
-            user: {
-              select: { id: true, firstName: true, lastName: true },
+      const diffDays =
+        (toDate.getTime() - fromDate.getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays > 90) {
+        throw new BadRequestException('Maximum date range is 90 days');
+      }
+
+      return await this.prisma.calendarEvent.findMany({
+        where: {
+          tenantId,
+          status: { not: 'CANCELLED' },
+          OR: [
+            {
+              // Events that start within the range
+              AND: [
+                { startDate: { gte: fromDate } },
+                { startDate: { lte: toDate } },
+              ],
+            },
+            {
+              // Events that end within the range
+              AND: [
+                { endDate: { gte: fromDate } },
+                { endDate: { lte: toDate } },
+              ],
+            },
+            {
+              // Events that span the entire range
+              AND: [
+                { startDate: { lte: fromDate } },
+                { endDate: { gte: toDate } },
+              ],
+            },
+          ],
+          AND: [
+            {
+              OR: [
+                { createdById: userId },
+                { attendees: { some: { userId } } },
+                { googleEventId: { not: null } },
+              ],
+            },
+          ],
+        },
+        orderBy: { startDate: 'asc' },
+        include: {
+          attendees: {
+            include: {
+              user: {
+                select: { id: true, firstName: true, lastName: true },
+              },
             },
           },
+          createdBy: {
+            select: { id: true, firstName: true, lastName: true },
+          },
         },
-        createdBy: {
-          select: { id: true, firstName: true, lastName: true },
-        },
-      },
-    });
+      });
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Calendar findAll error:', error);
+      throw new BadRequestException('Failed to fetch calendar events');
+    }
   }
 
   async findOne(id: string, tenantId: string) {

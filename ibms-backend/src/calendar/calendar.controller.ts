@@ -9,6 +9,7 @@ import {
   Query,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { CalendarService } from './calendar.service';
 import {
@@ -39,6 +40,9 @@ export class CalendarController {
     @Query('from') from: string,
     @Query('to') to: string,
   ) {
+    if (!from || !to) {
+      throw new BadRequestException('from and to query parameters are required');
+    }
     return this.calendarService.findAll(
       req.user.tenantId,
       req.user.sub,

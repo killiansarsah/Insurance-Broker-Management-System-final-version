@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import {
   CreateTaskDto,
   TaskQueryDto,
@@ -10,7 +11,10 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   private async logAudit(
     tenantId: string,
@@ -45,7 +49,24 @@ export class TasksService {
         type: dto.type,
         link: dto.link,
       },
+      include: {
+        assignedTo: { select: { firstName: true, lastName: true, email: true } },
+        createdBy: { select: { firstName: true, lastName: true } },
+      },
     });
+
+    if (task.assignedTo?.email && task.dueDate) {
+      await this.emailService.sendTaskAssignment(
+        task.assignedTo.email,
+        task.assignedTo.firstName,
+        task.title,
+        task.description || '',
+        task.dueDate,
+        task.priority,
+        `${task.createdBy.firstName} ${task.createdBy.lastName}`,
+      );
+    }
+
     await this.logAudit(tenantId, userId, 'task.created', task.id);
     return task;
   }
@@ -156,9 +177,22 @@ export class TasksService {
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         assignedToId: dto.assignedToId,
       },
+      include: {
+        assignedTo: { select: { firstName: true, lastName: true, email: true } },
+        createdBy: { select: { firstName: true, lastName: true } },
+      },
     });
 
-    if (dto.assignedToId && dto.assignedToId !== task.assignedToId) {
+    if (dto.assignedToId && dto.assignedToId !== task.assignedToId && updated.assignedTo?.email && updated.dueDate) {
+      await this.emailService.sendTaskAssignment(
+        updated.assignedTo.email,
+        updated.assignedTo.firstName,
+        updated.title,
+        updated.description || '',
+        updated.dueDate,
+        updated.priority,
+        `${updated.createdBy.firstName} ${updated.createdBy.lastName}`,
+      );
       await this.logAudit(tenantId, userId, 'task.reassigned', id, {
         oldAssignee: task.assignedToId,
         newAssignee: dto.assignedToId,

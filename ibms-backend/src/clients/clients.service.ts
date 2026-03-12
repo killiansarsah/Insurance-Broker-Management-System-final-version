@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { ClientQueryDto } from './dto/client-query.dto';
@@ -18,7 +19,10 @@ import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ClientsService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) { }
 
   private async generateClientNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.client.count({ where: { tenantId } });
@@ -62,7 +66,6 @@ export class ClientsService {
 
     const clientNumber = await this.generateClientNumber(tenantId);
 
-    // Explicitly unwrap dto to ensure only prisma fields are passed
     const client = await this.prisma.client.create({
       data: {
         tenantId,
@@ -85,7 +88,31 @@ export class ClientsService {
         isPep: dto.isPep,
         eddRequired: dto.eddRequired,
       },
+      include: {
+        policies: {
+          select: { id: true },
+          where: { status: 'ACTIVE' },
+          take: 1,
+        },
+      },
     });
+
+    if (client.email) {
+      const clientName = client.firstName || client.companyName || 'Valued Client';
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { firstName: true, lastName: true, email: true, phone: true },
+      });
+      if (user) {
+        await this.emailService.sendWelcomeEmail(
+          client.email,
+          clientName,
+          `${user.firstName} ${user.lastName}`,
+          user.email,
+          user.phone || 'N/A',
+        );
+      }
+    }
 
     await this.logAudit(
       tenantId,

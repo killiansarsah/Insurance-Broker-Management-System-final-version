@@ -5,6 +5,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma } from '@prisma/client';
 import { RenewPolicyDto } from './dto/renew-policy.dto';
@@ -14,7 +15,10 @@ import { randomBytes } from 'crypto';
 export class RenewalsService {
   private readonly logger = new Logger(RenewalsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly emailService: EmailService,
+  ) {}
 
   async getUpcomingRenewals(
     tenantId: string,
@@ -204,5 +208,68 @@ export class RenewalsService {
     this.logger.log(
       `Marked ${expiredPolicies.length} policies as EXPIRED with audit logs.`,
     );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_9AM)
+  async sendRenewalReminders() {
+    this.logger.log('Sending policy renewal reminder emails...');
+    const now = new Date();
+    
+    // Send reminders for policies expiring in 90, 60, and 30 days
+    for (const daysAhead of [90, 60, 30]) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + daysAhead);
+      
+      // Find policies expiring on this specific day
+      const policies = await this.prisma.policy.findMany({
+        where: {
+          status: 'ACTIVE',
+          expiryDate: {
+            gte: new Date(targetDate.setHours(0, 0, 0, 0)),
+            lt: new Date(targetDate.setHours(23, 59, 59, 999)),
+          },
+        },
+        include: {
+          client: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+              companyName: true,
+            },
+          },
+        },
+      });
+
+      for (const policy of policies) {
+        if (!policy.client.email) continue;
+
+        const clientName = policy.client.companyName || 
+          `${policy.client.firstName} ${policy.client.lastName}`;
+
+        try {
+          await this.emailService.sendPolicyRenewalReminder(
+            policy.client.email,
+            clientName,
+            policy.policyNumber,
+            policy.expiryDate,
+            daysAhead,
+            Number(policy.premiumAmount),
+            policy.insuranceType,
+          );
+
+          this.logger.log(
+            `Sent ${daysAhead}-day renewal reminder for policy ${policy.policyNumber}`,
+          );
+        } catch (error) {
+          this.logger.error(
+            `Failed to send renewal reminder for policy ${policy.policyNumber}`,
+            error,
+          );
+        }
+      }
+    }
+
+    this.logger.log('Renewal reminder emails sent.');
   }
 }

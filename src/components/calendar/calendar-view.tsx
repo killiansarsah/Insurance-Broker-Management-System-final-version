@@ -48,7 +48,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
     const createEvent = useCreateCalendarEvent();
     
     const events = useMemo(() => {
-        if (!eventsData) return [];
+        if (!eventsData || !Array.isArray(eventsData)) return [];
         return eventsData.map((e: any) => ({
             ...e,
             start: new Date(e.startDate || e.start),

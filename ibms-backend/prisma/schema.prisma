@@ -443,6 +443,9 @@ model Tenant {
   carriers         Carrier[]
   quotes           Quote[]
   integrations     Integration[]
+  emailLogs        EmailLog[]
+  emailTemplates   EmailTemplate[]
+  emailQueue       EmailQueue[]
 
   @@map("tenants")
 }
@@ -487,6 +490,7 @@ model User {
   twoFactorSecret    String?
   mustChangePassword Boolean   @default(false)
   delegatedTo        String?   @db.Uuid
+  emailPreferences   Json      @default("{\"policyRenewal\": true, \"claimUpdates\": true, \"taskAssignments\": true, \"systemNotifications\": true, \"marketingEmails\": false}")
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
   deletedAt          DateTime?
@@ -1594,4 +1598,96 @@ model Integration {
   @@unique([tenantId, serviceKey])
   @@index([tenantId])
   @@map("integrations")
+}
+
+// ─── EMAIL SYSTEM ─────────────────────────────────
+
+enum EmailStatus {
+  QUEUED
+  PROCESSING
+  SENT
+  FAILED
+  BOUNCED
+  CANCELLED
+}
+
+model EmailLog {
+  id                String      @id @default(uuid()) @db.Uuid
+  tenantId          String      @db.Uuid
+  userId            String?     @db.Uuid
+  recipientEmail    String
+  subject           String
+  templateName      String
+  templateData      Json        @default("{}")
+  status            EmailStatus @default(QUEUED)
+  provider          String      @default("console")
+  providerMessageId String?
+  errorMessage      String?
+  retryCount        Int         @default(0)
+  maxRetries        Int         @default(3)
+  scheduledAt       DateTime    @default(now())
+  sentAt            DateTime?
+  failedAt          DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user   User?  @relation("EmailLogUser", fields: [userId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([recipientEmail])
+  @@map("email_logs")
+}
+
+model EmailTemplate {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @db.Uuid
+  name         String    // policy_renewal, claim_update, etc
+  displayName  String
+  subject      String
+  htmlContent  String
+  textContent  String?
+  variables    Json      @default("[]")
+  isActive     Boolean   @default(true)
+  isSystem     Boolean   @default(false)
+  createdById  String?   @db.Uuid
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy User?  @relation("EmailTemplateCreator", fields: [createdById], references: [id])
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("email_templates")
+}
+
+model EmailQueue {
+  id            String      @id @default(uuid()) @db.Uuid
+  tenantId      String      @db.Uuid
+  recipientEmail String
+  subject       String
+  htmlContent   String
+  textContent   String?
+  templateName  String?
+  templateData  Json        @default("{}")
+  priority      Int         @default(5)
+  status        EmailStatus @default(QUEUED)
+  retryCount    Int         @default(0)
+  maxRetries    Int         @default(3)
+  scheduledAt   DateTime    @default(now())
+  processedAt   DateTime?
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([scheduledAt])
+  @@index([priority])
+  @@index([tenantId])
+  @@map("email_queue")
 }

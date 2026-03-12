@@ -16,11 +16,11 @@ import { GoogleSyncSchedulerService } from './google/google-sync-scheduler.servi
 @Module({
   imports: [PrismaModule, ConfigModule],
   controllers: [
-    IntegrationsController,
     GoogleOAuthController,
     GoogleCalendarController,
     GoogleSheetsController,
     GoogleDriveController,
+    IntegrationsController,
   ],
   providers: [
     IntegrationsService,

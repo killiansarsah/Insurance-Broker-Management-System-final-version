@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { TenantsModule } from '../tenants/tenants.module.js';
+import { EmailModule } from '../email/email.module.js';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
@@ -36,6 +37,7 @@ import { TwoFactorController } from './two-factor.controller.js';
     PrismaModule,
     ConfigModule,
     TenantsModule,
+    EmailModule,
   ],
   providers: [AuthService, JwtStrategy, TwoFactorService],
   controllers: [AuthController, TwoFactorController],

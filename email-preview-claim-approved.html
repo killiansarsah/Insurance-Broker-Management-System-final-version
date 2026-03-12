@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claim Status Update - APPROVED</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+        .header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .content {
+            background-color: #f9fafb;
+            padding: 24px;
+        }
+        .greeting {
+            font-size: 16px;
+            color: #111827;
+            margin-bottom: 16px;
+        }
+        .description {
+            color: #374151;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .details-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #10b981;
+        }
+        .details-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .details-table tr {
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .details-table tr:last-child {
+            border-bottom: none;
+        }
+        .details-table td {
+            padding: 12px 0;
+        }
+        .label {
+            color: #6b7280;
+            font-weight: 600;
+            width: 40%;
+        }
+        .value {
+            color: #111827;
+        }
+        .value.approved {
+            color: #10b981;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .value.bold {
+            font-weight: bold;
+        }
+        .success-box {
+            background-color: #d1fae5;
+            border: 1px solid #6ee7b7;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .success-box p {
+            margin: 0;
+            color: #065f46;
+            font-size: 14px;
+        }
+        .success-box strong {
+            font-weight: bold;
+        }
+        .footer {
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .status-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>✅ Claim Status Update</h2>
+        </div>
+        <div class="content">
+            <p class="greeting">Dear Jane Smith,</p>
+            <p class="description">Your insurance claim status has been updated.</p>
+            
+            <div class="details-box">
+                <div class="status-badge">✓ APPROVED</div>
+                <table class="details-table">
+                    <tr>
+                        <td class="label">Claim Number:</td>
+                        <td class="value bold">CLM-2026-001</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Previous Status:</td>
+                        <td class="value">UNDER_REVIEW</td>
+                    </tr>
+                    <tr>
+                        <td class="label">New Status:</td>
+                        <td class="value approved">APPROVED</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Claim Amount:</td>
+                        <td class="value bold">GHS 15,000</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="success-box">
+                <p><strong>✓ Good News!</strong> Your claim has been approved. Payment will be processed within 5 business days.</p>
+            </div>
+
+            <p class="description">If you have any questions about your claim, please contact your broker or claims department.</p>
+            
+            <p class="description">Best regards,<br/>Claims Department</p>
+        </div>
+    </div>
+</body>
+</html>

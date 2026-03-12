@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { cn, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -213,6 +214,7 @@ function mergeWithApiData(catalog: IntegrationService[], apiData: any[]): Integr
 // ─── Main Component ─────────────────────────────────────────
 
 export function SettingsIntegrations() {
+    const searchParams = useSearchParams();
     // ── API hooks ──
     const { data: apiIntegrations } = useIntegrations();
     const connectMutation = useConnectIntegration();
@@ -223,6 +225,38 @@ export function SettingsIntegrations() {
     const calendarSync = useGoogleCalendarSync();
     const sheetsExport = useGoogleSheetsExport();
     const driveMirror = useGoogleDriveMirror();
+
+    // Handle OAuth callback
+    useEffect(() => {
+        const googleStatus = searchParams.get('google');
+        const email = searchParams.get('email');
+        const reason = searchParams.get('reason');
+
+        if (googleStatus === 'success' && email) {
+            toast.success('Google Calendar connected!', {
+                description: `Connected as ${email}. Syncing events...`,
+            });
+            // Trigger initial sync after successful connection
+            setTimeout(() => {
+                calendarSync.mutate(undefined, {
+                    onSuccess: (r) => {
+                        if (r?.push && r?.pull) {
+                            toast.success(`Initial sync complete: ${r.push.pushed} pushed, ${r.pull.pulled} pulled`);
+                        } else {
+                            toast.success('Initial sync complete');
+                        }
+                    },
+                    onError: () => {
+                        toast.warning('Connection successful, but initial sync failed. Try manual sync.');
+                    },
+                });
+            }, 1500);
+        } else if (googleStatus === 'error') {
+            toast.error('Google connection failed', {
+                description: reason || 'Unknown error occurred',
+            });
+        }
+    }, [searchParams, calendarSync]);
 
     // Merge static catalog with API data
     const services = useMemo(() => {
@@ -368,7 +402,11 @@ export function SettingsIntegrations() {
             calendarSync.mutate(undefined, {
                 onSuccess: (r) => {
                     setSyncing(null);
-                    toast.success(`Calendar synced: ${r.push.pushed} pushed, ${r.pull.pulled} pulled`);
+                    if (r?.push && r?.pull) {
+                        toast.success(`Calendar synced: ${r.push.pushed} pushed, ${r.pull.pulled} pulled`);
+                    } else {
+                        toast.success('Calendar synced');
+                    }
                 },
                 onError: () => {
                     setSyncing(null);
@@ -915,7 +953,13 @@ export function SettingsIntegrations() {
                                             leftIcon={<RefreshCw size={14} className={cn(calendarSync.isPending && 'animate-spin')} />}
                                             onClick={() => {
                                                 calendarSync.mutate(undefined, {
-                                                    onSuccess: (r) => toast.success(`Pushed ${r.push.pushed} events, pulled ${r.pull.pulled} events`),
+                                                    onSuccess: (r) => {
+                                                        if (r?.push && r?.pull) {
+                                                            toast.success(`Pushed ${r.push.pushed} events, pulled ${r.pull.pulled} events`);
+                                                        } else {
+                                                            toast.success('Calendar synced');
+                                                        }
+                                                    },
                                                     onError: () => toast.error('Calendar sync failed'),
                                                 });
                                             }}

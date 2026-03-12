@@ -13,6 +13,7 @@ import { GoogleOAuthService } from './google-oauth.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 import type { RequestWithUser } from '../../common/types/request.types.js';
 
 @Controller('integrations/google')
@@ -36,6 +37,7 @@ export class GoogleOAuthController {
    * Exchanges code for tokens, stores them, and redirects to the frontend.
    */
   @Get('callback')
+  @Public()
   async handleCallback(
     @Query('code') code: string,
     @Query('state') tenantId: string,
@@ -46,7 +48,7 @@ export class GoogleOAuthController {
 
     if (error) {
       return res.redirect(
-        `${frontendUrl}/settings?tab=integrations&google=error&reason=${encodeURIComponent(error)}`,
+        `${frontendUrl}/dashboard/integrations?google=error&reason=${encodeURIComponent(error)}`,
       );
     }
 
@@ -57,11 +59,11 @@ export class GoogleOAuthController {
     try {
       const result = await this.googleOAuth.handleCallback(code, tenantId);
       return res.redirect(
-        `${frontendUrl}/settings?tab=integrations&google=success&email=${encodeURIComponent(result.email ?? '')}`,
+        `${frontendUrl}/dashboard/integrations?google=success&email=${encodeURIComponent(result.email ?? '')}`,
       );
     } catch (err: any) {
       return res.redirect(
-        `${frontendUrl}/settings?tab=integrations&google=error&reason=${encodeURIComponent(err.message ?? 'Unknown error')}`,
+        `${frontendUrl}/dashboard/integrations?google=error&reason=${encodeURIComponent(err.message ?? 'Unknown error')}`,
       );
     }
   }

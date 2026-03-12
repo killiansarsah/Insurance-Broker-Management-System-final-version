@@ -169,7 +169,7 @@ export class GoogleCalendarService {
           });
         } else {
           // Create new IBMS event from Google
-          await this.prisma.calendarEvent.create({
+          const newEvent = await this.prisma.calendarEvent.create({
             data: {
               tenantId,
               title: gEvent.summary,
@@ -180,6 +180,13 @@ export class GoogleCalendarService {
               location: gEvent.location ?? null,
               googleEventId: gEvent.id,
               createdById: userId,
+            },
+          });
+          // Add current user as attendee so they can see the event
+          await this.prisma.calendarAttendee.create({
+            data: {
+              eventId: newEvent.id,
+              userId,
             },
           });
         }
@@ -193,6 +200,7 @@ export class GoogleCalendarService {
 
     await this.logSyncEvent(tenantId, 'pull', pulled, errors.length);
 
+    this.logger.log(`Pull completed: ${pulled} pulled, ${skipped} skipped, ${errors.length} errors`);
     return { pulled, skipped, errors };
   }
 
