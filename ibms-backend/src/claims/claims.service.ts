@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { EmailService } from '../email/email.service';
+import { EnhancedEmailService } from '../email/enhanced-email.service';
 import { CreateClaimDto } from './dto/create-claim.dto';
 import { ClaimQueryDto } from './dto/claim-query.dto';
 import {
@@ -25,7 +25,7 @@ import { randomBytes } from 'crypto';
 export class ClaimsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly emailService: EmailService,
+    private readonly emailService: EnhancedEmailService,
   ) {}
 
   private async generateClaimNumber(tenantId: string, client?: { claim: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
@@ -442,7 +442,7 @@ export class ClaimsService {
         claim.claimNumber,
         'UNDER_REVIEW',
         'REJECTED',
-        claim.claimAmount,
+        Number(claim.claimAmount),
         dto.reason,
       );
     }

@@ -525,6 +525,8 @@ model User {
   claimFollowUps        ClaimFollowUp[]     @relation("FollowUpBy")
   processedRemittances  Remittance[]        @relation("RemittanceProcessor")
   preparedQuotes        Quote[]             @relation("QuotePreparer")
+  emailLogs             EmailLog[]          @relation("EmailLogUser")
+  createdEmailTemplates EmailTemplate[]    @relation("EmailTemplateCreator")
 
   @@unique([tenantId, email])
   @@index([tenantId])
