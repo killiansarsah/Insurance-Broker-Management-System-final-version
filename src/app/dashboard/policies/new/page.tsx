@@ -186,7 +186,7 @@ export default function NewPolicyPage() {
 
     const INSURER_OPTIONS = useMemo(() =>
         allCarriers
-            .filter((c: any) => c.status === 'ACTIVE')
+            .filter((c: any) => c.status !== 'INACTIVE') // Just don't include explicit inactive ones, in case they exist
             .map((c: any) => ({ label: c.shortName || c.name, value: c.id }))
             .sort((a: any, b: any) => a.label.localeCompare(b.label)),
         [allCarriers]
@@ -449,6 +449,7 @@ export default function NewPolicyPage() {
                                     options={INSURER_OPTIONS}
                                     value={form.insurerName}
                                     onChange={(v) => update('insurerName', String(v || ''))}
+                                    className="w-full"
                                 />
                             </div>
                             <div>
@@ -462,6 +463,7 @@ export default function NewPolicyPage() {
                                     ]}
                                     value={form.currency}
                                     onChange={(v) => update('currency', String(v || 'GHS'))}
+                                    className="w-full"
                                 />
                             </div>
 
@@ -473,6 +475,7 @@ export default function NewPolicyPage() {
                                         options={MOTOR_COVER_TYPES}
                                         value={form.motorCoverType}
                                         onChange={(v) => update('motorCoverType', String(v || 'COMPREHENSIVE'))}
+                                        className="w-full"
                                     />
                                 </div>
                             )}
@@ -545,6 +548,7 @@ export default function NewPolicyPage() {
                                             ]}
                                             value={form.vehicleUsageType}
                                             onChange={(v) => update('vehicleUsageType', String(v || 'private'))}
+                                            className="w-full"
                                         />
                                     </div>
                                     <div>
@@ -577,6 +581,7 @@ export default function NewPolicyPage() {
                                             ]}
                                             value={form.propertyType}
                                             onChange={(v) => update('propertyType', String(v || ''))}
+                                            className="w-full"
                                         />
                                     </div>
                                 </div>
@@ -677,6 +682,7 @@ export default function NewPolicyPage() {
                                     options={PREMIUM_FREQUENCIES}
                                     value={form.premiumFrequency}
                                     onChange={(v) => update('premiumFrequency', (v || 'ANNUAL') as PremiumFrequency)}
+                                    className="w-full"
                                 />
                             </div>
                         </div>

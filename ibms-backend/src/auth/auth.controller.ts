@@ -149,7 +149,14 @@ export class AuthController {
 
   @Public()
   @Post('reset-password')
-  async reset(@Body() body: ResetPasswordDto) {
-    return this.auth.resetPassword(body.token, body.newPassword);
+  async reset(
+    @Body() body: ResetPasswordDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.auth.resetPassword(body.token, body.newPassword);
+    // Clear the old refresh token cookie so stale tokens don't cause
+    // immediate logout after the user logs back in with their new password
+    res.clearCookie('refreshToken', { path: '/api/v1/auth/refresh' });
+    return result;
   }
 }

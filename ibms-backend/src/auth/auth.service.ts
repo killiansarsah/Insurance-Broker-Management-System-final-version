@@ -358,16 +358,26 @@ export class AuthService {
     return { accessToken, user: this.userToDto(user), refreshRaw: newCreated.raw };
   }
 
-  async forgotPassword(email: string, tenantSlug: string) {
-    const tenant = await this.tenants.findBySlug(tenantSlug);
+  async forgotPassword(email: string, tenantSlug?: string) {
     const generic = {
       message: 'If that email exists, a reset link has been sent',
     };
-    if (!tenant) return generic;
+
+    let tenantIdStr: string | undefined = undefined;
+
+    if (tenantSlug) {
+      const tenant = await this.tenants.findBySlug(tenantSlug);
+      if (!tenant) return generic;
+      tenantIdStr = tenant.id;
+    }
 
     const user = (await this.prisma.user.findFirst({
-      where: { tenantId: tenant.id, email },
+      where: {
+        email,
+        ...(tenantIdStr && { tenantId: tenantIdStr }),
+      },
     })) as UserRecord | null;
+    
     if (!user) return generic;
 
     const raw = crypto.randomBytes(32).toString('hex');
@@ -377,7 +387,7 @@ export class AuthService {
 
     await this.prisma.passwordReset.create({
       data: {
-        tenantId: tenant.id,
+        tenantId: user.tenantId,
         email: user.email,
         token: tokenHash,
         tokenFamily,

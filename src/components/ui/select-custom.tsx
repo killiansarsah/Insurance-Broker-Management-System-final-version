@@ -61,16 +61,18 @@ export function CustomSelect({
                 type="button"
                 onClick={() => setOpen(!open)}
                 className={cn(
-                    'inline-flex items-center gap-1.5 px-4 py-1.5 text-[10px] font-black uppercase tracking-widest border rounded-full transition-all cursor-pointer shadow-sm backdrop-blur-md',
+                    'inline-flex items-center justify-between gap-1.5 px-4 py-2.5 text-xs font-medium border rounded-[var(--radius-md)] transition-all cursor-pointer shadow-sm',
+                    className?.includes('w-full') ? 'w-full' : '',
                     value !== null && value !== undefined && value !== ''
-                        ? 'text-primary-600 bg-primary-50/50 border-primary-200/50'
-                        : 'text-surface-400 bg-white/60 dark:bg-slate-800/60 border-surface-200/50 dark:border-slate-600/50 hover:bg-white dark:hover:bg-slate-700 hover:text-surface-600 dark:hover:text-slate-200 hover:border-surface-300'
+                        ? 'text-surface-900 bg-white border-primary-200'
+                        : 'text-surface-400 bg-surface-50 border-surface-200 hover:bg-white hover:text-surface-600 hover:border-surface-300'
                 )}
             >
-                {icon && <span className="shrink-0 opacity-60">{icon}</span>}
-                {selectedOption ? (
-                    <>
-                        <span className="max-w-[120px] truncate">{selectedOption.label}</span>
+                <div className="flex items-center gap-2 truncate">
+                    {icon && <span className="shrink-0 opacity-60">{icon}</span>}
+                    {selectedOption ? (
+                        <>
+                            <span className="truncate">{selectedOption.label}</span>
                         {clearable && (
                             <X
                                 size={10}
@@ -82,15 +84,14 @@ export function CustomSelect({
                                 }}
                             />
                         )}
-                    </>
-                ) : (
-                    <>
+                        </>
+                    ) : (
                         <span>{label || placeholder}</span>
-                    </>
-                )}
+                    )}
+                </div>
                 <ChevronDown
-                    size={10}
-                    className={cn('text-surface-400 transition-transform duration-300', open && 'rotate-180')}
+                    size={16}
+                    className={cn('text-surface-400 transition-transform duration-300 ml-2 shrink-0', open && 'rotate-180')}
                 />
             </button>
 

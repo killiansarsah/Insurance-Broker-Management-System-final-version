@@ -229,11 +229,11 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     <h3 className="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Client</h3>
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-700 font-bold text-lg">
-                            {policy.clientName.charAt(0)}
+                            {policy.clientName?.charAt(0) || '?'}
                         </div>
                         <div>
                             <Link href={`/dashboard/clients/${policy.clientId}`} className="text-base font-bold text-surface-900 hover:text-primary-600 transition-colors">
-                                {policy.clientName}
+                                {policy.clientName || 'Unknown Client'}
                             </Link>
                             <p className="text-xs text-surface-500">ID: {policy.clientId}</p>
                         </div>
@@ -345,7 +345,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         ['Policy Type', policy.policyType],
                         ['NIC Class of Business', policy.nicClassOfBusiness || '—'],
                         ['Product', policy.productName || '—'],
-                        ['Client', policy.clientName],
+                        ['Client', policy.clientName || 'Unknown Client'],
                         ['Insurer', policy.insurerName],
                         ['Broker', policy.brokerName],
                         ['Sum Insured', formatCurrency(policy.sumInsured)],

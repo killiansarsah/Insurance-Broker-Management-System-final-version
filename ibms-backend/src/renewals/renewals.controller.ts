@@ -62,4 +62,40 @@ export class RenewalsController {
       dto,
     );
   }
+
+  @Post('renewals/test-reminders')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'PLATFORM_SUPER_ADMIN')
+  async testTriggerReminders(@Query('targetDate') targetDateStr?: string) {
+    // If targetDate is provided, we simulate the cron job running on that date
+    // and sending reminders for exactly 90, 60, and 30 days ahead of that spoofed date.
+    // However, to make testing easy: Let's just find ALL active policies for the tenant 
+    // and send a test reminder for the first one we find.
+    const policy = await this.renewalsService['prisma'].policy.findFirst({
+      where: { status: 'ACTIVE' },
+      include: { client: true },
+    });
+
+    if (!policy) {
+      return { success: false, message: 'No active policies found to test with.' };
+    }
+
+    if (!policy.client.email) {
+      return { success: false, message: 'Found an active policy but the client has no email address.' };
+    }
+
+    const clientName = policy.client.companyName || `${policy.client.firstName} ${policy.client.lastName}`;
+    
+    // Send a 30-day spoofed reminder for testing
+    await this.renewalsService['emailService'].sendPolicyRenewalReminder(
+      policy.client.email,
+      clientName,
+      policy.policyNumber,
+      policy.expiryDate,
+      30, // days ahead
+      Number(policy.premiumAmount),
+      policy.insuranceType,
+    );
+
+    return { success: true, message: `Sent a test policy reminder to ${policy.client.email} for policy ${policy.policyNumber}` };
+  }
 }

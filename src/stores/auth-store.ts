@@ -14,6 +14,7 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    _justLoggedInAt: number | null;
     login: (email: string, password: string, tenantSlug?: string) => Promise<TenantOption[] | void>;
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
@@ -163,6 +164,7 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAuthenticated: false,
             isLoading: false,
+            _justLoggedInAt: null,
 
             login: async (email, password, tenantSlug?) => {
                 set({ isLoading: true });
@@ -184,7 +186,9 @@ export const useAuthStore = create<AuthState>()(
                     }
 
                     apiClient.setAccessToken(res.accessToken!);
-                    set({ user: res.user!, isAuthenticated: true, isLoading: false });
+                    // Mark that we just freshly logged in — checkAuth should skip
+                    // its auto-refresh for 30 seconds to avoid using a stale cookie
+                    set({ user: res.user!, isAuthenticated: true, isLoading: false, _justLoggedInAt: Date.now() });
                 } catch (err: unknown) {
                     set({ isLoading: false });
                     if (isNetworkError(err)) {
@@ -215,15 +219,22 @@ export const useAuthStore = create<AuthState>()(
 
                 // If already authenticated (from persisted state), try to restore token
                 if (get().isAuthenticated && get().user) {
+                    // Skip the refresh if the user just logged in within the last 30 seconds.
+                    // This prevents the stale pre-reset cookie from immediately logging them out.
+                    const justLoggedInAt = get()._justLoggedInAt;
+                    if (justLoggedInAt && Date.now() - justLoggedInAt < 30_000) {
+                        return;
+                    }
+
                     // Try to refresh token to ensure it's valid
                     try {
                         const { accessToken, user } = await apiClient.refreshSession();
-                        set({ user, isAuthenticated: true });
+                        set({ user, isAuthenticated: true, _justLoggedInAt: null });
                     } catch (err: unknown) {
                         // If refresh fails, clear auth
                         if (!isNetworkError(err)) {
                             apiClient.clearAccessToken();
-                            set({ user: null, isAuthenticated: false });
+                            set({ user: null, isAuthenticated: false, _justLoggedInAt: null });
                         }
                     }
                     return;

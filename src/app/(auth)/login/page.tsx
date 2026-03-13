@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
+import { apiClient } from '@/lib/api-client';
 import { AnimatedSignIn } from '@/components/ui/sign-in';
 import type { TenantOption } from '@/components/ui/sign-in';
 
@@ -11,6 +12,16 @@ function LoginContent() {
     const { login, isLoading } = useAuthStore();
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    // If the user lands on the login page with stale persisted auth state,
+    // we must NOT blindly redirect them — first verify the session is valid.
+    // The safest approach: clear the stale flag so they must re-authenticate.
+    useEffect(() => {
+        // When the login page mounts, clear any stale isAuthenticated flag.
+        // A proper session will be re-established after a successful login.
+        useAuthStore.setState({ isAuthenticated: false, user: null, _justLoggedInAt: null });
+        apiClient.clearAccessToken();
+    }, []);
 
     const handleSubmit = async (email: string, password: string, tenantSlug?: string): Promise<TenantOption[] | void> => {
         setError(null);

@@ -514,6 +514,25 @@ export default function RenewalsPage() {
                 </div>
                 <div className="flex gap-2">
                     <Button
+                        variant="outline"
+                        leftIcon={<Mail size={16} />}
+                        onClick={async () => {
+                            try {
+                                const { apiClient } = await import('@/lib/api-client');
+                                const res = await apiClient.post<{success: boolean; message: string}>('/renewals/test-reminders');
+                                if (res.success) {
+                                    toast.success('Test Email Sent', { description: res.message });
+                                } else {
+                                    toast.error('Test Failed', { description: res.message });
+                                }
+                            } catch (e) {
+                                toast.error('Error', { description: 'Failed to trigger test reminder' });
+                            }
+                        }}
+                    >
+                        Test Email Reminder
+                    </Button>
+                    <Button
                         variant="primary"
                         leftIcon={<Send size={16} />}
                         onClick={() => toast.success('Notifications Sent', { description: 'Bulk renewal reminders dispatched via Email & SMS.' })}
