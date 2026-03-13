@@ -109,54 +109,56 @@ function AcceptInviteContent() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
-            <div className="max-w-md w-full mx-4 p-8 bg-[var(--bg-card)] rounded-2xl shadow-xl">
-                <div className="text-center mb-6">
-                    <h1 className="text-2xl font-bold text-[var(--text-primary)]">Accept Invitation</h1>
+        <div className="min-h-screen flex items-center justify-center bg-surface-50 p-4">
+            <div className="max-w-md w-full bg-white rounded-[var(--radius-3xl)] shadow-2xl p-8 border border-surface-200/60 relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary-400 via-primary-500 to-accent-500" />
+                <div className="text-center mb-8 mt-2">
+                    <h1 className="text-2xl font-black text-surface-900 tracking-tight">Accept Invitation</h1>
                     {inviteInfo && (
-                        <p className="text-[var(--text-secondary)] mt-2">
-                            You&apos;ve been invited to join <strong>{inviteInfo.tenantName}</strong> as{' '}
-                            <strong>{inviteInfo.role}</strong>
+                        <p className="text-surface-500 mt-3 text-sm leading-relaxed max-w-[280px] mx-auto">
+                            You've been invited to join <strong className="text-surface-800">{inviteInfo.tenantName}</strong> as{' '}
+                            <strong className="text-primary-600">{inviteInfo.role}</strong>.
                         </p>
                     )}
                 </div>
 
                 {error && (
-                    <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm">
+                    <div className="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-semibold flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[20px]">error</span>
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-                                First Name
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={form.firstName}
-                                onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
-                                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)]"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
-                                Last Name
-                            </label>
-                            <input
-                                type="text"
-                                required
-                                value={form.lastName}
-                                onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
-                                className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)]"
-                            />
-                        </div>
+                    <div>
+                        <label className="block text-sm font-medium text-surface-600 mb-1">
+                            First Name
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={form.firstName}
+                            onChange={(e) => setForm((f) => ({ ...f, firstName: e.target.value }))}
+                            className="w-full px-4 py-3 rounded-xl border border-surface-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-surface-600 mb-1">
+                            Last Name
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={form.lastName}
+                            onChange={(e) => setForm((f) => ({ ...f, lastName: e.target.value }))}
+                            className="w-full px-4 py-3 rounded-xl border border-surface-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold"
+                        />
+                    </div>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                        <label className="block text-sm font-medium text-surface-600 mb-1">
                             Password
                         </label>
                         <input
@@ -165,12 +167,12 @@ function AcceptInviteContent() {
                             minLength={8}
                             value={form.password}
                             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)]"
+                            className="w-full px-4 py-3 rounded-xl border border-surface-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">
+                        <label className="block text-sm font-medium text-surface-600 mb-1">
                             Confirm Password
                         </label>
                         <input
@@ -179,14 +181,14 @@ function AcceptInviteContent() {
                             minLength={8}
                             value={form.confirmPassword}
                             onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                            className="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg-primary)] text-[var(--text-primary)]"
+                            className="w-full px-4 py-3 rounded-xl border border-surface-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold"
                         />
                     </div>
 
                     <button
                         type="submit"
                         disabled={status === 'submitting'}
-                        className="w-full py-3 rounded-lg bg-[var(--accent)] text-white font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                        className="w-full py-3.5 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 transition-all shadow-xl shadow-primary-500/20 active:scale-95 disabled:opacity-50 mt-6"
                     >
                         {status === 'submitting' ? 'Creating Account...' : 'Accept & Create Account'}
                     </button>

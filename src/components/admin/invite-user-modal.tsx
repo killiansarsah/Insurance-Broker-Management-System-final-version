@@ -47,7 +47,7 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
             {
                 email: email.trim(),
                 role: role as 'ADMIN' | 'TENANT_ADMIN' | 'BROKER' | 'VIEWER',
-                branchId: branch || undefined,
+                branchId: (branch && branch.length > 20) ? branch : undefined,
             },
             {
                 onSuccess: () => {
@@ -65,7 +65,8 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
                         error?.response?.data?.message ||
                         error?.message ||
                         'Failed to send invitation';
-                    toast.error('Invitation Failed', { description: message });
+                    console.error("Invite error:", error?.response?.data || error);
+                    toast.error('Invitation Failed', { description: Array.isArray(message) ? message[0] : message });
                 },
             },
         );

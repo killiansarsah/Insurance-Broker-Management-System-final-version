@@ -52,8 +52,8 @@ export class InvitationsService {
       );
     }
 
-    const existingUser = await this.prisma.user.findUnique({
-      where: { tenantId_email: { tenantId, email: dto.email } },
+    const existingUser = await this.prisma.user.findFirst({
+      where: { tenantId, email: dto.email },
     });
     if (existingUser) {
       throw new HttpException(

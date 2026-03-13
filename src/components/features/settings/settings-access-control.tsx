@@ -203,9 +203,11 @@ export function SettingsAccessControl() {
                     closeModal();
                     toast.success('Invitation Sent', { description: `Invite sent to ${inviteEmail.trim()}.` });
                 },
-                onError: () => {
+                onError: (error: any) => {
                     setIsSaving(false);
-                    toast.error('Invite Failed', { description: 'Could not send invitation. Please try again.' });
+                    const msg = error?.response?.data?.message || 'Could not send invitation. Please try again.';
+                    console.error("Invite error:", error?.response?.data || error);
+                    toast.error('Invite Failed', { description: Array.isArray(msg) ? msg[0] : msg });
                 },
             }
         );
