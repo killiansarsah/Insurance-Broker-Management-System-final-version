@@ -74,7 +74,7 @@ export default function PoliciesPage() {
     const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
     
     const BROKERS = useMemo(() => 
-        Array.from(new Set(policies.map((p: any) => p.brokerName))).sort().map(b => ({ label: b, value: b })),
+        Array.from(new Set(policies.map((p: any) => p.brokerName).filter(Boolean))).sort().map(b => ({ label: String(b), value: String(b) })),
         [policies]
     );
 

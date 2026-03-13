@@ -573,7 +573,7 @@ export default function PremiumFinancingPage() {
     // Unique brokers
     const brokers = useMemo(() => {
         const set = new Set(allApps.map(a => a.assignedBroker));
-        return Array.from(set).sort();
+        return Array.from(set).filter(Boolean).sort();
     }, [allApps]);
 
     const pfSummary = useMemo(() => {

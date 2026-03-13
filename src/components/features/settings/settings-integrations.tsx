@@ -2,18 +2,79 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { cn, formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
-    Calendar, Table2, Cloud, Mail, Receipt, Landmark, CreditCard,
-    Smartphone, MessageCircle, Hash, Check, X, ChevronRight,
-    RefreshCw, Settings2, Activity, Zap, Shield, Clock, ExternalLink,
-    Upload, FileSpreadsheet, Trash2, Eye, Search, AlertTriangle,
-    CheckCircle2, XCircle, Plug, Globe, Key, ArrowRight, Loader2,
+    Check, X, RefreshCw, Settings2, Zap, Shield, Clock, ExternalLink, Cloud,
+    Upload, FileSpreadsheet, CheckCircle2, XCircle, Plug, Globe, ArrowRight, Loader2, AlertTriangle,
+    Receipt, CreditCard, MessageCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { StatusBadge } from '@/components/data-display/status-badge';
+
+// ─── Branded Icons ──────────────────────────────────────────
+
+const BrandIcons = {
+    GoogleCalendar: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[60%] h-[60%]">
+            <rect x="2" y="4" width="20" height="16" rx="3" fill="#4285F4" />
+            <path d="M6 4V2M18 4V2" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <path d="M2 10H22" stroke="white" strokeWidth="2" />
+            <rect x="6" y="13" width="4" height="4" rx="1" fill="white" />
+        </svg>
+    ),
+    GoogleSheets: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[60%] h-[60%]">
+            <rect x="3" y="2" width="18" height="20" rx="3" fill="#0F9D58" />
+            <path d="M7 8H17M7 12H17M7 16H13" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <path d="M12 8V18" stroke="white" strokeWidth="2" />
+        </svg>
+    ),
+    GoogleDrive: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[60%] h-[60%]">
+            <path d="M8 19L1.5 8H8.5L15 19H8Z" fill="#34A853" />
+            <path d="M16 19L22.5 8L15.5 8L9 19H16Z" fill="#FBBC04" />
+            <path d="M1.5 8L5 2H19L22.5 8L12 8H1.5Z" fill="#4285F4" />
+        </svg>
+    ),
+    Gmail: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[60%] h-[60%]">
+            <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6Z" fill="#EA4335" />
+            <path d="M22 6L12 13L2 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    ),
+    QuickBooks: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
+            <circle cx="12" cy="12" r="10" fill="#2CA01C" />
+            <path d="M9 16C10.5 16 11.5 15.5 12 14.5C12.5 15.5 13.5 16 15 16C17 16 18 14.5 18 12.5C18 10.5 17 9 15 9C13.5 9 12.5 9.5 12 10.5C11.5 9.5 10.5 9 9 9C7 9 6 10.5 6 12.5C6 14.5 7 16 9 16Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            <circle cx="9" cy="12.5" r="1.5" fill="white" />
+            <circle cx="15" cy="12.5" r="1.5" fill="white" />
+        </svg>
+    ),
+    Xero: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
+            <circle cx="12" cy="12" r="11" fill="#13B5EA" />
+            <path d="M8 8L16 16M16 8L8 16" stroke="white" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+    ),
+    Paystack: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
+            <path d="M4 6H20M4 12H16M4 18H12" stroke="#00C3F7" strokeWidth="4" strokeLinecap="round" />
+        </svg>
+    ),
+    MtnMomo: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[70%] h-[70%] text-[#000000]">
+            <rect x="2" y="6" width="20" height="12" rx="6" fill="#FFC300" />
+            <path d="M7 10V14M7 10L9 12L11 10V14M13 14V10C13 10 17 10 17 12C17 14 13 14 13 14M13 12H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    ),
+    WhatsApp: () => (
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
+            <path d="M12 2C6.48 2 2 6.48 2 12C2 13.85 2.5 15.58 3.38 17.06L2 22L7.05 20.68C8.52 21.53 10.21 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2Z" fill="#25D366" />
+            <path d="M8.5 7.5C8 7.5 7.5 8 7.5 8.5C7.5 10.5 9 14 12.5 15.5C13 15.75 14 16 15 16C15.5 16 16 15.5 16 15C16 14.5 15.75 14.25 15 14C14.25 13.75 14 14 13.75 14.25C13.5 14.5 13 14.5 12.5 14C11.5 13 10.75 12 10.25 11" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+    )
+};
 import {
     useIntegrations,
     useConnectIntegration,
@@ -79,7 +140,7 @@ function createServices(): IntegrationService[] {
         {
             id: 'google-calendar', name: 'Google Calendar',
             description: 'Sync policy renewals, client meetings, and task deadlines automatically to your Google Calendar.',
-            icon: <Calendar size={24} />, brandColor: '#4285F4', bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+            icon: <BrandIcons.GoogleCalendar />, brandColor: '#4285F4', bgColor: 'bg-blue-50 dark:bg-blue-950/30',
             textColor: 'text-blue-600 dark:text-blue-400', category: 'productivity',
             connected: false, syncFrequency: '1h', syncEvents: [],
             features: ['Auto-create renewal events', 'Sync client meetings', 'Task deadline reminders', 'Two-way sync'],
@@ -88,7 +149,7 @@ function createServices(): IntegrationService[] {
         {
             id: 'google-sheets', name: 'Google Sheets',
             description: 'Export reports, client lists, and financial data directly to Google Sheets for analysis.',
-            icon: <Table2 size={24} />, brandColor: '#0F9D58', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+            icon: <BrandIcons.GoogleSheets />, brandColor: '#0F9D58', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
             textColor: 'text-emerald-600 dark:text-emerald-400', category: 'productivity',
             connected: false, syncFrequency: '24h', syncEvents: [],
             features: ['Auto-export monthly reports', 'Live client list sync', 'Commission tracking sheets', 'Custom templates'],
@@ -97,25 +158,25 @@ function createServices(): IntegrationService[] {
         {
             id: 'google-drive', name: 'Google Drive',
             description: 'Store policy documents, claim photos, and KYC files securely in the cloud.',
-            icon: <Cloud size={24} />, brandColor: '#FBBC04', bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+            icon: <BrandIcons.GoogleDrive />, brandColor: '#FBBC04', bgColor: 'bg-amber-50 dark:bg-amber-950/30',
             textColor: 'text-amber-600 dark:text-amber-400', category: 'productivity',
             connected: false, syncFrequency: '15m', syncEvents: [],
             features: ['Auto-upload policy documents', 'Claim photo backup', 'KYC file storage', 'Folder organization'],
             scopes: ['View and manage files', 'Create folders', 'Share files with team'],
         },
         {
-            id: 'outlook', name: 'Microsoft Outlook',
-            description: 'Send policy documents, renewal reminders, and notifications via Outlook email.',
-            icon: <Mail size={24} />, brandColor: '#0078D4', bgColor: 'bg-sky-50 dark:bg-sky-950/30',
-            textColor: 'text-sky-600 dark:text-sky-400', category: 'communication',
+            id: 'gmail', name: 'Gmail',
+            description: 'Send policy documents, renewal reminders, and notifications via Gmail.',
+            icon: <BrandIcons.Gmail />, brandColor: '#EA4335', bgColor: 'bg-red-50 dark:bg-red-950/30',
+            textColor: 'text-red-600 dark:text-red-400', category: 'communication',
             connected: false, syncFrequency: '1h', syncEvents: [],
-            features: ['Send policy docs via email', 'Automated renewal reminders', 'Client notifications', 'Calendar sync'],
-            scopes: ['Send mail on your behalf', 'Read your contacts', 'Access your calendar'],
+            features: ['Send policy docs via email', 'Automated renewal reminders', 'Client notifications'],
+            scopes: ['Send mail on your behalf', 'Read your contacts'],
         },
         {
             id: 'quickbooks', name: 'QuickBooks Online',
             description: 'Sync invoices, payments, and client data with QuickBooks for seamless accounting.',
-            icon: <Receipt size={24} />, brandColor: '#2CA01C', bgColor: 'bg-green-50 dark:bg-green-950/30',
+            icon: <BrandIcons.QuickBooks />, brandColor: '#2CA01C', bgColor: 'bg-green-50 dark:bg-green-950/30',
             textColor: 'text-green-600 dark:text-green-400', category: 'accounting',
             connected: false, syncFrequency: '6h', syncEvents: [],
             features: ['Invoice sync', 'Payment recording', 'Expense tracking', 'Chart of accounts mapping'],
@@ -124,7 +185,7 @@ function createServices(): IntegrationService[] {
         {
             id: 'xero', name: 'Xero',
             description: 'Seamless accounting data synchronization with Xero for financial reporting.',
-            icon: <Landmark size={24} />, brandColor: '#13B5EA', bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
+            icon: <BrandIcons.Xero />, brandColor: '#13B5EA', bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
             textColor: 'text-cyan-600 dark:text-cyan-400', category: 'accounting',
             connected: false, syncFrequency: '6h', syncEvents: [],
             features: ['Invoice sync', 'Bank reconciliation', 'Expense claims', 'Financial reports'],
@@ -133,7 +194,7 @@ function createServices(): IntegrationService[] {
         {
             id: 'paystack', name: 'Paystack',
             description: 'Accept premium payments via Mobile Money, Card, and Bank Transfer in Ghana.',
-            icon: <CreditCard size={24} />, brandColor: '#00C3F7', bgColor: 'bg-teal-50 dark:bg-teal-950/30',
+            icon: <BrandIcons.Paystack />, brandColor: '#00C3F7', bgColor: 'bg-teal-50 dark:bg-teal-950/30',
             textColor: 'text-teal-600 dark:text-teal-400', category: 'payment',
             connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true,
             features: ['Accept Mobile Money', 'Card payments', 'Bank transfers', 'Automatic receipts'],
@@ -143,7 +204,7 @@ function createServices(): IntegrationService[] {
         {
             id: 'mtn-momo', name: 'MTN MoMo',
             description: 'Collect premium payments directly via MTN Mobile Money — Ghana\'s most popular mobile wallet.',
-            icon: <Smartphone size={24} />, brandColor: '#FFC300', bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
+            icon: <BrandIcons.MtnMomo />, brandColor: '#FFC300', bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
             textColor: 'text-yellow-600 dark:text-yellow-500', category: 'payment',
             connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true,
             features: ['Collect premiums via MoMo', 'Instant payment confirmation', 'SMS receipts', 'Auto-reconciliation'],
@@ -152,20 +213,11 @@ function createServices(): IntegrationService[] {
         {
             id: 'whatsapp', name: 'WhatsApp Business',
             description: 'Send policy documents, renewal alerts, and claim updates to clients via WhatsApp.',
-            icon: <MessageCircle size={24} />, brandColor: '#25D366', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+            icon: <BrandIcons.WhatsApp />, brandColor: '#25D366', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
             textColor: 'text-emerald-600 dark:text-emerald-400', category: 'communication',
             connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true,
             features: ['Send policy documents', 'Renewal alerts', 'Claim status updates', 'Template messages'],
             scopes: ['Send messages', 'Send media files', 'Read message status'],
-        },
-        {
-            id: 'slack', name: 'Slack',
-            description: 'Get instant team notifications for new claims, escalations, and important updates.',
-            icon: <Hash size={24} />, brandColor: '#4A154B', bgColor: 'bg-purple-50 dark:bg-purple-950/30',
-            textColor: 'text-purple-600 dark:text-purple-400', category: 'communication',
-            connected: false, syncFrequency: '15m', syncEvents: [],
-            features: ['New claim alerts', 'Escalation notifications', 'Daily summary reports', 'Channel routing'],
-            scopes: ['Post to channels', 'Read channel info', 'Send direct messages'],
         },
     ];
 }
@@ -192,21 +244,24 @@ function formatFileSize(bytes: number): string {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-/** Merges static service catalog with backend integration records. */
-function mergeWithApiData(catalog: IntegrationService[], apiData: any[]): IntegrationService[] {
-    const byKey = new Map<string, any>();
-    for (const rec of apiData) byKey.set(rec.serviceKey, rec);
+function mergeWithApiData(catalog: IntegrationService[], apiData: { serviceKey?: string; connected?: boolean; connectedAt?: string; connectedEmail?: string; syncFrequency?: string; lastSyncAt?: string; syncEvents?: unknown; }[]): IntegrationService[] {
+    const byKey = new Map<string, typeof apiData[0]>();
+    for (const rec of apiData) {
+        if (typeof rec.serviceKey === 'string') {
+            byKey.set(rec.serviceKey, rec);
+        }
+    }
     return catalog.map(svc => {
         const db = byKey.get(svc.id);
         if (!db) return svc;
         return {
             ...svc,
-            connected: db.connected,
-            connectedAt: db.connectedAt,
-            connectedEmail: db.connectedEmail,
-            syncFrequency: db.syncFrequency || svc.syncFrequency,
-            lastSyncAt: db.lastSyncAt,
-            syncEvents: Array.isArray(db.syncEvents) ? db.syncEvents : [],
+            connected: !!db.connected,
+            connectedAt: typeof db.connectedAt === 'string' ? db.connectedAt : undefined,
+            connectedEmail: typeof db.connectedEmail === 'string' ? db.connectedEmail : undefined,
+            syncFrequency: (typeof db.syncFrequency === 'string' ? db.syncFrequency : svc.syncFrequency) as SyncFrequency,
+            lastSyncAt: typeof db.lastSyncAt === 'string' ? db.lastSyncAt : undefined,
+            syncEvents: Array.isArray(db.syncEvents) ? db.syncEvents as SyncEvent[] : [],
         };
     });
 }
@@ -262,7 +317,7 @@ export function SettingsIntegrations() {
     const services = useMemo(() => {
         const catalog = createServices();
         if (!apiIntegrations || !Array.isArray(apiIntegrations)) return catalog;
-        return mergeWithApiData(catalog, apiIntegrations);
+        return mergeWithApiData(catalog, apiIntegrations as Parameters<typeof mergeWithApiData>[1]);
     }, [apiIntegrations]);
 
     const [activeCategory, setActiveCategory] = useState<IntegrationCategory>('all');
@@ -499,7 +554,7 @@ export function SettingsIntegrations() {
         }, 300);
 
         importMutation.mutate(
-            { file: selectedFile, dataType: uploadDataType as any },
+            { file: selectedFile, dataType: uploadDataType as 'all' | 'clients' | 'policies' | 'claims' | 'invoices' | 'leads' | 'commissions' },
             {
                 onSuccess: (result) => {
                     clearInterval(interval);
@@ -534,11 +589,11 @@ export function SettingsIntegrations() {
                         setUploading(false);
                     }, 500);
                 },
-                onError: (error: any) => {
+                onError: (error: unknown) => {
                     clearInterval(interval);
                     setUploadProgress(0);
                     setUploading(false);
-                    const msg = error?.response?.data?.message || error?.message || 'Import failed';
+                    const msg = (error as { response?: { data?: { message?: string } }, message?: string })?.response?.data?.message || (error as Error)?.message || 'Import failed';
                     const newImport: ImportRecord = {
                         name: selectedFile.name,
                         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
@@ -569,7 +624,7 @@ export function SettingsIntegrations() {
                         <div>
                             <p className="text-[10px] font-bold text-surface-500 uppercase tracking-wider">{kpi.label}</p>
                             <p className="text-xl font-bold text-surface-900 dark:text-white mt-0.5 tabular-nums">
-                                {typeof kpi.value === 'number' && 'total' in kpi ? `${kpi.value}/${(kpi as any).total}` : kpi.value}
+                                {typeof kpi.value === 'number' && 'total' in kpi ? `${kpi.value}/${(kpi as {total?: number}).total}` : kpi.value}
                             </p>
                         </div>
                     </Card>
@@ -583,10 +638,10 @@ export function SettingsIntegrations() {
                         key={tab.value}
                         onClick={() => setActiveCategory(tab.value)}
                         className={cn(
-                            'flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap',
+                            'flex items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap border-b-2',
                             activeCategory === tab.value
-                                ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/20'
-                                : 'bg-white dark:bg-slate-900 text-surface-500 hover:text-surface-900 dark:hover:text-white border border-surface-200 dark:border-slate-700 hover:border-primary-300'
+                                ? 'border-primary-600 text-primary-600 dark:text-primary-400'
+                                : 'border-transparent text-surface-500 hover:text-surface-900 dark:hover:text-white hover:border-surface-300 dark:hover:border-slate-700'
                         )}
                     >
                         {tab.icon} {tab.label}
@@ -595,66 +650,68 @@ export function SettingsIntegrations() {
             </div>
 
             {/* ── Integration Cards Grid ── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {filtered.map(svc => (
-                    <div key={svc.id} className="group flex flex-col justify-between gap-5 rounded-2xl border border-surface-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-xl hover:shadow-surface-200/40 dark:hover:shadow-none transition-all duration-300">
-                        {/* Header */}
-                        <div className="flex items-start justify-between">
-                            <div className={cn('w-14 h-14 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform', svc.bgColor, svc.textColor)}>
-                                {svc.icon}
+                    <div key={svc.id} className="group relative flex flex-col justify-between overflow-hidden rounded-xl border border-surface-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-lg hover:shadow-primary-500/5 transition-all duration-300 min-h-[160px]">
+                        
+                        {/* Status/Activity strip top */}
+                        <div className={cn("absolute top-0 left-0 right-0 h-1 transition-colors z-20", svc.connected ? 'bg-emerald-500' : 'bg-transparent group-hover:bg-primary-300')} />
+
+                        <div className="flex flex-col p-4 gap-3 z-10 flex-1">
+                            {/* Header: Icon & Name */}
+                            <div className="flex items-start justify-between gap-3">
+                                <div className={cn('w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border border-black/5 dark:border-white/5 shadow-inner', svc.bgColor, svc.textColor)}>
+                                    {svc.icon}
+                                </div>
+                                <div className="flex flex-col items-end gap-1">
+                                    <span className="text-[9px] font-bold text-surface-400 uppercase tracking-widest text-right">{svc.category}</span>
+                                    {svc.connected && (
+                                        <div className="flex items-center gap-1">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" title="Connected" />
+                                            <span className="text-[9px] font-semibold text-emerald-600 uppercase tracking-widest">Active</span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                            {svc.connected && (
-                                <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-full">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    Connected
-                                </span>
-                            )}
+
+                            {/* Title & Description */}
+                            <div className="flex flex-col gap-1 flex-1">
+                                <h3 className="text-sm font-bold text-surface-900 dark:text-white tracking-tight leading-tight">{svc.name}</h3>
+                                <p className="text-xs text-surface-500 dark:text-surface-400 line-clamp-2 leading-relaxed">{svc.description}</p>
+                            </div>
                         </div>
 
-                        {/* Body */}
-                        <div>
-                            <h3 className="text-base font-bold text-surface-900 dark:text-white tracking-tight">{svc.name}</h3>
-                            <p className="text-surface-500 text-sm mt-1.5 leading-relaxed line-clamp-2">{svc.description}</p>
-                        </div>
-
-                        {/* Features */}
-                        <div className="flex flex-wrap gap-1.5">
-                            {svc.features.slice(0, 3).map(f => (
-                                <span key={f} className="text-[10px] font-medium text-surface-500 bg-surface-50 dark:bg-slate-800 px-2 py-1 rounded-md">{f}</span>
-                            ))}
-                        </div>
-
-                        {/* Footer */}
-                        <div className="pt-4 border-t border-surface-100 dark:border-slate-800 flex items-center justify-between">
+                        {/* Actions block (Bottom) */}
+                        <div className="flex items-center border-t border-surface-100 dark:border-slate-800 bg-surface-50/50 dark:bg-slate-800/30 p-3 shrink-0 z-10 transition-colors group-hover:bg-surface-50 dark:group-hover:bg-slate-800">
                             {svc.connected ? (
-                                <>
-                                    <span className="text-[10px] text-surface-400 font-medium truncate max-w-[120px]" title={svc.connectedEmail}>
-                                        {svc.connectedEmail}
-                                    </span>
-                                    <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3 w-full justify-between">
+                                    <div className="flex flex-col min-w-0 flex-1">
+                                        <span className="text-[9px] text-surface-400 font-medium">Synced {svc.lastSyncAt ? new Date(svc.lastSyncAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'never'}</span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 shrink-0">
                                         <button
                                             onClick={() => handleSync(svc.id)}
                                             disabled={syncing === svc.id}
-                                            className="text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+                                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 text-primary-600 hover:text-white hover:bg-primary-600 hover:border-primary-600 transition-all shadow-sm disabled:opacity-50"
+                                            title="Sync Now"
                                         >
                                             <RefreshCw size={12} className={cn(syncing === svc.id && 'animate-spin')} />
-                                            Sync
                                         </button>
                                         <button
                                             onClick={() => setConfigId(svc.id)}
-                                            className="text-xs font-bold text-surface-500 hover:text-surface-700 transition-colors flex items-center gap-1"
+                                            className="w-7 h-7 flex items-center justify-center rounded-md bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 text-surface-600 dark:text-surface-400 hover:text-surface-900 hover:bg-surface-100 dark:hover:bg-slate-800 hover:border-surface-300 dark:hover:border-slate-600 transition-all shadow-sm"
+                                            title="Configure"
                                         >
                                             <Settings2 size={12} />
-                                            Configure
                                         </button>
                                     </div>
-                                </>
+                                </div>
                             ) : (
                                 <button
                                     onClick={() => startConnect(svc.id)}
-                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider bg-primary-600 text-white hover:bg-primary-700 transition-all shadow-sm hover:shadow-md"
+                                    className="w-full flex items-center justify-center gap-2 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-surface-900 dark:bg-white text-white dark:text-slate-900 hover:bg-primary-600 dark:hover:bg-primary-500 hover:text-white transition-colors shadow-sm"
                                 >
-                                    <Plug size={14} /> Connect
+                                    <Plug size={12} /> Connect
                                 </button>
                             )}
                         </div>
@@ -662,199 +719,275 @@ export function SettingsIntegrations() {
                 ))}
             </div>
 
-            {/* ── Bulk Data Import ── */}
-            <section id="bulk-import" className="flex flex-col gap-6 mt-4">
-                <h2 className="text-xs font-bold text-surface-400 uppercase tracking-widest">Bulk Data Import</h2>
+            {/* ── Premium Bulk Data Import ── */}
+            <section id="bulk-import" className="flex flex-col gap-6 mt-8 pt-8 relative">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-surface-200 dark:via-slate-800 to-transparent" />
+                
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-primary-600 dark:text-primary-400 shadow-inner border border-primary-100 dark:border-primary-800/50">
+                            <Upload size={18} />
+                        </div>
+                        <div>
+                            <h2 className="text-lg font-bold text-surface-900 dark:text-white tracking-tight">Bulk Data Import</h2>
+                            <p className="text-[13px] text-surface-500">Securely batch import records via CSV, Excel, or JSON.</p>
+                        </div>
+                    </div>
+                </div>
+                
                 <input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls,.json" className="hidden" onChange={handleInputChange} />
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Dropzone */}
-                    <div className="lg:col-span-4">
+                
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                    {/* Interactive Dropzone */}
+                    <div className="lg:col-span-5 h-full">
                         <div
                             onClick={() => fileInputRef.current?.click()}
                             onDrop={handleDrop}
                             onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                             onDragLeave={() => setDragOver(false)}
                             className={cn(
-                                'h-full min-h-[280px] flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl bg-white dark:bg-slate-900 transition-all group cursor-pointer',
-                                dragOver ? 'border-primary-400 bg-primary-50/50 dark:bg-primary-900/20 scale-[1.02]' : 'border-surface-200 dark:border-slate-800 hover:bg-surface-50 dark:hover:bg-slate-800 hover:border-surface-300'
+                                'h-full min-h-[260px] flex flex-col items-center justify-center p-8 rounded-2xl transition-all duration-300 group cursor-pointer border-2 relative overflow-hidden',
+                                dragOver 
+                                    ? 'border-primary-500 bg-primary-50/50 dark:bg-primary-900/10 scale-[1.02] shadow-xl shadow-primary-500/10' 
+                                    : 'border-dashed border-surface-200 dark:border-slate-700 bg-surface-50/30 dark:bg-slate-900/30 hover:bg-surface-100/50 dark:hover:bg-slate-800/50 hover:border-primary-300 dark:hover:border-primary-800'
                             )}
                         >
-                            <div className={cn('p-5 rounded-full mb-4 group-hover:scale-110 transition-transform', dragOver ? 'bg-primary-200' : 'bg-primary-100 dark:bg-primary-900/30')}>
-                                <Upload size={32} className={cn(dragOver ? 'text-primary-700' : 'text-primary-600')} />
+                            {/* Animated Background Pattern on Drag */}
+                            <div className={cn("absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none", dragOver && "opacity-10")} 
+                                 style={{ backgroundImage: 'radial-gradient(circle at center, var(--primary-color) 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+
+                            <div className={cn('relative z-10 p-5 rounded-2xl mb-4 group-hover:-translate-y-2 transition-all duration-300 block', 
+                                dragOver ? 'bg-primary-600 text-white shadow-lg shadow-primary-600/30 scale-110' : 'bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-700 shadow-sm text-surface-400 group-hover:text-primary-500 group-hover:border-primary-200 dark:group-hover:border-primary-800')}>
+                                <FileSpreadsheet size={32} className={cn(dragOver && 'animate-pulse')} />
                             </div>
-                            <p className="text-surface-900 dark:text-white text-sm font-bold text-center mb-1">{dragOver ? 'Drop file here' : 'Click to upload'}</p>
-                            <p className="text-surface-500 text-[10px] font-medium text-center mb-5 uppercase tracking-wider">CSV, XLSX or JSON — max 10 MB</p>
-                            <Button variant="primary" size="sm" leftIcon={<Upload size={14} />} onClick={(e: React.MouseEvent) => { e.stopPropagation(); fileInputRef.current?.click(); }}>
-                                Browse Files
+                            
+                            <h3 className="relative z-10 text-[15px] font-bold text-surface-900 dark:text-white mb-1">
+                                {dragOver ? 'Drop files now...' : 'Drag & drop files here'}
+                            </h3>
+                            <p className="relative z-10 text-[12px] text-surface-500 text-center mb-6 px-4">
+                                Supported formats: .CSV, .XLSX, .JSON<br/>Maximum file size: 10MB
+                            </p>
+                            
+                            <Button 
+                                variant={dragOver ? 'primary' : 'outline'} 
+                                className={cn("relative z-10 rounded-xl px-6 py-2 transition-transform duration-300", dragOver && "scale-105")}
+                                onClick={(e: React.MouseEvent) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                            >
+                                Browse Computer
                             </Button>
                         </div>
                     </div>
 
-                    {/* Recent Imports */}
-                    <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-                        <div className="px-6 py-4 border-b border-surface-100 dark:border-slate-800 flex justify-between items-center bg-surface-50/50 dark:bg-slate-800/30">
-                            <h3 className="text-xs font-bold text-surface-900 dark:text-white uppercase tracking-wider">Recent Imports</h3>
+                    {/* Minimal Recent Activity Log */}
+                    <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm flex flex-col h-full min-h-[260px]">
+                        <div className="px-6 py-4 border-b border-surface-100 dark:border-slate-800 flex items-center justify-between bg-surface-50/50 dark:bg-slate-800/30">
+                            <h3 className="text-[11px] font-bold text-surface-500 dark:text-surface-400 uppercase tracking-widest flex items-center gap-2">
+                                <Clock size={14} /> Recent Imports
+                            </h3>
+                            {recentImports.length > 0 && <span className="text-[10px] bg-surface-200 dark:bg-slate-700 text-surface-600 dark:text-surface-300 px-2 py-0.5 rounded-full font-bold">{recentImports.length}</span>}
                         </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-white dark:bg-slate-900 text-surface-400 border-b border-surface-100 dark:border-slate-800">
-                                        {['File', 'Date', 'By', 'Status'].map(h => (
-                                            <th key={h} className="px-6 py-3 font-bold uppercase tracking-wider text-[10px]">{h}</th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-surface-100 dark:divide-slate-800">
+                        
+                        <div className="flex-1 overflow-y-auto w-full p-2">
+                            {recentImports.length === 0 ? (
+                                <div className="h-full flex flex-col items-center justify-center text-surface-400 dark:text-surface-500 space-y-3 p-8 text-center opacity-70">
+                                    <div className="p-4 rounded-full bg-surface-100 dark:bg-slate-800">
+                                        <Upload size={24} className="opacity-50" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-semibold text-surface-600 dark:text-surface-300">No import history yet</p>
+                                        <p className="text-xs mt-1">Files you upload will appear here.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-1 p-2">
                                     {recentImports.map((row, i) => (
-                                        <tr key={i} className="hover:bg-surface-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                            <td className="px-6 py-3.5 flex items-center gap-2">
-                                                <FileSpreadsheet size={14} className={row.ok ? 'text-emerald-600' : 'text-danger-600'} />
-                                                <span className="text-sm font-medium text-surface-900 dark:text-white">{row.name}</span>
-                                            </td>
-                                            <td className="px-6 py-3.5 text-surface-500 font-mono text-xs">{row.date}</td>
-                                            <td className="px-6 py-3.5 text-sm text-surface-500">{row.by}</td>
-                                            <td className="px-6 py-3.5">
-                                                <span className={cn('px-2 py-0.5 rounded text-[10px] font-bold uppercase', row.ok ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700' : 'bg-danger-100 dark:bg-danger-900/30 text-danger-700')}>{row.status}</span>
-                                            </td>
-                                        </tr>
+                                        <div key={i} className="flex items-center justify-between p-3 rounded-xl hover:bg-surface-50 dark:hover:bg-slate-800/50 transition-colors group border border-transparent hover:border-surface-100 dark:hover:border-slate-800">
+                                            <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                                                <div className={cn("p-2 rounded-lg shrink-0 transition-colors", 
+                                                    row.ok ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-500 group-hover:bg-emerald-100 dark:group-hover:bg-emerald-900/40" 
+                                                           : "bg-danger-50 dark:bg-danger-900/20 text-danger-600 dark:text-danger-500 group-hover:bg-danger-100 dark:group-hover:bg-danger-900/40")}>
+                                                    <FileSpreadsheet size={16} />
+                                                </div>
+                                                <div className="flex flex-col min-w-0">
+                                                    <span className="text-[13px] font-bold text-surface-900 dark:text-white truncate" title={row.name}>{row.name}</span>
+                                                    <span className="text-[11px] text-surface-500 flex items-center gap-1.5 mt-0.5">
+                                                        <span>{row.date}</span>
+                                                        <span className="w-1 h-1 rounded-full bg-surface-300 dark:bg-slate-600" />
+                                                        <span className={cn('font-semibold', row.ok ? 'text-emerald-600 dark:text-emerald-400' : 'text-danger-600 dark:text-danger-400')}>
+                                                            {row.status}
+                                                        </span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="hidden sm:flex shrink-0 pl-4 items-center gap-2">
+                                                {row.ok ? (
+                                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800/50 text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                                                        <Check size={10} /> Success
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-danger-50 dark:bg-danger-900/20 border border-danger-100 dark:border-danger-800/50 text-[10px] font-bold text-danger-700 dark:text-danger-400 uppercase tracking-wider">
+                                                        <AlertTriangle size={10} /> Failed
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
                                     ))}
-                                </tbody>
-                            </table>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* ── OAuth Connection Modal ── */}
+            {/* ── Premium OAuth Connection Modal ── */}
             {connectingService && connectionStep !== 'idle' && (
-                <div className="fixed inset-0 z-[400] flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={connectionStep !== 'connecting' ? closeConnect : undefined} />
-                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-surface-200 dark:border-slate-800 shadow-2xl w-full max-w-md mx-4 animate-fade-in overflow-hidden">
+                <div className="fixed inset-0 z-[400] flex items-center justify-center p-4 sm:p-0">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={connectionStep !== 'connecting' ? closeConnect : undefined} />
+                    
+                    <div className="relative bg-white dark:bg-slate-900 rounded-3xl border border-surface-200/50 dark:border-slate-800/50 shadow-2xl w-full max-w-[420px] overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+                        
+                        {/* Dynamic Top Glow */}
+                        <div className="absolute top-0 left-0 right-0 h-1.5 z-20" style={{ background: `linear-gradient(90deg, transparent, ${connectingService.brandColor}, transparent)` }} />
+
                         {/* Modal Header */}
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-slate-800">
-                            <div className="flex items-center gap-3">
-                                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', connectingService.bgColor, connectingService.textColor)}>
-                                    {connectingService.icon}
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-surface-900 dark:text-white">Connect {connectingService.name}</h3>
-                                    <p className="text-[10px] text-surface-400 font-medium uppercase tracking-wider mt-0.5">
-                                        Step {connectionStep === 'signin' ? '1' : connectionStep === 'permissions' ? '2' : '3'} of 3
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="flex flex-col px-8 pt-8 pb-6 text-center border-b border-surface-100 dark:border-slate-800/60">
                             {connectionStep !== 'connecting' && (
-                                <button onClick={closeConnect} className="text-surface-400 hover:text-surface-600 transition-colors p-1 rounded-lg hover:bg-surface-100">
+                                <button onClick={closeConnect} className="absolute top-4 right-4 text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors p-2 rounded-full hover:bg-surface-100 dark:hover:bg-slate-800">
                                     <X size={18} />
                                 </button>
                             )}
-                        </div>
-
-                        {/* Step Progress */}
-                        <div className="flex gap-1 px-6 pt-4">
-                            {['signin', 'permissions', 'success'].map((step, i) => (
-                                <div key={step} className={cn('h-1 flex-1 rounded-full transition-all duration-500',
-                                    (connectionStep === 'connecting' && i < 2) || connectionStep === step || ['signin', 'permissions', 'connecting', 'success'].indexOf(connectionStep) > i
-                                        ? 'bg-primary-600' : 'bg-surface-200 dark:bg-slate-700'
-                                )} />
-                            ))}
+                            
+                            <div className="relative mx-auto mb-5">
+                                <div className="absolute inset-0 blur-xl opacity-30" style={{ backgroundColor: connectingService.brandColor }} />
+                                <div className={cn('relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border border-black/5 dark:border-white/10', connectingService.bgColor, connectingService.textColor)}>
+                                    {connectingService.icon}
+                                </div>
+                            </div>
+                            
+                            <h3 className="text-xl font-bold text-surface-900 dark:text-white mb-1 tracking-tight">Connect {connectingService.name}</h3>
+                            <p className="text-[13px] text-surface-500 font-medium">
+                                {connectionStep === 'signin' ? 'Sign in to authenticate' : connectionStep === 'permissions' ? 'Review required permissions' : 'Establishing secure link'}
+                            </p>
+                            
+                            {/* Minimal Step Trackers */}
+                            <div className="flex justify-center gap-1.5 mt-6">
+                                {['signin', 'permissions', 'success'].map((step, i) => (
+                                    <div key={step} className={cn('h-1.5 rounded-full transition-all duration-500',
+                                        (connectionStep === 'connecting' && i < 2) || connectionStep === step || ['signin', 'permissions', 'connecting', 'success'].indexOf(connectionStep) > i
+                                            ? 'w-6 bg-primary-600' : 'w-1.5 bg-surface-200 dark:bg-slate-700'
+                                    )} />
+                                ))}
+                            </div>
                         </div>
 
                         {/* Step Content */}
-                        <div className="px-6 py-6 space-y-5">
+                        <div className="px-8 py-7 bg-surface-50/30 dark:bg-slate-900/50">
                             {connectionStep === 'signin' && (
-                                <>
+                                <div className="animate-in slide-in-from-right-4 fade-in duration-300">
                                     {connectingService.apiKeyRequired ? (
                                         <div className="space-y-4">
-                                            <div className="bg-surface-50 dark:bg-slate-800 rounded-xl p-4 border border-surface-100 dark:border-slate-700">
-                                                <div className="flex items-center gap-2 mb-3">
-                                                    <Key size={14} className="text-surface-500" />
-                                                    <span className="text-xs font-bold text-surface-700 dark:text-surface-300 uppercase tracking-wider">API Credentials</span>
-                                                </div>
+                                            <div className="space-y-3">
+                                                <label className="text-[11px] font-bold text-surface-500 uppercase tracking-widest block">API Credentials</label>
                                                 <input
                                                     type="text"
                                                     placeholder="API Key / Public Key"
                                                     value={apiKeyInput}
                                                     onChange={e => setApiKeyInput(e.target.value)}
-                                                    className="w-full px-3 py-2.5 text-sm border border-surface-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30 mb-2"
+                                                    className="w-full px-4 py-3 text-sm border border-surface-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow"
                                                 />
                                                 <input
                                                     type="password"
                                                     placeholder="Secret Key (optional)"
                                                     value={apiSecretInput}
                                                     onChange={e => setApiSecretInput(e.target.value)}
-                                                    className="w-full px-3 py-2.5 text-sm border border-surface-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500/30"
+                                                    className="w-full px-4 py-3 text-sm border border-surface-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 focus:outline-none focus:ring-2 focus:ring-primary-500/50 transition-shadow"
                                                 />
                                             </div>
                                             {connectingService.webhookUrl && (
-                                                <div className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-4 border border-amber-200 dark:border-amber-800">
-                                                    <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1">Webhook URL</p>
-                                                    <code className="text-[11px] text-amber-600 dark:text-amber-300 break-all">{connectingService.webhookUrl}</code>
+                                                <div className="bg-primary-50 dark:bg-primary-900/10 rounded-xl p-4 border border-primary-100 dark:border-primary-900/30 mt-4">
+                                                    <p className="text-[11px] font-bold text-primary-700 dark:text-primary-400 mb-1.5 uppercase tracking-wider">Webhook URL Callback</p>
+                                                    <code className="text-[12px] bg-white dark:bg-slate-950 px-2.5 py-1.5 rounded-md text-primary-800 dark:text-primary-300 break-all block border border-primary-200 dark:border-primary-800/50">{connectingService.webhookUrl}</code>
                                                 </div>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-4">
-                                            <div className={cn('w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-4', connectingService.bgColor, connectingService.textColor)}>
-                                                {connectingService.icon}
-                                            </div>
-                                            <p className="text-sm text-surface-600 dark:text-surface-400 mb-2">
-                                                Sign in with your <strong>{connectingService.name}</strong> account to continue.
+                                        <div className="text-center">
+                                            <p className="text-[14px] text-surface-600 dark:text-surface-400 leading-relaxed mb-6">
+                                                Allow <strong>IBMS Workspace</strong> to access your <strong>{connectingService.name}</strong> account for seamless data synchronization.
                                             </p>
-                                            <p className="text-xs text-surface-400">You&apos;ll be redirected to a secure sign-in page.</p>
+                                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold border border-emerald-100 dark:border-emerald-800">
+                                                <Shield size={12} /> Secure OAuth 2.0 Login
+                                            </div>
                                         </div>
                                     )}
-                                </>
+                                </div>
                             )}
 
                             {connectionStep === 'permissions' && (
-                                <div className="space-y-4">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Shield size={14} className="text-primary-600" />
-                                        <span className="text-xs font-bold text-surface-700 dark:text-surface-300 uppercase tracking-wider">Permissions Required</span>
-                                    </div>
-                                    <div className="space-y-2">
-                                        {connectingService.scopes.map(scope => (
-                                            <div key={scope} className="flex items-center gap-3 p-3 rounded-xl bg-surface-50 dark:bg-slate-800 border border-surface-100 dark:border-slate-700">
-                                                <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
-                                                <span className="text-sm text-surface-700 dark:text-surface-300">{scope}</span>
+                                <div className="space-y-4 animate-in slide-in-from-right-4 fade-in duration-300">
+                                    <p className="text-[13px] text-surface-600 dark:text-surface-400 text-center mb-5">
+                                        <strong>IBMS Workspace</strong> is requesting the following access:
+                                    </p>
+                                    <div className="space-y-2.5">
+                                        {connectingService.scopes.map((scope, idx) => (
+                                            <div key={idx} className="flex items-start gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-950 border border-surface-100 dark:border-slate-800 shadow-sm">
+                                                <CheckCircle2 size={18} className="text-primary-500 shrink-0 mt-0.5" />
+                                                <span className="text-[13px] font-medium text-surface-800 dark:text-surface-200 leading-snug">{scope}</span>
                                             </div>
                                         ))}
                                     </div>
-                                    <p className="text-[11px] text-surface-400 flex items-center gap-1.5">
-                                        <Shield size={11} /> Your data is encrypted and never shared with third parties.
+                                    <p className="text-[11px] text-surface-400 flex items-center justify-center gap-1.5 mt-6 text-center">
+                                        <Shield size={12} /> You can revoke access at any time from settings.
                                     </p>
                                 </div>
                             )}
 
                             {connectionStep === 'connecting' && (
-                                <div className="text-center py-8">
-                                    <Loader2 size={40} className="text-primary-600 animate-spin mx-auto mb-4" />
-                                    <p className="text-sm font-medium text-surface-700 dark:text-surface-300">Connecting to {connectingService.name}...</p>
-                                    <p className="text-xs text-surface-400 mt-1">Establishing secure connection</p>
+                                <div className="text-center py-6 animate-in zoom-in-95 fade-in duration-300">
+                                    <div className="relative w-20 h-20 mx-auto mb-6">
+                                        <div className="absolute inset-0 border-4 border-primary-100 dark:border-slate-800 rounded-full" />
+                                        <div className="absolute inset-0 border-4 border-primary-600 rounded-full border-t-transparent animate-spin" />
+                                        <div className={cn("absolute inset-0 flex items-center justify-center p-5 rounded-full", connectingService.textColor)}>
+                                            {connectingService.icon}
+                                        </div>
+                                    </div>
+                                    <p className="text-[15px] font-bold text-surface-900 dark:text-white">Authorizing...</p>
+                                    <p className="text-xs text-surface-500 mt-1.5">Waiting for {connectingService.name}</p>
                                 </div>
                             )}
 
                             {connectionStep === 'success' && (
-                                <div className="text-center py-6">
-                                    <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
-                                        <Check size={32} className="text-emerald-600" />
+                                <div className="text-center py-6 animate-in zoom-in-95 fade-in duration-500">
+                                    <div className="w-20 h-20 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20 flex items-center justify-center mx-auto mb-6">
+                                        <Check size={36} className="text-white" />
                                     </div>
-                                    <p className="text-lg font-bold text-surface-900 dark:text-white mb-1">Connected!</p>
-                                    <p className="text-sm text-surface-500">{connectingService.name} is now active and syncing.</p>
+                                    <p className="text-2xl font-black tracking-tight text-surface-900 dark:text-white mb-2">Connected Successfully!</p>
+                                    <p className="text-[14px] text-surface-500 leading-relaxed max-w-[280px] mx-auto">
+                                        <strong>{connectingService.name}</strong> is now securely linked to your workspace.
+                                    </p>
                                 </div>
                             )}
                         </div>
 
-                        {/* Modal Footer */}
-                        <div className="px-6 py-4 border-t border-surface-100 dark:border-slate-800 flex items-center justify-end gap-3 bg-surface-50/50 dark:bg-slate-800/30">
+                        {/* Modal Footer Actions */}
+                        <div className="px-8 py-5 border-t border-surface-100 dark:border-slate-800/60 bg-white dark:bg-slate-900 flex items-center justify-end gap-3">
                             {connectionStep === 'success' ? (
-                                <Button variant="primary" onClick={closeConnect}>Done</Button>
+                                <Button variant="primary" className="w-full py-6 text-[15px] rounded-xl shadow-lg" onClick={closeConnect}>
+                                    Return to Settings
+                                </Button>
                             ) : connectionStep !== 'connecting' ? (
                                 <>
-                                    <Button variant="outline" onClick={closeConnect}>Cancel</Button>
-                                    <Button variant="primary" onClick={progressConnect} rightIcon={<ArrowRight size={14} />}>
-                                        {connectionStep === 'signin' ? (connectingService.apiKeyRequired ? 'Verify' : 'Sign In') : 'Authorize'}
+                                    <Button variant="outline" className="flex-1 py-6 rounded-xl border-surface-200 dark:border-slate-700 hover:bg-surface-50" onClick={closeConnect}>
+                                        Cancel
+                                    </Button>
+                                    <Button 
+                                        variant="primary" 
+                                        className="flex-1 py-6 rounded-xl shadow-md" 
+                                        onClick={progressConnect} 
+                                        rightIcon={<ArrowRight size={16} />}
+                                    >
+                                        {connectionStep === 'signin' ? (connectingService.apiKeyRequired ? 'Verify Keys' : 'Continue') : 'Authorize App'}
                                     </Button>
                                 </>
                             ) : null}
@@ -1054,149 +1187,196 @@ export function SettingsIntegrations() {
                 </div>
             )}
 
-            {/* ── Upload Modal ── */}
+            {/* ── Premium Upload Modal ── */}
             {uploadModal && selectedFile && (
-                <div className="fixed inset-0 z-[400] flex items-center justify-center">
-                    <div className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={!uploading ? () => { setUploadModal(false); setSelectedFile(null); setUploadProgress(0); } : undefined} />
-                    <div className="relative bg-white dark:bg-slate-900 rounded-2xl border border-surface-200 dark:border-slate-800 shadow-2xl w-full max-w-lg mx-4 animate-fade-in overflow-hidden">
-                        <div className="flex items-center justify-between px-6 py-5 border-b border-surface-100 dark:border-slate-800">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-primary-100 dark:bg-primary-900/30 p-2.5 rounded-xl">
-                                    <Upload size={18} className="text-primary-600" />
-                                </div>
-                                <div>
-                                    <h3 className="text-sm font-bold text-surface-900 dark:text-white">Import Data</h3>
-                                    <p className="text-[10px] text-surface-400 font-medium uppercase tracking-wider mt-0.5">Review & upload</p>
-                                </div>
-                            </div>
+                <div className="fixed inset-0 z-[500] flex items-center justify-center p-4 sm:p-0">
+                    <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300" onClick={!uploading ? () => { setUploadModal(false); setSelectedFile(null); setUploadProgress(0); } : undefined} />
+                    
+                    <div className="relative bg-white dark:bg-slate-900 rounded-3xl border border-surface-200/50 dark:border-slate-800/50 shadow-2xl w-full max-w-[500px] animate-in fade-in zoom-in-95 duration-300 overflow-hidden">
+                        
+                        {/* Dynamic Top Glow based on file state */}
+                        <div className={cn("absolute top-0 left-0 right-0 h-1.5 z-20 transition-colors duration-500", 
+                            importResult ? 'bg-emerald-500' : 'bg-primary-500'
+                        )} />
+
+                        {/* Modal Header */}
+                        <div className="flex flex-col px-8 pt-8 pb-6 text-center border-b border-surface-100 dark:border-slate-800/60">
                             {!uploading && (
-                                <button onClick={() => { setUploadModal(false); setSelectedFile(null); }} className="text-surface-400 hover:text-surface-600 p-1 rounded-lg hover:bg-surface-100">
+                                <button onClick={() => { setUploadModal(false); setSelectedFile(null); }} className="absolute top-4 right-4 text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 transition-colors p-2 rounded-full hover:bg-surface-100 dark:hover:bg-slate-800">
                                     <X size={18} />
                                 </button>
                             )}
-                        </div>
-
-                        <div className="px-6 py-5 space-y-5">
-                            {/* File info */}
-                            <div className="flex items-center gap-3 p-3 rounded-xl bg-surface-50 dark:bg-slate-800 border border-surface-100 dark:border-slate-700">
-                                <FileSpreadsheet size={20} className="text-emerald-600 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-surface-900 dark:text-white truncate">{selectedFile.name}</p>
-                                    <p className="text-xs text-surface-500 mt-0.5">{formatFileSize(selectedFile.size)}</p>
+                            
+                            <div className="relative mx-auto mb-4">
+                                <div className={cn("absolute inset-0 blur-xl opacity-30 transition-colors duration-500", importResult ? 'bg-emerald-500' : 'bg-primary-500')} />
+                                <div className={cn('relative w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg border border-black/5 dark:border-white/10 transition-colors duration-500', 
+                                    importResult ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400' : 'bg-primary-100 dark:bg-primary-900/40 text-primary-600 dark:text-primary-400'
+                                )}>
+                                    {importResult ? <CheckCircle2 size={32} /> : <Upload size={32} />}
                                 </div>
                             </div>
+                            
+                            <h3 className="text-xl font-bold text-surface-900 dark:text-white mb-1 tracking-tight">
+                                {importResult ? 'Import Complete' : 'Import Configuration'}
+                            </h3>
+                            <p className="text-[13px] text-surface-500 font-medium">
+                                {importResult ? 'Your file has been processed successfully' : 'Map your data and review settings before import'}
+                            </p>
+                        </div>
 
-                            {/* Data type */}
-                            <div>
-                                <label className="text-[10px] font-bold text-surface-400 uppercase tracking-wider mb-2 block">Import As</label>
-                                <div className="grid grid-cols-4 gap-2">
-                                    {DATA_TYPES.map(dt => (
-                                        <button key={dt.value} onClick={() => !uploading && !importResult && setUploadDataType(dt.value)} disabled={uploading || !!importResult}
-                                            className={cn('px-3 py-2 rounded-xl text-xs font-medium border transition-all',
-                                                uploadDataType === dt.value ? 'bg-primary-600 text-white border-primary-600' : 'bg-white dark:bg-slate-800 text-surface-600 border-surface-200 dark:border-slate-700 hover:border-primary-300',
-                                                dt.value === 'all' && uploadDataType === dt.value && 'bg-amber-600 border-amber-600',
-                                            )}>
-                                            {dt.label}
-                                        </button>
-                                    ))}
+                        <div className="px-8 py-7 bg-surface-50/30 dark:bg-slate-900/50 space-y-6">
+                            
+                            {/* Selected File Card */}
+                            <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-slate-950 border border-surface-200 dark:border-slate-800 shadow-sm animate-in slide-in-from-bottom-4 fade-in duration-500 delay-100">
+                                <div className={cn("p-3 rounded-xl", importResult ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600" : "bg-primary-50 dark:bg-primary-900/20 text-primary-600")}>
+                                    <FileSpreadsheet size={24} />
                                 </div>
-                                {uploadDataType === 'all' && !importResult && (
-                                    <p className="text-[10px] text-amber-600 mt-2 flex items-center gap-1">
-                                        <AlertTriangle size={10} /> Auto-detects data types from column headers
-                                    </p>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[15px] font-bold text-surface-900 dark:text-white truncate" title={selectedFile.name}>{selectedFile.name}</p>
+                                    <p className="text-xs text-surface-500 font-medium mt-0.5">{formatFileSize(selectedFile.size)} • {selectedFile.name.split('.').pop()?.toUpperCase()}</p>
+                                </div>
+                                {importResult && (
+                                    <div className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 text-[11px] font-bold uppercase tracking-wider shrink-0">
+                                        Done
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Progress */}
-                            {uploading && !importResult && (
-                                <div className="space-y-2">
-                                    <div className="flex justify-between">
-                                        <span className="text-xs text-surface-500">{uploadProgress >= 90 ? 'Processing rows...' : 'Uploading file...'}</span>
-                                        <span className="text-xs font-bold tabular-nums">{Math.min(100, Math.round(uploadProgress))}%</span>
+                            {/* Data Type Selection */}
+                            {!importResult && (
+                                <div className="animate-in slide-in-from-bottom-4 fade-in duration-500 delay-200">
+                                    <label className="text-[11px] font-bold text-surface-500 uppercase tracking-widest mb-3 block">Target Destination</label>
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                                        {DATA_TYPES.map(dt => (
+                                            <button key={dt.value} onClick={() => !uploading && setUploadDataType(dt.value)} disabled={uploading}
+                                                className={cn('px-4 py-3 rounded-xl text-[13px] font-bold transition-all border outline-none text-left flex items-center justify-between group',
+                                                    uploadDataType === dt.value 
+                                                        ? dt.value === 'all' 
+                                                            ? 'bg-amber-600 text-white border-amber-600 shadow-md shadow-amber-500/20' 
+                                                            : 'bg-primary-600 text-white border-primary-600 shadow-md shadow-primary-500/20' 
+                                                        : 'bg-white dark:bg-slate-950 text-surface-600 dark:text-surface-300 border-surface-200 dark:border-slate-800 hover:border-primary-300 dark:hover:border-primary-700'
+                                                )}>
+                                                {dt.label}
+                                                {uploadDataType === dt.value && <Check strokeWidth={3} size={14} className="opacity-80" />}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <div className="w-full h-2 bg-surface-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                                        <div className={cn('h-full rounded-full transition-all duration-300', uploadProgress >= 100 ? 'bg-emerald-500' : 'bg-primary-600')} style={{ width: `${Math.min(100, uploadProgress)}%` }} />
+                                    {uploadDataType === 'all' && (
+                                        <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 flex items-start gap-2.5">
+                                            <AlertTriangle size={14} className="text-amber-600 dark:text-amber-500 mt-0.5 shrink-0" />
+                                            <p className="text-[12px] text-amber-800 dark:text-amber-400 font-medium leading-snug">
+                                                <strong>Smart Routing Active:</strong> IBMS will automatically detect the data types based on your column headers.
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Active Upload Progress */}
+                            {uploading && !importResult && (
+                                <div className="animate-in zoom-in-95 fade-in duration-300">
+                                    <div className="flex justify-between items-end mb-2.5">
+                                        <span className="text-[13px] font-medium text-surface-700 dark:text-surface-300 flex items-center gap-2">
+                                            <Loader2 size={14} className="animate-spin text-primary-600" />
+                                            {uploadProgress >= 90 ? 'Finalizing records...' : 'Encrypting and syncing...'}
+                                        </span>
+                                        <span className="text-[15px] font-black text-primary-600 dark:text-primary-400 tabular-nums">{Math.min(100, Math.round(uploadProgress))}%</span>
+                                    </div>
+                                    <div className="w-full h-3 bg-surface-100 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
+                                        <div className={cn('h-full rounded-full transition-all duration-300 ease-out', uploadProgress >= 100 ? 'bg-emerald-500' : 'bg-primary-500')} style={{ width: `${Math.min(100, uploadProgress)}%` }}>
+                                            <div className="w-full h-full bg-white/20 animate-pulse" />
+                                        </div>
                                     </div>
                                 </div>
                             )}
 
-                            {/* Import Results */}
+                            {/* Import Results View */}
                             {importResult && (
-                                <div className="space-y-3">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-emerald-600">
-                                        <CheckCircle2 size={16} /> Import Complete
+                                <div className="space-y-4 animate-in slide-in-from-bottom-4 fade-in duration-500">
+                                    
+                                    {/* Stat Grid */}
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 dark:bg-emerald-950/30 dark:border-emerald-900/30 text-center shadow-sm">
+                                            <p className="text-3xl font-black text-emerald-600 tabular-nums tracking-tighter">
+                                                {'summary' in importResult ? importResult.summary.totalCreated : importResult.created}
+                                            </p>
+                                            <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-500 uppercase tracking-widest mt-1">Created</p>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-amber-50 border border-amber-100 dark:bg-amber-950/30 dark:border-amber-900/30 text-center shadow-sm">
+                                            <p className="text-3xl font-black text-amber-600 tabular-nums tracking-tighter">
+                                                {'summary' in importResult ? importResult.summary.totalSkipped : importResult.skipped}
+                                            </p>
+                                            <p className="text-[11px] font-bold text-amber-700 dark:text-amber-500 uppercase tracking-widest mt-1">Skipped</p>
+                                        </div>
+                                        <div className="p-4 rounded-2xl bg-red-50 border border-red-100 dark:bg-red-950/30 dark:border-red-900/30 text-center shadow-sm">
+                                            <p className="text-3xl font-black text-red-600 tabular-nums tracking-tighter">
+                                                {'summary' in importResult ? importResult.summary.totalErrors : importResult.errors.length}
+                                            </p>
+                                            <p className="text-[11px] font-bold text-red-700 dark:text-red-500 uppercase tracking-widest mt-1">Errors</p>
+                                        </div>
                                     </div>
 
+                                    {/* Detailed Breakdown */}
                                     {'summary' in importResult ? (
-                                        // Mixed import results
-                                        <div className="space-y-3">
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center">
-                                                    <p className="text-lg font-bold text-emerald-600 tabular-nums">{importResult.summary.totalCreated}</p>
-                                                    <p className="text-[10px] font-bold text-emerald-600/70 uppercase">Created</p>
-                                                </div>
-                                                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-center">
-                                                    <p className="text-lg font-bold text-amber-600 tabular-nums">{importResult.summary.totalSkipped}</p>
-                                                    <p className="text-[10px] font-bold text-amber-600/70 uppercase">Skipped</p>
-                                                </div>
-                                                <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 text-center">
-                                                    <p className="text-lg font-bold text-red-600 tabular-nums">{importResult.summary.totalErrors}</p>
-                                                    <p className="text-[10px] font-bold text-red-600/70 uppercase">Errors</p>
-                                                </div>
+                                        <div className="space-y-2 mt-2">
+                                            <p className="text-[11px] font-bold text-surface-500 uppercase tracking-widest px-2">Data Processed</p>
+                                            <div className="bg-white dark:bg-slate-950 border border-surface-200 dark:border-slate-800 rounded-xl overflow-hidden divide-y divide-surface-100 dark:divide-slate-800">
+                                                {importResult.results.map((r: ImportResult, i: number) => (
+                                                    <div key={i} className="flex items-center justify-between text-[13px] px-4 py-3">
+                                                        <span className="font-bold text-surface-900 dark:text-white capitalize flex items-center gap-2">
+                                                            <div className="w-2 h-2 rounded-full bg-primary-500" />
+                                                            {r.dataType}
+                                                        </span>
+                                                        <span className="text-surface-500 font-medium">
+                                                            <span className="text-emerald-600">+{r.created}</span> / <span className="text-amber-600">{r.skipped} skip</span>{r.errors.length > 0 && <span className="text-red-600"> / {r.errors.length} err</span>}
+                                                        </span>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            {importResult.results.map((r: ImportResult, i: number) => (
-                                                <div key={i} className="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-surface-50 dark:bg-slate-800">
-                                                    <span className="font-medium text-surface-700 dark:text-surface-300 capitalize">{r.dataType}</span>
-                                                    <span className="text-surface-500">{r.created} created, {r.skipped} skipped{r.errors.length > 0 && `, ${r.errors.length} errors`}</span>
-                                                </div>
-                                            ))}
                                         </div>
                                     ) : (
-                                        // Single-type import results
-                                        <div className="space-y-3">
-                                            <div className="grid grid-cols-3 gap-2">
-                                                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center">
-                                                    <p className="text-lg font-bold text-emerald-600 tabular-nums">{importResult.created}</p>
-                                                    <p className="text-[10px] font-bold text-emerald-600/70 uppercase">Created</p>
-                                                </div>
-                                                <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-center">
-                                                    <p className="text-lg font-bold text-amber-600 tabular-nums">{importResult.skipped}</p>
-                                                    <p className="text-[10px] font-bold text-amber-600/70 uppercase">Skipped</p>
-                                                </div>
-                                                <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 text-center">
-                                                    <p className="text-lg font-bold text-red-600 tabular-nums">{importResult.errors.length}</p>
-                                                    <p className="text-[10px] font-bold text-red-600/70 uppercase">Errors</p>
-                                                </div>
-                                            </div>
-                                            {importResult.errors.length > 0 && (
-                                                <div className="max-h-32 overflow-y-auto space-y-1">
-                                                    {importResult.errors.slice(0, 10).map((err, i) => (
-                                                        <div key={i} className="flex gap-2 text-xs px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400">
-                                                            <span className="font-mono shrink-0">Row {err.row}:</span>
+                                        importResult.errors.length > 0 && (
+                                            <div className="space-y-2 mt-2">
+                                                <p className="text-[11px] font-bold text-surface-500 uppercase tracking-widest px-2">Error Log</p>
+                                                <div className="bg-red-50/50 dark:bg-red-950/10 border border-red-100 dark:border-red-900/30 rounded-xl overflow-y-auto max-h-36 p-1">
+                                                    {importResult.errors.slice(0, 50).map((err, i) => (
+                                                        <div key={i} className="flex gap-2.5 text-[12px] px-3 py-2 rounded-lg text-red-800 dark:text-red-400 hover:bg-red-100/50 dark:hover:bg-red-900/20 transition-colors">
+                                                            <span className="font-mono font-bold shrink-0 opacity-70">Row {err.row}:</span>
                                                             <span className="truncate">{err.message}</span>
                                                         </div>
                                                     ))}
-                                                    {importResult.errors.length > 10 && (
-                                                        <p className="text-[10px] text-red-500 px-3">...and {importResult.errors.length - 10} more errors</p>
+                                                    {importResult.errors.length > 50 && (
+                                                        <div className="px-3 py-2 text-[11px] text-red-600 font-bold text-center border-t border-red-200 dark:border-red-900/30">
+                                                            ...and {importResult.errors.length - 50} more errors
+                                                        </div>
                                                     )}
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )
                                     )}
                                 </div>
                             )}
                         </div>
 
-                        <div className="px-6 py-4 border-t border-surface-100 dark:border-slate-800 flex justify-end gap-3 bg-surface-50/50 dark:bg-slate-800/30">
+                        {/* Modal Footer Actions */}
+                        <div className="px-8 py-5 border-t border-surface-100 dark:border-slate-800/60 bg-white dark:bg-slate-900 flex items-center justify-end gap-3">
                             {importResult ? (
-                                <Button variant="primary" onClick={() => { setUploadModal(false); setSelectedFile(null); setImportResult(null); setUploadProgress(0); setUploading(false); }} leftIcon={<Check size={14} />}>
+                                <Button variant="primary" className="w-full py-6 text-[15px] rounded-xl shadow-lg bg-emerald-600 hover:bg-emerald-700 border-emerald-600" onClick={() => { setUploadModal(false); setSelectedFile(null); setImportResult(null); setUploadProgress(0); setUploading(false); }}>
                                     Done
                                 </Button>
                             ) : (
                                 <>
-                                    <Button variant="outline" onClick={() => { setUploadModal(false); setSelectedFile(null); }} disabled={uploading}>Cancel</Button>
-                                    <Button variant="primary" onClick={handleUpload} disabled={uploading} leftIcon={uploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}>
-                                        {uploading ? 'Importing...' : 'Start Import'}
+                                    <Button variant="outline" className="flex-1 py-6 rounded-xl border-surface-200 dark:border-slate-700 hover:bg-surface-50" onClick={() => { setUploadModal(false); setSelectedFile(null); }} disabled={uploading}>
+                                        Cancel
+                                    </Button>
+                                    <Button 
+                                        variant="primary" 
+                                        className="flex-[2] py-6 rounded-xl shadow-md" 
+                                        onClick={handleUpload} 
+                                        disabled={uploading} 
+                                        leftIcon={uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                                    >
+                                        {uploading ? 'Processing Data...' : 'Begin Import'}
                                     </Button>
                                 </>
                             )}

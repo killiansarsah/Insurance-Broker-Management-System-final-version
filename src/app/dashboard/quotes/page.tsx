@@ -461,13 +461,13 @@ export default function QuotesPage() {
 
     // Insurance types from quotes data
     const insuranceTypes = useMemo(() => {
-        const types = Array.from(new Set(allQuotes.map(q => q.insuranceType)));
-        return types.sort().map(t => ({ label: t.charAt(0).toUpperCase() + t.slice(1).replace(/_/g, ' '), value: t }));
+        const types = Array.from(new Set(allQuotes.map(q => q.insuranceType))).filter(Boolean);
+        return types.sort().map(t => ({ label: String(t).charAt(0).toUpperCase() + String(t).slice(1).replace(/_/g, ' '), value: String(t) }));
     }, [allQuotes]);
 
     const brokers = useMemo(() => {
-        const b = Array.from(new Set(allQuotes.map(q => q.preparedBy)));
-        return b.sort().map(name => ({ label: name, value: name }));
+        const b = Array.from(new Set(allQuotes.map(q => q.preparedBy))).filter(Boolean);
+        return b.sort().map(name => ({ label: String(name), value: String(name) }));
     }, [allQuotes]);
 
     // KPIs

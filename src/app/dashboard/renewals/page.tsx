@@ -446,7 +446,7 @@ export default function RenewalsPage() {
     // Unique agents list
     const agents = useMemo(() => {
         const set = new Set(allRenewals.map(r => r.assignedAgent));
-        return Array.from(set).sort();
+        return Array.from(set).filter(Boolean).sort();
     }, [allRenewals]);
 
     const renewalSummary = useMemo(() => {
