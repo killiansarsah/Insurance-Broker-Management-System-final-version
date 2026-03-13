@@ -36,6 +36,8 @@ export class SearchService {
           { email: { contains: searchTerm, mode: 'insensitive' } },
           { phone: { contains: searchTerm, mode: 'insensitive' } },
           { ghanaCardNumber: { contains: searchTerm, mode: 'insensitive' } },
+          { companyName: { contains: searchTerm, mode: 'insensitive' } },
+          { clientNumber: { contains: searchTerm, mode: 'insensitive' } },
         ],
       },
       take: 5,
@@ -69,6 +71,7 @@ export class SearchService {
               OR: [
                 { firstName: { contains: searchTerm, mode: 'insensitive' } },
                 { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                { companyName: { contains: searchTerm, mode: 'insensitive' } },
               ],
             },
           },
@@ -111,6 +114,7 @@ export class SearchService {
               OR: [
                 { firstName: { contains: searchTerm, mode: 'insensitive' } },
                 { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                { companyName: { contains: searchTerm, mode: 'insensitive' } },
               ],
             },
           },
@@ -180,6 +184,7 @@ export class SearchService {
               OR: [
                 { firstName: { contains: searchTerm, mode: 'insensitive' } },
                 { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                { companyName: { contains: searchTerm, mode: 'insensitive' } },
               ],
             },
           },

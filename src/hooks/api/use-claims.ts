@@ -72,7 +72,8 @@ export function useInvestigateClaim() {
 export function useApproveClaim() {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (id: string) => apiClient.post(`/claims/${id}/approve`),
+        mutationFn: ({ id, data }: { id: string; data: { approvedAmount: number; notes?: string } }) =>
+            apiClient.post(`/claims/${id}/approve`, data),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['claims'] }),
     });
 }

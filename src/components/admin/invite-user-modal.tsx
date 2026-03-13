@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { User, Mail, Shield, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { useCreateInvitation } from '@/hooks/api/use-invitations';
 
 interface InviteUserModalProps {
     isOpen: boolean;
@@ -14,17 +15,17 @@ interface InviteUserModalProps {
 }
 
 export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
-    const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [role, setRole] = useState('broker');
+    const [role, setRole] = useState('BROKER');
     const [branch, setBranch] = useState('BR-ACC-01');
+
+    const createInvitation = useCreateInvitation();
 
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
 
-        // Validate required fields
         if (!firstName.trim()) {
             toast.error('First name is required.');
             return;
@@ -42,22 +43,32 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
             return;
         }
 
-        setIsLoading(true);
-
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        toast.success('Invitation Sent', {
-            description: `An invite link has been sent to ${email}`,
-            icon: <Mail className="text-success-500" size={18} />
-        });
-
-        // Reset
-        setEmail('');
-        setFirstName('');
-        setLastName('');
-        setIsLoading(false);
-        onClose();
+        createInvitation.mutate(
+            {
+                email: email.trim(),
+                role: role as 'ADMIN' | 'TENANT_ADMIN' | 'BROKER' | 'VIEWER',
+                branchId: branch || undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Invitation Sent', {
+                        description: `An invite link has been sent to ${email}`,
+                        icon: <Mail className="text-success-500" size={18} />,
+                    });
+                    setEmail('');
+                    setFirstName('');
+                    setLastName('');
+                    onClose();
+                },
+                onError: (error: any) => {
+                    const message =
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        'Failed to send invitation';
+                    toast.error('Invitation Failed', { description: message });
+                },
+            },
+        );
     };
 
     const footer = (
@@ -138,12 +149,10 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'Admin', value: 'admin' },
-                                { label: 'Branch Manager', value: 'branch_manager' },
-                                { label: 'Senior Broker', value: 'senior_broker' },
-                                { label: 'Broker', value: 'broker' },
-                                { label: 'Data Entry', value: 'data_entry' },
-                                { label: 'Viewer', value: 'viewer' },
+                                { label: 'Admin', value: 'ADMIN' },
+                                { label: 'Tenant Admin', value: 'TENANT_ADMIN' },
+                                { label: 'Broker', value: 'BROKER' },
+                                { label: 'Viewer', value: 'VIEWER' },
                             ]}
                             value={role}
                             onChange={(v) => setRole(v as string)}

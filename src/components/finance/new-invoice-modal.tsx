@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useClients } from '@/hooks/api/use-clients';
 import { usePolicies } from '@/hooks/api/use-policies';
+import { useCreateInvoice } from '@/hooks/api/use-finance';
 
 interface NewInvoiceModalProps {
     isOpen: boolean;
@@ -84,23 +85,39 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
         setDescription('');
     };
 
+    const createInvoice = useCreateInvoice();
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!clientId || !amount || !dueDate) return;
 
-        setIsLoading(true);
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const invNum = `INV-2026-${String(Math.floor(Math.random() * 9000) + 1000).padStart(3, '0')}`;
-
-        toast.success('Invoice Created', {
-            description: `${invNum} for ${selectedClient?.companyName || selectedClient?.clientNumber || 'Client'} — GHS ${parseFloat(amount).toLocaleString()}`,
-            icon: <CheckCircle2 className="text-success-500" size={18} />,
-        });
-
-        resetForm();
-        setIsLoading(false);
-        onClose();
+        createInvoice.mutate(
+            {
+                clientId,
+                policyId: policyId || undefined,
+                amount: parseFloat(amount),
+                currency: currency as string || 'GHS',
+                dueDate,
+                description: description || undefined,
+            },
+            {
+                onSuccess: (data: any) => {
+                    toast.success('Invoice Created', {
+                        description: `Invoice for ${selectedClient?.companyName || selectedClient?.clientNumber || 'Client'} — GHS ${parseFloat(amount).toLocaleString()}`,
+                        icon: <CheckCircle2 className="text-success-500" size={18} />,
+                    });
+                    resetForm();
+                    onClose();
+                },
+                onError: (error: any) => {
+                    const message =
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        'Failed to create invoice';
+                    toast.error('Invoice Failed', { description: message });
+                },
+            },
+        );
     };
 
     const footer = (

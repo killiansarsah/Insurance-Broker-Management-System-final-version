@@ -8,6 +8,7 @@ import { usePaymentStore } from '@/stores/payment-store';
 import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { generateReceipt } from '@/lib/generate-receipt';
+import { useCreateTransaction } from '@/hooks/api/use-finance';
 import type { PaymentMethod, MoMoNetwork, Transaction } from '@/types';
 import {
     CreditCard,
@@ -123,34 +124,56 @@ export function RecordPaymentModal({
         return Object.keys(newErrors).length === 0;
     }
 
+    const createTransaction = useCreateTransaction();
+
     async function handleSubmit() {
         setIsProcessing(true);
 
-        // Simulate network delay
-        await new Promise((r) => setTimeout(r, 2500));
+        try {
+            const payload: Record<string, unknown> = {
+                policyId,
+                amount: parsedAmount,
+                currency,
+                method,
+                reference,
+                description,
+                ...(method === 'MOBILE_MONEY' && { momoNetwork, phoneNumber }),
+                ...(method === 'BANK_TRANSFER' && { bankName }),
+                ...(method === 'CHEQUE' && { chequeNumber }),
+            };
 
-        const txn: Transaction = {
-            id: `TXN-${Date.now().toString(36).toUpperCase()}`,
-            policyId,
-            policyNumber,
-            clientId,
-            clientName,
-            amount: parsedAmount,
-            currency,
-            status: 'PAID',
-            method,
-            momoNetwork: method === 'MOBILE_MONEY' ? momoNetwork : undefined,
-            phoneNumber: method === 'MOBILE_MONEY' ? phoneNumber : undefined,
-            reference,
-            description,
-            processedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-        };
+            const result = await createTransaction.mutateAsync(payload);
 
-        addTransaction(txn);
-        setLastTransaction(txn);
-        setIsProcessing(false);
-        setStep('success');
+            const txn: Transaction = {
+                id: (result as any)?.id || `TXN-${Date.now().toString(36).toUpperCase()}`,
+                policyId,
+                policyNumber,
+                clientId,
+                clientName,
+                amount: parsedAmount,
+                currency,
+                status: 'PAID',
+                method,
+                momoNetwork: method === 'MOBILE_MONEY' ? momoNetwork : undefined,
+                phoneNumber: method === 'MOBILE_MONEY' ? phoneNumber : undefined,
+                reference,
+                description,
+                processedAt: new Date().toISOString(),
+                createdAt: new Date().toISOString(),
+            };
+
+            addTransaction(txn);
+            setLastTransaction(txn);
+            setStep('success');
+        } catch (error: any) {
+            const message =
+                error?.response?.data?.message ||
+                error?.message ||
+                'Failed to process payment';
+            toast.error('Payment Failed', { description: message });
+        } finally {
+            setIsProcessing(false);
+        }
     }
 
     return (

@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { Resend } from 'resend';
 
 interface EmailPreferences {
   policyRenewal: boolean;
@@ -13,18 +14,24 @@ interface EmailPreferences {
 @Injectable()
 export class EnhancedEmailService {
   private readonly logger = new Logger(EnhancedEmailService.name);
-  private readonly namespace: string | undefined;
+  private readonly resend: Resend | null;
 
   constructor(
     private config: ConfigService,
     private prisma: PrismaService,
   ) {
-    this.namespace = this.config.get<string>('TESTMAIL_NAMESPACE');
-    this.logger.log('Enhanced Email service initialized (fallback mode)');
+    const apiKey = this.config.get<string>('RESEND_API_KEY');
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+      this.logger.log('Enhanced Email service initialized with Resend');
+    } else {
+      this.resend = null;
+      this.logger.warn('Enhanced Email service: no RESEND_API_KEY — console-log mode');
+    }
   }
 
   private get from(): string {
-    return this.config.get<string>('EMAIL_FROM', 'IBMS <noreply@ibms.app>');
+    return this.config.get<string>('EMAIL_FROM', 'IBMS <onboarding@resend.dev>');
   }
 
   // Simplified email sending for now
@@ -42,15 +49,31 @@ export class EnhancedEmailService {
   }
 
   private async sendDirect(to: string, subject: string, html: string): Promise<void> {
-    const tag = to.split('@')[0];
-    const testmailAddress = `${tag}.${this.namespace}@inbox.testmail.app`;
-    
+    if (this.resend) {
+      try {
+        const { data, error } = await this.resend.emails.send({
+          from: this.from,
+          to,
+          subject,
+          html,
+        });
+        if (error) {
+          this.logger.error(`Resend API error sending to ${to}: ${JSON.stringify(error)}`);
+          return;
+        }
+        this.logger.log(`Email sent to ${to} [Resend ID: ${data?.id}]`);
+      } catch (err) {
+        this.logger.error(`Failed to send email to ${to} via Resend`, err);
+      }
+      return;
+    }
+
+    // Fallback: console log
     this.logger.log('\n' + '='.repeat(80));
-    this.logger.log('📧 EMAIL SENT (Development Mode)');
+    this.logger.log('EMAIL (Dev Mode — no RESEND_API_KEY)');
     this.logger.log('='.repeat(80));
-    this.logger.log(`To: ${testmailAddress}`);
+    this.logger.log(`To: ${to}`);
     this.logger.log(`Subject: ${subject}`);
-    this.logger.log(`View at: https://testmail.app/inbox/${this.namespace}/${tag}`);
     this.logger.log('='.repeat(80) + '\n');
   }
 

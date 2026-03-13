@@ -14,6 +14,7 @@ import {
     Flag
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCreateComplaint } from '@/hooks/api/use-complaints';
 
 interface NewComplaintModalProps {
     isOpen: boolean;
@@ -21,7 +22,6 @@ interface NewComplaintModalProps {
 }
 
 export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
-    const [isLoading, setIsLoading] = useState(false);
     const [subject, setSubject] = useState('');
     const [complainant, setComplainant] = useState('');
     const [policyNo, setPolicyNo] = useState('');
@@ -29,10 +29,11 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
     const [priority, setPriority] = useState('MEDIUM');
     const [description, setDescription] = useState('');
 
+    const createComplaint = useCreateComplaint();
+
     const handleSubmit = async (e?: React.FormEvent) => {
         e?.preventDefault();
 
-        // Validate required fields
         if (!complainant.trim()) {
             toast.error('Complainant name is required.');
             return;
@@ -46,23 +47,36 @@ export function NewComplaintModal({ isOpen, onClose }: NewComplaintModalProps) {
             return;
         }
 
-        setIsLoading(true);
-
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        toast.success('Complaint Logged', {
-            description: `Complaint #${Math.floor(Math.random() * 10000)} has been registered.`,
-            icon: <CheckCircle2 className="text-success-500" size={18} />
-        });
-
-        // Reset
-        setSubject('');
-        setComplainant('');
-        setPolicyNo('');
-        setDescription('');
-        setIsLoading(false);
-        onClose();
+        createComplaint.mutate(
+            {
+                complainantName: complainant.trim(),
+                subject: subject.trim(),
+                description: description.trim(),
+                category: type,
+                priority,
+                policyNumber: policyNo.trim() || undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Complaint Logged', {
+                        description: 'The complaint has been registered successfully.',
+                        icon: <CheckCircle2 className="text-success-500" size={18} />,
+                    });
+                    setSubject('');
+                    setComplainant('');
+                    setPolicyNo('');
+                    setDescription('');
+                    onClose();
+                },
+                onError: (error: any) => {
+                    const message =
+                        error?.response?.data?.message ||
+                        error?.message ||
+                        'Failed to log complaint';
+                    toast.error('Complaint Failed', { description: message });
+                },
+            },
+        );
     };
 
     const footer = (

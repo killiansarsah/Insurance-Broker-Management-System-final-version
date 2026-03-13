@@ -1,32 +1,51 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly namespace: string | undefined;
+  private readonly resend: Resend | null;
 
   constructor(private config: ConfigService) {
-    this.namespace = this.config.get<string>('TESTMAIL_NAMESPACE');
-    this.logger.log('Email service initialized (development mode - console logging)');
+    const apiKey = this.config.get<string>('RESEND_API_KEY');
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+      this.logger.log('Email service initialized with Resend (production mode)');
+    } else {
+      this.resend = null;
+      this.logger.warn('RESEND_API_KEY not set — email service running in console-log mode');
+    }
   }
 
   private get from(): string {
-    return this.config.get<string>('EMAIL_FROM', 'IBMS <noreply@ibms.app>');
+    return this.config.get<string>('EMAIL_FROM', 'IBMS <onboarding@resend.dev>');
   }
+
+  // ───────────────────────────────────────────────────────
+  // Public email methods
+  // ───────────────────────────────────────────────────────
 
   async sendInvite(email: string, rawToken: string, frontendUrl: string): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
     const subject = 'You have been invited to IBMS';
     const html = `
-      <h2>Welcome to IBMS</h2>
-      <p>You have been invited to join the Insurance Broker Management System.</p>
-      <p><a href="${inviteUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Accept Invitation</a></p>
-      <p>This link expires in 48 hours.</p>
-      <p style="color:#6b7280;font-size:12px;">If you did not expect this invitation, please ignore this email.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #2563eb; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Welcome to IBMS</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <p style="font-size: 16px; color: #111827;">You have been invited to join the Insurance Broker Management System.</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Accept Invitation</a>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;">This link expires in 48 hours.</p>
+          <p style="color: #9ca3af; font-size: 12px;">If you did not expect this invitation, please ignore this email.</p>
+        </div>
+      </div>
     `;
 
-    await this.send(email, subject, html, inviteUrl);
+    await this.send(email, subject, html);
   }
 
   async sendPolicyRenewalReminder(
@@ -76,7 +95,7 @@ export class EmailService {
           
           <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 12px; border-radius: 6px; margin: 20px 0;">
             <p style="margin: 0; color: #92400e; font-size: 14px;">
-              <strong>⚠️ Important:</strong> Your coverage will cease on the expiry date if not renewed. Ensure timely renewal to avoid any gaps in protection.
+              <strong>Important:</strong> Your coverage will cease on the expiry date if not renewed. Ensure timely renewal to avoid any gaps in protection.
             </p>
           </div>
 
@@ -159,7 +178,7 @@ export class EmailService {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #2563eb; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0;">📋 New Task Assignment</h2>
+          <h2 style="margin: 0;">New Task Assignment</h2>
         </div>
         <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
           <p style="font-size: 16px; color: #111827;">Hi ${assigneeName},</p>
@@ -206,7 +225,7 @@ export class EmailService {
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #10b981; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px;">🎉 Welcome!</h1>
+          <h1 style="margin: 0; font-size: 28px;">Welcome!</h1>
         </div>
         <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
           <p style="font-size: 16px; color: #111827;">Dear ${clientName},</p>
@@ -253,31 +272,57 @@ export class EmailService {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
     const subject = 'IBMS Password Reset';
     const html = `
-      <h2>Password Reset</h2>
-      <p>A password reset was requested for your account.</p>
-      <p><a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a></p>
-      <p>This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: #f59e0b; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Password Reset</h1>
+        </div>
+        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+          <p style="font-size: 16px; color: #111827;">A password reset was requested for your account.</p>
+          <div style="text-align: center; margin: 32px 0;">
+            <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Reset Password</a>
+          </div>
+          <p style="color: #6b7280; font-size: 14px;">This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>
+        </div>
+      </div>
     `;
 
-    await this.send(email, subject, html, resetUrl);
+    await this.send(email, subject, html);
   }
 
-  private async send(to: string, subject: string, html: string, resetUrl?: string): Promise<void> {
-    const tag = to.split('@')[0];
-    const testmailAddress = `${tag}.${this.namespace}@inbox.testmail.app`;
-    
-    this.logger.log('\n' + '='.repeat(80));
-    this.logger.log('📧 EMAIL SENT (Development Mode)');
-    this.logger.log('='.repeat(80));
-    this.logger.log(`To: ${testmailAddress}`);
-    this.logger.log(`Subject: ${subject}`);
-    if (resetUrl) {
-      this.logger.log(`Reset URL: ${resetUrl}`);
+  // ───────────────────────────────────────────────────────
+  // Core send method — Resend with console fallback
+  // ───────────────────────────────────────────────────────
+
+  private async send(to: string, subject: string, html: string): Promise<void> {
+    // Production mode — send via Resend
+    if (this.resend) {
+      try {
+        const { data, error } = await this.resend.emails.send({
+          from: this.from,
+          to,
+          subject,
+          html,
+        });
+
+        if (error) {
+          this.logger.error(`Resend API error sending to ${to}: ${JSON.stringify(error)}`);
+          return;
+        }
+
+        this.logger.log(`Email sent successfully to ${to} [Resend ID: ${data?.id}]`);
+      } catch (err) {
+        this.logger.error(`Failed to send email to ${to} via Resend`, err);
+      }
+      return;
     }
-    this.logger.log(`View at: https://testmail.app/inbox/${this.namespace}/${tag}`);
+
+    // Development fallback — console log
+    this.logger.log('\n' + '='.repeat(80));
+    this.logger.log('EMAIL (Development Mode — no RESEND_API_KEY set)');
+    this.logger.log('='.repeat(80));
+    this.logger.log(`From: ${this.from}`);
+    this.logger.log(`To: ${to}`);
+    this.logger.log(`Subject: ${subject}`);
     this.logger.log('='.repeat(80) + '\n');
-    
-    // In development, just log the email
-    // For production, integrate with SendGrid or similar
   }
 }
