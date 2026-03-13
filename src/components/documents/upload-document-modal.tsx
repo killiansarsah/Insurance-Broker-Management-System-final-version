@@ -25,6 +25,7 @@ interface UploadDocumentModalProps {
     defaultReferenceId?: string;
     /** Pre-set the category */
     defaultCategory?: string;
+    onUploadComplete?: (uploadedDocs: any[]) => void;
 }
 
 interface QueuedFile {
@@ -54,6 +55,7 @@ export function UploadDocumentModal({
     onClose,
     defaultReferenceId = '',
     defaultCategory = 'KYC',
+    onUploadComplete,
 }: UploadDocumentModalProps) {
     const [files, setFiles] = useState<QueuedFile[]>([]);
     const [category, setCategory] = useState(defaultCategory);
@@ -135,6 +137,17 @@ export function UploadDocumentModal({
 
         // Reset after short delay
         setTimeout(() => {
+            if (onUploadComplete) {
+                const uploadedDocs = files.map(f => ({
+                    id: Math.random().toString(36).substring(2, 9),
+                    name: f.file.name,
+                    type: category || 'DOCUMENT',
+                    mimeType: f.file.type,
+                    url: URL.createObjectURL(f.file),
+                    uploadedAt: new Date().toISOString()
+                }));
+                onUploadComplete(uploadedDocs);
+            }
             setFiles([]);
             setReferenceId('');
             setDescription('');

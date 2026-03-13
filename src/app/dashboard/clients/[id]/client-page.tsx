@@ -218,7 +218,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                     <ChevronDown size={12} className="text-surface-400" />
                                 </button>
                                 {showKycMenu && (
-                                    <div className="absolute right-0 top-full mt-1 w-48 bg-background border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                                    <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-700 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-[100] py-1 animate-fade-in">
                                         <p className="px-3 py-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">Change KYC Status</p>
                                         {(['PENDING', 'VERIFIED', 'REJECTED', 'EXPIRED'] as const).map(s => (
                                             <button
@@ -272,7 +272,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                 <ChevronDown size={12} />
                             </button>
                             {showStatusMenu && (
-                                <div className="absolute right-0 top-full mt-1 w-52 bg-background border border-surface-200 rounded-xl shadow-xl z-50 py-1 animate-fade-in">
+                                <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-700 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-[100] py-1 animate-fade-in">
                                     <p className="px-3 py-1.5 text-[10px] font-bold text-surface-400 uppercase tracking-wider">Change Client Status</p>
                                     {([
                                         { value: 'ACTIVE', label: 'Active', desc: 'Client is operational', color: 'bg-emerald-500' },

@@ -117,38 +117,44 @@ export default function PoliciesPage() {
         {
             label: `Active ${typeParam ? (typeParam === 'MOTOR' ? 'Motor' : 'Non-Motor') : ''} Policies`,
             value: activePolicies.length,
-            icon: <FileText size={20} />,
-            color: 'text-primary-500 bg-primary-50',
+            icon: <FileText size={22} strokeWidth={2.5} />,
+            color: 'text-primary-600 bg-primary-50 ring-primary-100',
+            borderColor: 'bg-primary-500',
         },
         {
             label: 'Total Premium',
             value: formatCurrency(totalPremium),
-            icon: <TrendingUp size={20} />,
-            color: 'text-success-500 bg-success-50',
+            icon: <TrendingUp size={22} strokeWidth={2.5} />,
+            color: 'text-success-600 bg-success-50 ring-success-100',
+            borderColor: 'bg-success-500',
         },
         {
             label: 'Expiring ≤30d',
             value: expiringSoon.length,
-            icon: <Clock size={20} />,
-            color: 'text-accent-500 bg-accent-50',
+            icon: <Clock size={22} strokeWidth={2.5} />,
+            color: 'text-accent-600 bg-accent-50 ring-accent-100',
+            borderColor: 'bg-accent-500',
         },
         {
             label: 'Pending / Draft',
             value: pendingDraft.length,
-            icon: <AlertCircle size={20} />,
-            color: 'text-warning-500 bg-warning-50',
+            icon: <AlertCircle size={22} strokeWidth={2.5} />,
+            color: 'text-warning-600 bg-warning-50 ring-warning-100',
+            borderColor: 'bg-warning-500',
         },
         {
             label: 'Lapsed',
             value: lapsedPolicies.length,
-            icon: <ShieldAlert size={20} />,
-            color: 'text-danger-500 bg-danger-50',
+            icon: <ShieldAlert size={22} strokeWidth={2.5} />,
+            color: 'text-danger-600 bg-danger-50 ring-danger-100',
+            borderColor: 'bg-danger-500',
         },
         {
             label: 'New This Month',
             value: newThisMonth.length,
-            icon: <Activity size={20} />,
-            color: 'text-info-500 bg-info-50',
+            icon: <Activity size={22} strokeWidth={2.5} />,
+            color: 'text-info-600 bg-info-50 ring-info-100',
+            borderColor: 'bg-info-500',
         },
     ];
 
@@ -355,21 +361,36 @@ export default function PoliciesPage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6 gap-4">
                 {kpis.map((kpi) => (
-                    <Card key={kpi.label} padding="md" className="relative overflow-hidden group">
-                        <div className="flex items-center gap-3">
-                            <div className={cn(
-                                'w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 duration-300',
-                                kpi.color
-                            )}>
-                                {kpi.icon}
+                    <Card key={kpi.label} padding="none" className="relative overflow-hidden group bg-white border-surface-200/60 hover:border-surface-300 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div className="p-5 flex flex-col gap-4">
+                            <div className="flex items-center justify-between">
+                                <div className={cn(
+                                    'w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:-rotate-3 shadow-sm ring-1 ring-inset',
+                                    kpi.color
+                                )}>
+                                    {kpi.icon}
+                                </div>
+                                <div className="h-8 w-8 rounded-full bg-surface-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform group-hover:translate-x-0 translate-x-2">
+                                    <TrendingUp size={14} className="text-surface-400" />
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-2xl font-bold text-surface-900">{kpi.value}</p>
-                                <p className="text-xs font-medium text-surface-500 uppercase tracking-wider">{kpi.label}</p>
+                            <div className="min-w-0">
+                                <p className="text-2xl font-black text-surface-900 truncate tracking-tight mb-0.5" title={String(kpi.value)}>{kpi.value}</p>
+                                <p className="text-[10px] font-bold text-surface-500 uppercase tracking-widest truncate" title={kpi.label}>{kpi.label}</p>
                             </div>
                         </div>
+                        {/* Premium Gradient Overlay on hover */}
+                        <div className={cn(
+                            "absolute inset-0 opacity-0 group-hover:opacity-[0.03] pointer-events-none transition-opacity duration-500",
+                            kpi.borderColor
+                        )} />
+                        {/* Vibrant decorative bar at the bottom */}
+                        <div className={cn(
+                            "absolute bottom-0 left-0 w-full h-1 scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left",
+                            kpi.borderColor
+                        )} />
                     </Card>
                 ))}
             </div>

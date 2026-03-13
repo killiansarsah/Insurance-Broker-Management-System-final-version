@@ -46,7 +46,7 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { formatCurrency, cn, formatDate } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import type { Policy } from '@/types';
-import { usePolicy, useClaims, useCarrier } from '@/hooks/api';
+import { usePolicy, useClaims, useCarrier, useDocuments } from '@/hooks/api';
 import { toast } from 'sonner';
 import { usePaymentStore } from '@/stores/payment-store';
 import { generateReceipt } from '@/lib/generate-receipt';
@@ -90,6 +90,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [showDocUploadModal, setShowDocUploadModal] = useState(false);
+    const [localDocuments, setLocalDocuments] = useState<any[]>([]);
 
     const { transactions } = usePaymentStore();
 
@@ -101,6 +102,10 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     const { data: carrierRaw } = useCarrier(insurerId);
     const carrier = carrierRaw as any;
     const policyTransactions = useMemo(() => transactions.filter(t => t.policyId === policyId), [transactions, policyId]);
+
+    // Fetch persisted documents linked to this policy
+    const { data: apiDocsRaw } = useDocuments({ linkedEntityType: 'POLICY', linkedEntityId: policyId });
+    const apiDocuments: any[] = ((apiDocsRaw as any)?.items ?? (Array.isArray(apiDocsRaw) ? apiDocsRaw : []));
 
     if (policyLoading) {
         return (
@@ -713,11 +718,52 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     );
 
     // ─── Documents Tab ───────────────────────────────────────────────────────
-    const renderDocuments = () => (
+    const handleViewDocument = (doc: any) => {
+        const url = doc.url || doc.fileUrl;
+        if (url) {
+            window.open(url, '_blank', 'noopener,noreferrer');
+        } else {
+            toast.error('No preview available', { description: 'This document does not have a viewable URL.' });
+        }
+    };
+
+    const handleDownloadDocument = (doc: any) => {
+        const url = doc.url || doc.fileUrl;
+        if (url) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = doc.name || 'document';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            toast.success(`Downloading ${doc.name}`);
+        } else {
+            toast.error('Download unavailable', { description: 'This document does not have a downloadable URL.' });
+        }
+    };
+
+    const renderDocuments = () => {
+        const allDocuments = [
+            ...(policy.documents || []),
+            ...apiDocuments,
+            ...localDocuments,
+        ];
+        // Deduplicate by id
+        const seen = new Set<string>();
+        const uniqueDocs = allDocuments.filter((doc: any) => {
+            if (seen.has(doc.id)) return false;
+            seen.add(doc.id);
+            return true;
+        });
+
+        return (
         <Card className="p-0 overflow-hidden">
             <div className="bg-surface-50/50 border-b border-surface-100 px-6 py-4 flex justify-between items-center">
                 <h3 className="font-semibold text-surface-900 flex items-center gap-2">
                     <FileCheck size={18} className="text-accent-500" /> Policy Documents
+                    {uniqueDocs.length > 0 && (
+                        <span className="text-xs font-normal text-surface-400">({uniqueDocs.length})</span>
+                    )}
                 </h3>
                 <Button
                     variant="outline"
@@ -728,31 +774,59 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     Upload
                 </Button>
             </div>
-            {policy.documents && policy.documents.length > 0 ? (
+            {uniqueDocs.length > 0 ? (
                 <div className="p-2">
-                    {policy.documents.map((doc: any) => (
-                        <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-surface-50 rounded-lg group transition-colors">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 group-hover:bg-white dark:group-hover:bg-slate-800 group-hover:shadow-sm transition-all">
-                                    <FileText size={20} />
+                    {uniqueDocs.map((doc: any) => {
+                        const docUrl = doc.url || doc.fileUrl;
+                        const docDate = doc.uploadedAt || doc.createdAt || '';
+                        const docType = doc.type || doc.category || 'DOCUMENT';
+                        const docMime = doc.mimeType || '';
+                        const isImage = docMime.startsWith('image/');
+
+                        return (
+                            <div key={doc.id} className="flex items-center justify-between p-3 hover:bg-surface-50 rounded-lg group transition-colors">
+                                <div className="flex items-center gap-3 min-w-0 flex-1">
+                                    {/* Thumbnail */}
+                                    {isImage && docUrl ? (
+                                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-surface-100 shrink-0 border border-surface-200">
+                                            <img src={docUrl} alt={doc.name} className="w-full h-full object-cover" />
+                                        </div>
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center text-surface-500 group-hover:bg-white dark:group-hover:bg-slate-800 group-hover:shadow-sm transition-all shrink-0">
+                                            <FileText size={20} />
+                                        </div>
+                                    )}
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-surface-900 group-hover:text-primary-600 transition-colors truncate">{doc.name}</p>
+                                        <p className="text-xs text-surface-500">
+                                            <span className="capitalize">{docType.replace(/_/g, ' ')}</span>
+                                            {docDate && <> · {formatDate(typeof docDate === 'string' ? docDate.split('T')[0] : docDate)}</>}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm font-medium text-surface-900 group-hover:text-primary-600 transition-colors">{doc.name}</p>
-                                    <p className="text-xs text-surface-500">
-                                        <span className="capitalize">{doc.type.replace(/_/g, ' ')}</span> · {formatDate(doc.uploadedAt.split('T')[0])}
-                                    </p>
+                                <div className="flex items-center gap-1 shrink-0">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity px-2"
+                                        onClick={() => handleViewDocument(doc)}
+                                        title="View Document"
+                                    >
+                                        <Eye size={16} />
+                                    </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity px-2"
+                                        onClick={() => handleDownloadDocument(doc)}
+                                        title="Download Document"
+                                    >
+                                        <Download size={16} />
+                                    </Button>
                                 </div>
                             </div>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity px-2"
-                                onClick={() => toast.info(`Download ${doc.name}`)}
-                            >
-                                <Download size={16} />
-                            </Button>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="p-12 text-center text-surface-400">
@@ -761,7 +835,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 </div>
             )}
         </Card>
-    );
+        );
+    };
 
     // ─── Claims History Tab ──────────────────────────────────────────────────
     const renderClaims = () => (
@@ -1062,6 +1137,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
         );
     };
 
+
     // ─── Tab Content Map ─────────────────────────────────────────────────────
     const tabContent: Record<TabId, () => React.ReactNode> = {
         'overview': renderOverview,
@@ -1227,6 +1303,9 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 onClose={() => setShowDocUploadModal(false)}
                 defaultReferenceId={policy.policyNumber}
                 defaultCategory="POLICY"
+                onUploadComplete={(docs) => {
+                    setLocalDocuments(prev => [...prev, ...docs]);
+                }}
             />
         </div>
     );
