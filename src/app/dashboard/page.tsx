@@ -136,17 +136,8 @@ function formatCompact(n: number): string {
 // =====================================================================
 export default function DashboardPage() {
     const { user } = useAuthStore();
-    const {
-        policies: policiesData,
-        leads: leadsData,
-        invoices: invoicesData,
-        dashboardReport,
-        isLoading,
-        isError,
-    } = useDashboardData();
-
     const [period, setPeriod] = useState<Period>('mtd');
-    const [selectedYear, setSelectedYear] = useState<number>(2026);
+    const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
     const [filters, setFilters] = useState<Filters>({
         insurer: null,
         product: null,
@@ -154,6 +145,15 @@ export default function DashboardPage() {
         accountOfficer: null,
         region: null,
     });
+
+    const {
+        policies: policiesData,
+        leads: leadsData,
+        invoices: invoicesData,
+        dashboardReport,
+        isLoading,
+        isError,
+    } = useDashboardData(period, selectedYear, filters);
 
     // Greeting logic
     const greeting = useMemo(() => {
@@ -225,9 +225,10 @@ export default function DashboardPage() {
 
     const claimsRatioValue = claimsRatioData.ratio;
 
-    // Lapsed policies — computed from report counts (no raw data iteration)
-    const lapsedCount = 0; // report doesn't include lapsed count yet — safe fallback
-    const lapsedPremium = 0;
+    // Lapsed policies — from server report
+    const lapsedPolicies: any = report.lapsedPolicies ?? {};
+    const lapsedCount = Number(lapsedPolicies.count ?? 0);
+    const lapsedPremium = Number(lapsedPolicies.premiumAtRisk ?? 0);
 
     // KPI data — using server-computed overview directly
     const kpiData = (() => {
@@ -258,7 +259,7 @@ export default function DashboardPage() {
         const topCarriers = (report.topCarriers ?? []).slice(0, 5);
         const byInsurer = topCarriers.map((c: any, idx: number) => ({
             name: c.name || 'Unknown',
-            amount: Number(c.premium ?? 0) * 0.125, // approximate commission from premium
+            amount: Number(c.premium ?? 0) * (c.commissionRate ? Number(c.commissionRate) / 100 : 0.165),
             status: (['PAID', 'PENDING', 'OVERDUE'][idx % 3]) as 'PAID' | 'PENDING' | 'OVERDUE'
         }));
         return { expected, paid: expected * 0.6, outstanding: expected * 0.4, overdue60: expected * 0.1, byInsurer };
@@ -306,13 +307,24 @@ export default function DashboardPage() {
         return { openTasks: openClaims + premiumPending, premiumPending, coverNotesPending: 1, certsPending: 1, overdueFollowups: overdueInvoices };
     })();
 
-    // Client segments — from server data
+    // Client segments — from server data (real breakdown)
     const clientSegments = (() => {
-        const total = Number(overview.totalClients ?? 1) || 1;
-        // Approximate from total — exact breakdown would require a server endpoint
+        const segmentColors: Record<string, string> = {
+            CORPORATE: 'bg-primary-500',
+            INDIVIDUAL: 'bg-success-500',
+        };
+        const serverSegments: any[] = report.clientSegments ?? [];
+        if (serverSegments.length > 0) {
+            return serverSegments.map((s: any) => ({
+                label: s.type === 'CORPORATE' ? 'Corporate' : 'Retail / Individual',
+                pct: Number(s.pct ?? 0),
+                color: segmentColors[s.type] ?? 'bg-surface-400',
+            }));
+        }
+        // Fallback if no data yet
         return [
-            { label: 'Corporate', pct: 45, color: 'bg-primary-500' },
-            { label: 'Retail / Individual', pct: 55, color: 'bg-success-500' },
+            { label: 'Corporate', pct: 0, color: 'bg-primary-500' },
+            { label: 'Retail / Individual', pct: 0, color: 'bg-success-500' },
         ];
     })();
 

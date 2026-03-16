@@ -36,6 +36,7 @@ import {
   MotorCoverType,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { NIC_LEVY_RATE } from '../src/common/constants/nic.constants';
 
 const prisma = new PrismaClient();
 
@@ -281,21 +282,27 @@ async function main(): Promise<void> {
   ];
 
   const productTemplates: Array<{ name: string; codeSuffix: string; insuranceType: InsuranceType; commissionRate: number; description: string }> = [
-    { name: 'Comprehensive Motor', codeSuffix: 'MOT-COMP', insuranceType: InsuranceType.MOTOR, commissionRate: 15.0, description: 'Full comprehensive motor vehicle cover' },
-    { name: 'Third Party Motor', codeSuffix: 'MOT-TP', insuranceType: InsuranceType.MOTOR, commissionRate: 12.5, description: 'Third party only motor cover' },
+    { name: 'Comprehensive Motor', codeSuffix: 'MOT-COMP', insuranceType: InsuranceType.MOTOR, commissionRate: 16.5, description: 'Full comprehensive motor vehicle cover' },
+    { name: 'Third Party Fire & Theft Motor', codeSuffix: 'MOT-TPFT', insuranceType: InsuranceType.MOTOR, commissionRate: 13.5, description: 'Third party fire and theft motor cover' },
+    { name: 'Third Party Motor', codeSuffix: 'MOT-TP', insuranceType: InsuranceType.MOTOR, commissionRate: 10.0, description: 'Third party only motor cover' },
     { name: 'Fire & Allied Perils', codeSuffix: 'FIRE-AP', insuranceType: InsuranceType.FIRE, commissionRate: 20.0, description: 'Fire, lightning, explosion and allied perils' },
-    { name: 'Marine Cargo', codeSuffix: 'MAR-CRG', insuranceType: InsuranceType.MARINE, commissionRate: 17.5, description: 'Coverage for goods in transit' },
-    { name: 'Professional Indemnity', codeSuffix: 'PI', insuranceType: InsuranceType.PROFESSIONAL_INDEMNITY, commissionRate: 18.0, description: 'Professional liability coverage' },
+    { name: 'Marine Cargo', codeSuffix: 'MAR-CRG', insuranceType: InsuranceType.MARINE, commissionRate: 20.0, description: 'Coverage for goods in transit by sea' },
+    { name: 'Professional Indemnity', codeSuffix: 'PI', insuranceType: InsuranceType.PROFESSIONAL_INDEMNITY, commissionRate: 22.0, description: 'Professional liability coverage' },
     { name: 'Group Health', codeSuffix: 'HLTH-GRP', insuranceType: InsuranceType.HEALTH, commissionRate: 10.0, description: 'Group health insurance for employees' },
     { name: 'Travel Insurance', codeSuffix: 'TRV', insuranceType: InsuranceType.TRAVEL, commissionRate: 22.0, description: 'Travel and accident coverage' },
-    { name: 'Engineering All Risk', codeSuffix: 'ENG-AR', insuranceType: InsuranceType.ENGINEERING, commissionRate: 16.0, description: 'All risks engineering cover' },
+    { name: 'Engineering All Risk', codeSuffix: 'ENG-AR', insuranceType: InsuranceType.ENGINEERING, commissionRate: 20.0, description: 'All risks engineering cover' },
+    { name: 'Bonds', codeSuffix: 'BONDS', insuranceType: InsuranceType.BONDS, commissionRate: 18.0, description: 'Performance, bid and customs bonds' },
+    { name: 'Workmen Comp / GPA', codeSuffix: 'WC-GPA', insuranceType: InsuranceType.LIABILITY, commissionRate: 22.0, description: 'Workmen compensation and group personal accident' },
+    { name: 'Public Liability', codeSuffix: 'PL', insuranceType: InsuranceType.LIABILITY, commissionRate: 22.0, description: 'Public and general liability cover' },
+    { name: 'Goods in Transit', codeSuffix: 'GIT', insuranceType: InsuranceType.MARINE, commissionRate: 20.0, description: 'Inland goods in transit coverage' },
+    { name: 'Fidelity Guarantee', codeSuffix: 'FG', insuranceType: InsuranceType.BONDS, commissionRate: 20.0, description: 'Employee dishonesty / fidelity guarantee' },
   ];
 
   const lifeProductTemplates: Array<{ name: string; codeSuffix: string; insuranceType: InsuranceType; commissionRate: number; description: string }> = [
     { name: 'Term Life', codeSuffix: 'LIFE-TERM', insuranceType: InsuranceType.LIFE, commissionRate: 25.0, description: 'Term life insurance policy' },
     { name: 'Whole Life', codeSuffix: 'LIFE-WHOLE', insuranceType: InsuranceType.LIFE, commissionRate: 30.0, description: 'Whole life insurance with savings' },
     { name: 'Endowment Plan', codeSuffix: 'LIFE-END', insuranceType: InsuranceType.LIFE, commissionRate: 28.0, description: 'Endowment savings and protection' },
-    { name: 'Group Life', codeSuffix: 'LIFE-GRP', insuranceType: InsuranceType.LIFE, commissionRate: 12.0, description: 'Group life for corporate clients' },
+    { name: 'Group Life', codeSuffix: 'LIFE-GRP', insuranceType: InsuranceType.LIFE, commissionRate: 20.0, description: 'Group life for corporate clients' },
   ];
 
   const carrierIdMap: Record<string, Record<string, string>> = {};
@@ -804,7 +811,7 @@ async function main(): Promise<void> {
       const pol = policies[i % policies.length];
       const carrier = await prisma.carrier.findUnique({ where: { id: pol.carrierId }, select: { name: true } });
       const commAmount = parseFloat((pol.premium * pol.commissionRate / 100).toFixed(2));
-      const nicLevy = parseFloat((commAmount * 0.03).toFixed(2));
+      const nicLevy = parseFloat((commAmount * NIC_LEVY_RATE).toFixed(2));
       const status = pick([CommissionStatus.PENDING, CommissionStatus.EARNED, CommissionStatus.PAID, CommissionStatus.PAID]);
 
       await prisma.commission.create({

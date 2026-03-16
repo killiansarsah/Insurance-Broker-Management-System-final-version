@@ -5,8 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { parse } from 'csv-parse/sync';
+import * as ExcelJS from 'exceljs';
 import { Prisma, InsuranceType, PremiumFrequency, LeadSource, LeadPriority, Gender } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
 import type { ImportDataType } from './dto/import.dto';
 
 export interface ImportResult {
@@ -83,7 +85,7 @@ export class ImportsService {
     file: Express.Multer.File,
     dataType: ImportDataType,
   ): Promise<ImportResult | MixedImportResult> {
-    const rows = this.parseFile(file);
+    const rows = await this.parseFile(file);
 
     if (!rows.length) {
       throw new BadRequestException('File contains no data rows');
@@ -104,8 +106,13 @@ export class ImportsService {
 
   // ─── FILE PARSING ─────────────────────────────────────────
 
-  private parseFile(file: Express.Multer.File): Record<string, string>[] {
+  private async parseFile(file: Express.Multer.File): Promise<Record<string, string>[]> {
     const ext = file.originalname.split('.').pop()?.toLowerCase();
+
+    if (ext === 'xlsx' || ext === 'xls') {
+      return this.parseExcel(file.buffer);
+    }
+
     const content = file.buffer.toString('utf-8');
 
     if (ext === 'json') {
@@ -114,6 +121,49 @@ export class ImportsService {
 
     // CSV (also handles TSV)
     return this.parseCsv(content);
+  }
+
+  private async parseExcel(buffer: Buffer): Promise<Record<string, string>[]> {
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
+
+    // Use the first worksheet that has data
+    let sheet: ExcelJS.Worksheet | undefined;
+    workbook.eachSheet((ws) => {
+      if (!sheet && ws.rowCount > 1) sheet = ws;
+    });
+
+    if (!sheet || sheet.rowCount < 2) {
+      throw new BadRequestException('Excel file contains no data. Ensure the first sheet has headers in row 1 and data below.');
+    }
+
+    // Row 1 = headers
+    const headerRow = sheet.getRow(1);
+    const headers: string[] = [];
+    headerRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
+      headers[colNumber - 1] = String(cell.value ?? '').trim();
+    });
+
+    const rows: Record<string, string>[] = [];
+    for (let r = 2; r <= sheet.rowCount; r++) {
+      const row: Record<string, string> = {};
+      let hasData = false;
+      const excelRow = sheet.getRow(r);
+      for (let c = 0; c < headers.length; c++) {
+        const cell = excelRow.getCell(c + 1);
+        let val = '';
+        if (cell.value instanceof Date) {
+          val = cell.value.toISOString();
+        } else if (cell.value !== null && cell.value !== undefined) {
+          val = String(cell.value).trim();
+        }
+        if (val) hasData = true;
+        if (headers[c]) row[headers[c]] = val;
+      }
+      if (hasData) rows.push(row);
+    }
+
+    return rows;
   }
 
   private parseCsv(content: string): Record<string, string>[] {
@@ -363,6 +413,29 @@ export class ImportsService {
   private colDate(row: Record<string, string>, ...candidates: string[]): string | null {
     const val = this.col(row, ...candidates);
     if (!val) return null;
+
+    // 1. Excel serial date (e.g. 44955)
+    if (/^\d{5}$/.test(val.trim())) {
+      const serial = parseInt(val.trim());
+      const d = new Date(Date.UTC(1899, 11, 30 + serial));
+      return isNaN(d.getTime()) ? null : d.toISOString();
+    }
+
+    // 2. DD/MM/YYYY or DD/MM/YY (Ghana default format)
+    const ddmm = val.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (ddmm) {
+      const [, dayStr, monthStr, yearStr] = ddmm;
+      const day = parseInt(dayStr);
+      const month = parseInt(monthStr);
+      const year = yearStr.length === 2 ? 2000 + parseInt(yearStr) : parseInt(yearStr);
+      // Treat as DD/MM/YYYY (Ghana convention) — day first
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        const d = new Date(year, month - 1, day);
+        return isNaN(d.getTime()) ? null : d.toISOString();
+      }
+    }
+
+    // 3. ISO or other standard formats
     const d = new Date(val);
     return isNaN(d.getTime()) ? null : d.toISOString();
   }
@@ -380,7 +453,7 @@ export class ImportsService {
     row: Record<string, string>,
     rowNum: number,
   ): Promise<boolean> {
-    const name = this.col(row, 'name', 'clientname', 'fullname', 'companyname', 'client');
+    const name = this.col(row, 'name', 'clientname', 'fullname', 'companyname', 'client', 'insured', 'assured', 'policyholder', 'insuredname');
     const firstName = this.col(row, 'firstname', 'first_name', 'first name');
     const lastName = this.col(row, 'lastname', 'last_name', 'last name', 'surname');
     const phone = this.col(row, 'phone', 'phonenumber', 'phone number', 'mobile', 'tel', 'telephone');
@@ -488,6 +561,15 @@ export class ImportsService {
     if (!insuranceType) throw new Error(`Row ${rowNum}: insuranceType is required`);
     if (!premiumAmount) throw new Error(`Row ${rowNum}: premiumAmount is required`);
 
+    // Dedup — if a policy number is provided in the import, check for existing
+    const sourcePolicyNumber = this.col(row, 'policynumber', 'policy_number', 'policy number', 'policy#', 'policyno');
+    if (sourcePolicyNumber) {
+      const existing = await this.prisma.policy.findFirst({
+        where: { tenantId, policyNumber: sourcePolicyNumber, deletedAt: null },
+      });
+      if (existing) return false; // skip duplicate
+    }
+
     // Look up client
     const client = await this.prisma.client.findFirst({
       where: {
@@ -531,10 +613,22 @@ export class ImportsService {
     const nextYear = new Date(today);
     nextYear.setFullYear(nextYear.getFullYear() + 1);
 
-    const policyNumber = await this.generatePolicyNumber(tenantId);
+    const policyNumber = sourcePolicyNumber || await this.generatePolicyNumber(tenantId);
     const insType = this.normaliseInsuranceType(insuranceType) as InsuranceType;
     const policyType = ['LIFE'].includes(insType) ? 'LIFE' : 'NON_LIFE';
-    const commRate = this.colNum(row, 'commission', 'commissionrate', 'commission_rate') ?? 10;
+
+    // Commission rate — prefer Product table lookup over imported value
+    const importedRate = this.colNum(row, 'commission', 'commissionrate', 'commission_rate');
+    let commRate = importedRate ?? 10;
+    if (carrierId) {
+      const product = await this.prisma.product.findFirst({
+        where: { tenantId, carrierId, insuranceType: insType },
+        select: { commissionRate: true },
+      });
+      if (product) {
+        commRate = product.commissionRate.toNumber();
+      }
+    }
     const commAmount = ((premiumAmount ?? 0) * commRate) / 100;
 
     await this.prisma.policy.create({
@@ -752,7 +846,7 @@ export class ImportsService {
     const rate = this.colNum(row, 'commissionrate', 'rate', 'commission_rate', 'commission') ?? 10;
     const premAmt = policy.premiumAmount.toNumber();
     const commissionAmount = (premAmt * rate) / 100;
-    const nicLevy = commissionAmount * 0.03; // 3% NIC levy
+    const nicLevy = commissionAmount * NIC_LEVY_RATE;
     const netCommission = commissionAmount - nicLevy;
 
     // Need a brokerId — use the importing user as fallback

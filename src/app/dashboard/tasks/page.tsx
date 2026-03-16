@@ -321,9 +321,9 @@ export default function TasksPage() {
 
     const handleDragEnd = (taskId: string, point: { x: number; y: number }) => {
         setBinHovered(false);
+        setCrumplingTaskId(null);
 
         if (!binRef.current) {
-            setCrumplingTaskId(null);
             return;
         }
         const binRect = binRef.current.getBoundingClientRect();
@@ -342,16 +342,42 @@ export default function TasksPage() {
 
         // Match the 120px threshold used in handleDrag
         if (distance < 120) {
-            // Keep crumpling active so the note visually shrinks before removal
-            setCrumplingTaskId(taskId);
+            // Set visual feedback immediately
             setJustTrashed(true);
-            setTimeout(() => {
-                handleComplete(taskId);
-                setCrumplingTaskId(null);
-            }, 500);
-            setTimeout(() => setJustTrashed(false), 1000);
-        } else {
-            setCrumplingTaskId(null);
+            
+            // Execute the deletion with proper cleanup
+            updateTask.mutate(
+                { id: taskId, data: { isCompleted: true } },
+                {
+                    onSuccess: () => {
+                        toast.success('Task Trashed', {
+                            description: 'Task permanently removed from desk.',
+                            icon: <Trash2 className="text-danger-500" />
+                        });
+                        
+                        // Clean up selection state
+                        if (selectedTaskIds.has(taskId)) {
+                            const newSelection = new Set(selectedTaskIds);
+                            newSelection.delete(taskId);
+                            setSelectedTaskIds(newSelection);
+                        }
+                        
+                        // Reset visual states after animation completes
+                        setTimeout(() => {
+                            setBinHovered(false);
+                            setJustTrashed(false);
+                        }, 800);
+                    },
+                    onError: () => {
+                        // Reset states on error
+                        setJustTrashed(false);
+                        setBinHovered(false);
+                        toast.error('Failed to delete task', {
+                            description: 'Please try again.'
+                        });
+                    }
+                }
+            );
         }
     };
 
@@ -484,7 +510,10 @@ export default function TasksPage() {
             {/* Conditional Interface Rendering */}
             {viewMode === 'desk' ? (
                 /* Interactive Desk Area - Scrollable */
-                <div className="relative h-[700px] bg-surface-50/50 rounded-[40px] border border-surface-200/50 shadow-inner overflow-hidden flex flex-col group/desk">
+                <motion.div 
+                    layout
+                    className="relative h-[700px] bg-surface-50/50 rounded-[40px] border border-surface-200/50 shadow-inner overflow-hidden flex flex-col group/desk"
+                >
                     {/* Desk Background Decoration */}
                     <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/wood-pattern.png')]" />
 
@@ -548,8 +577,11 @@ export default function TasksPage() {
                         </div>
 
                         {/* Task Notes Grid */}
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 pb-8">
-                            <AnimatePresence>
+                        <motion.div 
+                            layout
+                            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-8 pb-8 place-items-center"
+                        >
+                            <AnimatePresence mode="popLayout">
                                 {filteredTasks.length === 0 && (
                                     <motion.div
                                         initial={{ opacity: 0 }}
@@ -561,19 +593,42 @@ export default function TasksPage() {
                                     </motion.div>
                                 )}
                                 {filteredTasks.map((task) => (
-                                    <StickyNoteTask
+                                    <motion.div
                                         key={task.id}
-                                        task={task}
-                                        isCrumpled={crumplingTaskId === task.id}
-                                        isSelected={selectedTaskIds.has(task.id)}
-                                        onToggleSelection={toggleTaskSelection}
-                                        onDelete={handleDelete}
-                                        onDrag={handleDrag}
-                                        onDragEnd={handleDragEnd}
-                                    />
+                                        layout
+                                        layoutId={`task-${task.id}`}
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ 
+                                            opacity: 0, 
+                                            scale: 0.3,
+                                            transition: { duration: 0.2, ease: "easeOut" }
+                                        }}
+                                        transition={{ 
+                                            layout: { 
+                                                type: 'spring', 
+                                                stiffness: 400, 
+                                                damping: 25,
+                                                mass: 0.8
+                                            },
+                                            opacity: { duration: 0.3 },
+                                            scale: { duration: 0.3 }
+                                        }}
+                                        className="relative flex justify-center items-center w-full h-full"
+                                    >
+                                        <StickyNoteTask
+                                            task={task}
+                                            isCrumpled={crumplingTaskId === task.id}
+                                            isSelected={selectedTaskIds.has(task.id)}
+                                            onToggleSelection={toggleTaskSelection}
+                                            onDelete={handleDelete}
+                                            onDrag={handleDrag}
+                                            onDragEnd={handleDragEnd}
+                                        />
+                                    </motion.div>
                                 ))}
                             </AnimatePresence>
-                        </div>
+                        </motion.div>
                     </div>
 
                     {/* Scroll Indicator */}
@@ -602,7 +657,7 @@ export default function TasksPage() {
                             </span>
                         </div>
                     </div>
-                </div>
+                </motion.div>
             ) : (
                 /* Classic Dashboard List View - Completely different interface */
                 <div className="space-y-6">

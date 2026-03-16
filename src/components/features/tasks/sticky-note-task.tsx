@@ -58,47 +58,69 @@ export function StickyNoteTask({
             drag
             dragMomentum={false}
             dragElastic={0}
-            dragSnapToOrigin
+            dragSnapToOrigin={false}
             style={{ x, y }}
-            onDragStart={() => setIsDragging(true)}
+            onDragStart={() => {
+                setIsDragging(true);
+            }}
             onDrag={(_event, info) => {
                 onDrag?.(info.point, task.id);
             }}
             onDragEnd={(_event, info) => {
                 setIsDragging(false);
                 onDragEnd?.(task.id, info.point);
+                // Only reset position if not deleted (will be handled by parent)
+                setTimeout(() => {
+                    if (!isCrumpled) {
+                        x.set(0);
+                        y.set(0);
+                    }
+                }, 100);
             }}
-            initial={{ opacity: 0, scale: 0.9, rotate: baseRotation }}
+            initial={{ scale: 0.9, rotate: baseRotation, x: 0, y: 0 }}
             animate={{
-                opacity: task.isCompleted ? 0 : 1,
-                scale: isCrumpled ? 0.4 : 1,
-                rotate: isCrumpled ? [0, 90, 180, 270, 360] : isDragging ? 0 : baseRotation,
+                opacity: isCrumpled ? 0 : 1,
+                scale: isCrumpled ? 0 : 1,
+                rotate: isCrumpled ? 360 : isDragging ? 0 : baseRotation,
                 borderRadius: isCrumpled ? "100%" : "2px",
+                filter: isCrumpled ? "blur(4px)" : "blur(0px)",
                 boxShadow: isCrumpled
-                    ? "0 10px 25px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.1)"
+                    ? "0 0px 0px rgba(0,0,0,0)"
                     : isDragging
                         ? "0 25px 50px rgba(0,0,0,0.25), 0 10px 20px rgba(0,0,0,0.15)"
                         : "5px 5px 15px rgba(0,0,0,0.08)"
             }}
             whileHover={{
-                scale: isCrumpled ? 0.4 : 1.03,
+                scale: isCrumpled ? 0.4 : isDragging ? 1.15 : 1.03,
                 boxShadow: isCrumpled
                     ? "0 10px 25px rgba(0,0,0,0.2)"
                     : "8px 8px 25px rgba(0,0,0,0.14)",
-                y: isCrumpled ? 0 : -3
+                y: isCrumpled ? 0 : isDragging ? 0 : -3
             }}
             whileDrag={{
-                scale: 1.08,
-                zIndex: 100,
+                scale: 1.15,
+                zIndex: 1000,
                 cursor: 'grabbing',
-                rotate: 0,
+                rotate: typeof baseRotation === 'number' ? baseRotation + 5 : 5,
             }}
             transition={{
-                type: "spring",
-                stiffness: isCrumpled ? 200 : 400,
-                damping: isCrumpled ? 15 : 30,
-                rotate: { repeat: isCrumpled ? Infinity : 0, duration: 0.5 }
+                scale: { 
+                    type: "spring", 
+                    stiffness: isCrumpled ? 150 : 350, 
+                    damping: isCrumpled ? 15 : 25 
+                },
+                rotate: { duration: 0.3, ease: "easeOut" },
+                opacity: { duration: 0.3 },
+                layout: { 
+                    type: "spring", 
+                    stiffness: 400, 
+                    damping: 25 
+                },
+                x: { type: "spring", stiffness: 300, damping: 30 },
+                y: { type: "spring", stiffness: 300, damping: 30 }
             }}
+            layout
+            layoutId={`sticky-${task.id}`}
             className={cn(
                 "relative w-full aspect-square max-w-[200px] cursor-grab active:cursor-grabbing select-none group",
                 stickyColors[task.priority],

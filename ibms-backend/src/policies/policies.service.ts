@@ -13,6 +13,7 @@ import { CreateEndorsementDto } from './dto/endorsements/create-endorsement.dto'
 import { PayInstallmentDto } from './dto/installments/pay-installment.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
 
 @Injectable()
 export class PoliciesService {
@@ -427,8 +428,7 @@ export class PoliciesService {
       const premiumAmount = Number(policy.premiumAmount);
       const commissionRate = Number(policy.commissionRate);
       const commissionAmount = Number(policy.commissionAmount);
-      const nicLevyRate = 0.03; // NIC 3% levy
-      const nicLevy = commissionAmount * nicLevyRate;
+      const nicLevy = commissionAmount * NIC_LEVY_RATE;
       const netCommission = commissionAmount - nicLevy;
 
       await (tx as Prisma.TransactionClient).commission.create({

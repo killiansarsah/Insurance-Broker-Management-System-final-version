@@ -16,12 +16,59 @@ import { apiClient } from '@/lib/api-client';
  *
  * Net savings: ~60-70% less data transferred, computation offloaded to server.
  */
-export function useDashboardData() {
+interface DashboardFilters {
+  insurer: string | null;
+  product: string | null;
+  clientType: string | null;
+  accountOfficer: string | null;
+  region: string | null;
+}
+
+export function useDashboardData(
+  period: 'today' | 'mtd' | 'ytd' = 'mtd',
+  year: number = new Date().getFullYear(),
+  filters?: DashboardFilters
+) {
+  // Compute date range based on period and year
+  const computeDateRange = () => {
+    const today = new Date();
+    const isCurrentYear = today.getFullYear() === year;
+    const endDate = isCurrentYear ? today : new Date(year, 11, 31, 23, 59, 59);
+
+    let startDate: Date;
+    if (period === 'today') {
+      startDate = new Date(endDate);
+      startDate.setHours(0, 0, 0, 0);
+    } else if (period === 'mtd') {
+      startDate = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+    } else {
+      // ytd
+      startDate = new Date(endDate.getFullYear(), 0, 1);
+    }
+
+    return {
+      from: startDate.toISOString(),
+      to: endDate.toISOString(),
+    };
+  };
+
+  const { from, to } = computeDateRange();
+
+  const queryParams = {
+    from,
+    to,
+    ...(filters?.insurer && { insurer: filters.insurer }),
+    ...(filters?.product && { product: filters.product }),
+    ...(filters?.clientType && { clientType: filters.clientType }),
+    ...(filters?.accountOfficer && { accountOfficer: filters.accountOfficer }),
+    ...(filters?.region && { region: filters.region }),
+  };
+
   const results = useQueries({
     queries: [
       {
-        queryKey: ['reports', 'dashboard'],
-        queryFn: () => apiClient.get('/reports/dashboard'),
+        queryKey: ['reports', 'dashboard', period, year, filters],
+        queryFn: () => apiClient.get('/reports/dashboard', queryParams),
         staleTime: 60000, // 1 minute — aggregate data doesn't change often
       },
       {

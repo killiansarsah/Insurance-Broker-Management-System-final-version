@@ -366,7 +366,7 @@ model Policy {
   inceptionDate      DateTime
   expiryDate         DateTime
   issueDate          DateTime?
-  sumInsured         Decimal              @db.Decimal(15, 2)
+  sumInsured         Decimal?             @db.Decimal(15, 2)
   premiumAmount      Decimal              @db.Decimal(15, 2)
   commissionRate     Decimal              @db.Decimal(5, 2)
   commissionAmount   Decimal              @db.Decimal(15, 2)

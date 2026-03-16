@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? `http://${window.location.hostname}:3001/api/v1` : 'http://localhost:3001/api/v1');
 
 interface RetryableRequest extends InternalAxiosRequestConfig {
     _retry?: boolean;

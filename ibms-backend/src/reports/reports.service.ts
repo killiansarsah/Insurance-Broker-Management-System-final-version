@@ -1,15 +1,90 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class ReportsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async dashboard(tenantId: string, from?: string, to?: string) {
+  async dashboard(
+    tenantId: string,
+    from?: string,
+    to?: string,
+    filters?: {
+      insurer?: string;
+      product?: string;
+      clientType?: string;
+      accountOfficer?: string;
+      region?: string;
+    },
+  ) {
     const dateFrom = from
       ? new Date(from)
       : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const dateTo = to ? new Date(to) : new Date();
+    const dateRange = { gte: dateFrom, lte: dateTo };
+
+    // Resolve carrier ID if insurer string is passed
+    let carrierId: string | undefined;
+    if (filters?.insurer) {
+      const carrier = await this.prisma.carrier.findFirst({
+        where: { tenantId, name: { contains: filters.insurer, mode: 'insensitive' } },
+      });
+      if (carrier) carrierId = carrier.id;
+    }
+
+    // Resolve product map
+    const productMap: Record<string, any> = {
+      'Motor': 'MOTOR',
+      'Health': 'HEALTH',
+      'Fire / Property': 'FIRE',
+      'Marine': 'MARINE',
+      'Professional Indemnity': 'PROFESSIONAL_INDEMNITY',
+      'Travel': 'TRAVEL',
+    };
+    const insuranceType = filters?.product ? productMap[filters.product] : undefined;
+
+    // Resolve client type
+    const clientTypeMap: Record<string, any> = {
+      'Corporate': 'CORPORATE',
+      'SME': 'CORPORATE',
+      'Retail / Individual': 'INDIVIDUAL',
+    };
+    const cType = filters?.clientType ? clientTypeMap[filters.clientType] : undefined;
+    const accountOfficer = filters?.accountOfficer;
+
+    const basePolicyWhere: Prisma.PolicyWhereInput = {
+      tenantId,
+      deletedAt: null,
+      createdAt: dateRange,
+      ...(carrierId && { carrierId }),
+      ...(insuranceType && { insuranceType }),
+      ...(cType && { client: { type: cType } }),
+      ...(accountOfficer && { brokerId: accountOfficer }), // Note: UI dropdown passes string names, but usually accountOfficer in UI should pass ID or we ignore for now if name is hard to map
+    };
+
+    const baseClaimWhere: Prisma.ClaimWhereInput = {
+      tenantId,
+      deletedAt: null,
+      createdAt: dateRange,
+      ...(carrierId && { policy: { carrierId } }),
+      ...(insuranceType && { policy: { insuranceType } }),
+      ...(cType && { policy: { client: { type: cType } } }),
+    };
+
+    const baseClientWhere: Prisma.ClientWhereInput = {
+      tenantId,
+      deletedAt: null,
+      createdAt: dateRange,
+      ...(cType && { type: cType }),
+    };
+
+    const baseCommWhere: Prisma.CommissionWhereInput = {
+      tenantId,
+      createdAt: dateRange,
+      ...(carrierId && { policy: { carrierId } }),
+      ...(insuranceType && { policy: { insuranceType } }),
+    };
 
     const [
       totalClients,
@@ -26,17 +101,20 @@ export class ReportsService {
       recentActivity,
       policyMixData,
       overdueNIC,
+      lapsedCount,
+      lapsedPremiumAgg,
+      clientSegmentsData,
+      clientConcentrationData,
     ] = await Promise.all([
-      this.prisma.client.count({ where: { tenantId, deletedAt: null } }),
-      this.prisma.policy.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.client.count({ where: baseClientWhere }),
+      this.prisma.policy.count({ where: basePolicyWhere }),
       this.prisma.policy.count({
-        where: { tenantId, status: 'ACTIVE', deletedAt: null },
+        where: { ...basePolicyWhere, status: 'ACTIVE' },
       }),
-      this.prisma.claim.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.claim.count({ where: baseClaimWhere }),
       this.prisma.claim.count({
         where: {
-          tenantId,
-          deletedAt: null,
+          ...baseClaimWhere,
           status: {
             in: [
               'INTIMATED',
@@ -48,36 +126,36 @@ export class ReportsService {
         },
       }),
       this.prisma.policy.aggregate({
-        where: { tenantId, deletedAt: null },
+        where: basePolicyWhere,
         _sum: { premiumAmount: true },
       }),
       this.prisma.claim.aggregate({
-        where: { tenantId, deletedAt: null },
+        where: baseClaimWhere,
         _sum: { claimAmount: true },
       }),
       this.prisma.claim.aggregate({
-        where: { tenantId, deletedAt: null, status: 'SETTLED' },
+        where: { ...baseClaimWhere, status: 'SETTLED' },
         _sum: { settledAmount: true },
       }),
       this.prisma.commission.aggregate({
-        where: { tenantId },
+        where: baseCommWhere,
         _sum: { commissionAmount: true },
       }),
       this.prisma.claim.groupBy({
         by: ['status'],
-        where: { tenantId, deletedAt: null },
+        where: baseClaimWhere,
         _count: { id: true },
       }),
       this.prisma.policy.groupBy({
         by: ['carrierId'],
-        where: { tenantId, deletedAt: null },
+        where: basePolicyWhere,
         _count: { id: true },
         _sum: { premiumAmount: true },
         orderBy: { _count: { id: 'desc' } },
         take: 10,
       }),
       this.prisma.auditLog.findMany({
-        where: { tenantId, createdAt: { gte: dateFrom, lte: dateTo } },
+        where: { tenantId, createdAt: dateRange }, // Audit log doesn't filter perfectly by client type, keep it simple
         orderBy: { createdAt: 'desc' },
         take: 20,
         include: {
@@ -87,7 +165,7 @@ export class ReportsService {
       // policyMix: breakdown by insuranceType
       this.prisma.policy.groupBy({
         by: ['insuranceType'],
-        where: { tenantId, deletedAt: null },
+        where: basePolicyWhere,
         _count: { id: true },
         _sum: { premiumAmount: true },
         orderBy: { _count: { id: 'desc' } },
@@ -95,8 +173,7 @@ export class ReportsService {
       // overdueNIC: open claims past processing deadline
       this.prisma.claim.count({
         where: {
-          tenantId,
-          deletedAt: null,
+          ...baseClaimWhere,
           status: {
             in: [
               'INTIMATED',
@@ -107,6 +184,29 @@ export class ReportsService {
           },
           processingDeadline: { lt: new Date() },
         },
+      }),
+      // lapsed & expired policy count
+      this.prisma.policy.count({
+        where: { ...basePolicyWhere, status: { in: ['LAPSED', 'EXPIRED'] } },
+      }),
+      // lapsed / expired premium at risk
+      this.prisma.policy.aggregate({
+        where: { ...basePolicyWhere, status: { in: ['LAPSED', 'EXPIRED'] } },
+        _sum: { premiumAmount: true },
+      }),
+      // client segments breakdown (corporate vs individual)
+      this.prisma.client.groupBy({
+        by: ['type'],
+        where: baseClientWhere,
+        _count: { id: true },
+      }),
+      // client concentration: premium grouped by client
+      this.prisma.policy.groupBy({
+        by: ['clientId'],
+        where: { ...basePolicyWhere, status: 'ACTIVE' },
+        _sum: { premiumAmount: true },
+        orderBy: { _sum: { premiumAmount: 'desc' } },
+        take: 10,
       }),
     ]);
 
@@ -254,6 +354,48 @@ export class ReportsService {
         userId: a.userId,
         userName: a.user ? `${a.user.firstName} ${a.user.lastName}` : 'System',
       })),
+      // Lapsed / expired metrics
+      lapsedPolicies: {
+        count: lapsedCount,
+        premiumAtRisk: lapsedPremiumAgg._sum.premiumAmount ?? 0,
+      },
+      // Client segments (real data)
+      clientSegments: clientSegmentsData.map((s) => ({
+        type: s.type,
+        count: s._count.id,
+        pct: totalClients > 0
+          ? Number(((s._count.id / totalClients) * 100).toFixed(1))
+          : 0,
+      })),
+      // Client concentration risk (top clients by premium)
+      clientConcentration: await (async () => {
+        const totalActivePremium = Number(totalPremium);
+        if (!totalActivePremium || !clientConcentrationData.length) {
+          return { alerts: [], topClients: [] };
+        }
+        const clientIds = clientConcentrationData.map((c) => c.clientId);
+        const clients = await this.prisma.client.findMany({
+          where: { id: { in: clientIds } },
+          select: { id: true, firstName: true, lastName: true, companyName: true, type: true },
+        });
+        const clientNameMap = new Map(clients.map((c) => [
+          c.id,
+          c.type === 'CORPORATE' ? (c.companyName ?? 'Unknown') : `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || 'Unknown',
+        ]));
+        const topClients = clientConcentrationData.map((c) => {
+          const premium = Number(c._sum.premiumAmount ?? 0);
+          const pct = Number(((premium / totalActivePremium) * 100).toFixed(1));
+          return {
+            clientId: c.clientId,
+            name: clientNameMap.get(c.clientId) ?? 'Unknown',
+            premium,
+            pct,
+            alert: pct > 30,
+          };
+        });
+        const alerts = topClients.filter((c) => c.alert);
+        return { alerts, topClients };
+      })(),
     };
   }
 

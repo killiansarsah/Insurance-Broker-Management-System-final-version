@@ -103,4 +103,16 @@ export class PrismaService
     await this.$disconnect();
     this.logger.log('Disconnected from PostgreSQL');
   }
+
+  /**
+   * Set the PostgreSQL session variable used by RLS policies.
+   * Call this at the start of each request to activate row-level
+   * security filtering defined in prisma/rls.sql.
+   */
+  async setTenantContext(tenantId: string): Promise<void> {
+    if (!tenantId) return;
+    await this.$executeRawUnsafe(
+      `SET LOCAL app.current_tenant_id = '${tenantId.replace(/'/g, "''")}'`,
+    );
+  }
 }

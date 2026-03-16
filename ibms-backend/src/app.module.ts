@@ -8,6 +8,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
+import { TenantContextInterceptor } from './common/interceptors/tenant-context.interceptor';
 import configuration from './config/configuration';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HealthModule } from './health/health.module';
@@ -150,6 +151,10 @@ import { SearchModule } from './search/search.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: RequestIdInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TenantContextInterceptor,
     },
   ],
 })

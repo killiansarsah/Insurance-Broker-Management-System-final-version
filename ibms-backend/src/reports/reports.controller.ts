@@ -17,8 +17,19 @@ export class ReportsController {
     @Request() req: RequestWithUser,
     @Query('from') from?: string,
     @Query('to') to?: string,
+    @Query('insurer') insurer?: string,
+    @Query('product') product?: string,
+    @Query('clientType') clientType?: string,
+    @Query('accountOfficer') accountOfficer?: string,
+    @Query('region') region?: string,
   ) {
-    return this.reportsService.dashboard(req.user.tenantId, from, to);
+    return this.reportsService.dashboard(req.user.tenantId, from, to, {
+      insurer,
+      product,
+      clientType,
+      accountOfficer,
+      region,
+    });
   }
 
   @Get('production')

@@ -4,7 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { apiClient } from '@/lib/api-client';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
+const SOCKET_URL = process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ? `http://${window.location.hostname}:3001` : 'http://localhost:3001');
 
 interface ChatMessageEvent {
     id: string;
