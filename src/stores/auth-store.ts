@@ -189,10 +189,13 @@ export const useAuthStore = create<AuthState>()(
                     // Mark that we just freshly logged in — checkAuth should skip
                     // its auto-refresh for 30 seconds to avoid using a stale cookie
                     set({ user: res.user!, isAuthenticated: true, isLoading: false, _justLoggedInAt: Date.now() });
-                } catch (err: unknown) {
+                } catch (err: any) {
                     set({ isLoading: false });
                     if (isNetworkError(err)) {
                         throw new Error('Cannot reach the server. Please ensure the backend is running and try again.');
+                    }
+                    if (err.response?.status === 429) {
+                        throw new Error('Too many login attempts. Please wait a minute and try again.');
                     }
                     throw new Error('Invalid email or password');
                 }

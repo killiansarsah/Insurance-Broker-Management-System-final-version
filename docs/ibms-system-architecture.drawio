@@ -1,0 +1,162 @@
+<mxfile host="app.diagrams.net" modified="2026-03-17T00:00:00.000Z" agent="Cursor GPT" version="22.1.0" type="device">
+  <diagram id="system-context" name="System Context">
+    <mxGraphModel dx="1320" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="t1" value="IBMS — System Context" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=24;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="600" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- Users -->
+        <mxCell id="u1" value="Users&#xa;(Brokers, Admins, Compliance, Finance, etc.)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8FAFC;strokeColor=#334155;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="280" height="80" as="geometry"/>
+        </mxCell>
+
+        <!-- Frontend -->
+        <mxCell id="fe" value="Frontend&#xa;Next.js (React)&#xa;TanStack Query + Socket.IO client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="380" y="100" width="300" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Backend -->
+        <mxCell id="be" value="Backend API&#xa;NestJS&#xa;REST: /api/v1/*&#xa;WebSockets: /chat, /notifications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#166534;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="760" y="90" width="340" height="140" as="geometry"/>
+        </mxCell>
+
+        <!-- Data stores -->
+        <mxCell id="pg" value="PostgreSQL&#xa;(Prisma)" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEF3C7;strokeColor=#92400E;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="80" width="280" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="rd" value="Redis" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FFE4E6;strokeColor=#9F1239;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1180" y="210" width="280" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- External services -->
+        <mxCell id="gg" value="Google APIs&#xa;OAuth + Calendar + Drive + Sheets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1D4ED8;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="760" y="320" width="340" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="rs" value="Email Provider&#xa;Resend (prod)&#xa;Console fallback (dev)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#9A3412;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="380" y="320" width="300" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Schedulers -->
+        <mxCell id="jobs" value="Background Jobs (Nest Schedule)&#xa;- Compliance Cron (SLA/KYC/Renewals)&#xa;- Google Sync Scheduler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#0F172A;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="380" y="470" width="720" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="e1" value="Browser" style="endArrow=block;html=1;strokeColor=#334155;" edge="1" parent="1" source="u1" target="fe">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e2" value="HTTPS REST" style="endArrow=block;html=1;strokeColor=#3730A3;" edge="1" parent="1" source="fe" target="be">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e3" value="Socket.IO" style="endArrow=block;dashed=1;html=1;strokeColor=#3730A3;" edge="1" parent="1" source="fe" target="be">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e4" value="Prisma" style="endArrow=block;html=1;strokeColor=#166534;" edge="1" parent="1" source="be" target="pg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e5" value="Cache/queues" style="endArrow=block;html=1;strokeColor=#166534;" edge="1" parent="1" source="be" target="rd">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e6" value="OAuth + Sync" style="endArrow=block;html=1;strokeColor=#1D4ED8;" edge="1" parent="1" source="be" target="gg">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e7" value="Send email" style="endArrow=block;html=1;strokeColor=#9A3412;" edge="1" parent="1" source="be" target="rs">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e8" value="Runs scheduled tasks" style="endArrow=block;dashed=1;html=1;strokeColor=#0F172A;" edge="1" parent="1" source="jobs" target="be">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+
+  <diagram id="backend-components" name="Backend Components">
+    <mxGraphModel dx="1320" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- Title -->
+        <mxCell id="t2" value="IBMS Backend — Components" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=24;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="720" height="40" as="geometry"/>
+        </mxCell>
+
+        <!-- API Boundary -->
+        <mxCell id="b1" value="NestJS Backend (ibms-backend)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ECFDF5;strokeColor=#166534;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="1050" height="640" as="geometry"/>
+        </mxCell>
+
+        <!-- Controllers -->
+        <mxCell id="c1" value="Controllers (REST)&#xa;/api/v1/*" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#166534;fontSize=14;" vertex="1" parent="b1">
+          <mxGeometry x="30" y="40" width="300" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- WebSockets -->
+        <mxCell id="ws1" value="WebSocket Gateways (Socket.IO)&#xa;- /chat&#xa;- /notifications" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#DCFCE7;strokeColor=#166534;fontSize=14;" vertex="1" parent="b1">
+          <mxGeometry x="30" y="150" width="300" height="110" as="geometry"/>
+        </mxCell>
+
+        <!-- Cross-cutting -->
+        <mxCell id="x1" value="Cross-cutting&#xa;- ThrottlerGuard&#xa;- JwtAuthGuard + RolesGuard&#xa;- TenantContextInterceptor&#xa;- GlobalExceptionFilter&#xa;- Validation Pipe + Decimal Serialization" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#0F172A;fontSize=13;" vertex="1" parent="b1">
+          <mxGeometry x="360" y="40" width="360" height="220" as="geometry"/>
+        </mxCell>
+
+        <!-- Auth -->
+        <mxCell id="a1" value="Auth Module&#xa;- JWT (RS256) access tokens&#xa;- Refresh tokens&#xa;- Two-factor (2FA)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEF2FF;strokeColor=#3730A3;fontSize=14;" vertex="1" parent="b1">
+          <mxGeometry x="750" y="40" width="270" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- Domain modules -->
+        <mxCell id="d1" value="Domain Modules&#xa;Clients, Carriers, Policies, Renewals, Quotes&#xa;Claims, Complaints&#xa;Finance (Invoices/Commissions/Transactions/Remittances)&#xa;Leads, Documents, Tasks, Calendar, Approvals&#xa;Notifications, Chat, Reports, Departments, Settings&#xa;Imports, Search, Integrations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#64748B;fontSize=13;" vertex="1" parent="b1">
+          <mxGeometry x="30" y="290" width="990" height="220" as="geometry"/>
+        </mxCell>
+
+        <!-- Schedulers -->
+        <mxCell id="s1" value="Schedulers (Nest Schedule)&#xa;- Compliance Cron (SLA/KYC/Renewals)&#xa;- Google Sync Scheduler" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1F5F9;strokeColor=#0F172A;fontSize=13;" vertex="1" parent="b1">
+          <mxGeometry x="30" y="530" width="470" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Email & Integrations -->
+        <mxCell id="e9" value="Email Module&#xa;(Resend + dev fallback)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#9A3412;fontSize=13;" vertex="1" parent="b1">
+          <mxGeometry x="520" y="530" width="240" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="i1" value="Integrations Module&#xa;Google OAuth + Calendar/Drive/Sheets" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1D4ED8;fontSize=13;" vertex="1" parent="b1">
+          <mxGeometry x="780" y="530" width="240" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Data stores outside boundary -->
+        <mxCell id="pg2" value="PostgreSQL&#xa;Prisma ORM&#xa;Tenant-scoped schema + RLS context" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FEF3C7;strokeColor=#92400E;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="140" width="420" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="rd2" value="Redis" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;fillColor=#FFE4E6;strokeColor=#9F1239;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="300" width="420" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="gg2" value="Google APIs" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EFF6FF;strokeColor=#1D4ED8;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="450" width="420" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="rs2" value="Resend Email API" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFF7ED;strokeColor=#9A3412;fontSize=14;" vertex="1" parent="1">
+          <mxGeometry x="1140" y="560" width="420" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- Edges -->
+        <mxCell id="l1" value="DB queries" style="endArrow=block;html=1;strokeColor=#166534;" edge="1" parent="1" source="b1" target="pg2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l2" value="Cache/queue" style="endArrow=block;html=1;strokeColor=#166534;" edge="1" parent="1" source="b1" target="rd2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l3" value="OAuth + Sync" style="endArrow=block;html=1;strokeColor=#1D4ED8;" edge="1" parent="1" source="i1" target="gg2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="l4" value="Send email" style="endArrow=block;html=1;strokeColor=#9A3412;" edge="1" parent="1" source="e9" target="rs2">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

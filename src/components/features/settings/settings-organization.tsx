@@ -20,24 +20,8 @@ export function SettingsOrganization() {
     const [lCompanyName, setLCompanyName] = useState('');
     const [lCompanyEmail, setLCompanyEmail] = useState('');
     const [lCorporatePhone, setLCorporatePhone] = useState('');
-    const [lMobileNumber, setLMobileNumber] = useState('');
-    const [lTin, setLTin] = useState('');
     const [lNicLicense, setLNicLicense] = useState('');
     const [lStreet, setLStreet] = useState('');
-    const [lCity, setLCity] = useState('');
-    const [lRegion, setLRegion] = useState('');
-    const [lGps, setLGps] = useState('');
-    const [lPostal, setLPostal] = useState('');
-    const [lBusinessHours, setLBusinessHours] = useState('');
-    const [lFiscalYear, setLFiscalYear] = useState('');
-    const [lCommission, setLCommission] = useState('');
-    const [lGracePeriod, setLGracePeriod] = useState('');
-    const [lPolPrefix, setLPolPrefix] = useState('');
-    const [lClmPrefix, setLClmPrefix] = useState('');
-    const [lCliPrefix, setLCliPrefix] = useState('');
-    const [lLedPrefix, setLLedPrefix] = useState('');
-    const [lPrimaryColor, setLPrimaryColor] = useState('#c28532');
-    const [lAccentColor, setLAccentColor] = useState('#2563eb');
 
     const [isSaving, setIsSaving] = useState(false);
     const [showToast, setShowToast] = useState(false);
@@ -49,24 +33,8 @@ export function SettingsOrganization() {
             setLCompanyName(t.name || '');
             setLCompanyEmail(t.email || '');
             setLCorporatePhone(t.phone || '');
-            setLMobileNumber(t.mobileNumber || '');
-            setLTin(t.tin || '');
             setLNicLicense(t.nicLicense || '');
             setLStreet(t.street || t.address || '');
-            setLCity(t.city || '');
-            setLRegion(t.region || '');
-            setLGps(t.gps || '');
-            setLPostal(t.postal || '');
-            setLBusinessHours(t.businessHours || '');
-            setLFiscalYear(t.fiscalYear || '');
-            setLCommission(t.commission || '');
-            setLGracePeriod(t.gracePeriod || '');
-            setLPolPrefix(t.polPrefix || '');
-            setLClmPrefix(t.clmPrefix || '');
-            setLCliPrefix(t.cliPrefix || '');
-            setLLedPrefix(t.ledPrefix || '');
-            setLPrimaryColor(t.primaryColor || '#c28532');
-            setLAccentColor(t.accentColor || '#2563eb');
             // Hydrate logo from backend if available
             if (t.logoUrl) {
                 const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
@@ -78,30 +46,20 @@ export function SettingsOrganization() {
         }
     }, [tenant, updateProfile]);
 
-    // Apply branding colors as CSS custom properties live
-    useEffect(() => {
-        document.documentElement.style.setProperty('--brand-primary', lPrimaryColor);
-        document.documentElement.style.setProperty('--brand-accent', lAccentColor);
-    }, [lPrimaryColor, lAccentColor]);
-
     const handleSave = () => {
         setIsSaving(true);
         const payload: Record<string, unknown> = {
             name: lCompanyName,
             email: lCompanyEmail,
             phone: lCorporatePhone,
-            primaryColor: lPrimaryColor,
+            address: lStreet,
+            nicLicense: lNicLicense,
         };
         updateTenantMutation.mutate(payload, {
             onSuccess: () => {
                 updateProfile({
                     companyName: lCompanyName, companyEmail: lCompanyEmail,
-                    corporatePhone: lCorporatePhone, mobileNumber: lMobileNumber, tin: lTin,
-                    street: lStreet, city: lCity, region: lRegion, gps: lGps, postal: lPostal,
-                    businessHours: lBusinessHours, fiscalYear: lFiscalYear,
-                    commission: lCommission, gracePeriod: lGracePeriod,
-                    polPrefix: lPolPrefix, clmPrefix: lClmPrefix, cliPrefix: lCliPrefix, ledPrefix: lLedPrefix,
-                    primaryColor: lPrimaryColor, accentColor: lAccentColor,
+                    corporatePhone: lCorporatePhone, street: lStreet,
                 });
                 setIsSaving(false);
                 toast.success('Organization Saved', { description: 'Your organization settings have been updated.' });
@@ -139,7 +97,7 @@ export function SettingsOrganization() {
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className={`h-12 px-10 rounded-xl bg-primary hover:bg-primary-hover text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all flex items-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
+                    className={`h-12 px-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary-500/20 transition-all flex items-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
                 >
                     {isSaving ? <span className="animate-spin material-symbols-outlined text-lg">sync</span> : <span className="material-symbols-outlined text-lg">save</span>}
                     {isSaving ? 'Saving...' : 'Update Profile'}
@@ -150,9 +108,9 @@ export function SettingsOrganization() {
             <div className="flex flex-col gap-8">
                 <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm p-10 flex flex-col md:flex-row items-center gap-10">
                     <div className="relative group">
-                        <div className="size-40 rounded-full border-4 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden shadow-inner p-4 relative font-black text-3xl text-primary">
+                        <div className="size-40 rounded-full border-4 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden shadow-inner p-4 relative font-black text-3xl text-primary-600">
                             {logoUrl ? (
-                                <Image src={logoUrl} alt="Company Logo" width={160} height={160} className="w-full h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                <Image src={logoUrl} alt="Company Logo" width={160} height={160} className="w-full h-full object-contain group-hover:grayscale transition-all duration-500" />
                             ) : (
                                 `${lCompanyName.charAt(0)}${lCompanyName.split(/\s+/).slice(1, 2).map(w => w[0]).join('')}`
                             )}
@@ -166,7 +124,7 @@ export function SettingsOrganization() {
                         />
                         <button
                             onClick={() => logoInputRef.current?.click()}
-                            className="absolute bottom-2 right-2 size-12 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95"
+                            className="absolute bottom-2 right-2 size-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95"
                         >
                             <span className="material-symbols-outlined text-2xl">photo_camera</span>
                         </button>
@@ -185,18 +143,20 @@ export function SettingsOrganization() {
                     </div>
                 </div>
 
+                {/* Identity Grid */}
                 <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
                     <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50">
-                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">General Information</h3>
+                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Corporate Identity</h3>
                     </div>
-                    <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="md:col-span-2">
-                            <OrgInput label="Company Name" value={lCompanyName} onChange={setLCompanyName} />
+                    <div className="p-10 flex flex-col gap-10">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="md:col-span-2">
+                                <OrgInput label="Company Name" value={lCompanyName} onChange={setLCompanyName} />
+                            </div>
+                            <OrgInput label="Corporate Email Address" value={lCompanyEmail} onChange={setLCompanyEmail} type="email" />
+                            <OrgInput label="NIC Registration Number" value={lNicLicense || 'Not registered'} disabled />
+                            <OrgInput label="Corporate Phone Number" value={lCorporatePhone} onChange={setLCorporatePhone} />
                         </div>
-                        <OrgInput label="Corporate Email Address" value={lCompanyEmail} onChange={setLCompanyEmail} type="email" />
-                        <OrgInput label="NIC Registration Number" value={lNicLicense || 'Not registered'} disabled />
-                        <OrgInput label="Corporate Phone Number" value={lCorporatePhone} onChange={setLCorporatePhone} />
-                        <OrgInput label="Mobile Phone Number" value={lMobileNumber} onChange={setLMobileNumber} />
                     </div>
                 </div>
             </div>
@@ -208,72 +168,25 @@ export function SettingsOrganization() {
                 </div>
                 <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
                     <OrgInput label="Street Address" value={lStreet} onChange={setLStreet} />
-                    <OrgInput label="City" value={lCity} onChange={setLCity} />
+                    {/* <OrgInput label="City" value={lCity} onChange={setLCity} />
                     <OrgInput label="Region" value={lRegion} onChange={setLRegion} />
                     <OrgInput label="Digital Address (GPS)" value={lGps} onChange={setLGps} />
                     <div className="md:col-span-2">
                         <OrgInput label="Postal Address" value={lPostal} onChange={setLPostal} />
-                    </div>
+                    </div> */}
                 </div>
             </div>
 
-            {/* Operational & Branding */}
-            <div className="flex flex-col gap-8">
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50">
-                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Operational Settings</h3>
-                    </div>
-                    <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <OrgInput label="Business Hours" value={lBusinessHours} onChange={setLBusinessHours} />
-                        <OrgInput label="Fiscal Year Start" value={lFiscalYear} onChange={setLFiscalYear} />
-                        <OrgInput label="Default Commission (%)" value={lCommission} onChange={setLCommission} type="number" />
-                        <OrgInput label="Premium Grace Period (Days)" value={lGracePeriod} onChange={setLGracePeriod} type="number" />
-                    </div>
+            {/* Regulatory Compliance Note */}
+            <div className="bg-indigo-50 dark:bg-indigo-900/10 p-8 rounded-3xl border border-indigo-100 dark:border-indigo-800 flex items-start gap-6">
+                <div className="size-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/20">
+                    <span className="material-symbols-outlined text-2xl">verified</span>
                 </div>
-
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-                    <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50">
-                        <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Branding & Prefixes</h3>
-                    </div>
-                    <div className="p-10 space-y-10">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            <div className="flex flex-col gap-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Primary Brand Color</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="size-14 rounded-2xl border-4 border-slate-50 shadow-sm flex-shrink-0" style={{ backgroundColor: lPrimaryColor }} />
-                                    <input type="text" value={lPrimaryColor} onChange={(e) => setLPrimaryColor(e.target.value)} className="flex-1 h-14 px-5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold font-mono text-sm outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 transition-all dark:text-white" />
-                                    <input type="color" value={lPrimaryColor} onChange={(e) => setLPrimaryColor(e.target.value)} className="size-14 rounded-2xl border-2 border-slate-200 cursor-pointer overflow-hidden p-0" />
-                                </div>
-                            </div>
-                            <div className="flex flex-col gap-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Accent Color</label>
-                                <div className="flex items-center gap-4">
-                                    <div className="size-14 rounded-2xl border-4 border-slate-50 shadow-sm flex-shrink-0" style={{ backgroundColor: lAccentColor }} />
-                                    <input type="text" value={lAccentColor} onChange={(e) => setLAccentColor(e.target.value)} className="flex-1 h-14 px-5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold font-mono text-sm outline-none focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 transition-all dark:text-white" />
-                                    <input type="color" value={lAccentColor} onChange={(e) => setLAccentColor(e.target.value)} className="size-14 rounded-2xl border-2 border-slate-200 cursor-pointer overflow-hidden p-0" />
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-10 border-t border-slate-100 dark:border-slate-800">
-                            <OrgInput label="Policy Prefix" value={lPolPrefix} onChange={setLPolPrefix} />
-                            <OrgInput label="Claim Prefix" value={lClmPrefix} onChange={setLClmPrefix} />
-                            <OrgInput label="Client Prefix" value={lCliPrefix} onChange={setLCliPrefix} />
-                            <OrgInput label="Lead Prefix" value={lLedPrefix} onChange={setLLedPrefix} />
-                        </div>
-
-                        <div className="bg-indigo-50 dark:bg-indigo-900/10 p-8 rounded-3xl border border-indigo-100 dark:border-indigo-800 flex items-start gap-6">
-                            <div className="size-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/20">
-                                <span className="material-symbols-outlined text-2xl">verified</span>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <h4 className="text-lg font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-tight">Regulatory Compliance</h4>
-                                <p className="text-sm font-medium text-indigo-800/70 dark:text-indigo-200/50 leading-relaxed">
-                                    Ensure your NIC Registration number is accurate. This identifier is required for regulatory reporting and electronic filings with the National Insurance Commission.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
+                <div className="flex flex-col gap-2">
+                    <h4 className="text-lg font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-tight">Regulatory Compliance</h4>
+                    <p className="text-sm font-medium text-indigo-800/70 dark:text-indigo-200/50 leading-relaxed">
+                        Ensure your NIC Registration number is accurate. This identifier is required for regulatory reporting and electronic filings with the National Insurance Commission.
+                    </p>
                 </div>
             </div>
 

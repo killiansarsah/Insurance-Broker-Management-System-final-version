@@ -53,11 +53,11 @@ import { SearchModule } from './search/search.module';
       envFilePath: '.env',
     }),
 
-    // Rate limiting
+    // Rate limiting - relaxed for local development
     ThrottlerModule.forRoot([
       {
         ttl: parseInt(process.env['THROTTLE_TTL'] || '60', 10) * 1000,
-        limit: parseInt(process.env['THROTTLE_LIMIT'] || '100', 10),
+        limit: process.env.NODE_ENV === 'production' ? parseInt(process.env['THROTTLE_LIMIT'] || '100', 10) : 10000,
       },
     ]),
 

@@ -46,7 +46,7 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
         createInvitation.mutate(
             {
                 email: email.trim(),
-                role: role as 'ADMIN' | 'TENANT_ADMIN' | 'BROKER' | 'VIEWER',
+                role: role as any,
                 branchId: (branch && branch.length > 20) ? branch : undefined,
             },
             {
@@ -150,9 +150,19 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'Admin', value: 'ADMIN' },
+                                { label: 'Platform Admin', value: 'PLATFORM_SUPER_ADMIN' },
+                                { label: 'Super Admin', value: 'SUPER_ADMIN' },
                                 { label: 'Tenant Admin', value: 'TENANT_ADMIN' },
+                                { label: 'Admin', value: 'ADMIN' },
+                                { label: 'Branch Manager', value: 'BRANCH_MANAGER' },
+                                { label: 'Compliance Officer', value: 'COMPLIANCE_OFFICER' },
+                                { label: 'Finance Manager', value: 'FINANCE_MANAGER' },
+                                { label: 'Senior Broker', value: 'SENIOR_BROKER' },
                                 { label: 'Broker', value: 'BROKER' },
+                                { label: 'Underwriter', value: 'UNDERWRITER' },
+                                { label: 'Agent', value: 'AGENT' },
+                                { label: 'Secretary', value: 'SECRETARY' },
+                                { label: 'Data Entry', value: 'DATA_ENTRY' },
                                 { label: 'Viewer', value: 'VIEWER' },
                             ]}
                             value={role}

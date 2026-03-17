@@ -46,13 +46,13 @@ export function SettingsAppearance() {
                             className={cn(
                                 "p-8 rounded-3xl border-2 text-left transition-all relative flex flex-col gap-4 group",
                                 currentTheme === t.value
-                                    ? "border-primary bg-primary/5 ring-4 ring-primary/5"
+                                    ? "border-primary-600 bg-primary-500/5 ring-4 ring-primary-500/5"
                                     : "border-slate-100 dark:border-slate-800 hover:border-slate-200 dark:hover:border-slate-700 bg-white dark:bg-slate-950"
                             )}
                         >
                             <div className={cn(
                                 "size-12 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110",
-                                currentTheme === t.value ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                currentTheme === t.value ? "bg-primary-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
                             )}>
                                 <span className="material-symbols-outlined text-2xl">{t.icon}</span>
                             </div>
@@ -61,7 +61,7 @@ export function SettingsAppearance() {
                                 <span className="text-[10px] font-bold text-slate-400 mt-1 leading-relaxed uppercase tracking-tight">{t.desc}</span>
                             </div>
                             {currentTheme === t.value && (
-                                <div className="absolute top-4 right-4 text-primary animate-pulse">
+                                <div className="absolute top-4 right-4 text-primary-600 animate-pulse">
                                     <span className="material-symbols-outlined font-black">check_circle</span>
                                 </div>
                             )}
@@ -85,7 +85,7 @@ export function SettingsAppearance() {
                             <div className="flex items-center gap-6">
                                 <div className={cn(
                                     "size-12 rounded-2xl flex items-center justify-center",
-                                    w.enabled ? "bg-primary/10 text-primary" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                    w.enabled ? "bg-primary-500/10 text-primary-600" : "bg-slate-100 dark:bg-slate-800 text-slate-400"
                                 )}>
                                     <span className="material-symbols-outlined text-2xl">{w.icon}</span>
                                 </div>
@@ -155,12 +155,12 @@ export function SettingsAppearance() {
             </div>
 
             {/* Accessibility Tip */}
-            <div className="bg-primary/5 dark:bg-slate-900/50 rounded-3xl border border-primary/20 p-8 flex items-start gap-6">
-                <div className="size-12 rounded-2xl bg-primary text-white flex items-center justify-center shrink-0">
+            <div className="bg-primary-500/5 dark:bg-slate-900/50 rounded-3xl border border-primary-500/20 p-8 flex items-start gap-6">
+                <div className="size-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shrink-0">
                     <span className="material-symbols-outlined text-2xl">visibility</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                    <h4 className="text-lg font-black text-primary uppercase tracking-tight">Accessibility Tip</h4>
+                    <h4 className="text-lg font-black text-primary-600 uppercase tracking-tight">Accessibility Tip</h4>
                     <p className="text-sm font-medium text-slate-600 dark:text-slate-300 leading-relaxed">
                         Dark Mode is highly recommended for late-night audits to reduce digital eye strain. Your settings are saved locally and will be remembered on this device.
                     </p>

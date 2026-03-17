@@ -37,9 +37,16 @@ function getColorFromName(name: string): string {
 export function Avatar({ name, src, icon, size = 'md', className }: AvatarProps) {
     if (src) {
         const dim = size === 'sm' ? 32 : size === 'md' ? 40 : size === 'lg' ? 48 : 64;
+        
+        let finalSrc = src;
+        if (src.startsWith('/uploads')) {
+            const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
+            finalSrc = `${backendBase}${src}`;
+        }
+        
         return (
             <Image
-                src={src}
+                src={finalSrc}
                 alt={name}
                 width={dim}
                 height={dim}

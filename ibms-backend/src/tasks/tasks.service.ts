@@ -176,6 +176,12 @@ export class TasksService {
         priority: dto.priority,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         assignedToId: dto.assignedToId,
+        ...(dto.isCompleted !== undefined && { 
+          isCompleted: dto.isCompleted,
+          completedAt: dto.isCompleted ? new Date() : null,
+          status: dto.isCompleted ? 'REGISTERED' : 'PENDING'
+        }),
+        ...(dto.status !== undefined && { status: dto.status }),
       },
       include: {
         assignedTo: { select: { firstName: true, lastName: true, email: true } },

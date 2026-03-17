@@ -186,7 +186,7 @@ export function SettingsSecurityDetails() {
                                 onClick={() => setIs2faEnabled(!is2faEnabled)}
                                 className={cn(
                                     "relative inline-flex h-8 w-14 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-300 ease-in-out focus:outline-none",
-                                    is2faEnabled ? "bg-primary border-primary ring-4 ring-primary/20 shadow-lg shadow-primary/30" : "bg-slate-200 dark:bg-slate-700 border-transparent"
+                                    is2faEnabled ? "bg-primary-600 border-primary-600 ring-4 ring-primary-500/20 shadow-lg shadow-primary-500/30" : "bg-slate-200 dark:bg-slate-700 border-transparent"
                                 )}
                             >
                                 <span className={cn(
@@ -205,7 +205,7 @@ export function SettingsSecurityDetails() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-1 flex-1">
-                                        <span className="text-[10px] font-black text-primary uppercase tracking-widest">Step 1 of 2</span>
+                                        <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest">Step 1 of 2</span>
                                         <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight">Scan QR Code</h4>
                                         <p className="text-xs font-bold text-slate-500 leading-relaxed uppercase tracking-tight">Open your authenticator app and scan this code to link your account.</p>
                                     </div>
@@ -224,7 +224,7 @@ export function SettingsSecurityDetails() {
                                                 toast.success('2FA Enabled', { description: 'Two-factor authentication has been activated on your account.' });
                                                 setTwoFaCode('');
                                             }}
-                                            className="h-14 px-8 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20"
+                                            className="h-14 px-8 rounded-2xl bg-primary-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary-500/20"
                                         >Verify</button>
                                     </div>
                                 </div>
@@ -236,13 +236,13 @@ export function SettingsSecurityDetails() {
                 <div className="lg:col-span-4 flex flex-col gap-6">
                     <div className="bg-primary/5 dark:bg-slate-900/50 p-8 rounded-3xl border border-primary/20 flex flex-col gap-6">
                         <div className="flex items-center gap-3">
-                            <span className="material-symbols-outlined text-primary text-3xl">verified</span>
+                            <span className="material-symbols-outlined text-primary-600 text-3xl">verified</span>
                             <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight">Account Recovery</h4>
                         </div>
                         <p className="text-xs font-bold text-slate-500 uppercase leading-relaxed tracking-tight">
                             Print or securely store your backup codes. These allow you to regain access if you lose your authentication device.
                         </p>
-                        <button className="h-11 w-full rounded-xl border-2 border-primary text-primary font-black text-[10px] uppercase tracking-widest hover:bg-primary/5 transition-all cursor-pointer"
+                        <button className="h-11 w-full rounded-xl border-2 border-primary-600 text-primary-600 font-black text-[10px] uppercase tracking-widest hover:bg-primary-50 transition-all cursor-pointer"
                             onClick={() => toast.success('Recovery Codes Downloaded', { description: 'Your backup codes have been saved to your downloads folder. Store them securely.' })}
                         >
                             Download Recovery Codes

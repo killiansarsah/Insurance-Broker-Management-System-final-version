@@ -27,7 +27,7 @@ class ApiClient {
 
             if (this.accessToken) {
                 config.headers.Authorization = `Bearer ${this.accessToken}`;
-            } else if (process.env.NODE_ENV === 'development') {
+            } else if (process.env.NODE_ENV === 'development' && !config.url?.includes('/auth/')) {
                 console.warn('⚠️ API Request without token:', config.url);
             }
             return config;
@@ -37,10 +37,10 @@ class ApiClient {
             (response) => response,
             async (error: AxiosError) => {
                 const originalRequest = error.config as RetryableRequest;
-                const isRefreshRequest = originalRequest.url?.includes('/auth/refresh');
+                const isAuthRequest = originalRequest.url?.includes('/auth/');
                 
                 // Handle 401 errors with token refresh
-                if (error.response?.status === 401 && !originalRequest._retry && !isRefreshRequest) {
+                if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
                     originalRequest._retry = true;
                     try {
                         const { accessToken } = await this.refreshSession();

@@ -31,8 +31,8 @@ export function SettingsProfile() {
             setLocalLastName(profile.lastName || '');
             setLocalEmail(profile.email || '');
             setLocalPhone((profile.phone as string) || '');
-            setLocalJobTitle((profile.jobTitle as string) || '');
-            setLocalLocation((profile.location as string) || '');
+            setLocalJobTitle((profile.role as string)?.replace(/_/g, ' ') || 'None Assigned');
+            setLocalLocation(((profile as any).branch?.name as string) || 'Main Branch');
             // Hydrate avatar from backend if available
             if (profile.avatarUrl) {
                 const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
@@ -110,7 +110,7 @@ export function SettingsProfile() {
                 <button
                     onClick={handleSave}
                     disabled={isSaving}
-                    className={`h-12 px-10 rounded-xl bg-primary hover:bg-primary-hover text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all flex items-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
+                    className={`h-12 px-10 rounded-xl bg-primary-600 hover:bg-primary-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary-500/20 transition-all flex items-center gap-2 ${isSaving ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105 active:scale-95'}`}
                 >
                     {isSaving ? <span className="animate-spin material-symbols-outlined text-lg">sync</span> : <span className="material-symbols-outlined text-lg">save</span>}
                     {isSaving ? 'Saving...' : 'Update Profile'}
@@ -122,7 +122,13 @@ export function SettingsProfile() {
                 <div className="relative group">
                     <div className="size-36 rounded-full border-4 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 flex items-center justify-center overflow-hidden shadow-inner p-1 relative">
                         {avatarUrl ? (
-                            <Image src={avatarUrl} alt="Profile" width={144} height={144} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            <Image 
+                                src={avatarUrl.startsWith('/uploads') ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001'}${avatarUrl}` : avatarUrl} 
+                                alt="Profile" 
+                                width={144} 
+                                height={144} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            />
                         ) : (
                             <span className="material-symbols-outlined text-6xl text-slate-300">person</span>
                         )}
@@ -136,7 +142,7 @@ export function SettingsProfile() {
                     />
                     <button
                         onClick={() => fileInputRef.current?.click()}
-                        className="absolute bottom-1 right-1 size-11 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95"
+                        className="absolute bottom-1 right-1 size-11 rounded-2xl bg-primary-600 text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform active:scale-95"
                     >
                         <span className="material-symbols-outlined text-xl">edit</span>
                     </button>
@@ -179,7 +185,7 @@ export function SettingsProfile() {
                 <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
                     <ProfileInput label="First Name" value={localFirstName} onChange={setLocalFirstName} />
                     <ProfileInput label="Last Name" value={localLastName} onChange={setLocalLastName} />
-                    <ProfileInput label="Work Email Address" value={localEmail} onChange={setLocalEmail} type="email" />
+                    <ProfileInput label="Work Email Address" value={localEmail} onChange={() => {}} type="email" disabled={true} />
                     <ProfileInput label="Phone Number" value={localPhone} onChange={setLocalPhone} />
                 </div>
             </div>
@@ -190,8 +196,8 @@ export function SettingsProfile() {
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Professional Context</h3>
                 </div>
                 <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <ProfileInput label="Job Title" value={localJobTitle} onChange={setLocalJobTitle} />
-                    <ProfileInput label="Assigned Branch / Location" value={localLocation} onChange={setLocalLocation} />
+                    <ProfileInput label="Job Title" value={localJobTitle} onChange={() => {}} disabled={true} />
+                    <ProfileInput label="Assigned Branch / Location" value={localLocation} onChange={() => {}} disabled={true} />
                 </div>
             </div>
 
@@ -208,7 +214,7 @@ export function SettingsProfile() {
     );
 }
 
-function ProfileInput({ label, value, onChange, type = "TEXT" }: { label: string; value: string; onChange: (v: string) => void; type?: string; }) {
+function ProfileInput({ label, value, onChange, type = "text", disabled = false }: { label: string; value: string; onChange: (v: string) => void; type?: string; disabled?: boolean }) {
     return (
         <div className="flex flex-col gap-3">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{label}</label>
@@ -216,7 +222,8 @@ function ProfileInput({ label, value, onChange, type = "TEXT" }: { label: string
                 type={type}
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
-                className="h-14 px-5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm font-bold outline-none transition-all focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary/10 dark:text-white"
+                disabled={disabled}
+                className={`h-14 px-5 bg-slate-50 dark:bg-slate-800 border ${disabled ? 'border-transparent text-slate-500 dark:text-slate-400 cursor-not-allowed opacity-70' : 'border-slate-200 dark:border-slate-800 focus:bg-white dark:focus:bg-slate-900 focus:ring-4 focus:ring-primary-500/10'} rounded-2xl text-sm font-bold outline-none transition-all dark:text-white`}
             />
         </div>
     );

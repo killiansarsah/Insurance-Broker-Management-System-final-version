@@ -8,7 +8,7 @@ export function SettingsTerms() {
             {/* Acceptance Status */}
             <div className="bg-gradient-to-r from-primary/10 to-indigo-50/50 dark:from-primary/20 dark:to-indigo-900/10 rounded-3xl border border-primary/10 dark:border-primary/20 p-10 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-6">
-                    <div className="size-16 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-primary/10 dark:border-primary/20 flex items-center justify-center text-primary shrink-0 font-black text-xl">
+                    <div className="size-16 rounded-2xl bg-white dark:bg-slate-900 shadow-sm border border-primary-500/10 dark:border-primary-500/20 flex items-center justify-center text-primary-600 shrink-0 font-black text-xl">
                         <span className="material-symbols-outlined text-4xl">verified_user</span>
                     </div>
                     <div>
@@ -16,7 +16,7 @@ export function SettingsTerms() {
                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">Review and manage your acceptance of platform policies.</p>
                     </div>
                 </div>
-                <Badge variant="primary" className="px-6 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest bg-primary text-white shadow-lg shadow-primary/20">Full Compliance</Badge>
+                <Badge variant="primary" className="px-6 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest bg-primary-600 text-white shadow-lg shadow-primary-500/20">Full Compliance</Badge>
             </div>
 
             {/* Terms of Service */}

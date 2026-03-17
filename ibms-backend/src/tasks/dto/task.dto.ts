@@ -85,6 +85,13 @@ export class UpdateTaskDto {
   @IsUUID()
   @IsOptional()
   assignedToId?: string;
+
+  @IsOptional()
+  isCompleted?: boolean;
+
+  @IsEnum(TaskStatus)
+  @IsOptional()
+  status?: TaskStatus;
 }
 
 export class UpdateTaskStatusDto {

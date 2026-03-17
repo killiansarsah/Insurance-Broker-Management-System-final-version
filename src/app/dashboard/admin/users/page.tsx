@@ -15,6 +15,7 @@ import {
     Lock,
     Unlock,
 } from 'lucide-react';
+import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
@@ -91,13 +92,11 @@ export default function UsersPage() {
             sortable: true,
             render: (row: any) => (
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-surface-100 flex items-center justify-center text-surface-500 font-medium text-xs overflow-hidden">
-                        {row.avatarUrl ? (
-                            <Image src={row.avatarUrl} alt="" width={32} height={32} className="w-full h-full object-cover" />
-                        ) : (
-                            <span>{row.firstName[0]}{row.lastName[0]}</span>
-                        )}
-                    </div>
+                    <Avatar 
+                        name={`${row.firstName} ${row.lastName}`}
+                        src={row.avatarUrl || undefined}
+                        size="sm"
+                    />
                     <div>
                         <p className="font-medium text-surface-900">{row.firstName} {row.lastName}</p>
                         <p className="text-xs text-surface-500">{row.email}</p>

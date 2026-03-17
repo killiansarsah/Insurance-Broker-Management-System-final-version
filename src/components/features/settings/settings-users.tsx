@@ -103,7 +103,7 @@ export function SettingsUsers() {
                         </div>
                         <button
                             onClick={() => setIsAddStaffModalOpen(true)}
-                            className="h-12 px-8 rounded-2xl bg-primary text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                            className="h-12 px-8 rounded-2xl bg-primary-600 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-primary-500/20 transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
                         >
                             <span className="material-symbols-outlined text-base">person_add</span>
                             Add Staff
