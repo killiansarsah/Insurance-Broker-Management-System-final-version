@@ -94,6 +94,7 @@ export class SettingsService {
         phone: true,
         avatarUrl: true,
         role: true,
+        twoFactorEnabled: true,
         lastLoginAt: true,
         createdAt: true,
         branch: {
