@@ -70,8 +70,19 @@ export function SettingsAppearance() {
                 </div>
             </div>
 
-            {/* Dashboard Layout */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            {/* Dashboard Layout - Coming Soon */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative">
+                {/* Coming Soon Overlay */}
+                <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center gap-4">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-amber-500/10 border border-amber-500/30 rounded-full">
+                        <span className="material-symbols-outlined text-amber-500 animate-pulse">construction</span>
+                        <span className="text-sm font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Coming Soon in v2.4</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-500 max-w-md text-center px-8">
+                        Widget visibility controls will be fully functional in the next release. The Theme selector above works now.
+                    </p>
+                </div>
+
                 <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Dashboard Components</h3>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Widget Visibility</span>
@@ -111,8 +122,18 @@ export function SettingsAppearance() {
                 </div>
             </div>
 
-            {/* Fiscal Year Context */}
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            {/* Fiscal Year Context - Coming Soon */}
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden relative">
+                {/* Coming Soon Overlay */}
+                <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center gap-4">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-amber-500/10 border border-amber-500/30 rounded-full">
+                        <span className="material-symbols-outlined text-amber-500 animate-pulse">construction</span>
+                        <span className="text-sm font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Coming Soon in v2.4</span>
+                    </div>
+                    <p className="text-xs font-medium text-slate-500 max-w-md text-center px-8">
+                        Fiscal year filtering requires backend updates across all financial queries.
+                    </p>
+                </div>
                 <div className="px-10 py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 flex justify-between items-center">
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Fiscal Context</h3>
                     <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full border border-emerald-100 dark:border-emerald-800/30">Active</span>

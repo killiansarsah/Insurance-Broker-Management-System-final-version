@@ -35,7 +35,12 @@ function LoginContent() {
             const returnUrl = searchParams.get('returnUrl');
             const destination = returnUrl?.startsWith('/') ? returnUrl : '/dashboard';
             router.push(destination);
-        } catch {
+        } catch (err: any) {
+            // Handle two-factor authentication requirement
+            if (err.message === 'TWO_FACTOR_REQUIRED') {
+                setError('Two-factor authentication is required. Please contact your administrator to disable 2FA or use an account without 2FA enabled.');
+                return;
+            }
             setError('Invalid email or password. Please try again.');
         }
     };

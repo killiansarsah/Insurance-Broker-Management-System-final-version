@@ -174,6 +174,9 @@ export const useAuthStore = create<AuthState>()(
                         user?: User;
                         requiresTenantSelection?: boolean;
                         tenants?: TenantOption[];
+                        requiresTwoFactor?: boolean;
+                        userId?: string;
+                        tenantId?: string;
                     }>(
                         '/auth/login',
                         { email, password, ...(tenantSlug ? { tenantSlug } : {}) },
@@ -185,6 +188,15 @@ export const useAuthStore = create<AuthState>()(
                         return res.tenants;
                     }
 
+                    // Two-factor authentication required
+                    if (res.requiresTwoFactor && res.userId) {
+                        set({ isLoading: false });
+                        throw new Error('TWO_FACTOR_REQUIRED');
+                    }
+
+                    if (!res.accessToken) {
+                        throw new Error('Invalid response from server');
+                    }
                     apiClient.setAccessToken(res.accessToken!);
                     // Mark that we just freshly logged in — checkAuth should skip
                     // its auto-refresh for 30 seconds to avoid using a stale cookie

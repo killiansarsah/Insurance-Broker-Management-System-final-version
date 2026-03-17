@@ -37,7 +37,9 @@ class ApiClient {
             (response) => response,
             async (error: AxiosError) => {
                 const originalRequest = error.config as RetryableRequest;
-                const isAuthRequest = originalRequest.url?.includes('/auth/');
+                const isAuthRequest = originalRequest.url?.includes('/auth/login') || 
+                    originalRequest.url?.includes('/auth/refresh') || 
+                    originalRequest.url?.includes('/auth/register');
                 
                 // Handle 401 errors with token refresh
                 if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {

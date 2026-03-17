@@ -25,8 +25,14 @@ interface CookieRequest extends Request {
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env['NODE_ENV'] === 'production',
-  sameSite: 'strict' as const,
-  path: '/api/v1/auth/refresh',
+  // Dev note: localhost can be accessed as `localhost`, `127.0.0.1`, or a LAN IP.
+  // `sameSite: 'strict'` + a narrow path can cause the refresh cookie to not be
+  // stored/sent consistently in development, leading to 401s on /auth/refresh.
+  // Use a more permissive policy in dev; keep production strict.
+  sameSite: process.env['NODE_ENV'] === 'production'
+    ? ('strict' as const)
+    : ('lax' as const),
+  path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
 
@@ -131,7 +137,7 @@ export class AuthController {
   ) {
     const raw = req.cookies['refreshToken'];
     await this.auth.logout(raw);
-    res.clearCookie('refreshToken', { path: '/api/v1/auth/refresh' });
+    res.clearCookie('refreshToken', { path: '/' });
     return { success: true };
   }
 
@@ -156,7 +162,7 @@ export class AuthController {
     const result = await this.auth.resetPassword(body.token, body.newPassword);
     // Clear the old refresh token cookie so stale tokens don't cause
     // immediate logout after the user logs back in with their new password
-    res.clearCookie('refreshToken', { path: '/api/v1/auth/refresh' });
+    res.clearCookie('refreshToken', { path: '/' });
     return result;
   }
 }
