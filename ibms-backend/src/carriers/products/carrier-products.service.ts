@@ -84,13 +84,24 @@ export class CarrierProductsService {
     return product;
   }
 
-  async findAll(tenantId: string, carrierId: string, query: ProductQueryDto) {
+  async findAll(tenantId: string, carrierIdOrSlug: string, query: ProductQueryDto) {
+    const isUuid = carrierIdOrSlug.length === 36 && carrierIdOrSlug.includes('-');
+    
+    let actualCarrierId = carrierIdOrSlug;
+    if (!isUuid) {
+        const c = await this.prisma.carrier.findFirst({
+            where: { tenantId, slug: carrierIdOrSlug, deletedAt: null }
+        });
+        if (!c) throw new NotFoundException('Carrier not found');
+        actualCarrierId = c.id;
+    }
+
     const { page = 1, limit = 20, search, insuranceType, isActive } = query;
     const skip = (page - 1) * limit;
 
     const where: Prisma.ProductWhereInput = {
       tenantId,
-      carrierId,
+      carrierId: actualCarrierId,
     };
 
     if (search) {

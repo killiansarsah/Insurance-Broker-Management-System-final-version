@@ -126,9 +126,17 @@ export class CarriersService {
     };
   }
 
-  async findOne(tenantId: string, id: string) {
+  async findOne(tenantId: string, idOrSlug: string) {
+    const isUuid = idOrSlug.length === 36 && idOrSlug.includes('-');
+    const whereClause: any = { tenantId, deletedAt: null };
+    if (isUuid) {
+      whereClause.id = idOrSlug;
+    } else {
+      whereClause.slug = idOrSlug;
+    }
+
     const carrier = await this.prisma.carrier.findFirst({
-      where: { id, tenantId, deletedAt: null },
+      where: whereClause,
       include: {
         products: true,
       },
