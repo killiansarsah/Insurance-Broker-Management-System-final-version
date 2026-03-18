@@ -26,21 +26,27 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
     const iconClass = size === 'large' ? 'text-4xl' : 'text-xl';
     const imgClass = size === 'large' ? 'w-32 h-32' : 'w-12 h-12';
 
+    const fullLogoUrl = carrier.logoUrl?.startsWith('/uploads')
+        ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000'}${carrier.logoUrl}`
+        : carrier.logoUrl;
+    
+    const fallbackColor = carrier.brandColor || '#3b82f6';
+
     return (
         <div className="relative group/hero-logo z-10">
             {/* Glow effect */}
             <div
                 className="absolute inset-0 rounded-full blur-2xl opacity-30 animate-pulse"
-                style={{ backgroundColor: carrier.brandColor }}
+                style={{ backgroundColor: fallbackColor }}
             />
 
             <div className={cn(
                 "relative flex items-center justify-center bg-white dark:bg-slate-900 shadow-2xl border border-white/50 ring-4 ring-white/20 backdrop-blur-xl transition-transform duration-700 hover:scale-105",
                 containerClass
             )}>
-                {carrier.logoUrl && !imgError ? (
+                {fullLogoUrl && !imgError ? (
                     <Image
-                        src={carrier.logoUrl}
+                        src={fullLogoUrl}
                         alt={`${carrier.name} logo`}
                         width={size === 'large' ? 128 : 48}
                         height={size === 'large' ? 128 : 48}
@@ -51,9 +57,9 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
                 ) : (
                     <div
                         className="w-full h-full flex items-center justify-center text-white font-black"
-                        style={{ backgroundColor: carrier.brandColor, borderRadius: 'inherit' }}
+                        style={{ backgroundColor: fallbackColor, borderRadius: 'inherit' }}
                     >
-                        <span className={iconClass}>{carrier.shortName.substring(0, 2)}</span>
+                        <span className={iconClass}>{(carrier.shortName || carrier.name || 'C').substring(0, 2).toUpperCase()}</span>
                     </div>
                 )}
             </div>
@@ -109,7 +115,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
             <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
                 <div
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full blur-[120px] opacity-10 mix-blend-multiply"
-                    style={{ backgroundColor: carrier.brandColor }}
+                    style={{ backgroundColor: carrier.brandColor || '#3b82f6' }}
                 />
             </div>
 
@@ -131,7 +137,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
                     {/* Brand Stripe */}
                     <div
                         className="absolute top-0 inset-x-0 h-2"
-                        style={{ backgroundColor: carrier.brandColor }}
+                        style={{ backgroundColor: carrier.brandColor || '#3b82f6' }}
                     />
 
                     {/* Massive Logo Pedestal */}
@@ -292,7 +298,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
                                     { icon: MapPin, label: 'Address', value: 'Headquarters', sub: carrier.hq },
                                     { icon: Phone, label: 'Phone', value: carrier.phone },
                                     { icon: Mail, label: 'Email', value: carrier.email },
-                                    { icon: Globe, label: 'Website', value: (carrier.website as string).replace(/^https?:\/\//, '') },
+                                    { icon: Globe, label: 'Website', value: (carrier.website as string)?.replace(/^https?:\/\//, '') || 'N/A' },
                                     { icon: User, label: 'Contact Person', value: carrier.contactPerson },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors group">
@@ -330,7 +336,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
                                     ...(carrier.rating ? [{ icon: Star, label: 'Rating', value: carrier.rating }] : []),
                                     ...(carrier.parentGroup ? [{ icon: Landmark, label: 'Parent Group', value: carrier.parentGroup }] : []),
                                     ...(carrier.revenue2024 ? [{ icon: TrendingUp, label: 'Revenue (2024)', value: `GHS ${((carrier.revenue2024 as number) / 1_000_000).toFixed(1)}M` }] : []),
-                                    { icon: Shield, label: 'Product Lines', value: (carrier.productCategories as string[]).join(', ') },
+                                    { icon: Shield, label: 'Product Lines', value: (carrier.productCategories as string[])?.join(', ') || 'N/A' },
                                 ].map((item, i) => (
                                     <div key={i} className="flex items-center gap-4 p-3 hover:bg-white/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors group">
                                         <div className="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0 group-hover:bg-primary-50 group-hover:text-primary-600 transition-colors">

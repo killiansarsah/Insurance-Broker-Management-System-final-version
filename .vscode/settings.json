@@ -21,5 +21,6 @@
         }
     },
     "workbench.browser.openLocalhostLinks": true,
-    "workbench.browser.enableChatTools": true
+    "workbench.browser.enableChatTools": true,
+    "terminal.integrated.suggest.insertTrailingSpace": false
 }

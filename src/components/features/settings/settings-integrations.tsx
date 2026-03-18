@@ -37,35 +37,9 @@ const BrandIcons = {
             <path d="M1.5 8L5 2H19L22.5 8L12 8H1.5Z" fill="#4285F4" />
         </svg>
     ),
-    Gmail: () => (
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[60%] h-[60%]">
-            <path d="M22 6C22 4.9 21.1 4 20 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6Z" fill="#EA4335" />
-            <path d="M22 6L12 13L2 6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-    ),
-    QuickBooks: () => (
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
-            <circle cx="12" cy="12" r="10" fill="#2CA01C" />
-            <path d="M9 16C10.5 16 11.5 15.5 12 14.5C12.5 15.5 13.5 16 15 16C17 16 18 14.5 18 12.5C18 10.5 17 9 15 9C13.5 9 12.5 9.5 12 10.5C11.5 9.5 10.5 9 9 9C7 9 6 10.5 6 12.5C6 14.5 7 16 9 16Z" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-            <circle cx="9" cy="12.5" r="1.5" fill="white" />
-            <circle cx="15" cy="12.5" r="1.5" fill="white" />
-        </svg>
-    ),
-    Xero: () => (
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
-            <circle cx="12" cy="12" r="11" fill="#13B5EA" />
-            <path d="M8 8L16 16M16 8L8 16" stroke="white" strokeWidth="3" strokeLinecap="round" />
-        </svg>
-    ),
     Paystack: () => (
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[65%] h-[65%]">
             <path d="M4 6H20M4 12H16M4 18H12" stroke="#00C3F7" strokeWidth="4" strokeLinecap="round" />
-        </svg>
-    ),
-    MtnMomo: () => (
-        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[70%] h-[70%] text-[#000000]">
-            <rect x="2" y="6" width="20" height="12" rx="6" fill="#FFC300" />
-            <path d="M7 10V14M7 10L9 12L11 10V14M13 14V10C13 10 17 10 17 12C17 14 13 14 13 14M13 12H16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
     ),
     WhatsApp: () => (
@@ -92,7 +66,7 @@ import { useImportFile, type ImportResult, type MixedImportResult } from '@/hook
 
 // ─── Types ──────────────────────────────────────────────────
 
-type IntegrationCategory = 'all' | 'productivity' | 'accounting' | 'payment' | 'communication';
+type IntegrationCategory = 'all' | 'productivity' | 'payment' | 'communication';
 type SyncFrequency = '15m' | '1h' | '6h' | '24h' | 'manual';
 type ConnectionStep = 'idle' | 'signin' | 'permissions' | 'connecting' | 'success';
 
@@ -123,6 +97,7 @@ interface IntegrationService {
     scopes: string[];
     webhookUrl?: string;
     apiKeyRequired?: boolean;
+    comingSoon?: boolean;
 }
 
 interface ImportRecord {
@@ -165,57 +140,21 @@ function createServices(): IntegrationService[] {
             scopes: ['View and manage files', 'Create folders', 'Share files with team'],
         },
         {
-            id: 'gmail', name: 'Gmail',
-            description: 'Send policy documents, renewal reminders, and notifications via Gmail.',
-            icon: <BrandIcons.Gmail />, brandColor: '#EA4335', bgColor: 'bg-red-50 dark:bg-red-950/30',
-            textColor: 'text-red-600 dark:text-red-400', category: 'communication',
-            connected: false, syncFrequency: '1h', syncEvents: [],
-            features: ['Send policy docs via email', 'Automated renewal reminders', 'Client notifications'],
-            scopes: ['Send mail on your behalf', 'Read your contacts'],
-        },
-        {
-            id: 'quickbooks', name: 'QuickBooks Online',
-            description: 'Sync invoices, payments, and client data with QuickBooks for seamless accounting.',
-            icon: <BrandIcons.QuickBooks />, brandColor: '#2CA01C', bgColor: 'bg-green-50 dark:bg-green-950/30',
-            textColor: 'text-green-600 dark:text-green-400', category: 'accounting',
-            connected: false, syncFrequency: '6h', syncEvents: [],
-            features: ['Invoice sync', 'Payment recording', 'Expense tracking', 'Chart of accounts mapping'],
-            scopes: ['Read and write accounting data', 'Manage customers', 'View reports'],
-        },
-        {
-            id: 'xero', name: 'Xero',
-            description: 'Seamless accounting data synchronization with Xero for financial reporting.',
-            icon: <BrandIcons.Xero />, brandColor: '#13B5EA', bgColor: 'bg-cyan-50 dark:bg-cyan-950/30',
-            textColor: 'text-cyan-600 dark:text-cyan-400', category: 'accounting',
-            connected: false, syncFrequency: '6h', syncEvents: [],
-            features: ['Invoice sync', 'Bank reconciliation', 'Expense claims', 'Financial reports'],
-            scopes: ['Read and write accounting data', 'Manage contacts', 'View bank transactions'],
-        },
-        {
             id: 'paystack', name: 'Paystack',
             description: 'Accept premium payments via Mobile Money, Card, and Bank Transfer in Ghana.',
             icon: <BrandIcons.Paystack />, brandColor: '#00C3F7', bgColor: 'bg-teal-50 dark:bg-teal-950/30',
             textColor: 'text-teal-600 dark:text-teal-400', category: 'payment',
-            connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true,
+            connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true, comingSoon: true,
             features: ['Accept Mobile Money', 'Card payments', 'Bank transfers', 'Automatic receipts'],
             scopes: ['Process transactions', 'View payment history', 'Manage customers'],
             webhookUrl: 'https://api.yourdomain.com/webhooks/paystack',
-        },
-        {
-            id: 'mtn-momo', name: 'MTN MoMo',
-            description: 'Collect premium payments directly via MTN Mobile Money — Ghana\'s most popular mobile wallet.',
-            icon: <BrandIcons.MtnMomo />, brandColor: '#FFC300', bgColor: 'bg-yellow-50 dark:bg-yellow-950/30',
-            textColor: 'text-yellow-600 dark:text-yellow-500', category: 'payment',
-            connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true,
-            features: ['Collect premiums via MoMo', 'Instant payment confirmation', 'SMS receipts', 'Auto-reconciliation'],
-            scopes: ['Collection API access', 'Disbursement API access', 'Account balance check'],
         },
         {
             id: 'whatsapp', name: 'WhatsApp Business',
             description: 'Send policy documents, renewal alerts, and claim updates to clients via WhatsApp.',
             icon: <BrandIcons.WhatsApp />, brandColor: '#25D366', bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
             textColor: 'text-emerald-600 dark:text-emerald-400', category: 'communication',
-            connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true,
+            connected: false, syncFrequency: 'manual', syncEvents: [], apiKeyRequired: true, comingSoon: true,
             features: ['Send policy documents', 'Renewal alerts', 'Claim status updates', 'Template messages'],
             scopes: ['Send messages', 'Send media files', 'Read message status'],
         },
@@ -225,7 +164,6 @@ function createServices(): IntegrationService[] {
 const CATEGORY_TABS: { value: IntegrationCategory; label: string; icon: React.ReactNode }[] = [
     { value: 'all', label: 'All', icon: <Globe size={14} /> },
     { value: 'productivity', label: 'Productivity', icon: <Zap size={14} /> },
-    { value: 'accounting', label: 'Accounting', icon: <Receipt size={14} /> },
     { value: 'payment', label: 'Payments', icon: <CreditCard size={14} /> },
     { value: 'communication', label: 'Communication', icon: <MessageCircle size={14} /> },
 ];
@@ -705,6 +643,10 @@ export function SettingsIntegrations() {
                                             <Settings2 size={12} />
                                         </button>
                                     </div>
+                                </div>
+                            ) : svc.comingSoon ? (
+                                <div className="w-full flex items-center justify-center gap-2 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-surface-100 dark:bg-slate-800 text-surface-400 dark:text-surface-500 cursor-not-allowed shadow-inner border border-surface-200 dark:border-slate-700">
+                                    <Clock size={12} /> Coming Soon
                                 </div>
                             ) : (
                                 <button

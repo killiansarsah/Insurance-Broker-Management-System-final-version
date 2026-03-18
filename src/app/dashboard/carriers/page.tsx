@@ -50,19 +50,33 @@ const TYPE_LABEL: Record<CarrierType, string> = {
 
 function CarrierLogo({ carrier }: { carrier: Carrier }) {
     const [imgError, setImgError] = useState(false);
+    
+    // Fix: If the logo URL is an upload (e.g., starts with /uploads), point it to the backend API.
+    // If it's a static frontend asset (e.g., /images/carriers/...), keep it as is.
+    const fullLogoUrl = carrier.logoUrl?.startsWith('/uploads')
+        ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000'}${carrier.logoUrl}`
+        : carrier.logoUrl;
+
+    const fallbackColor = carrier.brandColor || '#3b82f6';
+
+    const renderInitials = () => {
+        const text = carrier.shortName || carrier.name || 'C';
+        return text.split(' ').filter(Boolean).map(w => w[0]?.toUpperCase()).slice(0, 2).join('');
+    };
+
     return (
         <div className="relative group/logo">
             {/* Glow effect behind logo */}
             <div
                 className="absolute inset-0 rounded-full blur-xl opacity-40 group-hover/card:opacity-60 transition-opacity duration-500"
-                style={{ backgroundColor: carrier.brandColor }}
+                style={{ backgroundColor: fallbackColor }}
             />
 
             {/* Logo Container - Pedestal */}
             <div className="relative w-24 h-24 rounded-2xl flex items-center justify-center bg-white dark:bg-slate-900 shadow-lg border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
-                {carrier.logoUrl && !imgError ? (
+                {fullLogoUrl && !imgError ? (
                     <Image
-                        src={carrier.logoUrl}
+                        src={fullLogoUrl}
                         alt={`${carrier.name} logo`}
                         width={80}
                         height={80}
@@ -72,9 +86,9 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
                 ) : (
                     <div
                         className="w-full h-full rounded-2xl flex items-center justify-center text-white font-black text-2xl"
-                        style={{ backgroundColor: carrier.brandColor }}
+                        style={{ backgroundColor: fallbackColor }}
                     >
-                        {(carrier.shortName || carrier.name || '').split(' ').map((w: string) => w[0]).slice(0, 2).join('')}
+                        {renderInitials()}
                     </div>
                 )}
             </div>
@@ -269,7 +283,7 @@ export default function CarriersPage() {
                                         <div
                                             className="absolute top-0 inset-x-0 h-32 opacity-10 transition-opacity duration-300 group-hover/card:opacity-20"
                                             style={{
-                                                background: `linear-gradient(to bottom, ${carrier.brandColor}, transparent)`
+                                                background: `linear-gradient(to bottom, ${carrier.brandColor || '#3b82f6'}, transparent)`
                                             }}
                                         />
 
