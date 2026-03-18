@@ -52,10 +52,18 @@ async function bootstrap(): Promise<void> {
     'http://localhost:3000',
   ]);
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, curl, same-origin)
+      if (!origin) return callback(null, true);
+      // Allow if origin is in the list
+      if (corsOrigins.includes(origin)) return callback(null, true);
+      // Otherwise reject
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
   });
 
   // Global prefix

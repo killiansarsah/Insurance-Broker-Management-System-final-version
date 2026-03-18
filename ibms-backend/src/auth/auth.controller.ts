@@ -25,13 +25,10 @@ interface CookieRequest extends Request {
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env['NODE_ENV'] === 'production',
-  // Dev note: localhost can be accessed as `localhost`, `127.0.0.1`, or a LAN IP.
-  // `sameSite: 'strict'` + a narrow path can cause the refresh cookie to not be
-  // stored/sent consistently in development, leading to 401s on /auth/refresh.
-  // Use a more permissive policy in dev; keep production strict.
+  // Use 'none' for cross-origin in development, 'strict' in production
   sameSite: process.env['NODE_ENV'] === 'production'
     ? ('strict' as const)
-    : ('lax' as const),
+    : ('none' as const),
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };

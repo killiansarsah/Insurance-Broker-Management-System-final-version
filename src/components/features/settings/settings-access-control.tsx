@@ -203,7 +203,7 @@ export function SettingsAccessControl() {
     const confirmInvite = () => {
         if (!inviteEmail.trim()) return;
         setIsSaving(true);
-        const backendRole = ROLE_TO_BACKEND[inviteRole] || 'BROKER';
+        const backendRole = (ROLE_TO_BACKEND[inviteRole] || 'BROKER') as 'BROKER';
         createInvitationMutation.mutate(
             { email: inviteEmail.trim(), role: backendRole },
             {
@@ -431,7 +431,17 @@ export function SettingsAccessControl() {
 
             {/* ROLES TAB */}
             {subTab === 'roles' && (
-                <div className="flex flex-col gap-6 animate-fade-in">
+                <div className="flex flex-col gap-6 animate-fade-in relative">
+                    {/* Coming Soon Overlay */}
+                    <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/90 backdrop-blur-sm rounded-3xl flex flex-col items-center justify-center gap-4 min-h-[400px]">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-amber-500/10 border border-amber-500/30 rounded-full">
+                            <span className="lucide lucide-construction text-amber-500 animate-pulse"></span>
+                            <span className="text-sm font-black text-amber-600 dark:text-amber-400 uppercase tracking-wider">Coming Soon in v2.4</span>
+                        </div>
+                        <p className="text-xs font-medium text-slate-500 max-w-md text-center px-8">
+                            Role and permission management requires a dedicated API. The Users tab above is fully functional.
+                        </p>
+                    </div>
 
                     {/* Role selector pills */}
                     <div className="flex flex-wrap gap-2">

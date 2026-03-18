@@ -14,6 +14,7 @@ interface AuthState {
     user: User | null;
     isAuthenticated: boolean;
     isLoading: boolean;
+    accessToken: string | null;
     _justLoggedInAt: number | null;
     login: (email: string, password: string, tenantSlug?: string) => Promise<TenantOption[] | void>;
     logout: () => Promise<void>;
@@ -164,6 +165,7 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAuthenticated: false,
             isLoading: false,
+            accessToken: null,
             _justLoggedInAt: null,
 
             login: async (email, password, tenantSlug?) => {
@@ -200,7 +202,7 @@ export const useAuthStore = create<AuthState>()(
                     apiClient.setAccessToken(res.accessToken!);
                     // Mark that we just freshly logged in — checkAuth should skip
                     // its auto-refresh for 30 seconds to avoid using a stale cookie
-                    set({ user: res.user!, isAuthenticated: true, isLoading: false, _justLoggedInAt: Date.now() });
+                    set({ user: res.user!, isAuthenticated: true, isLoading: false, _justLoggedInAt: Date.now(), accessToken: res.accessToken });
                 } catch (err: any) {
                     set({ isLoading: false });
                     if (isNetworkError(err)) {
@@ -220,7 +222,7 @@ export const useAuthStore = create<AuthState>()(
                     // ignore logout failures
                 }
                 apiClient.clearAccessToken();
-                set({ user: null, isAuthenticated: false });
+                set({ user: null, isAuthenticated: false, accessToken: null });
 
                 // Clear persisted storage
                 if (typeof window !== 'undefined') {
@@ -234,6 +236,12 @@ export const useAuthStore = create<AuthState>()(
 
                 // If already authenticated (from persisted state), try to restore token
                 if (get().isAuthenticated && get().user) {
+                    // Restore the access token from persisted state
+                    const storedToken = get().accessToken;
+                    if (storedToken) {
+                        apiClient.setAccessToken(storedToken);
+                    }
+
                     // Skip the refresh if the user just logged in within the last 30 seconds.
                     // This prevents the stale pre-reset cookie from immediately logging them out.
                     const justLoggedInAt = get()._justLoggedInAt;
@@ -244,12 +252,12 @@ export const useAuthStore = create<AuthState>()(
                     // Try to refresh token to ensure it's valid
                     try {
                         const { accessToken, user } = await apiClient.refreshSession();
-                        set({ user, isAuthenticated: true, _justLoggedInAt: null });
+                        set({ user, isAuthenticated: true, _justLoggedInAt: null, accessToken });
                     } catch (err: unknown) {
                         // If refresh fails, clear auth
                         if (!isNetworkError(err)) {
                             apiClient.clearAccessToken();
-                            set({ user: null, isAuthenticated: false, _justLoggedInAt: null });
+                            set({ user: null, isAuthenticated: false, _justLoggedInAt: null, accessToken: null });
                         }
                     }
                     return;
@@ -258,7 +266,7 @@ export const useAuthStore = create<AuthState>()(
                 set({ isLoading: true });
                 try {
                     const { accessToken, user } = await apiClient.refreshSession();
-                    set({ user, isAuthenticated: true, isLoading: false });
+                    set({ user, isAuthenticated: true, isLoading: false, accessToken });
                 } catch (err: unknown) {
                     // If backend unreachable and we have persisted auth, keep it
                     if (isNetworkError(err) && get().user) {
@@ -266,7 +274,7 @@ export const useAuthStore = create<AuthState>()(
                         return;
                     }
                     apiClient.clearAccessToken();
-                    set({ user: null, isAuthenticated: false, isLoading: false });
+                    set({ user: null, isAuthenticated: false, isLoading: false, accessToken: null });
                 }
             },
 
@@ -297,6 +305,7 @@ export const useAuthStore = create<AuthState>()(
             partialize: (state) => ({
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
+                accessToken: state.accessToken,
             }),
             storage: {
                 getItem: (name) => {
