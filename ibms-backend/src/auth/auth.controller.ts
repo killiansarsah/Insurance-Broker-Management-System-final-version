@@ -25,10 +25,10 @@ interface CookieRequest extends Request {
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env['NODE_ENV'] === 'production',
-  // Use 'none' for cross-origin in development, 'strict' in production
+  // Use 'lax' for cross-origin across ports on same top-level domain (localhost) in development, 'strict' in production
   sameSite: process.env['NODE_ENV'] === 'production'
     ? ('strict' as const)
-    : ('none' as const),
+    : ('lax' as const),
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -134,7 +134,9 @@ export class AuthController {
   ) {
     const raw = req.cookies['refreshToken'];
     await this.auth.logout(raw);
-    res.clearCookie('refreshToken', { path: '/' });
+    res.clearCookie('refreshToken', REFRESH_COOKIE_OPTIONS);
+    // Also explicitly clear the legacy path cookie to rescue browsers poisoned from before the fix!
+    res.clearCookie('refreshToken', { ...REFRESH_COOKIE_OPTIONS, path: '/api/v1/auth/refresh' });
     return { success: true };
   }
 
@@ -159,7 +161,7 @@ export class AuthController {
     const result = await this.auth.resetPassword(body.token, body.newPassword);
     // Clear the old refresh token cookie so stale tokens don't cause
     // immediate logout after the user logs back in with their new password
-    res.clearCookie('refreshToken', { path: '/' });
+    res.clearCookie('refreshToken', REFRESH_COOKIE_OPTIONS);
     return result;
   }
 }
