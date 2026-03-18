@@ -282,6 +282,11 @@ export class ClaimsService {
     if (dto.claimAmount !== undefined) updateData.claimAmount = dto.claimAmount;
     if (dto.description !== undefined) updateData.incidentDescription = dto.description;
     if (dto.location !== undefined) updateData.incidentLocation = dto.location;
+    if (dto.assessedAmount !== undefined) {
+      updateData.assessedAmount = dto.assessedAmount;
+      updateData.assessmentDate = new Date();
+      updateData.status = 'ASSESSED';
+    }
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException('No fields to update');
     }
@@ -290,7 +295,7 @@ export class ClaimsService {
       where: { id },
       data: updateData,
     });
-    await this.logAudit(tenantId, userId, 'claim.updated', id);
+    await this.logAudit(tenantId, userId, 'claim.updated', id, updateData);
     return updated;
   }
 

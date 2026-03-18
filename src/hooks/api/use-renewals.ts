@@ -39,7 +39,7 @@ export function useRenewPolicy() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: { premiumAmount: number; sumInsured?: number; notes?: string } }) =>
-            apiClient.post(`/renewals/${id}/renew`, data),
+            apiClient.post(`/policies/${id}/renew`, data),
         onSuccess: () => {
             qc.invalidateQueries({ queryKey: ['renewals'] });
             qc.invalidateQueries({ queryKey: ['policies'] });

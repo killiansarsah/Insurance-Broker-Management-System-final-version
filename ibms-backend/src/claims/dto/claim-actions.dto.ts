@@ -13,6 +13,11 @@ export class UpdateClaimDto {
   @IsOptional()
   claimAmount?: number;
 
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  assessedAmount?: number;
+
   @IsString()
   @MinLength(20)
   @IsOptional()

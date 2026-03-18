@@ -65,37 +65,62 @@ export class RenewalsController {
 
   @Post('renewals/test-reminders')
   @Roles('ADMIN', 'TENANT_ADMIN', 'PLATFORM_SUPER_ADMIN')
-  async testTriggerReminders(@Query('targetDate') targetDateStr?: string) {
-    // If targetDate is provided, we simulate the cron job running on that date
-    // and sending reminders for exactly 90, 60, and 30 days ahead of that spoofed date.
-    // However, to make testing easy: Let's just find ALL active policies for the tenant 
-    // and send a test reminder for the first one we find.
+  async testTriggerReminders(
+    @Request() req: RequestWithUser,
+    @Query('overrideEmail') overrideEmail?: string,
+  ) {
+    const tenantId = req.user.tenantId;
+
+    // Find the most urgent policy — prefer near-expiry or overdue ACTIVE policies first
     const policy = await this.renewalsService['prisma'].policy.findFirst({
-      where: { status: 'ACTIVE' },
+      where: {
+        tenantId,
+        status: { in: ['ACTIVE', 'LAPSED', 'EXPIRED'] },
+      },
+      orderBy: { expiryDate: 'asc' }, // most overdue first
       include: { client: true },
     });
 
     if (!policy) {
-      return { success: false, message: 'No active policies found to test with.' };
+      return { success: false, message: 'No policies found for your tenant.' };
     }
 
-    if (!policy.client.email) {
-      return { success: false, message: 'Found an active policy but the client has no email address.' };
+    const destinationEmail = overrideEmail || policy.client.email;
+
+    if (!destinationEmail) {
+      return { success: false, message: 'No destination email — client has no email address and no override was provided.' };
     }
 
     const clientName = policy.client.companyName || `${policy.client.firstName} ${policy.client.lastName}`;
-    
-    // Send a 30-day spoofed reminder for testing
+    const now = new Date();
+    const daysUntilExpiry = Math.ceil(
+      (new Date(policy.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
     await this.renewalsService['emailService'].sendPolicyRenewalReminder(
-      policy.client.email,
+      destinationEmail,
       clientName,
       policy.policyNumber,
       policy.expiryDate,
-      30, // days ahead
+      daysUntilExpiry,
       Number(policy.premiumAmount),
       policy.insuranceType,
     );
 
-    return { success: true, message: `Sent a test policy reminder to ${policy.client.email} for policy ${policy.policyNumber}` };
+    return {
+      success: true,
+      message: `Test reminder sent to ${destinationEmail} for policy ${policy.policyNumber} (${daysUntilExpiry < 0 ? Math.abs(daysUntilExpiry) + ' days overdue' : daysUntilExpiry + ' days remaining'})`,
+    };
+  }
+
+  @Post('renewals/notify-all')
+  @Roles('ADMIN', 'TENANT_ADMIN')
+  async notifyAll(@Request() req: RequestWithUser) {
+    const result = await this.renewalsService.notifyAllForTenant(req.user.tenantId);
+    return {
+      success: true,
+      message: `Bulk reminders complete: ${result.sent} sent, ${result.skipped} skipped (no email), ${result.failed} failed.`,
+      ...result,
+    };
   }
 }

@@ -32,6 +32,7 @@ import { Card } from '@/components/ui/card';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useRenewals } from '@/hooks/api/use-renewals';
+import { useAuthStore } from '@/stores/auth-store';
 
 // ─── Local Types & Config ───
 type UrgencyLevel = 'CRITICAL' | 'URGENT' | 'IMPORTANT' | 'UPCOMING';
@@ -426,6 +427,7 @@ export default function RenewalsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { data: renewalsApiData, isLoading } = useRenewals({ daysAhead: 90 });
+    const currentUserEmail = useAuthStore((s) => s.user?.email);
 
     const allRenewals: Renewal[] = useMemo(() => {
         const raw = Array.isArray(renewalsApiData) ? renewalsApiData : (renewalsApiData as any)?.data ?? [];
@@ -438,6 +440,7 @@ export default function RenewalsPage() {
     const [workflowFilter, setWorkflowFilter] = useState<RenewalWorkflowStatus | 'all'>('all');
     const [agentFilter, setAgentFilter] = useState<string>('all');
     const [selectedRenewal, setSelectedRenewal] = useState<Renewal | null>(null);
+    const [notifyingAll, setNotifyingAll] = useState(false);
 
     useEffect(() => {
         setActiveTab(tabParam);
@@ -519,9 +522,10 @@ export default function RenewalsPage() {
                         onClick={async () => {
                             try {
                                 const { apiClient } = await import('@/lib/api-client');
-                                const res = await apiClient.post<{success: boolean; message: string}>('/renewals/test-reminders');
+                                const email = encodeURIComponent(currentUserEmail || '');
+                                const res = await apiClient.post<{success: boolean; message: string}>(`/renewals/test-reminders${email ? '?overrideEmail=' + email : ''}`);
                                 if (res.success) {
-                                    toast.success('Test Email Sent', { description: res.message });
+                                    toast.success('Test Email Sent ✓', { description: res.message });
                                 } else {
                                     toast.error('Test Failed', { description: res.message });
                                 }
@@ -535,9 +539,25 @@ export default function RenewalsPage() {
                     <Button
                         variant="primary"
                         leftIcon={<Send size={16} />}
-                        onClick={() => toast.success('Notifications Sent', { description: 'Bulk renewal reminders dispatched via Email & SMS.' })}
+                        disabled={notifyingAll}
+                        onClick={async () => {
+                            setNotifyingAll(true);
+                            try {
+                                const { apiClient } = await import('@/lib/api-client');
+                                const res = await apiClient.post<{ success: boolean; message: string; sent: number; skipped: number; failed: number }>('/renewals/notify-all');
+                                if (res.success) {
+                                    toast.success('Reminders Dispatched', { description: res.message });
+                                } else {
+                                    toast.error('Notify Failed', { description: res.message });
+                                }
+                            } catch {
+                                toast.error('Error', { description: 'Failed to dispatch bulk reminders.' });
+                            } finally {
+                                setNotifyingAll(false);
+                            }
+                        }}
                     >
-                        Notify All
+                        {notifyingAll ? 'Sending...' : 'Notify All'}
                     </Button>
                 </div>
             </div>
@@ -740,7 +760,7 @@ export default function RenewalsPage() {
                         render: (r) => (
                             <div className="flex items-center gap-2">
                                 <div className="w-6 h-6 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center text-[10px] font-bold">
-                                    {r.assignedAgent.split(' ').map(n => n[0]).join('')}
+                                    {r.assignedAgent ? r.assignedAgent.split(' ').map((n: string) => n[0]).join('') : '?'}
                                 </div>
                                 <span className="text-sm text-surface-700">{r.assignedAgent}</span>
                             </div>

@@ -18,10 +18,12 @@ export function formatCurrency(
 }
 
 export function formatDate(
-    date: string | Date,
+    date: string | Date | null | undefined,
     style: 'short' | 'long' | 'relative' = 'short'
 ): string {
+    if (!date) return '—';
     const d = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(d.getTime())) return '—';
 
     if (style === 'relative') {
         const now = new Date();

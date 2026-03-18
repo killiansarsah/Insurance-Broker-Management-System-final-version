@@ -224,12 +224,12 @@ export default function FinanceOverviewPage() {
                         {recentPayments.map((rec) => (
                             <div key={rec.id} className="flex items-center justify-between py-2.5 border-b border-surface-100 last:border-0">
                                 <div>
-                                    <span className="text-xs font-mono font-bold text-success-600">{rec.receiptNumber}</span>
+                                    <span className="text-xs font-mono font-bold text-success-600">{rec.transactionNumber}</span>
                                     <p className="text-xs text-surface-500 mt-0.5">{rec.clientName}</p>
                                 </div>
                                 <div className="text-right">
                                     <p className="text-sm font-bold text-surface-900 tabular-nums">+{formatCurrency(rec.amount)}</p>
-                                    <p className="text-[10px] text-surface-400">{formatDate(rec.dateReceived)}</p>
+                                    <p className="text-[10px] text-surface-400">{formatDate(rec.processedAt ?? rec.createdAt)}</p>
                                 </div>
                             </div>
                         ))}

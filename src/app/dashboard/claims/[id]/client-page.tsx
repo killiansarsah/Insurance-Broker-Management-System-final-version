@@ -77,17 +77,17 @@ export default function ClaimDetailPage({ id }: { id: string }) {
     const timeline = [
         { date: claim.intimationDate, title: 'Claim Intimated', desc: 'First Notice of Loss (FNOL) recorded', icon: <AlertCircle size={14} />, active: true },
         { date: claim.registrationDate, title: 'Claim Registered', desc: 'Claim registered in IBMS with ID', icon: <FileText size={14} />, active: !!claim.registrationDate },
-        { date: claim.registrationDate, title: 'Document Submission', desc: 'Required evidence submitted by claimant', icon: <ClipboardList size={14} />, active: !!claim.registrationDate },
-        { date: claim.registrationDate, title: 'Verification', desc: 'Documents verified for authenticity', icon: <UserCheck size={14} />, active: !!claim.registrationDate },
-        { date: claim.assessmentDate, title: 'Assessment', desc: 'Damage assessment and adjustment', icon: <Search size={14} />, active: !!claim.assessmentDate },
+        { date: claim.registrationDate, title: 'Investigation Started', desc: 'Loss adjuster assigned, documents requested', icon: <ClipboardList size={14} />, active: ['UNDER_REVIEW','ASSESSED','APPROVED','SETTLED','CLOSED'].includes(claim.status) },
+        { date: claim.assessmentDate, title: 'Assessment', desc: 'Damage assessment and loss adjustment', icon: <Search size={14} />, active: !!claim.assessmentDate },
         { date: claim.approvalDate, title: 'Decision', desc: 'Internal review and decision reached', icon: <CheckCircle2 size={14} />, active: !!claim.approvalDate },
         { date: claim.settlementDate, title: 'Settlement', desc: 'Payment processed to claimant account', icon: <DollarSign size={14} />, active: !!claim.settlementDate, last: true },
     ];
 
-    // Calculate acknowledgment compliance (5 working days per NIC)
-    const intimationDate = new Date(claim.intimationDate);
-    const deadlineDate = new Date(intimationDate.getTime() + 86400000 * 5);
-    const isAcknowledged = !!claim.registrationDate;
+    // NIC acknowledgment compliance — use backend-calculated business-day deadline
+    const deadlineDate = claim.acknowledgmentDeadline
+        ? new Date(claim.acknowledgmentDeadline as string)
+        : new Date(new Date(claim.intimationDate).getTime() + 86400000 * 5);
+    const isAcknowledged = claim.status !== 'INTIMATED' || !!claim.registrationDate;
 
     return (
         <div className="space-y-6 animate-fade-in w-full pb-12 max-w-6xl mx-auto">
@@ -322,12 +322,16 @@ export default function ClaimDetailPage({ id }: { id: string }) {
                             <div className="flex justify-between items-center py-2 border-b border-surface-100">
                                 <span className="text-sm text-surface-500">Policy #</span>
                                 <span className="text-sm font-semibold text-primary-600 underline cursor-pointer" onClick={() => router.push(`/dashboard/policies/${claim.policyId}`)}>
-                                    {claim.policyNumber}
+                                    {(claim as any).policy?.policyNumber || claim.policyNumber || '—'}
                                 </span>
                             </div>
                             <div className="flex justify-between items-center py-2 border-b border-surface-100">
                                 <span className="text-sm text-surface-500">Client</span>
-                                <span className="text-sm font-medium text-surface-900">{claim.clientName}</span>
+                                <span className="text-sm font-medium text-surface-900">
+                                    {(claim as any).client
+                                        ? ((claim as any).client.companyName || `${(claim as any).client.firstName ?? ''} ${(claim as any).client.lastName ?? ''}`.trim())
+                                        : (claim.clientName || '—')}
+                                </span>
                             </div>
                         </div>
                     </Card>
@@ -342,10 +346,39 @@ export default function ClaimDetailPage({ id }: { id: string }) {
                         >
                             Discuss with Team
                         </Button>
-                        <Button variant="outline" className="w-full" leftIcon={<MessageSquare size={16} />} onClick={() => toast.info('Claimant notification', { description: `Email reminder would be sent to ${claim.clientName}` })}>
+                        <Button
+                            variant="outline"
+                            className="w-full"
+                            leftIcon={<MessageSquare size={16} />}
+                            onClick={async () => {
+                                try {
+                                    await addFollowUp.mutateAsync({
+                                        claimId: id,
+                                        data: {
+                                            method: 'EMAIL',
+                                            note: `Email reminder sent to claimant regarding claim ${claim.claimNumber}`,
+                                            contactName: (claimData as any)?.client
+                                                ? ((claimData as any).client.companyName || `${(claimData as any).client.firstName} ${(claimData as any).client.lastName}`)
+                                                : claim.clientName,
+                                            nextAction: 'Await claimant response',
+                                        },
+                                    });
+                                    toast.success('Claimant Notified', {
+                                        description: `Follow-up recorded and email reminder logged for ${claim.claimNumber}.`,
+                                    });
+                                } catch {
+                                    toast.error('Failed to log claimant message');
+                                }
+                            }}
+                        >
                             Message Claimant
                         </Button>
-                        <Button variant="outline" className="w-full" leftIcon={<Search size={16} />} onClick={() => toast.info('Internal notes feature coming soon')}>
+                        <Button
+                            variant="outline"
+                            className="w-full"
+                            leftIcon={<MessageSquare size={16} />}
+                            onClick={() => setShowFollowUpForm(v => !v)}
+                        >
                             Add Internal Note
                         </Button>
                     </div>

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
@@ -513,11 +513,11 @@ export default function ExpensesPage() {
         if (search.trim()) {
             const term = search.toLowerCase();
             data = data.filter(e =>
-                e.description.toLowerCase().includes(term) ||
-                e.vendor.toLowerCase().includes(term) ||
-                e.reference.toLowerCase().includes(term) ||
-                e.department.toLowerCase().includes(term) ||
-                CATEGORY_LABEL[e.category].toLowerCase().includes(term)
+                (e.description || '').toLowerCase().includes(term) ||
+                (e.vendor || '').toLowerCase().includes(term) ||
+                (e.reference || '').toLowerCase().includes(term) ||
+                (e.department || '').toLowerCase().includes(term) ||
+                (CATEGORY_LABEL[e.category] || e.category || '').toLowerCase().includes(term)
             );
         }
         return data;

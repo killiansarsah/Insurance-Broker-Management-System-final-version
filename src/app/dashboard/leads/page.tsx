@@ -305,7 +305,7 @@ function KanbanColumn({ stage, leads }: { stage: any, leads: Lead[] }) {
                         {...provided.droppableProps}
                         ref={provided.innerRef}
                         className={cn(
-                            "grow bg-surface-50/50 rounded-2xl p-2 space-y-3 overflow-y-auto border border-dashed transition-all duration-300 scrollbar-hide",
+                            "grow bg-surface-50/50 rounded-2xl p-2 space-y-3 border border-dashed transition-all duration-300",
                             snapshot.isDraggingOver ? "bg-primary-50/50 border-primary-300 ring-2 ring-primary-500/5 shadow-inner" : "border-surface-200"
                         )}
                     >

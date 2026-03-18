@@ -1,13 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-// Renewals
-export function useRenewals() {
-  return useQuery({
-    queryKey: ['renewals'],
-    queryFn: () => apiClient.get('/renewals'),
-  });
-}
 
 // Complaints
 export function useComplaints() {

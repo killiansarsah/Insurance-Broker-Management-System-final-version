@@ -272,4 +272,65 @@ export class RenewalsService {
 
     this.logger.log('Renewal reminder emails sent.');
   }
+
+  async notifyAllForTenant(tenantId: string): Promise<{ sent: number; skipped: number; failed: number }> {
+    this.logger.log(`Manual bulk notify triggered for tenant ${tenantId}`);
+    const now = new Date();
+    let sent = 0, skipped = 0, failed = 0;
+
+    for (const daysAhead of [90, 60, 30]) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + daysAhead);
+
+      const policies = await this.prisma.policy.findMany({
+        where: {
+          tenantId,
+          status: 'ACTIVE',
+          expiryDate: {
+            gte: new Date(new Date(targetDate).setHours(0, 0, 0, 0)),
+            lt: new Date(new Date(targetDate).setHours(23, 59, 59, 999)),
+          },
+        },
+        include: {
+          client: {
+            select: {
+              email: true,
+              firstName: true,
+              lastName: true,
+              companyName: true,
+            },
+          },
+        },
+      });
+
+      for (const policy of policies) {
+        if (!policy.client.email) { skipped++; continue; }
+
+        const clientName = policy.client.companyName ||
+          `${policy.client.firstName} ${policy.client.lastName}`;
+
+        try {
+          await this.emailService.sendPolicyRenewalReminder(
+            policy.client.email,
+            clientName,
+            policy.policyNumber,
+            policy.expiryDate,
+            daysAhead,
+            Number(policy.premiumAmount),
+            policy.insuranceType,
+          );
+          sent++;
+        } catch (error) {
+          this.logger.error(
+            `Failed to send reminder for ${policy.policyNumber}`,
+            error,
+          );
+          failed++;
+        }
+      }
+    }
+
+    this.logger.log(`Bulk notify complete for tenant ${tenantId}: ${sent} sent, ${skipped} skipped, ${failed} failed`);
+    return { sent, skipped, failed };
+  }
 }
