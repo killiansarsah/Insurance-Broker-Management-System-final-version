@@ -16,6 +16,9 @@ export class CreateClaimDto {
   @MinLength(20)
   description!: string;
 
+  @IsString()
+  perilType!: string;
+
   @IsDateString()
   incidentDate!: string;
 

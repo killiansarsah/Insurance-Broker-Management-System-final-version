@@ -4,6 +4,7 @@ import {
   IsNumber,
   MinLength,
   IsUUID,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -26,6 +27,20 @@ export class UpdateClaimDto {
   @IsString()
   @IsOptional()
   location?: string;
+
+  @IsString()
+  @IsOptional()
+  insurerReference?: string;
+
+  @Type(() => Date)
+  @IsDateString()
+  @IsOptional()
+  insurerSubmissionDate?: Date;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  deductibleAmount?: number;
 
   @IsString()
   @IsOptional()
@@ -80,6 +95,11 @@ export class SettleClaimDto {
   @IsOptional()
   paymentReference?: string;
 
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  deductibleAmount?: number;
+
   @IsString()
   @IsOptional()
   notes?: string;
@@ -89,6 +109,10 @@ export class ReopenClaimDto {
   @IsString()
   @MinLength(5)
   reason!: string;
+
+  @IsString()
+  @IsOptional()
+  appealNotes?: string;
 }
 
 export class CreateClaimDocumentDto {

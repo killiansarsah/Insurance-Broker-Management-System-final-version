@@ -1,20 +1,21 @@
 import type { Metadata } from 'next';
-import { Inter, Caveat } from 'next/font/google';
+import { Outfit, DM_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { QueryProvider } from '@/lib/query-provider';
 import './globals.css';
 
-const inter = Inter({
+const outfit = Outfit({
     subsets: ['latin'],
     variable: '--font-sans',
+    display: 'swap',
 });
 
-const caveat = Caveat({
+const dmMono = DM_Mono({
     subsets: ['latin'],
-    variable: '--font-caveat',
+    variable: '--font-dm-mono',
     display: 'swap',
-    weight: ['400', '700'],
+    weight: ['400', '500'],
 });
 
 export const metadata: Metadata = {
@@ -42,7 +43,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en" className={`${inter.variable} ${caveat.variable}`}>
+        <html lang="en" className={`${outfit.variable} ${dmMono.variable}`}>
             <head>
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

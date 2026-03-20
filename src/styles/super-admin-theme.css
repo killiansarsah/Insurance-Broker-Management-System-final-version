@@ -1,0 +1,238 @@
+/* ═══════════════════════════════════════════════════════════════
+   SUPER ADMIN — Command Centre Theme
+   ═══════════════════════════════════════════════════════════════
+   Palette: Dark Teal (#021a13 → #9FE1CB)
+   Geometry: Sharp (0-2px radii)
+   Typography: Playfair Display + DM Sans + DM Mono
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Super Admin Colour Tokens ─────────────────────────────── */
+:root {
+  --sa-bg-page:        #f0f4f3;
+  --sa-bg-sidebar:     #021a13;
+  --sa-bg-sidebar-hover: #05291e;
+  --sa-bg-card:        #ffffff;
+  --sa-bg-card-alt:    #f7faf9;
+  --sa-bg-input:       #ffffff;
+  --sa-bg-modal:       #ffffff;
+
+  --sa-border:         #d4e0dc;
+  --sa-border-focus:   #1D9E75;
+
+  /* Teal scale */
+  --sa-teal-950:       #021a13;
+  --sa-teal-900:       #042e22;
+  --sa-teal-800:       #085041;
+  --sa-teal-700:       #0c6a55;
+  --sa-teal-600:       #0F6E56;
+  --sa-teal-500:       #1D9E75;
+  --sa-teal-400:       #3BB58D;
+  --sa-teal-300:       #5DCAA5;
+  --sa-teal-200:       #9FE1CB;
+  --sa-teal-100:       #D0F0E4;
+  --sa-teal-50:        #EDFAF4;
+
+  /* Status colours (sharp, high-contrast) */
+  --sa-green:          #15803d;
+  --sa-green-light:    #dcfce7;
+  --sa-amber:          #b45309;
+  --sa-amber-light:    #fef3c7;
+  --sa-red:            #b91c1c;
+  --sa-red-light:      #fee2e2;
+  --sa-sky:            #0369a1;
+  --sa-sky-light:      #e0f2fe;
+
+  /* Gold accent (for premium/revenue contexts) */
+  --sa-gold:           #ca8a04;
+  --sa-gold-light:     #fef9c3;
+
+  /* Text */
+  --sa-text-primary:   #0f1f1a;
+  --sa-text-secondary: #4a6b5d;
+  --sa-text-muted:     #7a9a8c;
+  --sa-text-inverse:   #f0f4f3;
+
+  /* Sidebar */
+  --sa-sidebar-text:         #7a9a8c;
+  --sa-sidebar-text-hover:   #9FE1CB;
+  --sa-sidebar-text-active:  #ffffff;
+  --sa-sidebar-active-bg:    rgba(29, 158, 117, 0.15);
+  --sa-sidebar-active-border:#1D9E75;
+  --sa-sidebar-badge-bg:     #b91c1c;
+  --sa-sidebar-badge-text:   #ffffff;
+
+  /* Radii (Soft Premium) */
+  --sa-radius-none:    0px;
+  --sa-radius-sm:      8px;
+  --sa-radius-md:      16px;
+  --sa-radius-lg:      24px;
+  --sa-radius-pill:    9999px;
+
+  /* Shadows (Subtle, no blur-heavy effects) */
+  --sa-shadow-card:    0 1px 3px rgba(2, 26, 19, 0.06);
+  --sa-shadow-hover:   0 4px 12px rgba(2, 26, 19, 0.08);
+  --sa-shadow-sidebar: 2px 0 8px rgba(2, 26, 19, 0.12);
+  --sa-shadow-modal:   0 16px 48px rgba(2, 26, 19, 0.16);
+
+  /* Layout */
+  --sa-sidebar-width:       260px;
+  --sa-sidebar-collapsed:   64px;
+  --sa-header-height:       56px;
+  --sa-transition-fast:     150ms;
+  --sa-transition-base:     200ms;
+  --sa-transition-slow:     300ms;
+  --sa-transition-sidebar:  280ms;
+}
+
+/* ── Dark Mode Overrides (Matching screenshot aesthetic) ───── */
+:root.theme-dark {
+  --sa-bg-page:        #010e0b;
+  --sa-bg-sidebar:     #010b08;
+  --sa-bg-sidebar-hover: #032019;
+  --sa-bg-card:        #011510;
+  --sa-bg-card-alt:    #022119;
+  --sa-bg-input:       #022119;
+  --sa-bg-modal:       #011510;
+
+  --sa-border:         #073a2d;
+  --sa-border-focus:   #1D9E75;
+
+  --sa-text-primary:   #f0f4f3;
+  --sa-text-secondary: #9cbcae;
+  --sa-text-muted:     #6a8f80;
+  --sa-text-inverse:   #010e0b;
+
+  --sa-shadow-card:    0 1px 3px rgba(0, 0, 0, 0.6);
+  --sa-shadow-hover:   0 8px 24px rgba(29, 158, 117, 0.15), 0 0 0 1px var(--sa-border-focus);
+  --sa-shadow-sidebar: 2px 0 8px rgba(0, 0, 0, 0.8);
+  --sa-shadow-modal:   0 16px 48px rgba(0, 0, 0, 0.9);
+}
+
+/* ── Live Pulse Dot Keyframes ──────────────────────────────── */
+@keyframes sa-pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(21, 128, 61, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(21, 128, 61, 0); }
+}
+@keyframes sa-pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(180, 83, 9, 0); }
+}
+@keyframes sa-pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(185, 28, 28, 0); }
+}
+
+/* ── Counter Roll Animation ────────────────────────────────── */
+@keyframes sa-count-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Staggered Section Reveal ──────────────────────────────── */
+@keyframes sa-reveal {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sa-reveal {
+  animation: sa-reveal 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Stagger children via CSS custom property */
+.sa-stagger > * {
+  animation: sa-reveal 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.sa-stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.sa-stagger > *:nth-child(2)  { animation-delay: 50ms; }
+.sa-stagger > *:nth-child(3)  { animation-delay: 100ms; }
+.sa-stagger > *:nth-child(4)  { animation-delay: 150ms; }
+.sa-stagger > *:nth-child(5)  { animation-delay: 200ms; }
+.sa-stagger > *:nth-child(6)  { animation-delay: 250ms; }
+.sa-stagger > *:nth-child(7)  { animation-delay: 300ms; }
+.sa-stagger > *:nth-child(8)  { animation-delay: 350ms; }
+.sa-stagger > *:nth-child(9)  { animation-delay: 400ms; }
+.sa-stagger > *:nth-child(10) { animation-delay: 450ms; }
+
+/* ── Shimmer Skeleton (Super Admin variant) ────────────────── */
+@keyframes sa-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.sa-skeleton {
+  background: linear-gradient(90deg, #e8f0ed 25%, #d4e0dc 50%, #e8f0ed 75%);
+  background-size: 200% 100%;
+  animation: sa-shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--sa-radius-sm);
+}
+
+/* ── Slide Drawer ──────────────────────────────────────────── */
+@keyframes sa-slide-in-right {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes sa-slide-out-right {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100%); }
+}
+
+/* ── Impersonation Banner Shake ────────────────────────────── */
+@keyframes sa-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+/* ── Button Hover States ───────────────────────────────────── */
+.sa-btn-hover {
+  transition: transform var(--sa-transition-fast), box-shadow var(--sa-transition-fast);
+}
+.sa-btn-hover:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--sa-shadow-hover);
+}
+.sa-btn-hover:active {
+  transform: scale(0.97);
+}
+
+/* ── Card Hover ────────────────────────────────────────────── */
+.sa-card-hover {
+  transition: transform var(--sa-transition-base), box-shadow var(--sa-transition-base);
+}
+.sa-card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sa-shadow-hover);
+}
+
+/* ── Table Row Stagger ─────────────────────────────────────── */
+@keyframes sa-row-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Reduced Motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .sa-reveal,
+  .sa-stagger > *,
+  .sa-skeleton,
+  .sa-btn-hover,
+  .sa-card-hover {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* ── Interactive Card Glow ───────────────────────────────────── */
+.sa-card-bg-gradient {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(circle at top right, rgba(29, 158, 117, 0.12), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.group:hover .sa-card-bg-gradient {
+  opacity: 1;
+}

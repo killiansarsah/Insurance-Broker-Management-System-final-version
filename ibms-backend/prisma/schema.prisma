@@ -8,47 +8,65 @@ datasource db {
 }
 
 model Tenant {
-  id               String             @id @default(uuid()) @db.Uuid
-  name             String
-  slug             String             @unique
-  nicLicense       String?
-  plan             TenantPlan         @default(BASIC)
-  isActive         Boolean            @default(true)
-  logoUrl          String?
-  primaryColor     String?            @default("#1E40AF")
-  address          String?
-  phone            String?
-  email            String?
-  createdAt        DateTime           @default(now())
-  updatedAt        DateTime           @updatedAt
-  nicLicenseExpiry DateTime?
-  approvals        Approval[]
-  auditLogs        AuditLog[]
-  branches         Branch[]
-  calendarEvents   CalendarEvent[]
-  carriers         Carrier[]
-  chatMessages     ChatMessage[]
-  chatRooms        ChatRoom[]
-  claimFollowUps   ClaimFollowUp[]
-  claims           Claim[]
-  clients          Client[]
-  commissions      Commission[]
-  complaints       Complaint[]
-  departments      Department[]
-  documents        Document[]
-  expenses         Expense[]
-  integrations     Integration[]
-  invitations      Invitation[]
-  invoices         Invoice[]
-  leads            Lead[]
-  notifications    Notification[]
-  policies         Policy[]
-  premiumFinancing PremiumFinancing[]
-  quotes           Quote[]
-  remittances      Remittance[]
-  tasks            Task[]
-  transactions     Transaction[]
-  users            User[]
+  id                      String               @id @default(uuid()) @db.Uuid
+  name                    String
+  slug                    String               @unique
+  subdomain               String?              @unique
+  nicLicense              String?
+  plan                    TenantPlan           @default(BASIC)
+  billingCycle            BillingCycle         @default(MONTHLY)
+  tenantStatus            TenantStatus         @default(ACTIVE)
+  isActive                Boolean              @default(true)
+  logoUrl                 String?
+  primaryColor            String?              @default("#1E40AF")
+  address                 String?
+  phone                   String?
+  email                   String?
+  adminEmail              String?
+  storageUsedMb           Float                @default(0)
+  trialEndsAt             DateTime?
+  customOnboardingNotes   String?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  nicLicenseExpiry        DateTime?
+  approvals               Approval[]
+  auditLogs               AuditLog[]
+  branches                Branch[]
+  calendarEvents          CalendarEvent[]
+  carriers                Carrier[]
+  chatMessages            ChatMessage[]
+  chatRooms               ChatRoom[]
+  claimFollowUps          ClaimFollowUp[]
+  claimStatusHistories    ClaimStatusHistory[]
+  claims                  Claim[]
+  clients                 Client[]
+  commissions             Commission[]
+  complaints              Complaint[]
+  departments             Department[]
+  documents               Document[]
+  expenses                Expense[]
+  integrations            Integration[]
+  invitations             Invitation[]
+  invoices                Invoice[]
+  leads                   Lead[]
+  notifications           Notification[]
+  policies                Policy[]
+  premiumFinancing        PremiumFinancing[]
+  quotes                  Quote[]
+  remittances             Remittance[]
+  tasks                   Task[]
+  transactions            Transaction[]
+  users                   User[]
+  ClaimDocument           ClaimDocument[]
+  subscriptions           Subscription[]
+  payments                PlatformPayment[]
+  platformAuditLogs       PlatformAuditLog[]
+  errorLogs               ErrorLog[]
+  backgroundJobs          BackgroundJob[]
+  emailLogs               EmailLog[]
+  announcementReads       AnnouncementRead[]
+  featureFlagOverrides    FeatureFlagOverride[]
+  nicCompliance           NicCompliance?
 
   @@map("tenants")
 }
@@ -71,58 +89,68 @@ model Branch {
 }
 
 model User {
-  id                    String              @id @default(uuid()) @db.Uuid
-  tenantId              String              @db.Uuid
+  id                    String               @id @default(uuid()) @db.Uuid
+  tenantId              String               @db.Uuid
   email                 String
   passwordHash          String
   firstName             String
   lastName              String
   phone                 String?
-  role                  UserRole            @default(BROKER)
-  branchId              String?             @db.Uuid
-  departmentId          String?             @db.Uuid
+  role                  UserRole             @default(BROKER)
+  branchId              String?              @db.Uuid
+  departmentId          String?              @db.Uuid
   avatarUrl             String?
-  isActive              Boolean             @default(true)
+  isActive              Boolean              @default(true)
   lastLoginAt           DateTime?
-  failedAttempts        Int                 @default(0)
+  failedAttempts        Int                  @default(0)
   lockedUntil           DateTime?
-  twoFactorEnabled      Boolean             @default(false)
+  twoFactorEnabled      Boolean              @default(false)
   twoFactorSecret       String?
-  delegatedTo           String?             @db.Uuid
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
+  delegatedTo           String?              @db.Uuid
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
   deletedAt             DateTime?
-  mustChangePassword    Boolean             @default(false)
-  processedApprovals    Approval[]          @relation("ApprovalProcessor")
-  requestedApprovals    Approval[]          @relation("ApprovalRequester")
+  mustChangePassword    Boolean              @default(false)
+  processedApprovals    Approval[]           @relation("ApprovalProcessor")
+  requestedApprovals    Approval[]           @relation("ApprovalRequester")
   auditLogs             AuditLog[]
   eventAttendances      CalendarAttendee[]
-  createdEvents         CalendarEvent[]     @relation("EventCreator")
-  sentMessages          ChatMessage[]       @relation("MessageSender")
+  createdEvents         CalendarEvent[]      @relation("EventCreator")
+  sentMessages          ChatMessage[]        @relation("MessageSender")
   chatParticipations    ChatParticipant[]
-  claimFollowUps        ClaimFollowUp[]     @relation("FollowUpBy")
-  assessedClaims        Claim[]             @relation("ClaimAssessor")
-  assignedClients       Client[]            @relation("AssignedBroker")
-  commissions           Commission[]        @relation("CommissionBroker")
-  assignedComplaints    Complaint[]         @relation("ComplaintAssignee")
-  headOfDepartments     Department[]        @relation("DepartmentHead")
-  uploadedDocuments     Document[]          @relation("DocumentUploader")
-  approvedExpenses      Expense[]           @relation("ExpenseApprover")
-  sentInvitations       Invitation[]        @relation("InvitedBy")
-  assignedLeads         Lead[]              @relation("LeadBroker")
+  claimFollowUps        ClaimFollowUp[]      @relation("FollowUpBy")
+  claimStatusHistories  ClaimStatusHistory[] @relation("ClaimStatusHistoryCreator")
+  assessedClaims        Claim[]              @relation("ClaimAssessor")
+  assignedClients       Client[]             @relation("AssignedBroker")
+  commissions           Commission[]         @relation("CommissionBroker")
+  assignedComplaints    Complaint[]          @relation("ComplaintAssignee")
+  headOfDepartments     Department[]         @relation("DepartmentHead")
+  uploadedDocuments     Document[]           @relation("DocumentUploader")
+  uploadedClaimDocs     ClaimDocument[]      @relation("ClaimDocumentUploader")
+  approvedExpenses      Expense[]            @relation("ExpenseApprover")
+  sentInvitations       Invitation[]         @relation("InvitedBy")
+  assignedLeads         Lead[]               @relation("LeadBroker")
   notifications         Notification[]
-  assignedPolicies      Policy[]            @relation("PolicyBroker")
-  endorsementApprovals  PolicyEndorsement[] @relation("EndorsementApprover")
-  endorsementRequests   PolicyEndorsement[] @relation("EndorsementRequester")
-  preparedQuotes        Quote[]             @relation("QuotePreparer")
+  assignedPolicies      Policy[]             @relation("PolicyBroker")
+  endorsementApprovals  PolicyEndorsement[]  @relation("EndorsementApprover")
+  endorsementRequests   PolicyEndorsement[]  @relation("EndorsementRequester")
+  preparedQuotes        Quote[]              @relation("QuotePreparer")
   refreshTokens         RefreshToken[]
-  processedRemittances  Remittance[]        @relation("RemittanceProcessor")
-  assignedTasks         Task[]              @relation("TaskAssignee")
-  createdTasks          Task[]              @relation("TaskCreator")
-  processedTransactions Transaction[]       @relation("TransactionProcessor")
-  branch                Branch?             @relation(fields: [branchId], references: [id])
-  department            Department?         @relation("DepartmentMember", fields: [departmentId], references: [id])
-  tenant                Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  processedRemittances  Remittance[]         @relation("RemittanceProcessor")
+  assignedTasks         Task[]               @relation("TaskAssignee")
+  createdTasks          Task[]               @relation("TaskCreator")
+  processedTransactions Transaction[]        @relation("TransactionProcessor")
+  branch                Branch?              @relation(fields: [branchId], references: [id])
+  department            Department?          @relation("DepartmentMember", fields: [departmentId], references: [id])
+  tenant                Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // Platform admin relations
+  platformAuditLogs     PlatformAuditLog[]   @relation("PlatformAuditActor")
+  createdIncidents      Incident[]           @relation("IncidentCreator")
+  resolvedErrors        ErrorLog[]           @relation("ErrorResolver")
+  createdAnnouncements  Announcement[]       @relation("AnnouncementCreator")
+  updatedFeatureFlags   FeatureFlag[]        @relation("FlagUpdater")
+  createdFlagOverrides  FeatureFlagOverride[] @relation("FlagOverrideCreator")
+  updatedSettings       PlatformSetting[]    @relation("SettingUpdater")
 
   @@unique([tenantId, email])
   @@index([tenantId])
@@ -366,6 +394,8 @@ model Policy {
   inceptionDate      DateTime
   expiryDate         DateTime
   issueDate          DateTime?
+  claimCount         Int                  @default(0)
+  totalClaimsValue   Decimal              @default(0) @db.Decimal(15, 2)
   sumInsured         Decimal?             @db.Decimal(15, 2)
   premiumAmount      Decimal              @db.Decimal(15, 2)
   commissionRate     Decimal              @db.Decimal(5, 2)
@@ -512,37 +542,45 @@ model PolicyDocument {
 }
 
 model Claim {
-  id                     String          @id @default(uuid()) @db.Uuid
-  tenantId               String          @db.Uuid
+  id                     String               @id @default(uuid()) @db.Uuid
+  tenantId               String               @db.Uuid
   claimNumber            String
-  status                 ClaimStatus     @default(INTIMATED)
-  policyId               String          @db.Uuid
+  status                 ClaimStatus          @default(INTIMATED)
+  policyId               String               @db.Uuid
   insuranceType          InsuranceType
-  clientId               String          @db.Uuid
+  clientId               String               @db.Uuid
   incidentDate           DateTime
   incidentDescription    String
   incidentLocation       String?
-  claimAmount            Decimal         @db.Decimal(15, 2)
-  currency               String          @default("GHS")
-  intimationDate         DateTime        @default(now())
+  perilType              String?
+  claimAmount            Decimal              @db.Decimal(15, 2)
+  currency               String               @default("GHS")
+  insurerReference       String?
+  insurerSubmissionDate  DateTime?
+  intimationDate         DateTime             @default(now())
   registrationDate       DateTime?
   acknowledgmentDeadline DateTime
   processingDeadline     DateTime
-  assessedAmount         Decimal?        @db.Decimal(15, 2)
-  settledAmount          Decimal?        @db.Decimal(15, 2)
+  assessedAmount         Decimal?             @db.Decimal(15, 2)
+  settledAmount          Decimal?             @db.Decimal(15, 2)
+  deductibleAmount       Decimal?             @db.Decimal(15, 2)
   settlementDate         DateTime?
   rejectionReason        String?
-  isOverdue              Boolean         @default(false)
-  assessorId             String?         @db.Uuid
-  createdAt              DateTime        @default(now())
-  updatedAt              DateTime        @updatedAt
+  appealNotes            String?
+  nicEscalationDate      DateTime?
+  nicEscalationRef       String?
+  isOverdue              Boolean              @default(false)
+  assessorId             String?              @db.Uuid
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
   deletedAt              DateTime?
   claimDocuments         ClaimDocument[]
   followUps              ClaimFollowUp[]
-  assessor               User?           @relation("ClaimAssessor", fields: [assessorId], references: [id])
-  client                 Client          @relation(fields: [clientId], references: [id])
-  policy                 Policy          @relation(fields: [policyId], references: [id])
-  tenant                 Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  statusHistories        ClaimStatusHistory[]
+  assessor               User?                @relation("ClaimAssessor", fields: [assessorId], references: [id])
+  client                 Client               @relation(fields: [clientId], references: [id])
+  policy                 Policy               @relation(fields: [policyId], references: [id])
+  tenant                 Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, claimNumber])
   @@index([tenantId])
@@ -551,15 +589,36 @@ model Claim {
   @@map("claims")
 }
 
+model ClaimStatusHistory {
+  id         String      @id @default(uuid()) @db.Uuid
+  tenantId   String      @db.Uuid
+  claimId    String      @db.Uuid
+  fromStatus ClaimStatus
+  toStatus   ClaimStatus
+  changedBy  String      @db.Uuid
+  notes      String?
+  createdAt  DateTime    @default(now())
+  claim      Claim       @relation(fields: [claimId], references: [id])
+  user       User        @relation("ClaimStatusHistoryCreator", fields: [changedBy], references: [id])
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([claimId])
+  @@index([tenantId, createdAt])
+  @@map("claim_status_history")
+}
+
 model ClaimDocument {
-  id         String   @id @default(uuid()) @db.Uuid
-  tenantId   String   @db.Uuid
-  claimId    String   @db.Uuid
+  id         String            @id @default(uuid()) @db.Uuid
+  tenantId   String            @db.Uuid
+  claimId    String            @db.Uuid
   name       String
-  type       String
+  type       ClaimDocumentType
   url        String?
-  uploadedAt DateTime @default(now())
-  claim      Claim    @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  uploadedAt DateTime          @default(now())
+  claim      Claim             @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  uploadedBy String            @db.Uuid
+  uploader   User              @relation("ClaimDocumentUploader", fields: [uploadedBy], references: [id])
+  tenant     Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@index([claimId])
@@ -1504,4 +1563,416 @@ enum CalendarEventStatus {
   UPCOMING
   COMPLETED
   CANCELLED
+}
+
+enum ClaimDocumentType {
+  POLICE_REPORT
+  MEDICAL_REPORT
+  REPAIR_ESTIMATE
+  ADJUSTER_REPORT
+  SETTLEMENT_LETTER
+  CORRESPONDENCE
+  PHOTOGRAPH
+  OTHER
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SUPER ADMIN PLATFORM MODELS
+// ═══════════════════════════════════════════════════════════════
+
+// ─── ENUMS ───────────────────────────────────────────────────
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+  PENDING
+  TRIAL
+}
+
+enum BillingCycle {
+  MONTHLY
+  ANNUAL
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  OVERDUE
+  CANCELLED
+  TRIAL
+}
+
+enum PlatformPaymentStatus {
+  PAID
+  FAILED
+  REFUNDED
+  PENDING
+}
+
+enum AuditCategory {
+  AUTH
+  TENANT
+  USER
+  BILLING
+  POLICY
+  CLAIM
+  COMPLIANCE
+  SYSTEM
+  ERROR
+  SECURITY
+}
+
+enum AuditSeverity {
+  INFO
+  WARN
+  CRITICAL
+}
+
+enum AuditStatus {
+  SUCCESS
+  FAILED
+}
+
+enum ServiceHealthStatus {
+  HEALTHY
+  DEGRADED
+  DOWN
+}
+
+enum IncidentStatus {
+  OPEN
+  RESOLVED
+}
+
+enum ErrorSeverity {
+  FATAL
+  ERROR
+  WARNING
+}
+
+enum JobStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRYING
+}
+
+enum EmailDeliveryStatus {
+  SENT
+  DELIVERED
+  BOUNCED
+  FAILED
+  SPAM
+}
+
+enum AnnouncementType {
+  INFO
+  WARNING
+  CRITICAL
+  MAINTENANCE
+}
+
+enum AnnouncementTarget {
+  ALL
+  BY_PLAN
+  SPECIFIC
+}
+
+enum AnnouncementDelivery {
+  IN_APP
+  EMAIL
+  BOTH
+}
+
+// ─── SUBSCRIPTION & BILLING ─────────────────────────────────
+
+model Subscription {
+  id                     String             @id @default(uuid()) @db.Uuid
+  tenantId               String             @db.Uuid
+  plan                   TenantPlan
+  billingCycle           BillingCycle
+  amountGhs              Decimal            @db.Decimal(12, 2)
+  status                 SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart     DateTime
+  currentPeriodEnd       DateTime
+  paystackSubscriptionId String?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  tenant                 Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments               PlatformPayment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model PlatformPayment {
+  id                String                @id @default(uuid()) @db.Uuid
+  tenantId          String                @db.Uuid
+  subscriptionId    String                @db.Uuid
+  amountGhs         Decimal               @db.Decimal(12, 2)
+  status            PlatformPaymentStatus @default(PENDING)
+  paystackReference String?
+  invoiceNumber     String?
+  paidAt            DateTime?
+  createdAt         DateTime              @default(now())
+  tenant            Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscription      Subscription          @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([subscriptionId])
+  @@index([status])
+  @@map("platform_payments")
+}
+
+// ─── PLATFORM AUDIT LOG (IMMUTABLE) ─────────────────────────
+
+model PlatformAuditLog {
+  id               String        @id @default(uuid()) @db.Uuid
+  actorId          String        @db.Uuid
+  actorEmail       String
+  actorRole        String
+  tenantId         String?       @db.Uuid
+  tenantName       String?
+  sessionId        String?
+  impersonatedById String?       @db.Uuid
+  category         AuditCategory
+  severity         AuditSeverity @default(INFO)
+  action           String
+  resourceType     String?
+  resourceId       String?
+  description      String
+  beforeState      Json?
+  afterState       Json?
+  metadata         Json?
+  ipAddress        String?
+  userAgent        String?
+  requestId        String?
+  status           AuditStatus   @default(SUCCESS)
+  createdAt        DateTime      @default(now())
+  actor            User          @relation("PlatformAuditActor", fields: [actorId], references: [id])
+  tenant           Tenant?       @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([actorId])
+  @@index([category])
+  @@index([severity])
+  @@index([createdAt])
+  @@index([status])
+  @@map("platform_audit_logs")
+}
+
+// ─── SYSTEM HEALTH & INCIDENTS ──────────────────────────────
+
+model SystemHealthCheck {
+  id             String              @id @default(uuid()) @db.Uuid
+  serviceName    String
+  status         ServiceHealthStatus
+  responseTimeMs Int
+  checkedAt      DateTime            @default(now())
+  errorMessage   String?
+
+  @@index([serviceName])
+  @@index([checkedAt])
+  @@map("system_health_checks")
+}
+
+model Incident {
+  id               String         @id @default(uuid()) @db.Uuid
+  title            String
+  status           IncidentStatus @default(OPEN)
+  severity         AuditSeverity
+  affectedServices Json
+  startedAt        DateTime       @default(now())
+  resolvedAt       DateTime?
+  rootCause        String?
+  resolutionNotes  String?
+  createdById      String         @db.Uuid
+  createdAt        DateTime       @default(now())
+  createdBy        User           @relation("IncidentCreator", fields: [createdById], references: [id])
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("incidents")
+}
+
+// ─── ERROR TRACKING ─────────────────────────────────────────
+
+model ErrorLog {
+  id              String        @id @default(uuid()) @db.Uuid
+  errorType       String
+  message         String
+  stackTrace      String
+  severity        ErrorSeverity @default(ERROR)
+  tenantId        String?       @db.Uuid
+  userId          String?       @db.Uuid
+  requestMethod   String?
+  requestUrl      String?
+  requestBody     Json?
+  statusCode      Int?
+  resolved        Boolean       @default(false)
+  resolvedAt      DateTime?
+  resolvedById    String?       @db.Uuid
+  notes           String?
+  occurrenceCount Int           @default(1)
+  firstSeenAt     DateTime      @default(now())
+  lastSeenAt      DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  tenant          Tenant?       @relation(fields: [tenantId], references: [id])
+  resolvedBy      User?         @relation("ErrorResolver", fields: [resolvedById], references: [id])
+
+  @@index([tenantId])
+  @@index([severity])
+  @@index([resolved])
+  @@index([lastSeenAt])
+  @@map("error_logs")
+}
+
+// ─── BACKGROUND JOBS ────────────────────────────────────────
+
+model BackgroundJob {
+  id           String    @id @default(uuid()) @db.Uuid
+  jobName      String
+  tenantId     String?   @db.Uuid
+  status       JobStatus @default(QUEUED)
+  priority     Int       @default(0)
+  payload      Json?
+  result       Json?
+  errorMessage String?
+  attempts     Int       @default(0)
+  maxAttempts  Int       @default(3)
+  enqueuedAt   DateTime  @default(now())
+  startedAt    DateTime?
+  completedAt  DateTime?
+  nextRetryAt  DateTime?
+  tenant       Tenant?   @relation(fields: [tenantId], references: [id])
+
+  @@index([status])
+  @@index([tenantId])
+  @@index([jobName])
+  @@index([enqueuedAt])
+  @@map("background_jobs")
+}
+
+// ─── EMAIL LOGS ─────────────────────────────────────────────
+
+model EmailLog {
+  id                String              @id @default(uuid()) @db.Uuid
+  templateName      String
+  recipientEmail    String
+  tenantId          String?             @db.Uuid
+  subject           String
+  status            EmailDeliveryStatus @default(SENT)
+  providerMessageId String?
+  providerResponse  Json?
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+  createdAt         DateTime            @default(now())
+  tenant            Tenant?             @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([recipientEmail])
+  @@index([createdAt])
+  @@map("email_logs")
+}
+
+// ─── ANNOUNCEMENTS ──────────────────────────────────────────
+
+model Announcement {
+  id           String               @id @default(uuid()) @db.Uuid
+  title        String
+  body         String
+  type         AnnouncementType     @default(INFO)
+  targetType   AnnouncementTarget   @default(ALL)
+  targetIds    Json?
+  delivery     AnnouncementDelivery @default(IN_APP)
+  isPinned     Boolean              @default(false)
+  scheduledAt  DateTime?
+  sentAt       DateTime?
+  createdById  String               @db.Uuid
+  createdAt    DateTime             @default(now())
+  createdBy    User                 @relation("AnnouncementCreator", fields: [createdById], references: [id])
+  reads        AnnouncementRead[]
+
+  @@index([createdAt])
+  @@map("announcements")
+}
+
+model AnnouncementRead {
+  id             String       @id @default(uuid()) @db.Uuid
+  announcementId String       @db.Uuid
+  tenantId       String       @db.Uuid
+  readAt         DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([announcementId, tenantId])
+  @@map("announcement_reads")
+}
+
+// ─── FEATURE FLAGS ──────────────────────────────────────────
+
+model FeatureFlag {
+  id                String                @id @default(uuid()) @db.Uuid
+  key               String                @unique
+  label             String
+  description       String?
+  globalEnabled     Boolean               @default(false)
+  starterEnabled    Boolean               @default(false)
+  proEnabled        Boolean               @default(false)
+  enterpriseEnabled Boolean               @default(false)
+  updatedById       String?               @db.Uuid
+  updatedAt         DateTime              @updatedAt
+  updatedBy         User?                 @relation("FlagUpdater", fields: [updatedById], references: [id])
+  overrides         FeatureFlagOverride[]
+
+  @@map("feature_flags")
+}
+
+model FeatureFlagOverride {
+  id          String      @id @default(uuid()) @db.Uuid
+  flagId      String      @db.Uuid
+  tenantId    String      @db.Uuid
+  enabled     Boolean
+  createdById String      @db.Uuid
+  createdAt   DateTime    @default(now())
+  flag        FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  tenant      Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy   User        @relation("FlagOverrideCreator", fields: [createdById], references: [id])
+
+  @@unique([flagId, tenantId])
+  @@map("feature_flag_overrides")
+}
+
+// ─── PLATFORM SETTINGS (KEY-VALUE) ──────────────────────────
+
+model PlatformSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @db.Uuid
+  updatedAt   DateTime @updatedAt
+  updatedBy   User?    @relation("SettingUpdater", fields: [updatedById], references: [id])
+
+  @@map("platform_settings")
+}
+
+// ─── NIC COMPLIANCE ─────────────────────────────────────────
+
+model NicCompliance {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenantId              String   @unique @db.Uuid
+  licenceNumber         String?
+  expiryDate            DateTime?
+  segregationCompliant  Boolean  @default(false)
+  lastRemittanceDate    DateTime?
+  nextRemittanceDue     DateTime?
+  levyStatus            String?
+  kycStatus             String?
+  complianceScore       Int      @default(0)
+  lastCheckedAt         DateTime?
+  updatedAt             DateTime @updatedAt
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("nic_compliance")
 }

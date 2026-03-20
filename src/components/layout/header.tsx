@@ -266,7 +266,7 @@ export function Header() {
                                 </p>
                                 <p className="text-xs text-surface-500 mt-1.5 opacity-80">{user?.email}</p>
                             </div>
-                            <div className="py-2">
+                            <div className="py-2 space-y-1">
                                 <button
                                     onClick={() => {
                                         router.push('/dashboard/settings');
@@ -279,6 +279,21 @@ export function Header() {
                                     </div>
                                     My Profile
                                 </button>
+
+                                {(user?.role === 'SUPER_ADMIN' || user?.role === 'PLATFORM_SUPER_ADMIN') && (
+                                    <button
+                                        onClick={() => {
+                                            router.push('/super-admin/overview');
+                                            setProfileOpen(false);
+                                        }}
+                                        className="w-full px-5 py-2.5 text-sm text-left text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/30 cursor-pointer transition-colors font-bold flex items-center gap-3"
+                                    >
+                                        <div className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                                            <ShieldAlert size={12} className="text-primary-600 dark:text-primary-500" />
+                                        </div>
+                                        Command Centre
+                                    </button>
+                                )}
                             </div>
                             <div className="border-t border-surface-100 dark:border-slate-700 py-2 bg-surface-50/30 dark:bg-slate-900/30">
                                 <button

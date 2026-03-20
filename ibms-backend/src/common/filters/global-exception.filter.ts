@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service.js';
 
 interface ErrorResponseBody {
   statusCode: number;
@@ -20,6 +21,8 @@ interface ErrorResponseBody {
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(GlobalExceptionFilter.name);
+
+  constructor(private readonly prisma?: PrismaService) {}
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -41,6 +44,29 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         `${request.method} ${request.url} → ${statusCode}`,
         exception instanceof Error ? exception.stack : String(exception),
       );
+
+      // Async log to database (fire and forget)
+      if (this.prisma) {
+        this.prisma.errorLog.create({
+          data: {
+            errorType: exception?.constructor?.name || 'Error',
+            message: message.substring(0, 1000),
+            stackTrace: exception instanceof Error ? (exception.stack || String(exception)) : String(exception),
+            severity: 'FATAL',
+            requestMethod: request.method,
+            requestUrl: request.url,
+            statusCode,
+            occurrenceCount: 1,
+            // Assuming tenant context may be added via middleware later, we leave tenantId null for truly global errors.
+            // If the user's ID was attached in request.user by AuthGuard, we could log it here:
+            userId: (request as any).user?.userId || null,
+            tenantId: (request as any).user?.tenantId || null,
+          }
+        }).catch(err => {
+          this.logger.error('Failed to write error log to database', err);
+        });
+      }
+
     } else {
       this.logger.warn(
         `${request.method} ${request.url} → ${statusCode}: ${message}`,

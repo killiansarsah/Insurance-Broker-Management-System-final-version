@@ -23,7 +23,7 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { useClaim, useClaimFollowUps, useAddClaimFollowUp } from '@/hooks/api';
+import { useClaim, useClaimFollowUps, useAddClaimFollowUp, useClaimDocuments, useAddClaimDocument } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Claim } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
@@ -32,6 +32,11 @@ import { generateReportPdf } from '@/lib/generate-report-pdf';
 
 const ClaimStatusModal = dynamic(
     () => import('@/components/claims/claim-status-modal').then(m => ({ default: m.ClaimStatusModal })),
+    { ssr: false }
+);
+
+const UploadDocumentModal = dynamic(
+    () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
     { ssr: false }
 );
 
@@ -56,10 +61,13 @@ export default function ClaimDetailPage({ id }: { id: string }) {
 
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
     const [showFollowUpForm, setShowFollowUpForm] = useState(false);
+    const [showUploadModal, setShowUploadModal] = useState(false);
     const [followUpData, setFollowUpData] = useState({ method: 'PHONE', note: '', contactName: '', nextAction: '' });
 
     const followUpsQuery = useClaimFollowUps(id);
+    const documentsQuery = useClaimDocuments(id);
     const addFollowUp = useAddClaimFollowUp();
+    const addDocumentMutation = useAddClaimDocument();
 
     if (isLoading) {
         return (
@@ -148,6 +156,8 @@ export default function ClaimDetailPage({ id }: { id: string }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                             <InfoItem icon={<Calendar size={16} />} label="Incident Date" value={formatDate(claim.incidentDate)} />
                             <InfoItem icon={<MapPin size={16} />} label="Location" value={claim.incidentLocation || 'Not specified'} />
+                            <InfoItem icon={<FileText size={16} />} label="Peril Type" value={(claim as any).perilType || 'Not specified'} />
+                            <InfoItem icon={<ClipboardList size={16} />} label="Insurer Ref" value={(claim as any).insurerReference || 'Pending'} />
                             <InfoItem icon={<FileText size={16} />} label="Description" value={claim.incidentDescription} className="col-span-1 md:col-span-2" />
                         </div>
                     </Card>
@@ -167,6 +177,56 @@ export default function ClaimDetailPage({ id }: { id: string }) {
                                     {claim.settledAmount ? formatCurrency(claim.settledAmount) : '—'}
                                 </span>
                             } />
+                            {(claim as any).deductibleAmount && (
+                                <InfoItem icon={<DollarSign size={16} />} label="Deductible" value={
+                                    <span className="text-warning-600">
+                                        {formatCurrency((claim as any).deductibleAmount)}
+                                    </span>
+                                } />
+                            )}
+                        </div>
+                    </Card>
+
+                    {/* Documents */}
+                    <Card padding="lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <CardHeader title="Evidence & Documents" />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                leftIcon={<Plus size={14} />}
+                                onClick={() => setShowUploadModal(true)}
+                            >
+                                Upload Evidence
+                            </Button>
+                        </div>
+                        <div className="space-y-3">
+                            {documentsQuery.isLoading && <p className="text-sm text-surface-400">Loading documents...</p>}
+                            {(() => {
+                                const response: any = documentsQuery.data;
+                                const docs = response?.items ?? response?.data?.data ?? response?.data ?? (Array.isArray(response) ? response : []);
+                                if (!docs || !Array.isArray(docs)) return null;
+                                if (docs.length === 0) return <p className="text-sm text-surface-400 text-center py-4">No documents attached to this claim</p>;
+                                return docs.map((doc: any) => (
+                                    <div key={doc.id as string} className="flex items-center justify-between p-3 bg-surface-50 rounded-[var(--radius-md)] border border-surface-200">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-primary-100 text-primary-600 rounded">
+                                                <FileText size={16} />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-semibold text-surface-900">{doc.name as string}</h4>
+                                                <p className="text-xs text-surface-500 uppercase font-medium">{doc.type as string}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-xs font-medium text-surface-500">
+                                            <span>{formatDate(doc.uploadedAt as string)}</span>
+                                            <a href={doc.url as string} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:text-primary-800">
+                                                Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                ));
+                            })()}
                         </div>
                     </Card>
 
@@ -402,6 +462,35 @@ export default function ClaimDetailPage({ id }: { id: string }) {
                     onClose={() => setIsStatusModalOpen(false)}
                     claim={claim}
                     onUpdate={handleUpdateClaim}
+                />
+            )}
+            {showUploadModal && (
+                <UploadDocumentModal
+                    isOpen={showUploadModal}
+                    onClose={() => setShowUploadModal(false)}
+                    defaultCategory="claims"
+                    onUploadComplete={(docs) => {
+                        docs.forEach((doc: any) => {
+                            let docType = 'OTHER';
+                            if (doc.type === 'claims') docType = 'PHOTOGRAPH';
+                            if (doc.type === 'financial') docType = 'REPAIR_ESTIMATE';
+                            if (doc.type === 'legal') docType = 'CORRESPONDENCE';
+
+                            addDocumentMutation.mutate({
+                                claimId: id,
+                                data: {
+                                    name: doc.name,
+                                    type: docType,
+                                    url: doc.url || 'https://example.com/dummy-url.pdf', // Dummy URL from the modal's blob
+                                }
+                            }, {
+                                onError: (err: any) => {
+                                    toast.error('Database Error', { description: err?.response?.data?.message || err.message });
+                                }
+                            });
+                        });
+                        setShowUploadModal(false);
+                    }}
                 />
             )}
         </div>

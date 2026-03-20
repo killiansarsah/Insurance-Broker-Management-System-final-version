@@ -99,8 +99,12 @@
   --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 8px 10px rgba(0, 0, 0, 0.04);
 
   /* --- Typography --- */
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-base: var(--font-sans, 'Outfit', ui-sans-serif, system-ui, sans-serif);
+  --font-code: var(--font-dm-mono, 'JetBrains Mono', ui-monospace, monospace);
+  
+  --font-sans: var(--font-base);
+  --font-serif: var(--font-base);
+  --font-mono: var(--font-code);
 
   /* --- Transitions --- */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -119,7 +123,7 @@
    ============================================================ */
 
 html {
-  font-family: var(--font-sans);
+  font-family: var(--font-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

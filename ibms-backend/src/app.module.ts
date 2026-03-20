@@ -40,6 +40,7 @@ import { QuotesModule } from './quotes/quotes.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { ImportsModule } from './imports/imports.module';
 import { SearchModule } from './search/search.module';
+import { PlatformAdminModule } from './platform-admin/platform-admin.module';
 
 @Module({
   imports: [
@@ -129,6 +130,9 @@ import { SearchModule } from './search/search.module';
     IntegrationsModule,
     ImportsModule,
     SearchModule,
+
+    // Super Admin Platform Management
+    PlatformAdminModule,
   ],
   providers: [
     // Apply rate limiting globally

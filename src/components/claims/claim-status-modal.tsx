@@ -59,6 +59,7 @@ type TransitionConfig = {
     requiresReason?: boolean;
     requiresPayment?: boolean;
     requiresNote?: boolean;
+    requiresAssessor?: boolean;
     noteLabel?: string;
 };
 
@@ -83,6 +84,7 @@ const VALID_TRANSITIONS: Record<ClaimStatus, Partial<Record<ClaimStatus, Transit
             color: 'text-warning-700',
             bg: 'bg-warning-50',
             border: 'border-warning-300',
+            requiresAssessor: true,
             requiresNote: true,
             noteLabel: 'Investigation Notes (optional)',
         },
@@ -95,6 +97,7 @@ const VALID_TRANSITIONS: Record<ClaimStatus, Partial<Record<ClaimStatus, Transit
             color: 'text-warning-700',
             bg: 'bg-warning-50',
             border: 'border-warning-300',
+            requiresAssessor: true,
         },
     },
     UNDER_REVIEW: {
@@ -201,6 +204,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
     const [reason, setReason] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('BANK_TRANSFER');
     const [paymentReference, setPaymentReference] = useState('');
+    const [assignedTo, setAssignedTo] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const acknowledgeClaim = useAcknowledgeClaim();
@@ -245,7 +249,7 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                     if (claim.status === 'REJECTED') {
                         await reopenClaim.mutateAsync({ id: claim.id, reason: reason || 'Claim reopened for re-investigation' });
                     } else {
-                        await investigateClaim.mutateAsync({ id: claim.id, data: { notes: note || undefined } });
+                        await investigateClaim.mutateAsync({ id: claim.id, data: { notes: note || undefined, assignedTo: assignedTo || undefined } });
                     }
                     break;
 
@@ -399,6 +403,22 @@ export function ClaimStatusModal({ isOpen, onClose, claim, onUpdate }: ClaimStat
                                     {config.requiresAmount === 'approved' && claim.assessedAmount && (
                                         <p className="text-xs text-surface-400">Assessed at: GHS {Number(claim.assessedAmount).toLocaleString()}</p>
                                     )}
+                                </div>
+                            )}
+
+                            {/* Assessor selection */}
+                            {config.requiresAssessor && (
+                                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2">
+                                    <label className="text-xs font-bold text-surface-500 uppercase tracking-wider">
+                                        Assign Loss Adjuster / Investigator (Optional)
+                                    </label>
+                                    <Input
+                                        type="text"
+                                        value={assignedTo}
+                                        onChange={(e) => setAssignedTo(e.target.value)}
+                                        placeholder="Name or email of the assigned investigator..."
+                                        className="bg-surface-50"
+                                    />
                                 </div>
                             )}
 

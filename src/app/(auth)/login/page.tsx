@@ -32,8 +32,22 @@ function LoginContent() {
                 return result;
             }
             // Login succeeded
+            const user = useAuthStore.getState().user;
             const returnUrl = searchParams.get('returnUrl');
-            const destination = returnUrl?.startsWith('/') ? returnUrl : '/dashboard';
+            
+            let destination = '/dashboard';
+            
+            if (user?.role === 'PLATFORM_SUPER_ADMIN' || user?.role === 'SUPER_ADMIN') {
+                destination = '/super-admin/overview';
+                // Respect deep links meant specifically for super-admins
+                if (returnUrl?.startsWith('/super-admin')) {
+                    destination = returnUrl;
+                }
+            } else if (returnUrl?.startsWith('/')) {
+                // Normal users respect any standard returnUrl
+                destination = returnUrl;
+            }
+            
             router.push(destination);
         } catch (err: any) {
             // Handle two-factor authentication requirement

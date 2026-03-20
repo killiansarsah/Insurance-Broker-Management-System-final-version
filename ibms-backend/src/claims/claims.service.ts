@@ -66,6 +66,46 @@ export class ClaimsService {
     });
   }
 
+  private getValidTransitions(currentStatus: string): string[] {
+    const map: Record<string, string[]> = {
+      INTIMATED: ['REGISTERED'],
+      REGISTERED: ['UNDER_REVIEW', 'DOCUMENTS_PENDING'],
+      DOCUMENTS_PENDING: ['UNDER_REVIEW'],
+      UNDER_REVIEW: ['ASSESSED', 'REJECTED'],
+      ASSESSED: ['APPROVED', 'REJECTED'],
+      APPROVED: ['SETTLED'],
+      REJECTED: ['UNDER_REVIEW'],
+      SETTLED: ['CLOSED'],
+      CLOSED: [],
+    };
+    return map[currentStatus] || [];
+  }
+
+  private async enforceTransitionAndLog(
+    tx: Prisma.TransactionClient,
+    claim: any,
+    toStatus: any,
+    userId: string,
+    tenantId: string,
+    notes?: string,
+  ) {
+    const valid = this.getValidTransitions(claim.status);
+    if (!valid.includes(toStatus)) {
+      throw new BadRequestException(`Invalid transition from ${claim.status} to ${toStatus}`);
+    }
+
+    await tx.claimStatusHistory.create({
+      data: {
+        tenantId,
+        claimId: claim.id,
+        fromStatus: claim.status,
+        toStatus,
+        changedBy: userId,
+        notes,
+      },
+    });
+  }
+
   // ─── CREATE ─────────────────────────────────────────
   async create(tenantId: string, userId: string, dto: CreateClaimDto) {
     const policy = await this.prisma.policy.findUnique({
@@ -75,6 +115,15 @@ export class ClaimsService {
     if (policy.status !== 'ACTIVE' && policy.status !== 'EXPIRED') {
       throw new BadRequestException(
         'Claims can only be filed for ACTIVE or EXPIRED policies',
+      );
+    }
+
+    if (
+      new Date(dto.incidentDate) < new Date(policy.inceptionDate) ||
+      new Date(dto.incidentDate) > new Date(policy.expiryDate)
+    ) {
+      throw new BadRequestException(
+        'Incident date falls outside the policy period. Claim cannot be lodged.',
       );
     }
 
@@ -91,6 +140,7 @@ export class ClaimsService {
           policyId: dto.policyId,
           clientId: policy.clientId,
           insuranceType: policy.insuranceType,
+          perilType: dto.perilType,
           incidentDate: new Date(dto.incidentDate),
           incidentDescription: dto.description,
           incidentLocation: dto.location,
@@ -278,23 +328,35 @@ export class ClaimsService {
     userId: string,
     dto: UpdateClaimDto,
   ) {
+    const claim = await this.findOne(id, tenantId);
+    
     const updateData: Record<string, unknown> = {};
     if (dto.claimAmount !== undefined) updateData.claimAmount = dto.claimAmount;
     if (dto.description !== undefined) updateData.incidentDescription = dto.description;
     if (dto.location !== undefined) updateData.incidentLocation = dto.location;
-    if (dto.assessedAmount !== undefined) {
-      updateData.assessedAmount = dto.assessedAmount;
-      updateData.assessmentDate = new Date();
-      updateData.status = 'ASSESSED';
-    }
-    if (Object.keys(updateData).length === 0) {
+    if (dto.insurerReference !== undefined) updateData.insurerReference = dto.insurerReference;
+    if (dto.insurerSubmissionDate !== undefined) updateData.insurerSubmissionDate = dto.insurerSubmissionDate;
+    if (dto.deductibleAmount !== undefined) updateData.deductibleAmount = dto.deductibleAmount;
+    if (dto.notes !== undefined) updateData.appealNotes = dto.notes; // Basic mapping
+
+    if (Object.keys(updateData).length === 0 && dto.assessedAmount === undefined) {
       throw new BadRequestException('No fields to update');
     }
-    await this.findOne(id, tenantId);
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: updateData,
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      if (dto.assessedAmount !== undefined) {
+        await this.enforceTransitionAndLog(tx, claim, 'ASSESSED', userId, tenantId, 'Assessed via update endpoint');
+        updateData.assessedAmount = dto.assessedAmount;
+        updateData.assessmentDate = new Date();
+        updateData.status = 'ASSESSED';
+      }
+
+      return await tx.claim.update({
+        where: { id },
+        data: updateData,
+      });
     });
+
     await this.logAudit(tenantId, userId, 'claim.updated', id, updateData);
     return updated;
   }
@@ -316,13 +378,17 @@ export class ClaimsService {
     const now = new Date();
     const isOverdue5Day = now > new Date(claim.acknowledgmentDeadline);
 
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: {
-        status: 'REGISTERED',
-        registrationDate: now,
-        isOverdue: isOverdue5Day,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.enforceTransitionAndLog(tx, claim, 'REGISTERED', userId, tenantId, dto.notes);
+      
+      return await tx.claim.update({
+        where: { id },
+        data: {
+          status: 'REGISTERED',
+          registrationDate: now,
+          isOverdue: isOverdue5Day,
+        },
+      });
     });
 
     await this.logAudit(tenantId, userId, 'claim.acknowledged', id, {
@@ -346,12 +412,16 @@ export class ClaimsService {
       );
     }
 
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: {
-        status: 'UNDER_REVIEW',
-        assessorId: dto.assignedTo,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.enforceTransitionAndLog(tx, claim, 'UNDER_REVIEW', userId, tenantId, dto.notes);
+      
+      return await tx.claim.update({
+        where: { id },
+        data: {
+          status: 'UNDER_REVIEW',
+          assessorId: dto.assignedTo,
+        },
+      });
     });
 
     await this.logAudit(tenantId, userId, 'claim.investigation_started', id, {
@@ -385,12 +455,16 @@ export class ClaimsService {
       );
     }
 
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: {
-        status: 'APPROVED',
-        assessedAmount: dto.approvedAmount,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.enforceTransitionAndLog(tx, claim, 'APPROVED', userId, tenantId, dto.notes);
+
+      return await tx.claim.update({
+        where: { id },
+        data: {
+          status: 'APPROVED',
+          assessedAmount: dto.approvedAmount,
+        },
+      });
     });
 
     if (claim.client?.email) {
@@ -431,12 +505,16 @@ export class ClaimsService {
       throw new BadRequestException('Only claims UNDER_REVIEW can be rejected');
     }
 
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: {
-        status: 'REJECTED',
-        rejectionReason: dto.reason,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.enforceTransitionAndLog(tx, claim, 'REJECTED', userId, tenantId, dto.notes);
+
+      return await tx.claim.update({
+        where: { id },
+        data: {
+          status: 'REJECTED',
+          rejectionReason: dto.reason,
+        },
+      });
     });
 
     if (claim.client?.email) {
@@ -475,35 +553,25 @@ export class ClaimsService {
     const isOverdue30Day = now > new Date(claim.processingDeadline);
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      await this.enforceTransitionAndLog(tx, claim, 'SETTLED', userId, tenantId, dto.notes);
+
       const settled = await tx.claim.update({
         where: { id },
         data: {
           status: 'SETTLED',
           settledAmount: dto.settledAmount,
           settlementDate: now,
+          deductibleAmount: dto.deductibleAmount,
           isOverdue: claim.isOverdue || isOverdue30Day,
         },
       });
 
-      // Auto-create finance transaction for the settlement
-      const count = await tx.transaction.count({ where: { tenantId } });
-      const padded = String(count + 1).padStart(5, '0');
-      const txnNum = `TXN-CLM-${padded}`;
-
-      await tx.transaction.create({
+      // Update Policy claim statistics (GAP-8)
+      await tx.policy.update({
+        where: { id: claim.policyId },
         data: {
-          tenantId,
-          transactionNumber: txnNum,
-          type: 'CLAIM_SETTLEMENT',
-          accountType: 'CLIENT_ACCOUNT',
-          amount: dto.settledAmount,
-          currency: claim.currency ?? 'GHS',
-          paymentMethod: (dto.paymentMethod as any) ?? 'BANK_TRANSFER',
-          paymentStatus: 'PAID',
-          reference: dto.paymentReference,
-          notes: `Claim settlement for ${claim.claimNumber}`,
-          policyId: claim.policyId,
-          clientId: claim.clientId,
+          claimCount: { increment: 1 },
+          totalClaimsValue: { increment: dto.settledAmount },
         },
       });
 
@@ -532,16 +600,22 @@ export class ClaimsService {
       throw new BadRequestException('Only REJECTED claims can be reopened');
     }
 
-    const updated = await this.prisma.claim.update({
-      where: { id },
-      data: {
-        status: 'UNDER_REVIEW',
-        rejectionReason: null,
-      },
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.enforceTransitionAndLog(tx, claim, 'UNDER_REVIEW', userId, tenantId, dto.appealNotes);
+
+      return await tx.claim.update({
+        where: { id },
+        data: {
+          status: 'UNDER_REVIEW',
+          rejectionReason: null,
+          appealNotes: dto.appealNotes,
+        },
+      });
     });
 
     await this.logAudit(tenantId, userId, 'claim.reopened', id, {
       reason: dto.reason,
+      appealNotes: dto.appealNotes,
     });
     return updated;
   }
@@ -559,8 +633,9 @@ export class ClaimsService {
         tenantId,
         claimId,
         name: dto.name,
-        type: dto.type,
+        type: dto.type as any,
         url: dto.url,
+        uploadedBy: userId,
       },
     });
 

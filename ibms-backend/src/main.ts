@@ -72,8 +72,12 @@ async function bootstrap(): Promise<void> {
   // Global validation pipe
   app.useGlobalPipes(createGlobalValidationPipe());
 
+  // Extract Prisma Service to use for ExceptionFilter & startup checks
+  const { PrismaService } = await import('./prisma/prisma.service.js');
+  const prismaService = app.get(PrismaService);
+
   // Global exception filter
-  app.useGlobalFilters(new GlobalExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter(prismaService));
 
   // Global interceptor: convert Prisma Decimal objects to plain numbers
   app.useGlobalInterceptors(new DecimalSerializationInterceptor());
@@ -111,6 +115,21 @@ async function bootstrap(): Promise<void> {
   }
 
   const port = configService.get<number>('port', 3001);
+
+  // --- STARTUP CHECK: Super Admin Existence ---
+  try {
+    const superAdminCount = await prismaService.user.count({
+      where: { role: { in: ['PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN'] } },
+    });
+    if (superAdminCount === 0) {
+      logger.warn('⚠️ WARNING: No super admin user exists in the database. Run the seed script.');
+    } else {
+      logger.log(`✅ Super admin found (${superAdminCount} configured)`);
+    }
+  } catch (error) {
+    logger.error('Failed to run super admin startup check', error.stack);
+  }
+
   await app.listen(port);
   logger.log(`IBMS Backend running on port ${port}`);
   logger.log(

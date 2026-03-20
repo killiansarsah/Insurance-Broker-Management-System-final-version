@@ -22,10 +22,7 @@ import { cn, formatCurrency } from '@/lib/utils';
 import { usePolicies } from '@/hooks/api/use-policies';
 import { useCreateClaim } from '@/hooks/api/use-claims';
 import { Policy } from '@/types';
-const UploadDocumentModal = dynamic(
-    () => import('@/components/documents/upload-document-modal').then(m => ({ default: m.UploadDocumentModal })),
-    { ssr: false }
-);
+
 
 const STEPS = [
     { id: 1, label: 'Select Policy', icon: <Shield size={16} /> },
@@ -44,16 +41,25 @@ export default function NewClaimPage() {
     // Form State
     const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [perilType, setPerilType] = useState('Fire');
     const [incidentDate, setIncidentDate] = useState('');
     const [description, setDescription] = useState('');
     const [location, setLocation] = useState('');
     const [estimatedAmount, setEstimatedAmount] = useState('');
-    const [showDocUpload, setShowDocUpload] = useState(false);
+
+    // NIC Compliance Extensions
+    const [policeReported, setPoliceReported] = useState(false);
+    const [policeStation, setPoliceStation] = useState('');
+    const [thirdPartyInvolved, setThirdPartyInvolved] = useState(false);
+    const [thirdPartyDetails, setThirdPartyDetails] = useState('');
+    const [injuries, setInjuries] = useState(false);
+    const [hospitalName, setHospitalName] = useState('');
 
     // Filter policies for Step 1
     const filteredPolicies = allPolicies.filter((p: any) =>
-        (p.policyNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (p.clientName || '').toLowerCase().includes(searchTerm.toLowerCase())
+        (p.status === 'ACTIVE' || p.status === 'EXPIRED') &&
+        ((p.policyNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (p.clientName || '').toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     function next() {
@@ -69,18 +75,25 @@ export default function NewClaimPage() {
     }
 
     function handleSubmit() {
+        // Format NIC specific requirements into the description payload
+        let enhancedDescription = description;
+        if (policeReported) enhancedDescription += `\n\n[Police Report]: Reported at ${policeStation || 'Station not specified'}`;
+        if (thirdPartyInvolved) enhancedDescription += `\n\n[Third-Party]: ${thirdPartyDetails || 'Details not provided'}`;
+        if (injuries) enhancedDescription += `\n\n[Injuries/Medical]: Treated at ${hospitalName || 'Facility not specified'}`;
+
         createClaimMutation.mutate(
             {
                 policyId: selectedPolicy!.id,
-                description,
+                description: enhancedDescription,
                 incidentDate,
+                perilType,
                 claimAmount: estimatedAmount ? parseFloat(estimatedAmount) : undefined,
                 location: location || undefined,
             },
             {
-                onSuccess: () => {
-                    toast.success('Claim Submitted', { description: 'Your FNOL claim has been submitted and is now pending review.' });
-                    router.push('/dashboard/claims');
+                onSuccess: (data: any) => {
+                    toast.success('Claim Submitted', { description: 'Your FNOL claim has been submitted. You can now upload evidence.' });
+                    router.push(`/dashboard/claims/${data.id || data.data?.id}`);
                 },
                 onError: (error: any) => {
                     toast.error('Claim Submission Failed', { description: error?.response?.data?.message || 'Could not submit claim. Please try again.' });
@@ -171,6 +184,21 @@ export default function NewClaimPage() {
                 {step === 2 && (
                     <div className="space-y-4">
                         <div>
+                            <label className="block text-xs font-semibold text-surface-600 mb-1.5">Peril Type</label>
+                            <select
+                                value={perilType}
+                                onChange={(e) => setPerilType(e.target.value)}
+                                className="w-full px-3 py-2.5 text-sm bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                            >
+                                <option value="Fire">Fire</option>
+                                <option value="Theft">Theft</option>
+                                <option value="Motor Accident">Motor Accident</option>
+                                <option value="Flood">Flood</option>
+                                <option value="Marine Cargo">Marine Cargo</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div>
                             <label className="block text-xs font-semibold text-surface-600 mb-1.5">Incident Date & Time</label>
                             <input
                                 type="datetime-local"
@@ -199,6 +227,62 @@ export default function NewClaimPage() {
                                 className="w-full px-3 py-2.5 text-sm bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
                             />
                         </div>
+
+                        {/* NIC Compliance Fields - Conditional displays based on general Ghana market requirements */}
+                        <div className="bg-surface-50 p-4 border border-surface-200 rounded-[var(--radius-md)] space-y-4">
+                            <h4 className="text-sm font-bold text-surface-800 border-b border-surface-200 pb-2">Additional Incident Details (NIC / Insurer Requirements)</h4>
+                            
+                            {/* Police Report */}
+                            <div className="flex flex-col gap-2">
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 cursor-pointer">
+                                    <input type="checkbox" checked={policeReported} onChange={(e) => setPoliceReported(e.target.checked)} className="rounded text-primary-600 focus:ring-primary-500" />
+                                    Has this incident been reported to the Police?
+                                </label>
+                                {policeReported && (
+                                    <input
+                                        type="text"
+                                        placeholder="Police Station & Division / Report Number"
+                                        value={policeStation}
+                                        onChange={(e) => setPoliceStation(e.target.value)}
+                                        className="mt-1 w-full px-3 py-2 text-sm bg-white border border-surface-300 rounded-[var(--radius-md)]"
+                                    />
+                                )}
+                            </div>
+
+                            {/* Third Party */}
+                            <div className="flex flex-col gap-2">
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 cursor-pointer">
+                                    <input type="checkbox" checked={thirdPartyInvolved} onChange={(e) => setThirdPartyInvolved(e.target.checked)} className="rounded text-primary-600 focus:ring-primary-500" />
+                                    Are there any Third-Parties involved? (Vehicles/Property out of policy)
+                                </label>
+                                {thirdPartyInvolved && (
+                                    <input
+                                        type="text"
+                                        placeholder="Name of Third Party / Vehicle Registration..."
+                                        value={thirdPartyDetails}
+                                        onChange={(e) => setThirdPartyDetails(e.target.value)}
+                                        className="mt-1 w-full px-3 py-2 text-sm bg-white border border-surface-300 rounded-[var(--radius-md)]"
+                                    />
+                                )}
+                            </div>
+
+                            {/* Medical / Injury */}
+                            <div className="flex flex-col gap-2">
+                                <label className="flex items-center gap-2 text-sm font-medium text-surface-700 cursor-pointer">
+                                    <input type="checkbox" checked={injuries} onChange={(e) => setInjuries(e.target.checked)} className="rounded text-primary-600 focus:ring-primary-500" />
+                                    Were there any injuries sustained? 
+                                </label>
+                                {injuries && (
+                                    <input
+                                        type="text"
+                                        placeholder="Hospital or Medical Facility visited..."
+                                        value={hospitalName}
+                                        onChange={(e) => setHospitalName(e.target.value)}
+                                        className="mt-1 w-full px-3 py-2 text-sm bg-white border border-surface-300 rounded-[var(--radius-md)]"
+                                    />
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -219,15 +303,10 @@ export default function NewClaimPage() {
                             </div>
                         </div>
 
-                        <div className="p-6 border-2 border-dashed border-surface-200 rounded-[var(--radius-md)] text-center">
-                            <Upload size={32} className="mx-auto text-surface-300 mb-2" />
-                            <p className="text-sm text-surface-500">Upload evidence (Photos, Police Report)</p>
-                            <Button variant="outline" size="sm" className="mt-4" onClick={() => setShowDocUpload(true)}>Choose Files</Button>
-                            <UploadDocumentModal
-                                isOpen={showDocUpload}
-                                onClose={() => setShowDocUpload(false)}
-                                defaultCategory="claims"
-                            />
+                        <div className="p-4 bg-primary-50 rounded-[var(--radius-md)] text-center">
+                            <Upload size={24} className="mx-auto text-primary-500 mb-2" />
+                            <p className="text-sm text-primary-700 font-medium">Evidence upload available on the next page.</p>
+                            <p className="text-xs text-primary-600">Once you submit this initial report, you will be redirected to the claim detail page where you can attach police reports, photos, and adjuster documents.</p>
                         </div>
                     </div>
                 )}
@@ -243,6 +322,10 @@ export default function NewClaimPage() {
                             <div className="flex justify-between">
                                 <span className="text-sm text-surface-500">Insured</span>
                                 <span className="text-sm font-medium text-surface-900">{selectedPolicy.clientName}</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-sm text-surface-500">Peril Type</span>
+                                <span className="text-sm font-medium text-surface-900">{perilType}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-sm text-surface-500">Incident Date</span>

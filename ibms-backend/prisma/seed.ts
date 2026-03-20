@@ -34,6 +34,15 @@ import {
   CalendarEventType,
   CalendarEventStatus,
   MotorCoverType,
+  AuditCategory,
+  AuditSeverity,
+  ServiceHealthStatus,
+  IncidentStatus,
+  ErrorSeverity,
+  JobStatus,
+  EmailDeliveryStatus,
+  AnnouncementType,
+  SubscriptionStatus,
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { NIC_LEVY_RATE } from '../src/common/constants/nic.constants';
@@ -1082,6 +1091,416 @@ async function main(): Promise<void> {
   console.log('✅ Audit Logs: 30 per tenant');
 
   // ════════════════════════════════════════════════════
+  // ─── PLATFORM SUPER ADMIN USER ─────────────────────
+  // ════════════════════════════════════════════════════
+  const superAdmin = await prisma.user.upsert({
+    where: { tenantId_email: { tenantId: sicTenant.id, email: 'superadmin@brokerium.com' } },
+    update: {},
+    create: {
+      tenantId: sicTenant.id,
+      email: 'superadmin@brokerium.com',
+      passwordHash,
+      firstName: 'Platform',
+      lastName: 'SuperAdmin',
+      phone: '+233244000001',
+      role: 'PLATFORM_SUPER_ADMIN' as UserRole,
+      branchId: branchMap[sicTenant.id][0],
+      isActive: true,
+      mustChangePassword: false,
+    },
+  });
+  console.log('✅ Platform Super Admin: superadmin@brokerium.com / Admin@123');
+
+  // ════════════════════════════════════════════════════
+  // ─── SUBSCRIPTIONS ─────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const subscriptionData = [
+    { tenant: sicTenant, plan: TenantPlan.PROFESSIONAL, amount: 599.00, status: 'ACTIVE' as const, daysBack: 45 },
+    { tenant: enterpriseTenant, plan: TenantPlan.BASIC, amount: 199.00, status: 'ACTIVE' as const, daysBack: 120 },
+  ];
+
+  const subscriptionMap: Record<string, string> = {};
+  for (const sub of subscriptionData) {
+    const start = daysAgo(sub.daysBack);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+
+    const subscription = await prisma.subscription.create({
+      data: {
+        tenantId: sub.tenant.id,
+        plan: sub.plan,
+        billingCycle: 'MONTHLY',
+        amountGhs: sub.amount,
+        status: sub.status,
+        currentPeriodStart: start,
+        currentPeriodEnd: end,
+      },
+    });
+    subscriptionMap[sub.tenant.id] = subscription.id;
+  }
+  console.log('✅ Subscriptions: 1 per tenant');
+
+  // ════════════════════════════════════════════════════
+  // ─── PLATFORM PAYMENTS ─────────────────────────────
+  // ════════════════════════════════════════════════════
+  const paymentStatuses = ['PAID', 'PAID', 'PAID', 'PAID', 'PAID', 'FAILED', 'PENDING'] as const;
+  for (const tenant of [sicTenant, enterpriseTenant]) {
+    const subId = subscriptionMap[tenant.id];
+    const amount = tenant.id === sicTenant.id ? 599.00 : 199.00;
+
+    for (let i = 0; i < 6; i++) {
+      const status = paymentStatuses[i % paymentStatuses.length];
+      await prisma.platformPayment.create({
+        data: {
+          tenantId: tenant.id,
+          subscriptionId: subId,
+          amountGhs: amount,
+          status,
+          invoiceNumber: `PLAT-INV-${tenant.slug.slice(0, 3).toUpperCase()}-${String(i + 1).padStart(3, '0')}`,
+          paystackReference: status === 'PAID' ? `PSK_${rand(100000000, 999999999)}` : null,
+          paidAt: status === 'PAID' ? daysAgo(30 * i + rand(0, 5)) : null,
+          createdAt: daysAgo(30 * i),
+        },
+      });
+    }
+  }
+  console.log('✅ Platform Payments: 6 per tenant');
+
+  // ════════════════════════════════════════════════════
+  // ─── PLATFORM AUDIT LOGS ───────────────────────────
+  // ════════════════════════════════════════════════════
+  const platformAuditEntries = [
+    { category: 'AUTH' as const, action: 'LOGIN', desc: 'Super admin logged in', severity: 'INFO' as const },
+    { category: 'TENANT' as const, action: 'TENANT_CREATED', desc: 'New tenant SIC Insurance provisioned', severity: 'INFO' as const },
+    { category: 'TENANT' as const, action: 'TENANT_CREATED', desc: 'New tenant Enterprise Insurance provisioned', severity: 'INFO' as const },
+    { category: 'BILLING' as const, action: 'SUBSCRIPTION_UPDATED', desc: 'SIC upgraded to Professional plan', severity: 'INFO' as const },
+    { category: 'USER' as const, action: 'USER_UPDATED', desc: 'User role changed: broker to senior broker', severity: 'INFO' as const },
+    { category: 'TENANT' as const, action: 'TENANT_SUSPENDED', desc: 'Test tenant suspended for non-payment', severity: 'WARN' as const },
+    { category: 'TENANT' as const, action: 'TENANT_ACTIVATED', desc: 'Test tenant reactivated after payment', severity: 'INFO' as const },
+    { category: 'AUTH' as const, action: 'IMPERSONATION_STARTED', desc: 'Super admin impersonating SIC admin', severity: 'WARN' as const },
+    { category: 'AUTH' as const, action: 'IMPERSONATION_EXITED', desc: 'Impersonation session ended', severity: 'INFO' as const },
+    { category: 'SYSTEM' as const, action: 'FEATURE_FLAG_UPDATED', desc: 'Feature flag "ai_claims_assistant" enabled globally', severity: 'INFO' as const },
+    { category: 'SYSTEM' as const, action: 'SETTINGS_UPDATED', desc: 'SMTP configuration updated', severity: 'INFO' as const },
+    { category: 'SECURITY' as const, action: 'PASSWORD_RESET_FORCED', desc: 'Forced password reset for user kofi@sic.com', severity: 'WARN' as const },
+    { category: 'COMPLIANCE' as const, action: 'NIC_COMPLIANCE_UPDATED', desc: 'NIC compliance score updated for SIC Insurance', severity: 'INFO' as const },
+    { category: 'SYSTEM' as const, action: 'ANNOUNCEMENT_CREATED', desc: 'Maintenance window broadcast sent', severity: 'INFO' as const },
+    { category: 'ERROR' as const, action: 'ERROR_RESOLVED', desc: 'Critical database timeout error resolved', severity: 'WARN' as const },
+    { category: 'BILLING' as const, action: 'PAYMENT_FAILED', desc: 'Paystack payment failed for Enterprise Insurance', severity: 'WARN' as const },
+    { category: 'USER' as const, action: 'SUPER_ADMIN_CREATED', desc: 'New super admin account created', severity: 'CRITICAL' as const },
+    { category: 'SECURITY' as const, action: 'FORCED_LOGOUT', desc: 'User forced logout by super admin', severity: 'WARN' as const },
+    { category: 'AUTH' as const, action: 'LOGIN', desc: 'Super admin logged in from new IP', severity: 'INFO' as const },
+    { category: 'SYSTEM' as const, action: 'JOB_RETRIED', desc: 'Failed email job manually retried', severity: 'INFO' as const },
+  ];
+
+  for (let i = 0; i < platformAuditEntries.length; i++) {
+    const entry = platformAuditEntries[i];
+    await prisma.platformAuditLog.create({
+      data: {
+        actorId: superAdmin.id,
+        actorEmail: 'superadmin@brokerium.com',
+        actorRole: 'PLATFORM_SUPER_ADMIN',
+        tenantId: i % 2 === 0 ? sicTenant.id : enterpriseTenant.id,
+        tenantName: i % 2 === 0 ? sicTenant.name : enterpriseTenant.name,
+        category: entry.category,
+        severity: entry.severity,
+        action: entry.action,
+        description: entry.desc,
+        ipAddress: `41.215.${rand(1, 255)}.${rand(1, 255)}`,
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        status: 'SUCCESS',
+        createdAt: daysAgo(rand(0, 90)),
+      },
+    });
+  }
+  console.log('✅ Platform Audit Logs: 20 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── SYSTEM HEALTH CHECKS ─────────────────────────
+  // ════════════════════════════════════════════════════
+  const services = ['Database', 'Background Jobs', 'Email Service'];
+  const healthStatuses = ['HEALTHY', 'HEALTHY', 'HEALTHY', 'HEALTHY', 'HEALTHY', 'DEGRADED', 'DOWN'] as const;
+
+  for (const svc of services) {
+    for (let i = 0; i < 30; i++) {
+      const status = i < 28 ? 'HEALTHY' : pick([...healthStatuses]);
+      await prisma.systemHealthCheck.create({
+        data: {
+          serviceName: svc,
+          status,
+          responseTimeMs: status === 'HEALTHY' ? rand(5, 120) : status === 'DEGRADED' ? rand(500, 3000) : 0,
+          checkedAt: daysAgo(i),
+          errorMessage: status === 'DOWN' ? `${svc} connection refused` : status === 'DEGRADED' ? `${svc} response slow` : null,
+        },
+      });
+    }
+  }
+  console.log('✅ System Health Checks: 90 entries (30 days × 3 services)');
+
+  // ════════════════════════════════════════════════════
+  // ─── INCIDENTS ─────────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const incidents = [
+    { title: 'Database connection pool exhaustion', severity: AuditSeverity.CRITICAL, status: IncidentStatus.RESOLVED, daysBack: 15 },
+    { title: 'Email delivery delays (Mailgun outage)', severity: AuditSeverity.WARN, status: IncidentStatus.RESOLVED, daysBack: 30 },
+    { title: 'Slow API response times during peak hours', severity: AuditSeverity.WARN, status: IncidentStatus.OPEN, daysBack: 3 },
+  ];
+
+  for (const inc of incidents) {
+    await prisma.incident.create({
+      data: {
+        title: inc.title,
+        status: inc.status,
+        severity: inc.severity,
+        affectedServices: inc.title.includes('Database') ? ['Database'] : inc.title.includes('Email') ? ['Email Service'] : ['API Gateway'],
+        startedAt: daysAgo(inc.daysBack),
+        resolvedAt: inc.status === 'RESOLVED' ? daysAgo(inc.daysBack - 1) : null,
+        rootCause: inc.status === 'RESOLVED' ? 'Root cause identified and patched' : null,
+        resolutionNotes: inc.status === 'RESOLVED' ? 'Issue resolved. Monitoring for recurrence.' : null,
+        createdById: superAdmin.id,
+      },
+    });
+  }
+  console.log('✅ Incidents: 3 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── ERROR LOGS ────────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const errorTemplates = [
+    { type: 'PrismaClientKnownRequestError', msg: 'Unique constraint failed on fields: (email)', sev: 'ERROR' as const },
+    { type: 'HttpException', msg: 'Unauthorized - Invalid or expired token', sev: 'WARNING' as const },
+    { type: 'TypeError', msg: "Cannot read properties of undefined (reading 'id')", sev: 'ERROR' as const },
+    { type: 'ConnectionError', msg: 'ECONNREFUSED 127.0.0.1:5432', sev: 'FATAL' as const },
+    { type: 'TimeoutError', msg: 'Query timeout after 30000ms', sev: 'ERROR' as const },
+    { type: 'ValidationError', msg: 'Invalid enum value for field "status"', sev: 'WARNING' as const },
+    { type: 'MailgunError', msg: 'Failed to send email: 550 Mailbox not found', sev: 'ERROR' as const },
+    { type: 'PaystackError', msg: 'Card declined: insufficient funds', sev: 'WARNING' as const },
+  ];
+
+  for (let i = 0; i < errorTemplates.length; i++) {
+    const err = errorTemplates[i];
+    const firstSeen = daysAgo(rand(10, 60));
+    const resolved = i < 4;
+    await prisma.errorLog.create({
+      data: {
+        errorType: err.type,
+        message: err.msg,
+        stackTrace: `Error: ${err.msg}\n    at Object.handler (/app/src/controllers/controller.ts:${rand(10, 200)}:${rand(5, 40)})\n    at /app/node_modules/@nestjs/core/router/router-execution-context.js:46:28\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)`,
+        severity: err.sev,
+        tenantId: i % 2 === 0 ? sicTenant.id : enterpriseTenant.id,
+        requestMethod: pick(['GET', 'POST', 'PATCH', 'DELETE']),
+        requestUrl: pick(['/api/v1/policies', '/api/v1/claims', '/api/v1/auth/login', '/api/v1/clients', '/api/v1/users']),
+        statusCode: err.sev === 'FATAL' ? 500 : err.sev === 'ERROR' ? 400 : 422,
+        resolved,
+        resolvedAt: resolved ? daysAgo(rand(1, 5)) : null,
+        resolvedById: resolved ? superAdmin.id : null,
+        notes: resolved ? 'Fixed in latest deployment' : null,
+        occurrenceCount: rand(1, 50),
+        firstSeenAt: firstSeen,
+        lastSeenAt: resolved ? daysAgo(rand(3, 8)) : daysAgo(rand(0, 2)),
+      },
+    });
+  }
+  console.log('✅ Error Logs: 8 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── BACKGROUND JOBS ───────────────────────────────
+  // ════════════════════════════════════════════════════
+  const jobTemplates = [
+    { name: 'send-welcome-email', status: 'COMPLETED' as const },
+    { name: 'generate-monthly-report', status: 'COMPLETED' as const },
+    { name: 'sync-paystack-payments', status: 'COMPLETED' as const },
+    { name: 'check-policy-renewals', status: 'COMPLETED' as const },
+    { name: 'calculate-commissions', status: 'COMPLETED' as const },
+    { name: 'export-tenant-data', status: 'PROCESSING' as const },
+    { name: 'send-renewal-reminders', status: 'QUEUED' as const },
+    { name: 'nic-compliance-check', status: 'QUEUED' as const },
+    { name: 'send-batch-emails', status: 'FAILED' as const },
+    { name: 'generate-nic-report', status: 'FAILED' as const },
+    { name: 'cleanup-expired-tokens', status: 'COMPLETED' as const },
+    { name: 'aggregate-analytics', status: 'RETRYING' as const },
+    { name: 'backup-database', status: 'COMPLETED' as const },
+    { name: 'send-overdue-payment-notice', status: 'FAILED' as const },
+    { name: 'sync-carrier-rates', status: 'COMPLETED' as const },
+  ];
+
+  for (let i = 0; i < jobTemplates.length; i++) {
+    const job = jobTemplates[i];
+    const enqueuedAt = daysAgo(rand(0, 30));
+    await prisma.backgroundJob.create({
+      data: {
+        jobName: job.name,
+        tenantId: i % 3 === 0 ? null : i % 2 === 0 ? sicTenant.id : enterpriseTenant.id,
+        status: job.status,
+        priority: job.name.includes('backup') || job.name.includes('compliance') ? 2 : 0,
+        payload: { triggeredBy: 'system', params: { tenantId: sicTenant.id } },
+        result: job.status === 'COMPLETED' ? { processed: rand(5, 100), skipped: rand(0, 5) } : null,
+        errorMessage: job.status === 'FAILED' ? `Job failed: ${pick(['Connection timeout', 'Rate limit exceeded', 'Invalid payload', 'Service unavailable'])}` : null,
+        attempts: job.status === 'FAILED' ? 3 : job.status === 'RETRYING' ? 2 : job.status === 'COMPLETED' ? 1 : 0,
+        maxAttempts: 3,
+        enqueuedAt,
+        startedAt: ['PROCESSING', 'COMPLETED', 'FAILED', 'RETRYING'].includes(job.status) ? new Date(enqueuedAt.getTime() + rand(1000, 30000)) : null,
+        completedAt: job.status === 'COMPLETED' ? new Date(enqueuedAt.getTime() + rand(5000, 120000)) : null,
+        nextRetryAt: job.status === 'RETRYING' ? daysFromNow(rand(0, 1)) : null,
+      },
+    });
+  }
+  console.log('✅ Background Jobs: 15 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── EMAIL LOGS ────────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const emailTemplateNames = [
+    'welcome-tenant', 'password-reset', 'renewal-reminder', 'invoice-generated',
+    'claim-status-update', 'payment-receipt', 'overdue-notice', 'policy-issued',
+  ];
+  const emailStatuses = ['SENT', 'DELIVERED', 'DELIVERED', 'DELIVERED', 'BOUNCED', 'FAILED', 'SPAM'] as const;
+
+  for (let i = 0; i < 10; i++) {
+    const template = emailTemplateNames[i % emailTemplateNames.length];
+    const status = emailStatuses[i % emailStatuses.length];
+    const sentAt = daysAgo(rand(0, 60));
+
+    await prisma.emailLog.create({
+      data: {
+        templateName: template,
+        recipientEmail: `${pick(ghanaFirstNames).toLowerCase()}.${pick(ghanaLastNames).toLowerCase()}@gmail.com`,
+        tenantId: i % 2 === 0 ? sicTenant.id : enterpriseTenant.id,
+        subject: template.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join(' '),
+        status,
+        providerMessageId: status !== 'FAILED' ? `msg_${rand(100000000, 999999999)}` : null,
+        sentAt: ['SENT', 'DELIVERED'].includes(status) ? sentAt : null,
+        deliveredAt: status === 'DELIVERED' ? new Date(sentAt.getTime() + rand(1000, 60000)) : null,
+        createdAt: sentAt,
+      },
+    });
+  }
+  console.log('✅ Email Logs: 10 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── ANNOUNCEMENTS ─────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const announcementData = [
+    { title: 'Scheduled Maintenance — March 25, 2026', body: 'The platform will undergo scheduled maintenance from 11 PM to 3 AM WAT. Expect brief downtime. All data is backed up.', type: 'MAINTENANCE' as const },
+    { title: 'New Feature: AI Claims Assistant (Beta)', body: 'We are excited to announce the AI Claims Assistant feature in beta. Professional and Enterprise plan tenants can now enable it from their settings.', type: 'INFO' as const },
+    { title: 'NIC Compliance Deadline Reminder', body: 'All brokers must submit Q1 2026 levy reports by April 15th. Please ensure your segregation accounts are up to date.', type: 'WARNING' as const },
+  ];
+
+  for (const ann of announcementData) {
+    await prisma.announcement.create({
+      data: {
+        title: ann.title,
+        body: ann.body,
+        type: ann.type,
+        targetType: 'ALL',
+        delivery: 'BOTH',
+        isPinned: ann.type === 'MAINTENANCE',
+        sentAt: daysAgo(rand(1, 15)),
+        createdById: superAdmin.id,
+      },
+    });
+  }
+  console.log('✅ Announcements: 3 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── FEATURE FLAGS ─────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const featureFlags = [
+    { key: 'ai_claims_assistant', label: 'AI Claims Assistant', desc: 'AI-powered claims processing and fraud detection', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'two_factor_auth', label: 'Two-Factor Authentication', desc: 'Enforce 2FA for all users', global: true, starter: true, pro: true, enterprise: true },
+    { key: 'advanced_reports', label: 'Advanced Reports', desc: 'Custom report builder with drag-and-drop', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'api_access', label: 'API Access', desc: 'REST API access for integrations', global: false, starter: false, pro: false, enterprise: true },
+    { key: 'bulk_import', label: 'Bulk Import', desc: 'Bulk import clients and policies via CSV', global: true, starter: true, pro: true, enterprise: true },
+    { key: 'document_ocr', label: 'Document OCR', desc: 'Optical character recognition for uploaded documents', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'custom_branding', label: 'Custom Branding', desc: 'Custom logo, colors, and email templates', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'sms_notifications', label: 'SMS Notifications', desc: 'Send SMS notifications to clients and brokers', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'multi_branch', label: 'Multi-Branch Support', desc: 'Support for multiple branches per tenant', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'chat_support', label: 'In-App Chat', desc: 'Real-time chat between team members', global: true, starter: true, pro: true, enterprise: true },
+    { key: 'paystack_integration', label: 'Paystack Integration', desc: 'Online payment collection via Paystack', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'dark_mode', label: 'Dark Mode', desc: 'Dark theme for the dashboard', global: true, starter: true, pro: true, enterprise: true },
+    { key: 'audit_log_export', label: 'Audit Log Export', desc: 'Export audit logs to CSV/PDF', global: false, starter: false, pro: false, enterprise: true },
+    { key: 'compliance_dashboard', label: 'Compliance Dashboard', desc: 'NIC compliance monitoring dashboard', global: false, starter: false, pro: true, enterprise: true },
+    { key: 'mobile_app', label: 'Mobile App Access', desc: 'Access via the Brokerium mobile app', global: false, starter: false, pro: false, enterprise: true },
+  ];
+
+  for (const flag of featureFlags) {
+    await prisma.featureFlag.create({
+      data: {
+        key: flag.key,
+        label: flag.label,
+        description: flag.desc,
+        globalEnabled: flag.global,
+        starterEnabled: flag.starter,
+        proEnabled: flag.pro,
+        enterpriseEnabled: flag.enterprise,
+        updatedById: superAdmin.id,
+      },
+    });
+  }
+  console.log('✅ Feature Flags: 15 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── PLATFORM SETTINGS ─────────────────────────────
+  // ════════════════════════════════════════════════════
+  const platformSettings = [
+    { key: 'smtp_host', value: 'smtp.mailgun.org' },
+    { key: 'smtp_port', value: 587 },
+    { key: 'smtp_from_email', value: 'noreply@brokerium.com' },
+    { key: 'smtp_from_name', value: 'Brokerium Platform' },
+    { key: 'nic_levy_rate', value: 0.01 },
+    { key: 'max_tenants', value: 500 },
+    { key: 'max_storage_gb_per_tenant', value: 10 },
+    { key: 'trial_period_days', value: 14 },
+    { key: 'default_plan', value: 'BASIC' },
+    { key: 'maintenance_mode', value: false },
+    { key: 'platform_version', value: '1.0.0' },
+    { key: 'support_email', value: 'support@brokerium.com' },
+    { key: 'paystack_public_key', value: 'pk_test_xxxxxxxxxxxxx' },
+    { key: 'backup_enabled', value: true },
+    { key: 'backup_schedule', value: '0 2 * * *' },
+  ];
+
+  for (const setting of platformSettings) {
+    await prisma.platformSetting.upsert({
+      where: { key: setting.key },
+      update: {},
+      create: {
+        key: setting.key,
+        value: setting.value as any,
+        updatedById: superAdmin.id,
+      },
+    });
+  }
+  console.log('✅ Platform Settings: 15 entries');
+
+  // ════════════════════════════════════════════════════
+  // ─── NIC COMPLIANCE ────────────────────────────────
+  // ════════════════════════════════════════════════════
+  const nicData = [
+    { tenant: sicTenant, licence: 'NIC/BRK/2024/001', score: 85, segregation: true, levy: 'CURRENT', kyc: 'VERIFIED' },
+    { tenant: enterpriseTenant, licence: 'NIC/BRK/2024/002', score: 62, segregation: false, levy: 'OVERDUE', kyc: 'PENDING' },
+  ];
+
+  for (const nic of nicData) {
+    await prisma.nicCompliance.upsert({
+      where: { tenantId: nic.tenant.id },
+      update: {},
+      create: {
+        tenantId: nic.tenant.id,
+        licenceNumber: nic.licence,
+        expiryDate: daysFromNow(rand(60, 300)),
+        segregationCompliant: nic.segregation,
+        lastRemittanceDate: daysAgo(rand(15, 60)),
+        nextRemittanceDue: daysFromNow(rand(15, 45)),
+        levyStatus: nic.levy,
+        kycStatus: nic.kyc,
+        complianceScore: nic.score,
+        lastCheckedAt: daysAgo(rand(0, 7)),
+      },
+    });
+  }
+  console.log('✅ NIC Compliance: 1 per tenant');
+
+  // ════════════════════════════════════════════════════
   // ─── SUMMARY ───────────────────────────────────────
   // ════════════════════════════════════════════════════
   const counts = await Promise.all([
@@ -1106,6 +1525,18 @@ async function main(): Promise<void> {
     prisma.calendarEvent.count(),
     prisma.approval.count(),
     prisma.auditLog.count(),
+    prisma.subscription.count(),
+    prisma.platformPayment.count(),
+    prisma.platformAuditLog.count(),
+    prisma.systemHealthCheck.count(),
+    prisma.incident.count(),
+    prisma.errorLog.count(),
+    prisma.backgroundJob.count(),
+    prisma.emailLog.count(),
+    prisma.announcement.count(),
+    prisma.featureFlag.count(),
+    prisma.platformSetting.count(),
+    prisma.nicCompliance.count(),
   ]);
 
   const labels = [
@@ -1113,15 +1544,20 @@ async function main(): Promise<void> {
     'Clients', 'Policies', 'Claims', 'Complaints', 'Leads', 'Transactions',
     'Invoices', 'Commissions', 'Expenses', 'Documents', 'Tasks', 'Notifications',
     'Calendar Events', 'Approvals', 'Audit Logs',
+    'Subscriptions', 'Platform Payments', 'Platform Audit Logs',
+    'Health Checks', 'Incidents', 'Error Logs', 'Background Jobs',
+    'Email Logs', 'Announcements', 'Feature Flags', 'Platform Settings',
+    'NIC Compliance',
   ];
 
   console.log('\n📊 Seed Summary:');
   labels.forEach((label, idx) => {
-    console.log(`   ${label.padEnd(18)} ${counts[idx]}`);
+    console.log(`   ${label.padEnd(22)} ${counts[idx]}`);
   });
   console.log('\n✅ Comprehensive seeding complete!');
-  console.log('   Login: admin@sic.com / Admin@123');
-  console.log('   Login: admin@enterprise.com / Admin@123');
+  console.log('   Login (Super Admin): superadmin@brokerium.com / Admin@123');
+  console.log('   Login (SIC Admin):   admin@sic.com / Admin@123');
+  console.log('   Login (Enterprise):  admin@enterprise.com / Admin@123');
 }
 
 main()
