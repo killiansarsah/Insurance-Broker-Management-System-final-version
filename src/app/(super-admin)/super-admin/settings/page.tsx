@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/super-admin/PageHeader';
+import { SkeletonLoader } from '@/components/super-admin/SkeletonLoader';
 import { Settings, Save, Shield, Database, Mail, Building2, CreditCard, Lock, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/api-client';
 
 const TABS = [
   { id: 'general', label: 'General', icon: Building2 },
@@ -18,56 +20,66 @@ export default function GlobalSettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Mock global settings state
-  const [settings, setSettings] = useState({
-    general: {
-      platformName: 'IBMS Cloud Platform',
-      supportEmail: 'support@ibms.com.gh',
-      timezone: 'GMT',
-      currency: 'GHS',
-      maintenanceMode: false,
-    },
-    nic: {
-      levyRate: '1.5',
-      remittancePeriod: 15,
-      twoAccountEnforced: true,
-      nicGatewayUrl: 'https://api.nicgh.org/v2/broker-sync'
-    },
-    email: {
-      provider: 'Resend',
-      fromEmail: 'noreply@ibms.com.gh',
-      fromName: 'IBMS System',
-      host: 'smtp.resend.com'
-    },
-    security: {
-      sessionTimeout: 60,
-      maxFailedAttempts: 5,
-      mfaEnforced: true,
-    }
+  const [settings, setSettings] = useState<Record<string, any>>({
+    platformName: 'Brokerium Cloud Platform',
+    supportEmail: 'support@brokerium.com',
+    timezone: 'GMT',
+    currency: 'GHS',
+    maintenanceMode: false,
+    levyRate: '1.5',
+    remittancePeriod: 15,
+    twoAccountEnforced: true,
+    nicGatewayUrl: 'https://api.nicgh.org/v2/broker-sync',
+    emailProvider: 'Resend',
+    fromEmail: 'noreply@brokerium.com',
+    fromName: 'Brokerium System',
+    smtpHost: 'smtp.resend.com',
+    sessionTimeout: 60,
+    maxFailedAttempts: 5,
+    mfaEnforced: true,
   });
+
+  const fetchSettings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<{ data: Record<string, any> }>('/platform-admin/settings');
+      if (res.data && Object.keys(res.data).length > 0) {
+        setSettings(prev => ({ ...prev, ...res.data }));
+      }
+    } catch (err) {
+      console.error('Failed to load settings:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise(r => setTimeout(r, 1000));
-    setIsSaving(false);
-    setIsDirty(false);
-    toast.success('Configuration saved');
+    try {
+      await apiClient.patch('/platform-admin/settings', settings);
+      setIsDirty(false);
+      toast.success('Configuration saved and deployed.');
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      toast.error('Failed to save configuration.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const updateSetting = (category: keyof typeof settings, field: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category] as any,
-        [field]: value
-      }
-    }));
+  const updateSetting = (key: string, value: any) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
     setIsDirty(true);
   };
 
   const getTabIcon = (TabIcon: any, isActive: boolean) => {
-    return <TabIcon size={16} className={isActive ? 'text-[#1D9E75]' : 'text-gray-400'} />;
+    return <TabIcon size={16} className={isActive ? 'text-[#1D9E75]' : 'text-[var(--sa-text-muted)]'} />;
   };
 
   return (
@@ -92,10 +104,10 @@ export default function GlobalSettingsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold tracking-wider transition-all rounded-sm border-l-4
+                className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-bold tracking-wider transition-all rounded-[var(--sa-radius-md)] border-l-4
                   ${isActive 
-                    ? 'border-[#1D9E75] text-[#0c6a55] bg-white shadow-sm' 
-                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-white hover:border-gray-200'
+                    ? 'border-[#1D9E75] text-[#0c6a55] bg-[var(--sa-bg-card)] shadow-sm' 
+                    : 'border-transparent text-[var(--sa-text-muted)] hover:text-[var(--sa-text-primary)] hover:bg-[var(--sa-bg-card)] hover:border-[var(--sa-border)]'
                   }`}
               >
                 {getTabIcon(tab.icon, isActive)}
@@ -107,138 +119,146 @@ export default function GlobalSettingsPage() {
 
         {/* Tab Content */}
         <div className="lg:col-span-3">
-          <div className="bg-white border border-[#d4e0dc] rounded-sm p-6 shadow-sm min-h-[500px] sa-reveal">
+          <div className="bg-[var(--sa-bg-card)] border border-[var(--sa-border)] rounded-[var(--sa-radius-md)] p-6 shadow-sm min-h-[500px] sa-reveal">
             
-            {activeTab === 'general' && (
-              <div className="space-y-6">
-                <h3 className="text-sm font-bold font-serif text-[#0c6a55] border-b border-[#d4e0dc] pb-3 mb-6 uppercase tracking-widest">Global Preferences</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Platform Operating Name</label>
-                    <input 
-                      type="text" 
-                      value={settings.general.platformName}
-                      onChange={(e) => updateSetting('general', 'platformName', e.target.value)}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">System Support Email</label>
-                    <input 
-                      type="email" 
-                      value={settings.general.supportEmail}
-                      onChange={(e) => updateSetting('general', 'supportEmail', e.target.value)}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Default Timezone</label>
-                    <select 
-                      value={settings.general.timezone}
-                      onChange={(e) => updateSetting('general', 'timezone', e.target.value)}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900"
-                    >
-                      <option value="GMT">Greenwich Mean Time (GMT)</option>
-                      <option value="UTC">Coordinated Universal Time (UTC)</option>
-                    </select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Base Currency</label>
-                    <select 
-                      value={settings.general.currency}
-                      onChange={(e) => updateSetting('general', 'currency', e.target.value)}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900"
-                    >
-                      <option value="GHS">Ghanaian Cedi (GHS)</option>
-                      <option value="USD">US Dollar (USD)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-[#d4e0dc]">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${settings.general.maintenanceMode ? 'bg-[#b91c1c]' : 'bg-gray-200'}`}>
-                      <input 
-                        type="checkbox" 
-                        className="sr-only" 
-                        checked={settings.general.maintenanceMode}
-                        onChange={(e) => updateSetting('general', 'maintenanceMode', e.target.checked)}
-                      />
-                      <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.general.maintenanceMode ? 'translate-x-4' : 'translate-x-0'}`} />
-                    </div>
-                    <div>
-                      <div className="text-sm font-bold text-gray-900">Enable Maintenance Mode</div>
-                      <div className="text-xs text-gray-500">Forces all non-super-admins offline and displays a 503 Maintenance page.</div>
-                    </div>
-                  </label>
-                </div>
+            {loading ? (
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => <SkeletonLoader key={i} className="w-full h-12 rounded" />)}
               </div>
-            )}
-
-            {activeTab === 'nic' && (
-              <div className="space-y-6">
-                <h3 className="text-sm font-bold font-serif text-[#0c6a55] border-b border-[#d4e0dc] pb-3 mb-6 uppercase tracking-widest">Commission Logic</h3>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Act 1061 Levy Rate (%)</label>
-                    <input 
-                      type="number" 
-                      step="0.1"
-                      value={settings.nic.levyRate}
-                      onChange={(e) => updateSetting('nic', 'levyRate', e.target.value)}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900 font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">Remittance Period (Days)</label>
-                    <input 
-                      type="number" 
-                      value={settings.nic.remittancePeriod}
-                      onChange={(e) => updateSetting('nic', 'remittancePeriod', parseInt(e.target.value))}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900 font-mono"
-                    />
-                  </div>
-                  <div className="col-span-full space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-gray-500">NIC Sync Webhook Origin</label>
-                    <input 
-                      type="url" 
-                      value={settings.nic.nicGatewayUrl}
-                      onChange={(e) => updateSetting('nic', 'nicGatewayUrl', e.target.value)}
-                      className="w-full p-2 bg-[#f0f4f3] border-none rounded-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-gray-900 font-mono"
-                    />
-                  </div>
-                </div>
-                
-                <div className="pt-6 mt-6 border-t border-[#d4e0dc]">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${settings.nic.twoAccountEnforced ? 'bg-[#1D9E75]' : 'bg-gray-200'}`}>
-                      <input 
-                        type="checkbox" 
-                        className="sr-only" 
-                        checked={settings.nic.twoAccountEnforced}
-                        onChange={(e) => updateSetting('nic', 'twoAccountEnforced', e.target.checked)}
-                      />
-                      <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.nic.twoAccountEnforced ? 'translate-x-4' : 'translate-x-0'}`} />
+            ) : (
+              <>
+                {activeTab === 'general' && (
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-bold font-serif text-[#0c6a55] border-b border-[var(--sa-border)] pb-3 mb-6 uppercase tracking-widest">Global Preferences</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">Platform Operating Name</label>
+                        <input 
+                          type="text" 
+                          value={settings.platformName ?? ''}
+                          onChange={(e) => updateSetting('platformName', e.target.value)}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)]"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">System Support Email</label>
+                        <input 
+                          type="email" 
+                          value={settings.supportEmail ?? ''}
+                          onChange={(e) => updateSetting('supportEmail', e.target.value)}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)]"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">Default Timezone</label>
+                        <select 
+                          value={settings.timezone ?? 'GMT'}
+                          onChange={(e) => updateSetting('timezone', e.target.value)}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)]"
+                        >
+                          <option value="GMT">Greenwich Mean Time (GMT)</option>
+                          <option value="UTC">Coordinated Universal Time (UTC)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">Base Currency</label>
+                        <select 
+                          value={settings.currency ?? 'GHS'}
+                          onChange={(e) => updateSetting('currency', e.target.value)}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)]"
+                        >
+                          <option value="GHS">Ghanaian Cedi (GHS)</option>
+                          <option value="USD">US Dollar (USD)</option>
+                        </select>
+                      </div>
                     </div>
-                    <div>
-                      <div className="text-sm font-bold text-gray-900">Enforce Fiduciary Segregation</div>
-                      <div className="text-xs text-gray-500">Requires brokers to specify separate OP and Premium remittance bank accounts.</div>
-                    </div>
-                  </label>
-                </div>
-              </div>
-            )}
 
-            {/* Other tabs omitted for brevity, showing the structure applies. */}
-            {!['general', 'nic'].includes(activeTab) && (
-               <div className="flex flex-col items-center justify-center p-12 bg-gray-50 border border-dashed border-[#d4e0dc] rounded-sm h-[400px]">
-                {getTabIcon(TABS.find(t => t.id === activeTab)?.icon, false)}
-                <h3 className="mt-4 text-sm font-bold font-serif text-gray-600 uppercase tracking-widest">
-                  {TABS.find(t => t.id === activeTab)?.label} Settings
-                </h3>
-              </div>
+                    <div className="pt-6 mt-6 border-t border-[var(--sa-border)]">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${settings.maintenanceMode ? 'bg-[#b91c1c]' : 'bg-gray-200'}`}>
+                          <input 
+                            type="checkbox" 
+                            className="sr-only" 
+                            checked={settings.maintenanceMode ?? false}
+                            onChange={(e) => updateSetting('maintenanceMode', e.target.checked)}
+                          />
+                          <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.maintenanceMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-[var(--sa-text-primary)]">Enable Maintenance Mode</div>
+                          <div className="text-xs text-[var(--sa-text-muted)]">Forces all non-super-admins offline and displays a 503 Maintenance page.</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'nic' && (
+                  <div className="space-y-6">
+                    <h3 className="text-sm font-bold font-serif text-[#0c6a55] border-b border-[var(--sa-border)] pb-3 mb-6 uppercase tracking-widest">Commission Logic</h3>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">Act 1061 Levy Rate (%)</label>
+                        <input 
+                          type="number" 
+                          step="0.1"
+                          value={settings.levyRate ?? ''}
+                          onChange={(e) => updateSetting('levyRate', e.target.value)}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)] font-mono"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">Remittance Period (Days)</label>
+                        <input 
+                          type="number" 
+                          value={settings.remittancePeriod ?? ''}
+                          onChange={(e) => updateSetting('remittancePeriod', parseInt(e.target.value))}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)] font-mono"
+                        />
+                      </div>
+                      <div className="col-span-full space-y-1.5">
+                        <label className="text-xs font-bold uppercase tracking-wider text-[var(--sa-text-muted)]">NIC Sync Webhook Origin</label>
+                        <input 
+                          type="url" 
+                          value={settings.nicGatewayUrl ?? ''}
+                          onChange={(e) => updateSetting('nicGatewayUrl', e.target.value)}
+                          className="w-full p-2 bg-[var(--sa-bg-page)] border-none rounded-[var(--sa-radius-md)] focus:ring-2 focus:ring-[#1D9E75] focus:outline-none text-[var(--sa-text-primary)] font-mono"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="pt-6 mt-6 border-t border-[var(--sa-border)]">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <div className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${settings.twoAccountEnforced ? 'bg-[#1D9E75]' : 'bg-gray-200'}`}>
+                          <input 
+                            type="checkbox" 
+                            className="sr-only" 
+                            checked={settings.twoAccountEnforced ?? false}
+                            onChange={(e) => updateSetting('twoAccountEnforced', e.target.checked)}
+                          />
+                          <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.twoAccountEnforced ? 'translate-x-4' : 'translate-x-0'}`} />
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-[var(--sa-text-primary)]">Enforce Fiduciary Segregation</div>
+                          <div className="text-xs text-[var(--sa-text-muted)]">Requires brokers to specify separate OP and Premium remittance bank accounts.</div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {!['general', 'nic'].includes(activeTab) && (
+                  <div className="flex flex-col items-center justify-center p-12 bg-[var(--sa-bg-card-alt)] border border-dashed border-[var(--sa-border)] rounded-[var(--sa-radius-md)] h-[400px]">
+                    {getTabIcon(TABS.find(t => t.id === activeTab)?.icon, false)}
+                    <h3 className="mt-4 text-sm font-bold font-serif text-[var(--sa-text-muted)] uppercase tracking-widest">
+                      {TABS.find(t => t.id === activeTab)?.label} Settings
+                    </h3>
+                    <p className="mt-2 text-xs text-[var(--sa-text-muted)]">Configuration panel coming soon.</p>
+                  </div>
+                )}
+              </>
             )}
             
           </div>
@@ -254,18 +274,18 @@ export default function GlobalSettingsPage() {
         <div className="flex gap-3 pr-6">
           <button 
             type="button"
-            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#9FE1CB] hover:bg-[#05291e] rounded-sm transition-colors sa-btn-hover border border-[#085041]"
-            onClick={() => setIsDirty(false)}
+            className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#9FE1CB] hover:bg-[#05291e] rounded-full transition-colors sa-btn-hover border border-[#085041]"
+            onClick={() => { fetchSettings(); setIsDirty(false); }}
           >
             Discard
           </button>
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 px-6 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[#1D9E75] hover:bg-[#3BB58D] rounded-sm transition-colors sa-btn-hover"
+            className="flex items-center gap-2 px-6 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[#1D9E75] hover:bg-[#3BB58D] rounded-full transition-colors sa-btn-hover"
           >
             {isSaving ? <RefreshCcw size={14} className="animate-spin" /> : <Save size={14} />} 
-            {isSaving ? 'Commiting...' : 'Deploy Changes'}
+            {isSaving ? 'Committing...' : 'Deploy Changes'}
           </button>
         </div>
       </div>

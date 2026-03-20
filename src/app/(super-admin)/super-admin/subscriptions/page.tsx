@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/super-admin/PageHeader';
 import { StatCard } from '@/components/super-admin/StatCard';
@@ -7,59 +8,107 @@ import { DataTable } from '@/components/super-admin/DataTable';
 import { StatusPill } from '@/components/super-admin/StatusPill';
 import { CreditCard, TrendingUp, AlertCircle, Ban, RefreshCcw, BellRing, Settings } from 'lucide-react';
 import { RevenueTrendChart } from '@/components/super-admin/overview-charts/RevenueTrendChart';
+import { apiClient } from '@/lib/api-client';
+import { useLiveMetric } from '@/hooks/super-admin/useLiveMetric';
 
-const mockSubscriptions = [
-  { id: 'sub_1', tenant: 'Vanguard Insurance Group', plan: 'Enterprise', cycle: 'Annual', amount: 150000, nextBilling: '2027-01-15', status: 'active', payment: 'Credit Card' },
-  { id: 'sub_2', tenant: 'Horizon Brokers Ltd', plan: 'Professional', cycle: 'Monthly', amount: 2500, nextBilling: '2026-04-22', status: 'active', payment: 'Bank Transfer' },
-  { id: 'sub_3', tenant: 'Apex Secure Solutions', plan: 'Professional', cycle: 'Monthly', amount: 2500, nextBilling: '2026-03-10', status: 'overdue', payment: 'Credit Card' },
-  { id: 'sub_4', tenant: 'Meridian Capital', plan: 'Starter', cycle: 'Monthly', amount: 800, nextBilling: '2026-04-05', status: 'active', payment: 'Mobile Money' },
-  { id: 'sub_5', tenant: 'Sterling Risk Mgmt', plan: 'Starter', cycle: 'Annual', amount: 8500, nextBilling: '2026-11-30', status: 'canceled', payment: 'Bank Transfer' },
-];
+interface SubscriptionRow {
+  id: string;
+  tenantName: string;
+  plan: string;
+  billingCycle: string;
+  amountGhs: number;
+  nextBillingDate: string | null;
+  status: string;
+  paymentMethod: string | null;
+}
+
+interface SubsApiResponse {
+  data: SubscriptionRow[];
+  meta?: { total: number; page: number; limit: number };
+}
+
+interface BillingStats {
+  data: {
+    mrr: number;
+    overdueBalance: number;
+    newRevenue30d: number;
+    churnedRevenue: number;
+    mrrGrowth: number;
+    churnGrowth: number;
+  };
+}
 
 export default function SubscriptionsPage() {
+  const [subs, setSubs] = useState<SubscriptionRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const { data: billingStats, loading: statsLoading } = useLiveMetric<BillingStats>('/platform-admin/billing/stats', 60_000);
+  const stats = billingStats?.data;
+
+  const fetchSubs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<SubsApiResponse>('/platform-admin/billing/subscriptions');
+      setSubs(res.data ?? []);
+    } catch (err) {
+      console.error('Failed to load subscriptions:', err);
+      toast.error('Failed to load subscriptions.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSubs();
+  }, [fetchSubs]);
+
+  const overdueSubs = subs.filter(s => s.status === 'OVERDUE' || s.status === 'overdue');
+
   const columns = [
     {
       header: 'Tenant Name',
-      accessorKey: 'tenant',
-      cell: (row: typeof mockSubscriptions[0]) => (
-        <div className="font-bold text-gray-900">{row.tenant}</div>
+      accessorKey: 'tenantName',
+      cell: (row: any) => (
+        <div className="font-bold text-[var(--sa-text-primary)]">{row.tenantName}</div>
       ),
     },
     {
       header: 'Plan',
       accessorKey: 'plan',
-      cell: (row: typeof mockSubscriptions[0]) => (
-        <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded-sm text-gray-700">
+      cell: (row: any) => (
+        <span className="text-xs font-semibold px-2 py-1 bg-[var(--sa-bg-card-alt)] rounded-sm text-[var(--sa-text-primary)]">
           {row.plan}
         </span>
       ),
     },
     {
       header: 'Cycle',
-      accessorKey: 'cycle',
-      cell: (row: typeof mockSubscriptions[0]) => (
-        <span className="text-xs text-gray-600">{row.cycle}</span>
+      accessorKey: 'billingCycle',
+      cell: (row: any) => (
+        <span className="text-xs text-[var(--sa-text-secondary)]">{row.billingCycle}</span>
       ),
     },
     {
       header: 'Current Rate',
-      accessorKey: 'amount',
-      cell: (row: typeof mockSubscriptions[0]) => (
-        <span className="font-mono text-sm text-[#0c6a55]">₵{row.amount.toLocaleString()}</span>
+      accessorKey: 'amountGhs',
+      cell: (row: any) => (
+        <span className="font-mono text-sm text-[#0c6a55]">₵{(row.amountGhs ?? 0).toLocaleString()}</span>
       ),
     },
     {
       header: 'Next Billing',
-      accessorKey: 'nextBilling',
-      cell: (row: typeof mockSubscriptions[0]) => (
-        <span className="font-mono text-xs text-gray-500">{row.nextBilling}</span>
+      accessorKey: 'nextBillingDate',
+      cell: (row: any) => (
+        <span className="font-mono text-xs text-[var(--sa-text-muted)]">
+          {row.nextBillingDate ? new Date(row.nextBillingDate).toLocaleDateString() : '—'}
+        </span>
       ),
     },
     {
       header: 'Status',
       accessorKey: 'status',
-      cell: (row: typeof mockSubscriptions[0]) => (
-        <StatusPill status={row.status} />
+      cell: (row: any) => (
+        <StatusPill status={row.status?.toLowerCase()} />
       ),
     },
     {
@@ -87,18 +136,18 @@ export default function SubscriptionsPage() {
         ]}
         actions={
           <button 
-            onClick={() => toast.success('Stripe telemetry synchronized')}
+            onClick={() => toast.success('Payment gateway sync triggered.')}
             className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border)] hover:bg-[var(--sa-bg-page)] rounded-full transition-colors sa-btn-hover">
-            <RefreshCcw size={14} /> Sync Stripe
+            <RefreshCcw size={14} /> Sync Payments
           </button>
         }
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Monthly Recurring Rev" prefix="₵" value={84500} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} icon={TrendingUp} iconColor="#1d9e75" onClick={() => toast.info('MRR Chart open')} />
-        <StatCard label="Overdue Balance" prefix="₵" value={12450} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} icon={AlertCircle} iconColor="#b91c1c" onClick={() => toast.error('List filtered to overdue payments')} />
-        <StatCard label="New Revenue (30d)" prefix="₵" value={4200} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} change={14.1} icon={CreditCard} iconColor="#0369a1" onClick={() => toast.info('View breakdown of 30d revenue expansion')} />
-        <StatCard label="Churned Revenue" prefix="₵" value={850} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} change={-2.4} changeLabel="improvement" icon={Ban} iconColor="#ca8a04" onClick={() => toast.info('View contraction metrics')} />
+        <StatCard label="Monthly Recurring Rev" prefix="₵" value={stats?.mrr ?? 0} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} icon={TrendingUp} iconColor="#1d9e75" loading={statsLoading} />
+        <StatCard label="Overdue Balance" prefix="₵" value={stats?.overdueBalance ?? 0} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} icon={AlertCircle} iconColor="#b91c1c" loading={statsLoading} />
+        <StatCard label="New Revenue (30d)" prefix="₵" value={stats?.newRevenue30d ?? 0} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} change={stats?.mrrGrowth ?? 0} icon={CreditCard} iconColor="#0369a1" loading={statsLoading} />
+        <StatCard label="Churned Revenue" prefix="₵" value={stats?.churnedRevenue ?? 0} formatValue={(v) => (v / 1000).toFixed(1) + 'k'} change={stats?.churnGrowth ?? 0} changeLabel="improvement" icon={Ban} iconColor="#ca8a04" loading={statsLoading} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
@@ -110,24 +159,12 @@ export default function SubscriptionsPage() {
           <div className="mt-6 bg-[var(--sa-bg-card)] rounded-[var(--sa-radius-md)] border border-[var(--sa-border)] shadow-sm overflow-hidden">
             <div className="p-4 border-b border-[var(--sa-border)] flex items-center justify-between">
               <h3 className="text-sm font-bold font-serif text-[var(--sa-text-primary)]">Active Subscriptions</h3>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => toast.info('Filter: Active applied')}
-                  className="text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-[#1D9E75] transition-colors sa-btn-hover hover:underline">
-                  Filter Active
-                </button>
-                <span className="text-gray-300">|</span>
-                <button 
-                  onClick={() => toast.info('Filter: Overdue applied')}
-                  className="text-[10px] font-bold uppercase tracking-wider text-gray-500 hover:text-[#b91c1c] transition-colors sa-btn-hover hover:underline">
-                  Filter Overdue
-                </button>
-              </div>
             </div>
             <DataTable
-              data={mockSubscriptions}
-              columns={columns}
-              onRowClick={(row) => toast.info(`Viewing billing portal for ${row.tenant}`)}
+              data={subs as any}
+              columns={columns as any}
+              loading={loading}
+              onRowClick={(row: any) => toast.info(`Viewing billing portal for ${row.tenantName}`)}
             />
           </div>
         </div>
@@ -141,21 +178,23 @@ export default function SubscriptionsPage() {
             </div>
             
             <div className="space-y-4">
-              {mockSubscriptions.filter(s => s.status === 'overdue').map(overdue => (
+              {overdueSubs.length === 0 ? (
+                <p className="text-sm text-[#be123c]/70">No overdue subscriptions. 🎉</p>
+              ) : overdueSubs.map(overdue => (
                 <div key={overdue.id} className="bg-white border border-[#fecdd3] rounded-[var(--sa-radius-md)] p-4 text-sm">
-                  <div className="font-bold text-gray-900 mb-0.5">{overdue.tenant}</div>
+                  <div className="font-bold text-gray-900 mb-0.5">{overdue.tenantName}</div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="font-mono text-[#be123c] font-bold">₵{overdue.amount.toLocaleString()}</span>
-                    <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">4 Days Late</span>
+                    <span className="font-mono text-[#be123c] font-bold">₵{(overdue.amountGhs ?? 0).toLocaleString()}</span>
+                    <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Overdue</span>
                   </div>
                   <div className="mt-4 flex gap-2">
                     <button 
-                      onClick={() => toast.success(`Automated reminder dispatched to ${overdue.tenant}`)}
+                      onClick={() => toast.success(`Automated reminder dispatched to ${overdue.tenantName}`)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white bg-[#be123c] hover:bg-[#9f1239] rounded-full transition-colors sa-btn-hover">
                       <BellRing size={12} /> Remind
                     </button>
                     <button 
-                      onClick={() => toast.error(`Account suspended for ${overdue.tenant}`)}
+                      onClick={() => toast.error(`Account suspended for ${overdue.tenantName}`)}
                       className="flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#9f1239] bg-transparent border border-[#fecdd3] hover:bg-[#ffe4e6] rounded-full transition-colors sa-btn-hover">
                       Suspend
                     </button>
@@ -171,7 +210,7 @@ export default function SubscriptionsPage() {
                 <Settings size={20} />
                 <h3 className="text-sm font-bold uppercase tracking-widest">Plan Config</h3>
               </div>
-              <p className="text-xs text-[#7a9a8c]">Manage global plan tiers & features mapped to Stripe products.</p>
+              <p className="text-xs text-[#7a9a8c]">Manage global plan tiers & features.</p>
             </div>
             
             <div className="space-y-3">
@@ -186,7 +225,7 @@ export default function SubscriptionsPage() {
                     </span>
                   </div>
                   <div className="text-[10px] font-mono tracking-widest uppercase text-[#7a9a8c] group-hover:text-[#9FE1CB] transition-colors">
-                    {plan === 'Starter' ? '32 Tenants' : plan === 'Professional' ? '88 Tenants' : '22 Tenants'}
+                    Configure →
                   </div>
                 </div>
               ))}

@@ -81,31 +81,31 @@ export function SuperAdminSidebar() {
     >
       {/* Brand Header */}
       <div
-        className="flex items-center gap-3 px-4 py-3 shrink-0 cursor-pointer"
+        className="flex items-center gap-3 px-4 py-3 shrink-0 cursor-pointer hover:bg-[var(--sa-sidebar-active-bg)] transition-colors"
         style={{ height: 'var(--sa-header-height)', borderBottom: '1px solid var(--sa-border)' }}
         onClick={() => { window.location.href = '/super-admin/overview' }}
       >
-        <div className="w-8 h-8 rounded-[8px] flex items-center justify-center shrink-0" style={{ backgroundColor: 'var(--sa-teal-500)' }}>
+        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br from-[var(--sa-teal-400)] to-[var(--sa-teal-700)] shadow-[0_0_12px_rgba(29,158,117,0.4)]">
           <ShieldAlert size={18} style={{ color: 'var(--sa-bg-sidebar)' }} />
         </div>
         {!sidebarCollapsed && (
           <div className="flex flex-col overflow-hidden max-w-[170px] sa-reveal">
-            <span className="font-serif font-bold text-lg tracking-tight whitespace-nowrap leading-none pt-1" style={{ color: 'var(--sa-text-primary)' }}>
-              IBMS Command
+            <span className="font-serif font-bold text-lg tracking-tight whitespace-nowrap leading-none pt-1" style={{ color: 'var(--sa-sidebar-text-active)' }}>
+              Brokerium
             </span>
-            <span className="font-mono text-[10px] uppercase tracking-widest mt-0.5" style={{ color: 'var(--sa-teal-300)' }}>
-              Super Admin
+            <span className="font-mono text-[9px] uppercase tracking-[0.2em] mt-1 opacity-70" style={{ color: 'var(--sa-teal-300)' }}>
+              Command Centre
             </span>
           </div>
         )}
       </div>
 
-      {/* Navigation */}
+    {/* Navigation */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-4">
         {navGroups.map((group, gIdx) => (
           <div key={gIdx} className="space-y-1">
             {!sidebarCollapsed && (
-              <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--sa-text-secondary)' }}>
+              <div className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--sa-sidebar-text)' }}>
                 {group.label}
               </div>
             )}
@@ -116,22 +116,22 @@ export function SuperAdminSidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] transition-colors group"
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group hover:bg-[var(--sa-bg-sidebar-hover)]"
                   style={{
                     backgroundColor: isActive ? 'var(--sa-sidebar-active-bg)' : 'transparent',
-                    color: isActive ? 'var(--sa-text-primary)' : 'var(--sa-text-muted)',
-                    borderLeft: isActive ? '3px solid var(--sa-border-focus)' : '3px solid transparent',
+                    color: isActive ? 'var(--sa-sidebar-text-active)' : 'var(--sa-sidebar-text)',
+                    boxShadow: isActive ? 'inset 3px 0 0 var(--sa-border-focus)' : 'none',
                   }}
                   title={sidebarCollapsed ? item.label : undefined}
                 >
                   <item.icon
                     size={18}
                     strokeWidth={isActive ? 2.5 : 2}
-                    className={isActive ? '' : 'group-hover:opacity-80 transition-opacity'}
+                    className={isActive ? '' : 'group-hover:scale-110 transition-transform'}
                     style={{ color: isActive ? 'var(--sa-teal-400)' : 'var(--sa-teal-300)' }}
                   />
                   {!sidebarCollapsed && (
-                    <span className="font-medium text-sm whitespace-nowrap group-hover:opacity-80 transition-opacity">
+                    <span className="font-medium text-sm whitespace-nowrap group-hover:translate-x-1 transition-transform">
                       {item.label}
                     </span>
                   )}
@@ -142,33 +142,28 @@ export function SuperAdminSidebar() {
         ))}
       </nav>
 
-      {/* Footer (Theme, Collapse & Logout) */}
-      <div className="p-3 border-t space-y-1 shrink-0" style={{ borderColor: 'var(--sa-border)' }}>
-        <button
-          onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] transition-colors hover:opacity-80"
-          style={{ color: 'var(--sa-text-muted)' }}
-          title={sidebarCollapsed ? 'Toggle Theme' : 'Theme'}
-        >
-          {currentTheme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-          {!sidebarCollapsed && <span className="font-medium text-sm">Theme: {currentTheme === 'dark' ? 'Dark' : 'Light'}</span>}
-        </button>
+      {/* Footer (Collapse & Logout) */}
+      <div className="p-3 border-t space-y-2 shrink-0 flex flex-col" style={{ borderColor: 'var(--sa-border)' }}>
+        
+        {/* Collapse button */}
         <button
           onClick={toggleSidebar}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] transition-colors hover:opacity-80"
-          style={{ color: 'var(--sa-text-muted)' }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-[var(--sa-bg-sidebar-hover)] sa-btn-hover"
+          style={{ color: 'var(--sa-sidebar-text)' }}
           title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
-          {sidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!sidebarCollapsed && <span className="font-medium text-sm">Collapse Sidebar</span>}
+          {sidebarCollapsed ? <ChevronRight size={18} className="mx-auto" /> : <ChevronLeft size={18} />}
+          {!sidebarCollapsed && <span className="font-medium text-sm">Collapse Menu</span>}
         </button>
+        
+        {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-[12px] transition-colors hover:opacity-80"
-          style={{ color: 'var(--sa-text-muted)' }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-red-900/20 hover:text-red-400 sa-btn-hover mt-1"
+          style={{ color: 'var(--sa-sidebar-text)' }}
           title={sidebarCollapsed ? 'Logout' : undefined}
         >
-          <LogOut size={18} />
+          <LogOut size={18} className={sidebarCollapsed ? 'mx-auto' : ''} />
           {!sidebarCollapsed && <span className="font-medium text-sm">Sign Out</span>}
         </button>
       </div>

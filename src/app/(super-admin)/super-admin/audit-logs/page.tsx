@@ -1,74 +1,125 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { PageHeader } from '@/components/super-admin/PageHeader';
 import { DataTable } from '@/components/super-admin/DataTable';
 import { SlideDrawer } from '@/components/super-admin/SlideDrawer';
 import { StatusPill } from '@/components/super-admin/StatusPill';
 import { Clock, Search, Filter, Download, FileJson } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
+import { toast } from 'sonner';
 
-const mockLogs = [
-  { id: 'evt_99182', ts: '2026-03-19 14:22:01', severity: 'info', category: 'auth', actor: 'ksarsah@ibms.com', role: 'PLATFORM_SUPER_ADMIN', tenant: 'Platform Core', action: 'super_admin.login', resource: 'session', ip: '192.168.1.44', status: 'success' },
-  { id: 'evt_99181', ts: '2026-03-19 14:15:33', severity: 'warning', category: 'billing', actor: 'system', role: 'SYSTEM', tenant: 'Apex Secure Solutions', action: 'invoice.payment_failed', resource: 'inv_A4B2', ip: 'internal', status: 'failed' },
-  { id: 'evt_99180', ts: '2026-03-19 13:45:10', severity: 'info', category: 'tenant', actor: 'ksarsah@ibms.com', role: 'PLATFORM_SUPER_ADMIN', tenant: 'Platform Core', action: 'tenant.provisioning', resource: 'ten_Vanguard', ip: '192.168.1.44', status: 'success' },
-  { id: 'evt_99179', ts: '2026-03-19 11:10:05', severity: 'critical', category: 'security', actor: 'jdoe@vanguard.com', role: 'TENANT_ADMIN', tenant: 'Vanguard Insurance', action: 'policy.bulk_export', resource: 'export_77', ip: '41.215.170.1', status: 'success' },
-  { id: 'evt_99178', ts: '2026-03-19 09:05:22', severity: 'info', category: 'system', actor: 'system', role: 'SYSTEM', tenant: 'Platform Core', action: 'job.compliance_check', resource: 'job_441', ip: 'internal', status: 'success' },
-];
+interface AuditLogEntry {
+  id: string;
+  createdAt: string;
+  severity: string;
+  category: string;
+  actorEmail: string;
+  actorRole: string;
+  tenantName: string | null;
+  action: string;
+  description: string;
+  resourceType: string | null;
+  resourceId: string | null;
+  ipAddress: string | null;
+  status: string;
+  metadata: Record<string, unknown> | null;
+}
+
+interface AuditLogsResponse {
+  data: AuditLogEntry[];
+  meta?: { total: number; page: number; limit: number };
+}
+
+function formatTimestamp(dateStr: string): string {
+  return new Date(dateStr).toISOString().replace('T', ' ').slice(0, 19);
+}
 
 export default function AuditLogsPage() {
-  const [selectedEvent, setSelectedEvent] = useState<typeof mockLogs[0] | null>(null);
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [selectedEvent, setSelectedEvent] = useState<AuditLogEntry | null>(null);
+
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<AuditLogsResponse>('/platform-admin/audit-logs', {
+        page,
+        limit: 50,
+        search: searchTerm || undefined,
+      });
+      setLogs(res.data ?? []);
+      if (res.meta) {
+        setTotalPages(Math.ceil(res.meta.total / res.meta.limit));
+        setTotalCount(res.meta.total);
+      }
+    } catch (err) {
+      console.error('Failed to load audit logs:', err);
+      toast.error('Failed to load audit logs.');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, searchTerm]);
+
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
   const columns = [
     {
       header: 'Timestamp (UTC)',
-      accessorKey: 'ts',
-      cell: (row: typeof mockLogs[0]) => (
-        <span className="font-mono text-[10px] text-[#0c6a55]">{row.ts}</span>
+      accessorKey: 'createdAt',
+      cell: (row: AuditLogEntry) => (
+        <span className="font-mono text-[10px] text-[#0c6a55]">{formatTimestamp(row.createdAt)}</span>
       ),
     },
     {
       header: 'Severity',
       accessorKey: 'severity',
-      cell: (row: typeof mockLogs[0]) => (
-        <StatusPill status={row.severity === 'info' ? 'active' : row.severity === 'warning' ? 'warning' : 'failed'} />
+      cell: (row: AuditLogEntry) => (
+        <StatusPill status={
+          row.severity === 'LOW' ? 'active' : 
+          row.severity === 'MEDIUM' ? 'warning' : 
+          row.severity === 'HIGH' ? 'warning' :
+          row.severity === 'CRITICAL' ? 'failed' : 'active'
+        } />
       ),
     },
     {
       header: 'Actor & Role',
-      accessorKey: 'actor',
-      cell: (row: typeof mockLogs[0]) => (
+      accessorKey: 'actorEmail',
+      cell: (row: AuditLogEntry) => (
         <div className="flex flex-col">
-          <span className="text-xs font-bold text-gray-900">{row.actor}</span>
-          <span className="text-[9px] font-mono tracking-wider uppercase text-gray-500">{row.role}</span>
+          <span className="text-xs font-bold text-[var(--sa-text-primary)]">{row.actorEmail ?? 'system'}</span>
+          <span className="text-[9px] font-mono tracking-wider uppercase text-[var(--sa-text-muted)]">{row.actorRole ?? 'SYSTEM'}</span>
         </div>
       ),
     },
     {
       header: 'Tenant Scope',
-      accessorKey: 'tenant',
-      cell: (row: typeof mockLogs[0]) => (
-        <span className="text-xs text-gray-600">{row.tenant}</span>
+      accessorKey: 'tenantName',
+      cell: (row: AuditLogEntry) => (
+        <span className="text-xs text-[var(--sa-text-secondary)]">{row.tenantName ?? 'Platform Core'}</span>
       ),
     },
     {
       header: 'Action / Event Type',
       accessorKey: 'action',
-      cell: (row: typeof mockLogs[0]) => (
+      cell: (row: AuditLogEntry) => (
         <span className="font-mono text-xs text-[#1D9E75] font-bold">{row.action}</span>
-      ),
-    },
-    {
-      header: 'Target',
-      accessorKey: 'resource',
-      cell: (row: typeof mockLogs[0]) => (
-        <span className="font-mono text-[10px] text-gray-500">{row.resource}</span>
       ),
     },
     {
       header: 'Details',
       accessorKey: 'id',
-      cell: () => (
-        <button className="text-[10px] font-bold uppercase tracking-wider text-[#1D9E75] hover:text-[#0c6a55] transition-colors sa-btn-hover hover:underline flex items-center gap-1">
+      cell: (row: AuditLogEntry) => (
+        <button 
+          onClick={(e) => { e.stopPropagation(); setSelectedEvent(row); }}
+          className="text-[10px] font-bold uppercase tracking-wider text-[#1D9E75] hover:text-[#0c6a55] transition-colors sa-btn-hover hover:underline flex items-center gap-1">
           <FileJson size={14} /> Payload
         </button>
       ),
@@ -86,125 +137,127 @@ export default function AuditLogsPage() {
           { label: 'System Logs', href: '/super-admin/audit-logs' }
         ]}
         actions={
-          <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-white border border-[#d4e0dc] hover:bg-[#f0f4f3] rounded-sm transition-colors sa-btn-hover">
+          <button 
+            onClick={() => toast.info('CSV export coming soon.')}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border)] hover:bg-[var(--sa-bg-card-alt)] rounded-full transition-colors sa-btn-hover">
             <Download size={14} /> Export CSV
           </button>
         }
       />
 
       {/* Filter Bar */}
-      <div className="flex flex-wrap items-center gap-4 bg-white p-4 rounded-sm border border-[#d4e0dc]">
+      <div className="flex flex-wrap items-center gap-4 bg-[var(--sa-bg-card)] p-4 rounded-[var(--sa-radius-md)] border border-[var(--sa-border)]">
         <div className="relative flex-1 min-w-[250px]">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input 
             type="text" 
-            placeholder="Search by action, email, IP address, or trace ID..." 
-            className="w-full pl-9 pr-4 py-2 bg-[#f0f4f3] border-none rounded-sm text-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none placeholder:text-gray-500 font-mono"
+            placeholder="Search by action, email, or trace ID..." 
+            className="w-full pl-9 pr-4 py-2 bg-[var(--sa-bg-page)] border-none rounded-full text-sm focus:ring-2 focus:ring-[#1D9E75] focus:outline-none placeholder:text-gray-500 font-mono text-[var(--sa-text-primary)]"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[#f0f4f3] hover:bg-[#d4e0dc] rounded-sm transition-colors sa-btn-hover">
+        <button 
+          onClick={() => toast.info('Severity filter coming soon.')}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
           <Filter size={14} /> Severity
         </button>
-        <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[#f0f4f3] hover:bg-[#d4e0dc] rounded-sm transition-colors sa-btn-hover">
+        <button 
+          onClick={() => toast.info('Category filter coming soon.')}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
           <Filter size={14} /> Category
-        </button>
-        <button className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[#f0f4f3] hover:bg-[#d4e0dc] rounded-sm transition-colors sa-btn-hover">
-          <Filter size={14} /> 24 Hours
         </button>
       </div>
 
-      {/* Auto Refresh Toggle Banner */}
-      <div className="p-3 bg-[#e0f2fe] border border-[#bae6fd] rounded-sm flex items-center justify-between text-xs font-mono">
+      {/* Live Tailing Banner */}
+      <div className="p-3 bg-[#e0f2fe] border border-[#bae6fd] rounded-[var(--sa-radius-md)] flex items-center justify-between text-xs font-mono">
         <div className="flex items-center gap-2 text-[#0369a1]">
           <div className="w-2 h-2 rounded-full bg-[#0ea5e9] animate-pulse" />
-          Live tailing active... 2 new events received since page load.
+          Live tailing active... {totalCount.toLocaleString()} total events indexed.
         </div>
-        <button className="text-[#0369a1] font-bold uppercase tracking-widest hover:underline sa-btn-hover">
-          Load New Events
+        <button onClick={fetchLogs} className="text-[#0369a1] font-bold uppercase tracking-widest hover:underline sa-btn-hover">
+          Refresh
         </button>
       </div>
 
       {/* Audit Table */}
-      <div className="bg-white rounded-sm border border-[#d4e0dc] shadow-sm overflow-hidden min-h-[500px]">
+      <div className="bg-[var(--sa-bg-card)] rounded-[var(--sa-radius-md)] border border-[var(--sa-border)] shadow-sm overflow-hidden min-h-[500px]">
         <DataTable
-          data={mockLogs}
-          columns={columns}
-          onRowClick={(row) => setSelectedEvent(row)}
+          data={logs as any}
+          columns={columns as any}
+          loading={loading}
+          onRowClick={(row: any) => setSelectedEvent(row as AuditLogEntry)}
+          page={page}
+          total={totalCount}
+          pageSize={50}
+          onPageChange={setPage}
         />
-        
-        <div className="p-4 border-t border-[#d4e0dc] bg-[#f8faf9] flex items-center justify-between text-xs text-gray-500 font-mono">
-          <span>Showing 1-50 of 99,182 entries</span>
-          <div className="flex gap-4">
-            <button className="hover:text-[#0c6a55] sa-btn-hover disabled:opacity-50">← Prev</button>
-            <button className="hover:text-[#0c6a55] sa-btn-hover hover:underline">Next →</button>
-          </div>
-        </div>
       </div>
 
       {/* Slide Drawer for Full JSON Payload */}
       <SlideDrawer
         isOpen={!!selectedEvent}
         onClose={() => setSelectedEvent(null)}
-        title={`Event Log: ${selectedEvent?.id}`}
+        title={`Event Log: ${selectedEvent?.id?.slice(0, 12)}...`}
       >
         {selectedEvent && (
           <div className="space-y-6">
             <div className="flex items-center gap-3 border-b border-[#05291e] pb-4">
-              <StatusPill status={selectedEvent.severity === 'info' ? 'active' : selectedEvent.severity === 'warning' ? 'warning' : 'failed'} />
-              <span className="font-mono text-xs font-bold text-[#7a9a8c]">TS: {selectedEvent.ts} UTC</span>
+              <StatusPill status={
+                selectedEvent.severity === 'LOW' ? 'active' :
+                selectedEvent.severity === 'MEDIUM' ? 'warning' :
+                selectedEvent.severity === 'CRITICAL' ? 'failed' : 'active'
+              } />
+              <span className="font-mono text-xs font-bold text-[#7a9a8c]">TS: {formatTimestamp(selectedEvent.createdAt)} UTC</span>
             </div>
 
             <div className="grid grid-cols-2 gap-y-4 gap-x-6">
               <div>
                 <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#7a9a8c] mb-1">Actor (Email)</h4>
-                <p className="text-sm font-semibold text-gray-900">{selectedEvent.actor}</p>
+                <p className="text-sm font-semibold text-[var(--sa-text-primary)]">{selectedEvent.actorEmail ?? 'system'}</p>
               </div>
               <div>
                 <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#7a9a8c] mb-1">Role</h4>
-                <p className="text-[10px] font-mono tracking-wider uppercase bg-[#f0f4f3] px-2 py-1 rounded-sm text-[#0c6a55] inline-block">{selectedEvent.role}</p>
+                <p className="text-[10px] font-mono tracking-wider uppercase bg-[var(--sa-bg-card-alt)] px-2 py-1 rounded-sm text-[#0c6a55] inline-block">{selectedEvent.actorRole}</p>
               </div>
               <div>
                 <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#7a9a8c] mb-1">IP Address</h4>
-                <p className="text-sm font-mono text-gray-900">{selectedEvent.ip}</p>
+                <p className="text-sm font-mono text-[var(--sa-text-primary)]">{selectedEvent.ipAddress ?? 'internal'}</p>
               </div>
               <div>
                 <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#7a9a8c] mb-1">Tenant Scope</h4>
-                <p className="text-sm text-gray-900">{selectedEvent.tenant}</p>
+                <p className="text-sm text-[var(--sa-text-primary)]">{selectedEvent.tenantName ?? 'Platform Core'}</p>
               </div>
+            </div>
+
+            <div>
+              <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#7a9a8c] mb-1">Description</h4>
+              <p className="text-sm text-[var(--sa-text-secondary)]">{selectedEvent.description}</p>
             </div>
 
             <div>
               <h4 className="text-[10px] uppercase font-bold tracking-widest text-[#7a9a8c] mb-2 flex items-center gap-2">
                 <FileJson size={14} /> Full Raw Payload
               </h4>
-              <div className="bg-[#021a13] text-[#f0f4f3] p-4 rounded-sm font-mono text-[11px] overflow-auto border border-[#085041] max-h-[400px]" style={{ scrollbarWidth: 'thin' }}>
+              <div className="bg-[#021a13] text-[#f0f4f3] p-4 rounded-[var(--sa-radius-md)] font-mono text-[11px] overflow-auto border border-[#085041] max-h-[400px]" style={{ scrollbarWidth: 'thin' }}>
                 <pre>
 {JSON.stringify({
   _id: selectedEvent.id,
-  timestamp: selectedEvent.ts,
+  timestamp: selectedEvent.createdAt,
   severity: selectedEvent.severity,
   category: selectedEvent.category,
   event_type: selectedEvent.action,
   status: selectedEvent.status,
   actor: {
-    id: "usr_8239A",
-    email: selectedEvent.actor,
-    role: selectedEvent.role,
-    tenant_id: selectedEvent.tenant === "Platform Core" ? "SYS_00" : "TEN_01"
-  },
-  request: {
-    ip: selectedEvent.ip,
-    user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/100.0",
-    endpoint: `/api/v1/${selectedEvent.category}/${selectedEvent.action.split('.')[1] || 'action'}`
+    email: selectedEvent.actorEmail,
+    role: selectedEvent.actorRole,
   },
   target: {
-    resource_type: selectedEvent.resource,
-    resource_id: '1284A-FC44',
+    resource_type: selectedEvent.resourceType,
+    resource_id: selectedEvent.resourceId,
   },
-  diff: selectedEvent.action.includes('login') ? null : {
-    before: { state: 'unpaid' },
-    after: { state: 'failed', reason: 'insufficient_funds' }
-  }
+  description: selectedEvent.description,
+  metadata: selectedEvent.metadata,
 }, null, 2)}
                 </pre>
               </div>

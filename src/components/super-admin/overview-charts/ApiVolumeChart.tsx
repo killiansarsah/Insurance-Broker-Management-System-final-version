@@ -10,18 +10,22 @@ import {
   ResponsiveContainer,
   Legend
 } from 'recharts';
-
-const mockData = [
-  { day: 'Mon', success: 4000, failed: 240 },
-  { day: 'Tue', success: 3000, failed: 139 },
-  { day: 'Wed', success: 2000, failed: 980 },
-  { day: 'Thu', success: 2780, failed: 390 },
-  { day: 'Fri', success: 1890, failed: 480 },
-  { day: 'Sat', success: 2390, failed: 380 },
-  { day: 'Sun', success: 3490, failed: 430 },
-];
+import { useEffect, useState } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 export function ApiVolumeChart() {
+  const [data, setData] = useState<any[]>([]);
+
+  useEffect(() => {
+    apiClient.get('/platform-admin/overview/charts')
+      .then(res => {
+        if (res.data?.apiVolume) {
+          setData(res.data.apiVolume);
+        }
+      })
+      .catch(console.error);
+  }, []);
+
   return (
     <div 
       className="p-5 flex flex-col sa-card-hover"
@@ -38,7 +42,7 @@ export function ApiVolumeChart() {
       
       <div className="flex-1 w-full min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={mockData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
             <defs>
               <linearGradient id="colorSuccess" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.8}/>

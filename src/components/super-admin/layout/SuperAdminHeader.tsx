@@ -4,9 +4,10 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUiStore } from '@/stores/ui-store';
 import { ImpersonationBanner } from '@/components/super-admin/ImpersonationBanner';
-import { Bell, Menu, UserCircle } from 'lucide-react';
+import { Bell, Menu, UserCircle, Sun, Moon } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { NotificationsPopover } from '@/components/features/notifications';
 
 /**
  * SuperAdminHeader — Top bar for the command centre.
@@ -16,7 +17,7 @@ import { toast } from 'sonner';
 export function SuperAdminHeader() {
   const pathname = usePathname();
   const { user } = useAuthStore();
-  const { sidebarCollapsed, toggleSidebar } = useUiStore();
+  const { sidebarCollapsed, toggleSidebar, currentTheme, setTheme } = useUiStore();
 
   // Simple breadcrumb generator based on route segments
   const pathSegments = pathname.split('/').filter(Boolean);
@@ -41,7 +42,7 @@ export function SuperAdminHeader() {
     <>
       <ImpersonationBanner />
       <header
-        className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6"
+        className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 shadow-sm"
         style={{
           height: 'var(--sa-header-height)',
           backgroundColor: 'var(--sa-bg-card)',
@@ -51,7 +52,7 @@ export function SuperAdminHeader() {
         <div className="flex items-center gap-4">
           <button
             onClick={toggleSidebar}
-            className="sm:hidden text-gray-500 hover:text-gray-900"
+            className="sm:hidden text-gray-500 hover:text-[var(--sa-teal-500)] transition-colors sa-btn-hover"
             aria-label="Toggle sidebar"
           >
             <Menu size={20} />
@@ -61,13 +62,13 @@ export function SuperAdminHeader() {
           <nav aria-label="Breadcrumb" className="hidden sm:flex items-center gap-2">
             {breadcrumbs.map((crumb, i) => (
               <span key={crumb.href} className="flex items-center gap-2 text-sm font-medium font-sans">
-                {i > 0 && <span className="text-gray-400">/</span>}
+                {i > 0 && <span style={{ color: 'var(--sa-text-muted)' }}>/</span>}
                 {crumb.isLast ? (
-                  <span className="text-gray-900" aria-current="page">
+                  <span style={{ color: 'var(--sa-text-primary)' }} aria-current="page">
                     {crumb.label}
                   </span>
                 ) : (
-                  <Link href={crumb.href} className="text-gray-500 hover:text-gray-900 hover:underline">
+                  <Link href={crumb.href} className="hover:underline" style={{ color: 'var(--sa-text-muted)' }}>
                     {crumb.label}
                   </Link>
                 )}
@@ -78,31 +79,44 @@ export function SuperAdminHeader() {
 
         {/* User / Actions */}
         <div className="flex items-center gap-3">
-          {/* Notifications Placeholder */}
-          <button
-            onClick={() => toast.info('You have 0 new notifications.')}
-            className="w-8 h-8 flex flex-col items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
-            title="Notifications"
-          >
-            <Bell size={18} />
-          </button>
+          
+          {/* Theme Toggle */}
+          <div className="flex bg-[var(--sa-bg-page)] border border-[var(--sa-border)] rounded-full p-0.5">
+            <button
+              onClick={() => setTheme('light')}
+              className={`p-1.5 rounded-full transition-all flex items-center justify-center ${currentTheme === 'light' ? 'bg-[#1D9E75] text-[#021a13] shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              title="Light Mode"
+            >
+              <Sun size={14} />
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={`p-1.5 rounded-full transition-all flex items-center justify-center ${currentTheme === 'dark' ? 'bg-[#1D9E75] text-[#021a13] shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              title="Dark Mode"
+            >
+              <Moon size={14} />
+            </button>
+          </div>
+
+          {/* Notifications Integration */}
+          <NotificationsPopover />
 
           {/* Status separator */}
-          <div className="w-[1px] h-6 bg-gray-200" />
+          <div className="w-[1px] h-6 bg-[var(--sa-border)]" />
 
           {/* Profile Dropdown Trigger (stub) */}
           <button 
             onClick={() => toast.info('Profile settings panel expanding...')}
-            className="flex items-center gap-2 text-left hover:bg-gray-50 p-1 rounded-xl transition-colors group">
+            className="flex items-center gap-3 text-left hover:bg-[var(--sa-bg-page)] p-1.5 pr-2 rounded-full transition-colors group border border-transparent hover:border-[var(--sa-border)] sa-btn-hover">
             <div className="hidden md:flex flex-col items-end">
-              <span className="text-sm font-semibold text-gray-900 leading-none">
+              <span className="text-sm font-semibold leading-none" style={{ color: 'var(--sa-text-primary)' }}>
                 {user?.firstName || 'System'} {user?.lastName || 'Admin'}
               </span>
-              <span className="text-[10px] text-gray-500 font-mono tracking-widest uppercase mt-1">
+              <span className="text-[10px] font-mono tracking-widest uppercase mt-1" style={{ color: 'var(--sa-text-secondary)' }}>
                 {user?.role?.replace(/_/g, ' ') || 'RESTRICTED'}
               </span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-[#1D9E75] text-white flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 rounded-full bg-[#1D9E75] text-[#021a13] flex items-center justify-center shadow-sm">
               <UserCircle size={20} />
             </div>
           </button>

@@ -1,77 +1,119 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/super-admin/PageHeader';
 import { DataTable } from '@/components/super-admin/DataTable';
 import { StatusPill } from '@/components/super-admin/StatusPill';
-import { Building2, Search, Filter, Plus, Eye, MoreHorizontal } from 'lucide-react';
+import { Building2, Search, Filter, Plus, MoreHorizontal } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 
-const mockTenants = [
-  { id: '1', name: 'Vanguard Insurance Group', code: 'VIG', plan: 'Enterprise', users: 145, policies: 12450, status: 'active', joined: '2023-01-15' },
-  { id: '2', name: 'Horizon Brokers Ltd', code: 'HBL', plan: 'Professional', users: 43, policies: 8320, status: 'active', joined: '2023-04-22' },
-  { id: '3', name: 'Apex Secure Solutions', code: 'ASS', plan: 'Professional', users: 28, policies: 5100, status: 'active', joined: '2023-08-10' },
-  { id: '4', name: 'Meridian Capital', code: 'MER', plan: 'Starter', users: 12, policies: 3200, status: 'trial', joined: '2024-01-05' },
-  { id: '5', name: 'Sterling Risk Mgmt', code: 'SRM', plan: 'Starter', users: 5, policies: 2100, status: 'suspended', joined: '2023-11-30' },
-];
+interface TenantRow {
+  id: string;
+  name: string;
+  nicLicenceNumber: string | null;
+  subdomain: string | null;
+  tenantStatus: string;
+  isActive: boolean;
+  adminEmail: string | null;
+  storageUsedMb: number;
+  createdAt: string;
+  _count: { users: number; policies: number };
+  subscription: { plan: string; amountGhs: number } | null;
+}
+
+interface TenantsApiResponse {
+  data: TenantRow[];
+  meta: { total: number; page: number; limit: number };
+}
 
 export default function TenantsDirectoryPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [tenants, setTenants] = useState<TenantRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchTenants = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<TenantsApiResponse>('/platform-admin/tenants', {
+        page,
+        limit: 20,
+        search: searchTerm || undefined,
+      });
+      setTenants(res.data);
+      if (res.meta) {
+        setTotalPages(Math.ceil(res.meta.total / res.meta.limit));
+      }
+    } catch (err) {
+      console.error('Failed to load tenants:', err);
+      toast.error('Failed to load tenants from the server.');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, searchTerm]);
+
+  useEffect(() => {
+    fetchTenants();
+  }, [fetchTenants]);
 
   const columns = [
     {
       header: 'Tenant Name',
       accessorKey: 'name',
       sortable: true,
-      cell: (row: typeof mockTenants[0]) => (
+      cell: (row: TenantRow) => (
         <div>
-          <div className="font-bold text-gray-900">{row.name}</div>
-          <div className="text-[10px] text-[#5DCAA5] font-mono tracking-widest uppercase mt-0.5">Code: {row.code}</div>
+          <div className="font-bold text-[var(--sa-text-primary)]">{row.name}</div>
+          <div className="text-[10px] text-[#5DCAA5] font-mono tracking-widest uppercase mt-0.5">
+            {row.subdomain ? `${row.subdomain}.brokerium.com` : row.nicLicenceNumber ?? '—'}
+          </div>
         </div>
       ),
     },
     {
       header: 'Status',
-      accessorKey: 'status',
+      accessorKey: 'tenantStatus',
       sortable: true,
-      cell: (row: typeof mockTenants[0]) => (
-        <StatusPill status={row.status} />
+      cell: (row: TenantRow) => (
+        <StatusPill status={row.tenantStatus?.toLowerCase() ?? (row.isActive ? 'active' : 'suspended')} />
       ),
     },
     {
       header: 'Plan',
-      accessorKey: 'plan',
-      sortable: true,
-      cell: (row: typeof mockTenants[0]) => (
-        <span className="text-xs font-semibold px-2 py-1 bg-gray-100 rounded-sm text-gray-700">
-          {row.plan}
+      accessorKey: 'subscription',
+      sortable: false,
+      cell: (row: TenantRow) => (
+        <span className="text-xs font-semibold px-2 py-1 bg-[var(--sa-bg-card-alt)] rounded-sm text-[var(--sa-text-primary)]">
+          {row.subscription?.plan ?? 'No Plan'}
         </span>
       ),
     },
     {
       header: 'Users',
-      accessorKey: 'users',
+      accessorKey: '_count.users',
       sortable: true,
-      cell: (row: typeof mockTenants[0]) => (
-        <span className="font-mono text-sm">{row.users.toLocaleString()}</span>
+      cell: (row: TenantRow) => (
+        <span className="font-mono text-sm text-[var(--sa-text-primary)]">{(row._count?.users ?? 0).toLocaleString()}</span>
       ),
     },
     {
       header: 'Policies',
-      accessorKey: 'policies',
+      accessorKey: '_count.policies',
       sortable: true,
-      cell: (row: typeof mockTenants[0]) => (
-        <span className="font-mono text-sm">{row.policies.toLocaleString()}</span>
+      cell: (row: TenantRow) => (
+        <span className="font-mono text-sm text-[var(--sa-text-primary)]">{(row._count?.policies ?? 0).toLocaleString()}</span>
       ),
     },
     {
       header: 'Action',
       accessorKey: 'id',
-      cell: () => (
+      cell: (row: TenantRow) => (
         <button 
-          onClick={(e) => { e.stopPropagation(); toast.info('Tenant actions menu opened.'); }}
+          onClick={(e) => { e.stopPropagation(); router.push(`/super-admin/tenants/${row.id}`); }}
           className="p-1 text-[var(--sa-text-muted)] hover:text-[#0ea5e9] transition-colors rounded-full hover:bg-[var(--sa-bg-page)]">
           <MoreHorizontal size={18} />
         </button>
@@ -111,12 +153,12 @@ export default function TenantsDirectoryPage() {
           />
         </div>
         <button 
-          onClick={() => toast.info('Filtering functionality is locked in this demo layer.')}
+          onClick={() => toast.info('Plan filter coming soon.')}
           className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
           <Filter size={14} /> Plan: All
         </button>
         <button 
-          onClick={() => toast.info('Filtering functionality is locked in this demo layer.')}
+          onClick={() => toast.info('Status filter coming soon.')}
           className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
           <Filter size={14} /> Status: Active
         </button>
@@ -125,9 +167,14 @@ export default function TenantsDirectoryPage() {
       {/* Table */}
       <div className="bg-[var(--sa-bg-card)] rounded-[var(--sa-radius-md)] border border-[var(--sa-border)] shadow-sm overflow-hidden">
         <DataTable
-          data={mockTenants.filter(t => t.name.toLowerCase().includes(searchTerm.toLowerCase()))}
-          columns={columns}
-          onRowClick={(row) => router.push(`/super-admin/tenants/${row.id}`)}
+          data={tenants as any}
+          columns={columns as any}
+          loading={loading}
+          onRowClick={(row: any) => router.push(`/super-admin/tenants/${row.id}`)}
+          page={page}
+          total={totalPages * 20}
+          pageSize={20}
+          onPageChange={setPage}
         />
       </div>
     </div>

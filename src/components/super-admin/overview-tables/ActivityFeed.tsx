@@ -1,15 +1,53 @@
+'use client';
+
 import { Activity } from 'lucide-react';
 import { LiveDot } from '@/components/super-admin/LiveDot';
+import { useLiveMetric } from '@/hooks/super-admin/useLiveMetric';
+import { SkeletonLoader } from '@/components/super-admin/SkeletonLoader';
 
-const mockActivities = [
-  { id: 1, type: 'critical', actor: 'System Auto-Scaling', action: 'Provisioned 3 new worker nodes', tenant: 'Platform Infra', time: '2m ago' },
-  { id: 2, type: 'success', actor: 'Vanguard Admin', action: 'Upgraded subscription to Enterprise tier', tenant: 'Vanguard Insurance', time: '14m ago' },
-  { id: 3, type: 'info', actor: 'NIC Monitor bot', action: 'Completed daily compliance sweep (0 flags)', tenant: 'All Tenants', time: '1h ago' },
-  { id: 4, type: 'warning', actor: 'S3 Storage Watch', action: 'Nearing 80% quota threshold for document storage', tenant: 'Horizon Brokers Ltd', time: '3h ago' },
-  { id: 5, type: 'info', actor: 'Super Admin: K. Sarsah', action: 'Triggered global cache invalidation', tenant: 'Platform Core', time: '5h ago' },
-];
+interface AuditLogEntry {
+  id: string;
+  actorEmail: string;
+  actorRole: string;
+  category: string;
+  severity: string;
+  action: string;
+  description: string;
+  tenantName: string | null;
+  createdAt: string;
+  status: string;
+}
+
+interface ActivityFeedResponse {
+  data: AuditLogEntry[];
+}
+
+function timeAgo(dateStr: string): string {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay}d ago`;
+}
+
+function severityToColor(severity: string): 'green' | 'amber' | 'red' | 'sky' {
+  switch (severity) {
+    case 'CRITICAL': return 'red';
+    case 'HIGH': return 'amber';
+    case 'MEDIUM': return 'sky';
+    default: return 'green';
+  }
+}
 
 export function ActivityFeed() {
+  const { data: response, loading } = useLiveMetric<ActivityFeedResponse>('/platform-admin/overview/activity-feed', 30_000);
+  const activities = response?.data ?? [];
+
   return (
     <div 
       className="p-5 flex flex-col sa-card-hover"
@@ -31,39 +69,49 @@ export function ActivityFeed() {
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin' }}>
-        <ul className="space-y-4">
-          {mockActivities.map((event, idx) => (
-            <li 
-              key={event.id}
-              className="flex items-start gap-4 sa-reveal"
-              style={{ animationDelay: `${idx * 150}ms` }}
-            >
-              <div className="mt-1 shrink-0">
-                <LiveDot 
-                  color={
-                    event.type === 'success' ? 'green' : 
-                    event.type === 'warning' ? 'amber' : 
-                    event.type === 'critical' ? 'red' : 'sky'
-                  } 
-                  size={6} 
-                />
-              </div>
-              <div className="flex-1 min-w-0 font-sans">
-                <div className="text-xs font-bold text-gray-900 leading-tight">
-                  <span className="text-[#0c6a55]">{event.actor}</span>
-                  <span className="mx-1 text-[#d4e0dc]">·</span>
-                  <span className="font-mono text-[#7a9a8c]">{event.time}</span>
+        {loading ? (
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <SkeletonLoader key={i} className="w-full h-14 rounded" />
+            ))}
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-[var(--sa-text-muted)] text-sm">
+            No recent activity yet.
+          </div>
+        ) : (
+          <ul className="space-y-4">
+            {activities.map((event, idx) => (
+              <li 
+                key={event.id}
+                className="flex items-start gap-4 sa-reveal"
+                style={{ animationDelay: `${idx * 150}ms` }}
+              >
+                <div className="mt-1 shrink-0">
+                  <LiveDot 
+                    color={severityToColor(event.severity)} 
+                    size={6} 
+                  />
                 </div>
-                <p className="text-sm text-gray-700 mt-0.5 leading-snug">
-                  {event.action}
-                </p>
-                <p className="text-[10px] text-[#5DCAA5] font-mono tracking-widest uppercase mt-1">
-                  Tenant: {event.tenant}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ul>
+                <div className="flex-1 min-w-0 font-sans">
+                  <div className="text-xs font-bold text-[var(--sa-text-primary)] leading-tight">
+                    <span className="text-[#0c6a55]">{event.actorEmail ?? 'System'}</span>
+                    <span className="mx-1 text-[var(--sa-border)]">·</span>
+                    <span className="font-mono text-[var(--sa-text-muted)]">{timeAgo(event.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-[var(--sa-text-secondary)] mt-0.5 leading-snug">
+                    {event.description || event.action}
+                  </p>
+                  {event.tenantName && (
+                    <p className="text-[10px] text-[#5DCAA5] font-mono tracking-widest uppercase mt-1">
+                      Tenant: {event.tenantName}
+                    </p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

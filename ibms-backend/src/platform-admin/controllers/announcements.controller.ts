@@ -6,6 +6,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator.js';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { PlatformAuditService } from '../services/platform-audit.service.js';
+import { NotificationsService } from '../../notifications/notifications.service.js';
+import { NotificationType, NotificationPriority } from '@prisma/client';
 
 @Controller('platform-admin/announcements')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -14,6 +16,7 @@ export class AnnouncementsController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: PlatformAuditService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   @Get()
@@ -58,9 +61,45 @@ export class AnnouncementsController {
         delivery: body.delivery,
         isPinned: body.isPinned ?? false,
         createdById: user.sub,
-        sentAt: new Date(), // If scheduled, this would differ
+        sentAt: new Date(), 
       },
     });
+
+    // Determine target users
+    let targetUsers = [];
+    if (body.targetType === 'ALL') {
+      targetUsers = await this.prisma.user.findMany({ where: { isActive: true }, select: { id: true, tenantId: true } });
+    } else if (body.targetType === 'BY_PLAN') {
+      // Find tenants on Enterprise plan
+      const enterpriseTenants = await this.prisma.tenant.findMany({ where: { plan: 'ENTERPRISE' }, select: { id: true } });
+      const tenantIds = enterpriseTenants.map(t => t.id);
+      targetUsers = await this.prisma.user.findMany({ where: { tenantId: { in: tenantIds }, isActive: true }, select: { id: true, tenantId: true } });
+    } else if (body.targetType === 'SPECIFIC' && body.targetIds && body.targetIds.length > 0) {
+      targetUsers = await this.prisma.user.findMany({ where: { tenantId: { in: body.targetIds }, isActive: true }, select: { id: true, tenantId: true } });
+    }
+
+    // Map priority
+    let priority: NotificationPriority = NotificationPriority.MEDIUM;
+    if (body.type === 'CRITICAL') priority = NotificationPriority.URGENT;
+    if (body.type === 'WARNING') priority = NotificationPriority.HIGH;
+
+    // Dispatch system notifications immediately to the selected users
+    if (['IN_APP', 'BOTH'].includes(body.delivery)) {
+      await Promise.allSettled(
+        targetUsers.map(u => 
+          this.notificationsService.create(u.tenantId, {
+            userId: u.id,
+            title: `System Announcement: ${body.title}`,
+            message: body.body,
+            type: NotificationType.SYSTEM,
+            priority,
+          })
+        )
+      );
+    }
+    
+    // Delivery via EMAIL is handled implicitly by background mailer in full-scale deployment
+    // Currently relying on just IN_APP for realtime visibility.
 
     await this.audit.log({
       actorId: user.sub,
@@ -70,7 +109,7 @@ export class AnnouncementsController {
       action: 'ANNOUNCEMENT_CREATED',
       resourceType: 'Announcement',
       resourceId: announcement.id,
-      description: `New announcement broadcasted: ${body.title}`,
+      description: `New announcement broadcasted to ${targetUsers.length} users: ${body.title}`,
     });
 
     return { data: announcement };

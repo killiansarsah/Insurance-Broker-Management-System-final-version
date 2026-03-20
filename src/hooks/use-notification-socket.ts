@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { apiClient } from '@/lib/api-client';
+import { useAuthStore } from '@/stores/auth-store';
 
 const SOCKET_URL = process.env.NEXT_PUBLIC_WS_URL || (typeof window !== 'undefined' ? `http://${window.location.hostname}:3001` : 'http://localhost:3001');
 
@@ -17,32 +18,39 @@ interface NotificationEvent {
 }
 
 export function useNotificationSocket() {
-    const socketRef = useRef<Socket | null>(null);
+    const [socket, setSocket] = useState<Socket | null>(null);
+    const accessToken = useAuthStore(state => state.accessToken);
 
     useEffect(() => {
-        const token = apiClient.getAccessToken();
+        const token = accessToken || apiClient.getAccessToken();
         if (!token) return;
 
-        const socket = io(`${SOCKET_URL}/notifications`, {
+        const s = io(`${SOCKET_URL}/notifications`, {
             auth: { token },
             transports: ['websocket'],
         });
-        socketRef.current = socket;
+        
+        s.on('connect', () => console.log('Notification socket connected'));
+        s.on('connect_error', (err) => console.error('Notification socket error:', err));
+        
+        setSocket(s);
 
         return () => {
-            socket.disconnect();
+            s.disconnect();
+            setSocket(null);
         };
-    }, []);
+    }, [accessToken]);
 
     const onNewNotification = useCallback(
         (callback: (notification: NotificationEvent) => void) => {
-            socketRef.current?.on('new_notification', callback);
+            if (!socket) return () => {};
+            socket.on('new_notification', callback);
             return () => {
-                socketRef.current?.off('new_notification', callback);
+                socket.off('new_notification', callback);
             };
         },
-        [],
+        [socket],
     );
 
-    return { onNewNotification };
+    return { onNewNotification, isConnected: socket?.connected ?? false };
 }

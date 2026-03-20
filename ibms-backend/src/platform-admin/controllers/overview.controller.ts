@@ -111,7 +111,18 @@ export class OverviewController {
       count: p._count,
     }));
 
-    return { data: { tenantGrowth: months, monthlyRevenue: revenue, mrrByPlan } };
+    // Simulated API Volume data
+    const apiVolume = [
+      { day: 'Mon', success: 4120, failed: 120 },
+      { day: 'Tue', success: 3804, failed: 240 },
+      { day: 'Wed', success: 5200, failed: 95 },
+      { day: 'Thu', success: 4210, failed: 110 },
+      { day: 'Fri', success: 6100, failed: 55 },
+      { day: 'Sat', success: 2900, failed: 12 },
+      { day: 'Sun', success: 2100, failed: 8 },
+    ];
+
+    return { data: { tenantGrowth: months, monthlyRevenue: revenue, mrrByPlan, apiVolume } };
   }
 
   @Get('activity-feed')

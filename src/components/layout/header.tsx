@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
 import { useProfileStore } from '@/stores/profile-store';
-import { useNotificationStore } from '@/stores/notification-store';
+import { NotificationsPopover } from '@/components/features/notifications';
 import { useState } from 'react';
 import { useClickOutside } from '@/hooks/use-click-outside';
 import { GlobalSearch } from '@/components/features/global-search';
@@ -27,53 +27,12 @@ export function Header() {
     const { sidebarCollapsed, setSidebarMobileOpen, searchOpen, setSearchOpen } = useUiStore();
     const { user, logout } = useAuthStore();
     const avatarUrl = useProfileStore((s) => s.avatarUrl);
-    const { notifications: allNotifications, unreadCount, markAsRead, markAllAsRead } = useNotificationStore();
     const [profileOpen, setProfileOpen] = useState(false);
-    const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
     const [isSignOutOpen, setIsSignOutOpen] = useState(false);
 
     // Click outside handlers
     const profileRef = useClickOutside<HTMLDivElement>(() => setProfileOpen(false));
-    const notificationsRef = useClickOutside<HTMLDivElement>(() => setNotificationsOpen(false));
-
-    // Show latest 7 non-archived notifications in the dropdown
-    const notifications = allNotifications
-        .filter((n) => !n.archived)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 7);
-
-    const notifDot: Record<string, string> = {
-        RENEWAL: 'bg-warning-500',
-        CLAIM: 'bg-danger-500',
-        COMMISSION: 'bg-success-500',
-        LEAD: 'bg-primary-500',
-        FOLLOWUP: 'bg-accent-500',
-        COMPLIANCE: 'bg-surface-500',
-        FINANCE: 'bg-warning-600',
-        SYSTEM: 'bg-surface-400',
-        DOCUMENT: 'bg-accent-500',
-        APPROVAL: 'bg-primary-500',
-    };
-
-    const unread = unreadCount();
-
-    const handleNotificationClick = (id: string, link?: string) => {
-        markAsRead(id);
-        setNotificationsOpen(false);
-        if (link) router.push(link);
-    };
-
-    function timeAgo(dateStr: string): string {
-        const diff = Date.now() - new Date(dateStr).getTime();
-        const mins = Math.floor(diff / 60000);
-        if (mins < 1) return 'Just now';
-        if (mins < 60) return `${mins}m ago`;
-        const hrs = Math.floor(mins / 60);
-        if (hrs < 24) return `${hrs}h ago`;
-        const days = Math.floor(hrs / 24);
-        return `${days}d ago`;
-    }
 
     return (
         <header
@@ -152,87 +111,7 @@ export function Header() {
                 </button>
 
                 {/* Notifications */}
-                <div className="relative" ref={notificationsRef}>
-                    <button
-                        onClick={() => {
-                            setNotificationsOpen(!notificationsOpen);
-                            setProfileOpen(false);
-                        }}
-                        className="relative p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
-                        aria-label="Notifications"
-                    >
-                        <Bell size={20} />
-                        {unread > 0 && (
-                            <span className="absolute top-1 right-1 w-4 h-4 bg-danger-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                {unread > 9 ? '9+' : unread}
-                            </span>
-                        )}
-                    </button>
-
-                    {notificationsOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-80 bg-white dark:bg-slate-800 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] border border-surface-200 dark:border-slate-700 animate-scale-in overflow-hidden">
-                            <div className="px-4 py-3 border-b border-surface-100 dark:border-slate-700 flex items-center justify-between">
-                                <h3 className="text-sm font-bold text-surface-900 dark:text-white">
-                                    Notifications
-                                </h3>
-                                {unread > 0 && (
-                                    <button
-                                        onClick={markAllAsRead}
-                                        className="text-[10px] font-bold text-primary-600 hover:text-primary-700 uppercase tracking-wider flex items-center gap-1"
-                                    >
-                                        <CheckCircle2 size={12} />
-                                        Mark all read
-                                    </button>
-                                )}
-                            </div>
-                            <div className="max-h-80 overflow-y-auto">
-                                {notifications.length > 0 ? (
-                                    notifications.map((n) => (
-                                        <div
-                                            key={n.id}
-                                            onClick={() => handleNotificationClick(n.id, n.link)}
-                                            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNotificationClick(n.id, n.link); } }}
-                                            role="button"
-                                            tabIndex={0}
-                                            className={cn(
-                                                'px-4 py-3 border-b border-surface-50 dark:border-slate-700/50 hover:bg-surface-50 dark:hover:bg-slate-700/50 cursor-pointer transition-colors',
-                                                !n.read && 'bg-primary-50/30 dark:bg-primary-900/20'
-                                            )}
-                                        >
-                                            <div className="flex items-start gap-2">
-                                                {!n.read && (
-                                                    <span className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', notifDot[n.type] || 'bg-primary-500')} />
-                                                )}
-                                                <div className={cn(!n.read ? '' : 'ml-4')}>
-                                                    <p className="text-sm font-bold text-surface-900 dark:text-white">
-                                                        {n.title}
-                                                    </p>
-                                                    <p className="text-xs text-surface-500 mt-0.5 line-clamp-2">
-                                                        {n.message}
-                                                    </p>
-                                                    <p className="text-[10px] font-medium text-surface-400 mt-1 uppercase tracking-tight">{timeAgo(n.createdAt)}</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div className="px-4 py-12 text-center">
-                                        <p className="text-xs text-surface-500">No new notifications</p>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="px-4 py-2 bg-surface-50 dark:bg-slate-900/50 border-t border-surface-100 dark:border-slate-700">
-                                <Link
-                                    href="/dashboard/notifications"
-                                    onClick={() => setNotificationsOpen(false)}
-                                    className="block w-full text-xs text-center text-primary-600 font-bold hover:text-primary-700 cursor-pointer uppercase tracking-widest py-1"
-                                >
-                                    View All Notifications
-                                </Link>
-                            </div>
-                        </div>
-                    )}
-                </div>
+                <NotificationsPopover />
 
                 {/* Profile */}
                 <div className="relative" ref={profileRef}>

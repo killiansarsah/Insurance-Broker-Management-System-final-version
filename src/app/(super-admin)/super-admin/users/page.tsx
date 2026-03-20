@@ -1,32 +1,91 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'sonner';
 import { PageHeader } from '@/components/super-admin/PageHeader';
 import { DataTable } from '@/components/super-admin/DataTable';
 import { StatusPill } from '@/components/super-admin/StatusPill';
-import { Users, Search, Filter, Shield, Info, MoreHorizontal } from 'lucide-react';
+import { Users, Search, Filter, Shield, Info } from 'lucide-react';
+import { apiClient } from '@/lib/api-client';
 
-const mockUsers = [
-  { id: 'u_1', name: 'Killian Sarsah', email: 'ksarsah@ibms.com', role: 'PLATFORM_SUPER_ADMIN', tenant: 'System Core', status: 'active', lastLogin: '10m ago' },
-  { id: 'u_2', name: 'John Doe', email: 'jdoe@vanguard.com', role: 'TENANT_ADMIN', tenant: 'Vanguard Insurance', status: 'active', lastLogin: '2h ago' },
-  { id: 'u_3', name: 'Jane Smith', email: 'jsmith@horizon.com', role: 'BROKER', tenant: 'Horizon Brokers Ltd', status: 'suspended', lastLogin: '12d ago' },
-  { id: 'u_4', name: 'Michael Lee', email: 'mlee@apex.com', role: 'COMPLIANCE_OFFICER', tenant: 'Apex Secure Solutions', status: 'active', lastLogin: '1d ago' },
-  { id: 'u_5', name: 'Sarah Connor', email: 'sconnor@meridian.com', role: 'ADMIN', tenant: 'Meridian Capital', status: 'pending', lastLogin: '-' },
-];
+interface UserRow {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  role: string;
+  isActive: boolean;
+  lastLoginAt: string | null;
+  tenant: { name: string } | null;
+}
+
+interface UsersApiResponse {
+  data: UserRow[];
+  meta: { total: number; page: number; limit: number };
+}
+
+function timeAgo(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diffMs = now - then;
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr}h ago`;
+  const diffDay = Math.floor(diffHr / 24);
+  return `${diffDay}d ago`;
+}
 
 export default function UsersDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchUsers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await apiClient.get<UsersApiResponse>('/platform-admin/users', {
+        page,
+        limit: 20,
+        search: searchTerm || undefined,
+      });
+      setUsers(res.data);
+      if (res.meta) {
+        setTotalPages(Math.ceil(res.meta.total / res.meta.limit));
+      }
+    } catch (err) {
+      console.error('Failed to load users:', err);
+      toast.error('Failed to load users from the server.');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+
+  const handleImpersonate = async (user: UserRow) => {
+    if (!user.tenant) {
+      toast.error('Cannot impersonate a platform-level user.');
+      return;
+    }
+    toast.warning(`Impersonation of ${user.firstName} ${user.lastName} is being prepared...`);
+  };
 
   const columns = [
     {
       header: 'User',
-      accessorKey: 'name',
+      accessorKey: 'firstName',
       sortable: true,
-      cell: (row: typeof mockUsers[0]) => (
+      cell: (row: UserRow) => (
         <div>
-          <div className="font-bold text-gray-900">{row.name}</div>
-          <div className="text-xs text-gray-500 font-mono mt-0.5">{row.email}</div>
+          <div className="font-bold text-[var(--sa-text-primary)]">{row.firstName} {row.lastName}</div>
+          <div className="text-xs text-[var(--sa-text-muted)] font-mono mt-0.5">{row.email}</div>
         </div>
       ),
     },
@@ -34,9 +93,11 @@ export default function UsersDirectoryPage() {
       header: 'Tenant',
       accessorKey: 'tenant',
       sortable: true,
-      cell: (row: typeof mockUsers[0]) => (
+      cell: (row: UserRow) => (
         <div>
-          <div className="text-xs font-semibold text-gray-900 border-l border-[#1D9E75] pl-2">{row.tenant}</div>
+          <div className="text-xs font-semibold text-[var(--sa-text-primary)] border-l-2 border-[#1D9E75] pl-2">
+            {row.tenant?.name ?? 'Platform'}
+          </div>
         </div>
       ),
     },
@@ -44,10 +105,10 @@ export default function UsersDirectoryPage() {
       header: 'Role',
       accessorKey: 'role',
       sortable: true,
-      cell: (row: typeof mockUsers[0]) => (
+      cell: (row: UserRow) => (
         <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono tracking-wider uppercase font-bold
-          ${row.role.includes('ADMIN') ? 'bg-[#e0e7ff] text-[#4338ca]' : 
-            'bg-[#f1f5f9] text-[#475569]'}`}
+          ${row.role.includes('ADMIN') || row.role.includes('SUPER') ? 'bg-[#e0e7ff] text-[#4338ca]' : 
+            'bg-[var(--sa-bg-card-alt)] text-[var(--sa-text-secondary)]'}`}
         >
           {row.role.replace(/_/g, ' ')}
         </span>
@@ -55,27 +116,27 @@ export default function UsersDirectoryPage() {
     },
     {
       header: 'Status',
-      accessorKey: 'status',
+      accessorKey: 'isActive',
       sortable: true,
-      cell: (row: typeof mockUsers[0]) => (
-        <StatusPill status={row.status} />
+      cell: (row: UserRow) => (
+        <StatusPill status={row.isActive ? 'active' : 'suspended'} />
       ),
     },
     {
       header: 'Last Login',
-      accessorKey: 'lastLogin',
+      accessorKey: 'lastLoginAt',
       sortable: true,
-      cell: (row: typeof mockUsers[0]) => (
-        <span className="font-mono text-xs text-gray-500">{row.lastLogin}</span>
+      cell: (row: UserRow) => (
+        <span className="font-mono text-xs text-[var(--sa-text-muted)]">{timeAgo(row.lastLoginAt)}</span>
       ),
     },
     {
       header: 'Action',
       accessorKey: 'id',
-      cell: () => (
+      cell: (row: UserRow) => (
         <button 
-          onClick={(e) => { e.stopPropagation(); toast.warning('Impersonating user...'); }}
-          className="p-1 flex gap-2 items-center text-gray-400 hover:text-[#021a13] transition-colors rounded-full hover:bg-[var(--sa-bg-page)]">
+          onClick={(e) => { e.stopPropagation(); handleImpersonate(row); }}
+          className="p-1 flex gap-2 items-center text-[var(--sa-text-muted)] hover:text-[var(--sa-text-primary)] transition-colors rounded-full hover:bg-[var(--sa-bg-page)]">
           <span className="text-[10px] font-bold uppercase tracking-wider hidden md:block text-[#1D9E75]">Impersonate</span>
           <Shield size={16} />
         </button>
@@ -108,13 +169,13 @@ export default function UsersDirectoryPage() {
           />
         </div>
         <button 
-          onClick={() => toast.info('Advanced filtering unlocked')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
+          onClick={() => toast.info('Tenant filter coming soon.')}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
           <Filter size={14} /> Tenant: All
         </button>
         <button 
-          onClick={() => toast.info('Advanced filtering unlocked')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#021a13] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
+          onClick={() => toast.info('Role filter coming soon.')}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
           <Filter size={14} /> Role: All
         </button>
       </div>
@@ -131,11 +192,16 @@ export default function UsersDirectoryPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-[var(--sa-radius-md)] border border-[#d4e0dc] shadow-sm overflow-hidden">
+      <div className="bg-[var(--sa-bg-card)] rounded-[var(--sa-radius-md)] border border-[var(--sa-border)] shadow-sm overflow-hidden">
         <DataTable
-          data={mockUsers.filter(u => u.name.toLowerCase().includes(searchTerm.toLowerCase()) || u.email.toLowerCase().includes(searchTerm.toLowerCase()))}
-          columns={columns}
-          onRowClick={(row) => toast.info(`Viewing details for ${row.name}`)}
+          data={users as any}
+          columns={columns as any}
+          loading={loading}
+          onRowClick={(row: any) => toast.info(`Viewing details for ${row.firstName} ${row.lastName}`)}
+          page={page}
+          total={totalPages * 20}
+          pageSize={20}
+          onPageChange={setPage}
         />
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { AuthModule } from '../auth/auth.module.js';
+import { NotificationsModule } from '../notifications/notifications.module.js';
 
 // Services
 import { PlatformAuditService } from './services/platform-audit.service.js';
@@ -23,7 +24,7 @@ import { FeatureFlagsController } from './controllers/feature-flags.controller.j
 import { SettingsController } from './controllers/settings.controller.js';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [PrismaModule, AuthModule, NotificationsModule],
   providers: [PlatformAuditService, SystemHealthService],
   controllers: [
     OverviewController,

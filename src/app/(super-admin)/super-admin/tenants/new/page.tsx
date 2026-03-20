@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { PageHeader } from '@/components/super-admin/PageHeader';
 import { Building2, UserCircle, CreditCard, Settings, ChevronRight, Check, Activity } from 'lucide-react';
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/api-client';
 
 const STEPS = [
   { id: 1, title: 'Company Details', icon: Building2 },
@@ -18,7 +19,6 @@ export default function ProvisionTenantPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form state mock
   const [formData, setFormData] = useState({
     companyName: '',
     code: '',
@@ -43,14 +43,34 @@ export default function ProvisionTenantPage() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    toast.success('Tenant successfully provisioned', {
-      description: `${formData.companyName} workplace is ready.`,
-    });
-    
-    router.push('/super-admin/tenants');
+    try {
+      const planMap: Record<string, string> = { starter: 'BASIC', professional: 'PROFESSIONAL', enterprise: 'ENTERPRISE' };
+      const cycleMap: Record<string, string> = { monthly: 'MONTHLY', annual: 'ANNUAL' };
+
+      await apiClient.post('/platform-admin/tenants', {
+        name: formData.companyName,
+        subdomain: formData.code.toLowerCase(),
+        nicLicenseNumber: formData.nicLicense || undefined,
+        adminFirstName: formData.adminFirstName,
+        adminLastName: formData.adminLastName,
+        adminEmail: formData.adminEmail,
+        plan: planMap[formData.plan] ?? 'PROFESSIONAL',
+        billingCycle: cycleMap[formData.billingCycle] ?? 'ANNUAL',
+        currency: formData.currency,
+        sendWelcomeEmail: true,
+      });
+
+      toast.success('Tenant successfully provisioned', {
+        description: `${formData.companyName} workspace is ready.`,
+      });
+      
+      router.push('/super-admin/tenants');
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to provision tenant.';
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

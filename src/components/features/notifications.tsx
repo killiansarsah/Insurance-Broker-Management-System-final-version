@@ -80,19 +80,19 @@ export function NotificationsPopover() {
         <Popover>
             <PopoverTrigger asChild>
                 <button
-                    className="w-10 h-10 flex items-center justify-center text-surface-500 hover:text-primary-600 hover:bg-primary-50 rounded-lg transition-colors relative outline-none focus:ring-2 focus:ring-primary-200"
+                    className="flex justify-center items-center w-8 h-8 rounded-full text-gray-500 transition-colors relative outline-none hover:bg-surface-100"
                     title="Notifications"
                 >
                     <Bell size={20} />
                     {unreadCount > 0 && (
-                        <span className="absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white animate-pulse">
+                        <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-danger-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center border-2 border-white dark:border-slate-800 animate-pulse">
                             {unreadCount > 99 ? '99+' : unreadCount}
                         </span>
                     )}
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="start" side="right" sideOffset={12}>
-                <div className="flex items-center justify-between p-4 border-b border-surface-100">
+            <PopoverContent className="w-80 p-0 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-700 shadow-xl z-[300]" align="end" side="bottom" sideOffset={12}>
+                <div className="flex items-center justify-between p-4 border-b border-surface-100 dark:border-slate-700">
                     <h4 className="font-semibold text-sm">
                         Notifications
                         {unreadCount > 0 && (
@@ -120,10 +120,14 @@ export function NotificationsPopover() {
                             return (
                                 <div
                                     key={n.id}
-                                    className={`p-4 border-b border-surface-100/50 hover:bg-surface-50 transition-colors group cursor-pointer ${!n.read ? 'bg-primary-50/30' : ''}`}
+                                    className={`p-4 border-b border-surface-100/50 dark:border-slate-700/50 hover:bg-surface-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer ${!n.read ? 'bg-primary-50/30 dark:bg-primary-900/20' : ''}`}
                                     onClick={() => {
                                         if (!n.read) markRead.mutate(n.id)
-                                        if (n.link && typeof window !== 'undefined') window.location.href = n.link
+                                        if (n.link && typeof window !== 'undefined') {
+                                            window.location.href = n.link
+                                        } else if (typeof window !== 'undefined') {
+                                            window.location.href = '/dashboard/notifications'
+                                        }
                                     }}
                                 >
                                     <div className="flex gap-3">
@@ -132,7 +136,7 @@ export function NotificationsPopover() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-start justify-between gap-2">
-                                                <p className={`text-sm font-medium text-surface-900 truncate ${!n.read ? 'font-bold' : ''}`}>
+                                                <p className={`text-sm font-medium text-surface-900 dark:text-white truncate ${!n.read ? 'font-bold' : ''}`}>
                                                     {n.title}
                                                 </p>
                                                 <button
@@ -140,7 +144,7 @@ export function NotificationsPopover() {
                                                         e.stopPropagation()
                                                         deleteNotification.mutate(n.id)
                                                     }}
-                                                    className="opacity-0 group-hover:opacity-100 p-1 text-surface-400 hover:text-red-500 transition-all"
+                                                    className="opacity-0 group-hover:opacity-100 p-1 text-surface-400 hover:text-red-500 transition-all rounded"
                                                 >
                                                     <Trash2 size={12} />
                                                 </button>
@@ -156,6 +160,14 @@ export function NotificationsPopover() {
                             )
                         })
                     )}
+                </div>
+                <div className="px-4 py-2 bg-surface-50 dark:bg-slate-900/50 border-t border-surface-100 dark:border-slate-700">
+                    <a
+                        href="/dashboard/notifications"
+                        className="block w-full text-xs text-center text-primary-600 font-bold hover:text-primary-700 cursor-pointer uppercase tracking-widest py-1"
+                    >
+                        View All Notifications
+                    </a>
                 </div>
             </PopoverContent>
         </Popover>
