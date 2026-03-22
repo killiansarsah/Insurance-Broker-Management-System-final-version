@@ -7,7 +7,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { parse } from 'csv-parse/sync';
 import * as ExcelJS from 'exceljs';
 import { Prisma, InsuranceType, PremiumFrequency, LeadSource, LeadPriority, Gender } from '@prisma/client';
-import { randomBytes } from 'crypto';
 import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
 import type { ImportDataType } from './dto/import.dto';
 
@@ -875,20 +874,20 @@ export class ImportsService {
 
   private async generateClientNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.client.count({ where: { tenantId } });
-    const hex = randomBytes(3).toString('hex').toUpperCase();
-    return `CLI-${String(count + 1).padStart(6, '0')}-${hex}`;
+    const offset = 10000;
+    return `CLI-${offset + count + 1}`;
   }
 
   private async generatePolicyNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.policy.count({ where: { tenantId } });
-    const hex = randomBytes(2).toString('hex').toUpperCase();
-    return `POL-${String(count + 1).padStart(6, '0')}-${hex}`;
+    const offset = 10000;
+    return `POL-${offset + count + 1}`;
   }
 
   private async generateClaimNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.claim.count({ where: { tenantId } });
-    const hex = randomBytes(2).toString('hex').toUpperCase();
-    return `CLM-${String(count + 1).padStart(6, '0')}-${hex}`;
+    const offset = 10000;
+    return `CLM-${offset + count + 1}`;
   }
 
   private async generateInvoiceNumber(tenantId: string): Promise<string> {
@@ -898,8 +897,8 @@ export class ImportsService {
 
   private async generateLeadNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.lead.count({ where: { tenantId } });
-    const hex = randomBytes(2).toString('hex').toUpperCase();
-    return `LD-${String(count + 1).padStart(6, '0')}-${hex}`;
+    const offset = 10000;
+    return `LD-${offset + count + 1}`;
   }
 
   // ─── NORMALISATION HELPERS ────────────────────────────────

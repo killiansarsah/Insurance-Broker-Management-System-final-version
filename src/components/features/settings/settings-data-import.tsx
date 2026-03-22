@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
 import type { ImportEntityType, ImportColumnMapping, ImportValidationError } from '@/types';
 import {
     getFieldsForEntity,
@@ -191,19 +192,44 @@ export function SettingsDataImport() {
     }, [entityType, parsedData, mappings]);
 
     const handleImport = useCallback(async () => {
-        if (!entityType) return;
+        if (!entityType || !file) return;
         setIsImporting(true);
-        await new Promise(resolve => setTimeout(resolve, 2000));
 
-        const mappedRows = applyMappings(parsedData, mappings);
-        const dupes = detectDuplicates(mappedRows, entityType, []);
-        const successCount = mappedRows.length - dupes.size - validationErrors.length;
+        try {
+            // Map entity type to backend dataType
+            const dataTypeMap: Record<string, string> = {
+                universal: 'all',
+                clients: 'clients',
+                policies: 'policies',
+                claims: 'claims',
+            };
+            const dataType = dataTypeMap[entityType] || 'clients';
 
-        setImportedCount(successCount);
-        setImportComplete(true);
-        setIsImporting(false);
-        toast.success('Import Successful');
-    }, [entityType, parsedData, mappings, validationErrors]);
+            const result = await apiClient.uploadWithFields<any>(
+                '/imports',
+                file,
+                { dataType },
+            );
+
+            // Handle mixed import (all) vs single type import
+            const created = result?.summary?.totalCreated ?? result?.created ?? 0;
+            const errors = result?.summary?.totalErrors ?? result?.errors?.length ?? 0;
+
+            setImportedCount(created);
+            setImportComplete(true);
+
+            if (errors > 0) {
+                toast.warning(`Import completed with ${errors} error(s). ${created} records created.`);
+            } else {
+                toast.success(`Import Successful — ${created} records created.`);
+            }
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || 'Import failed';
+            toast.error(`Import Failed: ${message}`);
+        } finally {
+            setIsImporting(false);
+        }
+    }, [entityType, file]);
 
     return (
         <div className="h-full flex flex-col bg-slate-50 relative overflow-hidden">

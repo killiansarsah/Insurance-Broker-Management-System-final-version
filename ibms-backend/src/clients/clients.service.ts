@@ -15,7 +15,6 @@ import { UpdateBeneficiaryDto } from './dto/update-beneficiary.dto';
 import { CreateNextOfKinDto } from './dto/create-next-of-kin.dto';
 import { CreateBankDetailDto } from './dto/create-bank-detail.dto';
 import { Prisma } from '@prisma/client';
-import { randomBytes } from 'crypto';
 
 @Injectable()
 export class ClientsService {
@@ -26,9 +25,9 @@ export class ClientsService {
 
   private async generateClientNumber(tenantId: string): Promise<string> {
     const count = await this.prisma.client.count({ where: { tenantId } });
-    const padded = String(count + 1).padStart(6, '0');
-    const hex = randomBytes(3).toString('hex').toUpperCase();
-    return `CLI-${padded}-${hex}`;
+    const offset = 10000;
+    const cleanNumber = offset + count + 1;
+    return `CLI-${cleanNumber}`;
   }
 
   private async logAudit(

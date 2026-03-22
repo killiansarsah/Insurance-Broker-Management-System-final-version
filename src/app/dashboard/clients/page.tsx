@@ -618,7 +618,7 @@ export default function ClientsPage() {
                 searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'PHONE', 'EMAIL', 'status', 'kycStatus', 'amlRiskLevel', 'type', 'assignedBrokerName']}
                 onRowClick={(row) => router.push(`/dashboard/clients/${row.id}`)}
                 emptyMessage="No clients match the current filters."
-                exportable={false}
+                onExport={handleExport}
             />
         </div>
     );
