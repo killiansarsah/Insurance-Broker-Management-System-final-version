@@ -284,46 +284,60 @@ model Product {
 }
 
 model Client {
-  id                 String             @id @default(uuid()) @db.Uuid
-  tenantId           String             @db.Uuid
-  clientNumber       String
-  type               ClientType
-  status             ClientStatus       @default(ACTIVE)
-  firstName          String?
-  lastName           String?
-  companyName        String?
-  phone              String
-  email              String?
-  region             String?
-  city               String?
-  digitalAddress     String?
-  ghanaCardNumber    String?
-  dateOfBirth        DateTime?
-  gender             Gender?
-  occupation         String?
-  kycStatus          KycStatus          @default(PENDING)
-  amlRiskLevel       AmlRiskLevel       @default(LOW)
-  isPep              Boolean            @default(false)
-  eddRequired        Boolean            @default(false)
-  assignedBrokerId   String?            @db.Uuid
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
-  deletedAt          DateTime?
-  registrationNumber String?
-  tin                String?
-  bankDetails        BankDetail[]
-  beneficiaries      Beneficiary[]
-  claims             Claim[]
-  assignedBroker     User?              @relation("AssignedBroker", fields: [assignedBrokerId], references: [id])
-  tenant             Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  commissions        Commission[]
-  invoices           Invoice[]
-  leads              Lead[]             @relation("ConvertedClient")
-  nextOfKin          NextOfKin[]
-  policies           Policy[]
-  premiumFinancing   PremiumFinancing[]
-  quotes             Quote[]
-  transactions       Transaction[]
+  id                    String             @id @default(uuid()) @db.Uuid
+  tenantId              String             @db.Uuid
+  clientNumber          String
+  type                  ClientType
+  status                ClientStatus       @default(ACTIVE)
+  firstName             String?
+  lastName              String?
+  companyName           String?
+  phone                 String
+  alternatePhone        String?
+  email                 String?
+  region                String?
+  city                  String?
+  digitalAddress        String?
+  postalAddress         String?
+  ghanaCardNumber       String?
+  dateOfBirth           DateTime?
+  gender                Gender?
+  nationality           String?
+  maritalStatus         String?
+  occupation            String?
+  employerName          String?
+  employerAddress       String?
+  sourceOfFunds         String?
+  purposeOfRelationship String?
+  expectedVolume        String?
+  preferredCommunication String?
+  kycStatus             KycStatus          @default(PENDING)
+  amlRiskLevel          AmlRiskLevel       @default(LOW)
+  isPep                 Boolean            @default(false)
+  eddRequired           Boolean            @default(false)
+  assignedBrokerId      String?            @db.Uuid
+  dateOfIncorporation   DateTime?
+  industry              String?
+  contactPerson         String?
+  contactPersonPhone    String?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  deletedAt             DateTime?
+  registrationNumber    String?
+  tin                   String?
+  bankDetails           BankDetail[]
+  beneficiaries         Beneficiary[]
+  claims                Claim[]
+  assignedBroker        User?              @relation("AssignedBroker", fields: [assignedBrokerId], references: [id])
+  tenant                Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  commissions           Commission[]
+  invoices              Invoice[]
+  leads                 Lead[]             @relation("ConvertedClient")
+  nextOfKin             NextOfKin[]
+  policies              Policy[]
+  premiumFinancing      PremiumFinancing[]
+  quotes                Quote[]
+  transactions          Transaction[]
 
   @@unique([tenantId, clientNumber])
   @@index([tenantId])

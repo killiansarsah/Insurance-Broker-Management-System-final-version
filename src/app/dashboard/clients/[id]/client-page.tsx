@@ -33,7 +33,7 @@ import {
     User,
     ChevronDown,
 } from 'lucide-react';
-import { useClient, useUpdateKyc, useUpdateClient, usePolicies, useClaims, useInvoices, useCommissions, useDocuments } from '@/hooks/api';
+import { useClient, useUpdateKyc, useUpdateClient, usePolicies, useClaims, useInvoices, useCommissions, useDocuments, useCreateDocument } from '@/hooks/api';
 import { getClientDisplayName } from '@/lib/utils';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
@@ -142,10 +142,10 @@ export default function ClientProfilePage({ id }: { id: string }) {
     const partnerSince = new Date(client.createdAt).getFullYear();
 
     const statusColors: Record<string, string> = {
-        active: 'bg-emerald-50 text-emerald-600 border-emerald-200/50',
-        inactive: 'bg-surface-50 text-surface-500 border-surface-200/50',
-        suspended: 'bg-amber-50 text-amber-600 border-amber-200/50',
-        blacklisted: 'bg-danger-50 text-danger-600 border-danger-200/50',
+        ACTIVE: 'bg-emerald-50 text-emerald-600 border-emerald-200/50',
+        INACTIVE: 'bg-surface-50 text-surface-500 border-surface-200/50',
+        SUSPENDED: 'bg-amber-50 text-amber-600 border-amber-200/50',
+        BLACKLISTED: 'bg-danger-50 text-danger-600 border-danger-200/50',
     };
 
     return (
@@ -177,7 +177,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                 <h1 className="text-2xl font-bold text-surface-900 leading-tight">{name}</h1>
                                 <div className={cn(
                                     'flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-semibold capitalize',
-                                    statusColors[clientStatusLocal || client.status] || statusColors.active
+                                    statusColors[clientStatusLocal || client.status] || statusColors.ACTIVE
                                 )}>
                                     <div className={cn(
                                         'w-1.5 h-1.5 rounded-full',
@@ -259,7 +259,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                 onClick={() => { setShowStatusMenu(!showStatusMenu); setShowKycMenu(false); }}
                                 className={cn(
                                     'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-xs font-semibold capitalize transition-all cursor-pointer hover:shadow-sm',
-                                    statusColors[clientStatusLocal || client.status] || statusColors.active
+                                    statusColors[clientStatusLocal || client.status] || statusColors.ACTIVE
                                 )}
                             >
                                 <div className="flex items-center gap-1.5">
@@ -379,7 +379,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                     {activeTab === 'personal' && <PersonalInfoTab client={client} />}
                     {activeTab === 'policies' && <PoliciesTab policies={clientPolicies} router={router} />}
                     {activeTab === 'claims' && <ClaimsTab claims={clientClaims} router={router} />}
-                    {activeTab === 'documents' && <DocumentsTab documents={clientDocuments} />}
+                    {activeTab === 'documents' && <DocumentsTab documents={clientDocuments} client={client} />}
                     {activeTab === 'communication' && <CommunicationTab client={client} />}
                     {activeTab === 'beneficiaries' && <BeneficiariesTab client={client} />}
                 </motion.div>
@@ -520,7 +520,7 @@ function OverviewTab({
 function PersonalInfoTab({ client }: { client: any }) {
     return (
         <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* Basic Information */}
                 <GlassCard title={client.type === 'CORPORATE' ? 'Company Information' : 'Personal Information'} icon={client.type === 'CORPORATE' ? <Building2 size={16} /> : <User size={16} />}>
                     <div className="space-y-4">
@@ -566,7 +566,7 @@ function PersonalInfoTab({ client }: { client: any }) {
                 </GlassCard>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                 {/* KYC/AML */}
                 <GlassCard title="KYC / AML Compliance" icon={<ShieldCheck size={16} />}>
                     <div className="space-y-4">
@@ -589,19 +589,25 @@ function PersonalInfoTab({ client }: { client: any }) {
                         </div>
                         {client.sourceOfFunds && <InfoRow label="Source of Funds" value={client.sourceOfFunds} />}
                         {client.purposeOfRelationship && <InfoRow label="Purpose of Relationship" value={client.purposeOfRelationship} />}
-                        {client.expectedTransactionVolume && <InfoRow label="Expected Volume" value={client.expectedTransactionVolume} />}
+                        {client.expectedVolume && <InfoRow label="Expected Volume" value={client.expectedVolume} />}
                     </div>
                 </GlassCard>
 
                 {/* Banking & Next of Kin */}
                 <div className="space-y-6">
                     <GlassCard title="Banking Details" icon={<Landmark size={16} />}>
-                        {client.bankDetails ? (
-                            <div className="space-y-4">
-                                <InfoRow label="Bank" value={client.bankDetails.bankName} />
-                                <InfoRow label="Account Name" value={client.bankDetails.accountName} />
-                                <InfoRow label="Account Number" value={client.bankDetails.accountNumber} mono />
-                                <InfoRow label="Branch" value={client.bankDetails.branch} />
+                        {Array.isArray(client.bankDetails) && client.bankDetails.length > 0 ? (
+                            <div className="space-y-6">
+                                {client.bankDetails.map((bd: any, i: number) => (
+                                    <div key={bd.id || i} className={i > 0 ? 'pt-4 border-t border-surface-100' : ''}>
+                                        <div className="space-y-4">
+                                            <InfoRow label="Bank" value={bd.bankName} />
+                                            <InfoRow label="Account Name" value={bd.accountName} />
+                                            <InfoRow label="Account Number" value={bd.accountNumber} mono />
+                                            <InfoRow label="Branch" value={bd.branch} />
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <p className="text-sm text-surface-400 py-4">No banking details on file.</p>
@@ -609,15 +615,50 @@ function PersonalInfoTab({ client }: { client: any }) {
                     </GlassCard>
 
                     <GlassCard title="Next of Kin" icon={<Heart size={16} />}>
-                        {client.nextOfKin ? (
-                            <div className="space-y-4">
-                                <InfoRow label="Full Name" value={client.nextOfKin.fullName} />
-                                <InfoRow label="Relationship" value={client.nextOfKin.relationship} />
-                                <InfoRow label="Phone" value={client.nextOfKin.phone} />
-                                {client.nextOfKin.address && <InfoRow label="Address" value={client.nextOfKin.address} />}
+                        {Array.isArray(client.nextOfKin) && client.nextOfKin.length > 0 ? (
+                            <div className="space-y-6">
+                                {client.nextOfKin.map((nk: any, i: number) => (
+                                    <div key={nk.id || i} className={i > 0 ? 'pt-4 border-t border-surface-100' : ''}>
+                                        <div className="space-y-4">
+                                            <InfoRow label="Full Name" value={nk.fullName} />
+                                            <InfoRow label="Relationship" value={nk.relationship} />
+                                            <InfoRow label="Phone" value={nk.phone} />
+                                            {nk.address && <InfoRow label="Address" value={nk.address} />}
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         ) : (
                             <p className="text-sm text-surface-400 py-4">No next of kin recorded.</p>
+                        )}
+                    </GlassCard>
+
+                    <GlassCard title="Beneficiaries" icon={<Users size={16} />}>
+                        {Array.isArray(client.beneficiaries) && client.beneficiaries.length > 0 ? (
+                            <div className="space-y-6">
+                                {client.beneficiaries.map((b: any, i: number) => (
+                                    <div key={b.id || i} className={i > 0 ? 'pt-4 border-t border-surface-100' : ''}>
+                                        <div className="space-y-4">
+                                            <InfoRow label="Full Name" value={b.fullName} />
+                                            <InfoRow label="Relationship" value={b.relationship} />
+                                            <InfoRow label="Percentage" value={`${parseFloat(b.percentage).toFixed(2)}%`} />
+                                            {b.dateOfBirth && <InfoRow label="Date of Birth" value={formatDate(b.dateOfBirth)} />}
+                                            {b.phone && <InfoRow label="Phone" value={b.phone} />}
+                                            {b.ghanaCardNumber && <InfoRow label="Ghana Card #" value={b.ghanaCardNumber} mono />}
+                                            {b.guardianName && <InfoRow label="Guardian" value={b.guardianName} />}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center py-6 text-center">
+                                <Users size={24} className="text-surface-300 mb-2" />
+                                <p className="text-sm text-surface-500 font-medium">No beneficiaries recorded</p>
+                                <p className="text-xs text-surface-400 mt-1 mb-4">You have not added any beneficiaries yet.</p>
+                                <Button variant="outline" size="sm" onClick={() => toast.info('Adding beneficiaries will be implemented soon')}>
+                                    Add Beneficiary
+                                </Button>
+                            </div>
                         )}
                     </GlassCard>
                 </div>
@@ -758,25 +799,58 @@ function ClaimsTab({ claims: clientClaims, router }: { claims: any[]; router: an
 // ===========================================================
 // Documents Tab
 // ===========================================================
-function DocumentsTab({ documents }: { documents: any[] }) {
+function DocumentsTab({ documents, client }: { documents: any[]; client: any }) {
     const docs = documents.length > 0 ? documents : [];
+    const createDocMutation = useCreateDocument();
 
     const categoryLabels: Record<string, string> = {
+        KYC: 'KYC Document', POLICY: 'Policy Document', CLAIM: 'Claim Document',
+        COMPLIANCE: 'Compliance', INTERNAL: 'Internal', REPORT: 'Report', CLIENT: 'Client Document',
         kyc: 'KYC Document', policy: 'Policy Document', claim: 'Claim Document',
         compliance: 'Compliance', internal: 'Internal', report: 'Report', client: 'Client Document',
     };
 
     const categoryColors: Record<string, string> = {
+        KYC: 'bg-primary-50 text-primary-600', POLICY: 'bg-emerald-50 text-emerald-600',
+        CLAIM: 'bg-amber-50 text-amber-600', COMPLIANCE: 'bg-purple-50 text-purple-600',
+        CLIENT: 'bg-accent-50 text-accent-600',
         kyc: 'bg-primary-50 text-primary-600', policy: 'bg-emerald-50 text-emerald-600',
         claim: 'bg-amber-50 text-amber-600', compliance: 'bg-purple-50 text-purple-600',
         client: 'bg-accent-50 text-accent-600',
     };
 
+    function handleUpload() {
+        const inp = document.createElement('input');
+        inp.type = 'file';
+        inp.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+        inp.onchange = () => {
+            if (inp.files?.[0]) {
+                const file = inp.files[0];
+                createDocMutation.mutate(
+                    { 
+                        name: file.name, 
+                        mimeType: file.type || 'application/octet-stream', 
+                        fileSize: file.size,
+                        fileUrl: `https://storage.placeholder.com/${Math.random().toString(36).substring(7)}/${file.name}`,
+                        category: 'CLIENT', 
+                        linkedEntityType: 'CLIENT',
+                        linkedEntityId: client.id 
+                    },
+                    {
+                        onSuccess: () => toast.success(`"${file.name}" uploaded`, { description: 'Document attached to client profile.' }),
+                        onError: () => toast.error('Upload failed', { description: 'Could not upload document. Please try again.' }),
+                    }
+                );
+            }
+        };
+        inp.click();
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <p className="text-sm text-surface-500">{docs.length} document(s) on file</p>
-                <Button variant="outline" size="sm" leftIcon={<Upload size={14} />} onClick={() => { const inp = document.createElement('input'); inp.type = 'FILE'; inp.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`"${inp.files[0].name}" uploaded`, { description: 'Document will be attached to client profile.' }); }; inp.click(); }}>Upload Document</Button>
+                <Button variant="outline" size="sm" leftIcon={<Upload size={14} />} onClick={handleUpload}>Upload Document</Button>
             </div>
 
             <GlassCard title="Documents Repository" icon={<FileText size={16} />}>
@@ -800,18 +874,22 @@ function DocumentsTab({ documents }: { documents: any[] }) {
                                             <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', categoryColors[doc.category] || 'bg-surface-100 text-surface-500')}>
                                                 {categoryLabels[doc.category] || doc.category}
                                             </span>
-                                            <span className="text-[10px] text-surface-400">{(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>
-                                            <span className="text-[10px] text-surface-400">v{doc.version}</span>
+                                            {doc.sizeBytes && <span className="text-[10px] text-surface-400">{(doc.sizeBytes / 1024 / 1024).toFixed(1)} MB</span>}
+                                            {doc.uploadedAt && <span className="text-[10px] text-surface-400">{formatDate(doc.uploadedAt)}</span>}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => toast.info('Document Preview', { description: 'Opening document preview...' })} className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer" aria-label="View document">
-                                        <Eye size={14} />
-                                    </button>
-                                    <button onClick={() => toast.success('Download Started', { description: 'Your document download has begun.' })} className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer" aria-label="Download document">
-                                        <Download size={14} />
-                                    </button>
+                                    {doc.url && (
+                                        <a href={doc.url} target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer" aria-label="View document">
+                                            <Eye size={14} />
+                                        </a>
+                                    )}
+                                    {doc.url && (
+                                        <a href={doc.url} download className="w-8 h-8 rounded-lg bg-surface-100 flex items-center justify-center hover:bg-primary-50 text-surface-500 hover:text-primary-600 transition-colors cursor-pointer" aria-label="Download document">
+                                            <Download size={14} />
+                                        </a>
+                                    )}
                                 </div>
                             </div>
                         ))}
@@ -822,11 +900,13 @@ function DocumentsTab({ documents }: { documents: any[] }) {
             {/* Compliance Checklist */}
             <GlassCard title="Compliance Checklist" icon={<ShieldCheck size={16} />}>
                 <div className="space-y-1">
-                    <ChecklistItem label="Ghana Card / Certificate of Incorporation" required status={docs.some((d: any) => d.category === 'KYC') ? 'complete' : 'PENDING'} />
-                    <ChecklistItem label="Passport Photo" required status="PENDING" />
-                    <ChecklistItem label="Proof of Address" required status="PENDING" />
-                    <ChecklistItem label="Source of Funds Declaration" required={false} status="PENDING" />
-                    <ChecklistItem label="Board Resolution (Corporate)" required={false} status="PENDING" />
+                    <ChecklistItem label="Ghana Card / Certificate of Incorporation" required status={docs.some((d: any) => ['KYC', 'kyc'].includes(d.category)) ? 'complete' : 'PENDING'} />
+                    <ChecklistItem label="Passport Photo" required status={docs.some((d: any) => d.name?.toLowerCase().includes('passport')) ? 'complete' : 'PENDING'} />
+                    <ChecklistItem label="Proof of Address" required status={docs.some((d: any) => d.name?.toLowerCase().includes('address') || d.name?.toLowerCase().includes('proof')) ? 'complete' : 'PENDING'} />
+                    <ChecklistItem label="Source of Funds Declaration" required={false} status={docs.some((d: any) => d.name?.toLowerCase().includes('source') || d.name?.toLowerCase().includes('funds')) ? 'complete' : 'PENDING'} />
+                    {client?.type === 'CORPORATE' && (
+                        <ChecklistItem label="Board Resolution (Corporate)" required={false} status={docs.some((d: any) => d.name?.toLowerCase().includes('board') || d.name?.toLowerCase().includes('resolution')) ? 'complete' : 'PENDING'} />
+                    )}
                 </div>
             </GlassCard>
         </div>
@@ -837,14 +917,25 @@ function DocumentsTab({ documents }: { documents: any[] }) {
 // Communication Tab
 // ===========================================================
 function CommunicationTab({ client }: { client: any }) {
-    const commsLog = [
-        { id: 1, date: '2026-02-18', type: 'Call', direction: 'Outbound', summary: 'Discussed Motor Fleet renewal options and premium payment schedule', by: client.assignedBrokerName || 'Broker' },
-        { id: 2, date: '2026-02-12', type: 'Email', direction: 'Outbound', summary: 'Sent renewal quotation for upcoming Fire & Allied policy', by: client.assignedBrokerName || 'Broker' },
-        { id: 3, date: '2026-01-28', type: 'SMS', direction: 'Outbound', summary: 'Premium payment reminder for Q4 installment', by: 'System' },
-        { id: 4, date: '2026-01-20', type: 'Call', direction: 'Inbound', summary: 'Client called regarding claim status update on motor accident', by: client.assignedBrokerName || 'Broker' },
-        { id: 5, date: '2025-12-15', type: 'Email', direction: 'Outbound', summary: 'Sent updated policy schedule after endorsement', by: client.assignedBrokerName || 'Broker' },
-        { id: 6, date: '2025-11-20', type: 'Meeting', direction: 'In-person', summary: 'Annual review meeting — discussed portfolio expansion, new property coverage', by: client.assignedBrokerName || 'Broker' },
-    ];
+    const [commsLog, setCommsLog] = useState<{ id: number; date: string; type: string; direction: string; summary: string; by: string }[]>([]);
+    const [showForm, setShowForm] = useState(false);
+    const [newComm, setNewComm] = useState({ type: 'Call', direction: 'Outbound', summary: '' });
+
+    function addCommunication() {
+        if (!newComm.summary.trim()) { toast.error('Please enter a summary'); return; }
+        const entry = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            type: newComm.type,
+            direction: newComm.direction,
+            summary: newComm.summary,
+            by: client.assignedBrokerName || 'Current User',
+        };
+        setCommsLog((prev) => [entry, ...prev]);
+        setNewComm({ type: 'Call', direction: 'Outbound', summary: '' });
+        setShowForm(false);
+        toast.success('Communication logged', { description: `${entry.type} interaction recorded.` });
+    }
 
     const typeColors: Record<string, string> = {
         Call: 'bg-primary-50 text-primary-600 border-primary-200/50',
@@ -859,34 +950,99 @@ function CommunicationTab({ client }: { client: any }) {
     };
 
     return (
-        <GlassCard title="Communication Log" icon={<MessageSquare size={16} />}>
-            <div className="space-y-0 relative">
-                {commsLog.map((item, idx) => (
-                    <div key={item.id} className="flex gap-4 relative pb-6 last:pb-0">
-                        {idx < commsLog.length - 1 && (
-                            <div className="absolute top-10 left-[17px] bottom-0 w-px bg-surface-200/60" />
-                        )}
-                        <div className={cn(
-                            'w-9 h-9 rounded-full flex items-center justify-center shrink-0 border',
-                            typeColors[item.type] || 'bg-surface-50 text-surface-500 border-surface-200'
-                        )}>
-                            {typeIcons[item.type] || <MessageSquare size={14} />}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between mb-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-surface-900">{item.type}</span>
-                                    <span className="text-[11px] text-surface-400 px-2 py-0.5 bg-surface-50 rounded-full">{item.direction}</span>
-                                </div>
-                                <span className="text-xs text-surface-400">{formatDate(item.date)}</span>
+        <div className="space-y-6">
+            {/* Add Communication Button */}
+            <div className="flex justify-end">
+                <Button variant="primary" size="sm" leftIcon={<MessageSquare size={14} />} onClick={() => setShowForm(!showForm)}>
+                    {showForm ? 'Cancel' : 'Log Interaction'}
+                </Button>
+            </div>
+
+            {/* Add Communication Form */}
+            {showForm && (
+                <GlassCard title="New Communication" icon={<MessageSquare size={16} />}>
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-semibold text-surface-600 mb-1.5">Type</label>
+                                <select
+                                    value={newComm.type}
+                                    onChange={(e) => setNewComm({ ...newComm, type: e.target.value })}
+                                    className="w-full px-3 py-2.5 text-sm border border-surface-200 bg-surface-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                                >
+                                    <option value="Call">Phone Call</option>
+                                    <option value="Email">Email</option>
+                                    <option value="SMS">SMS</option>
+                                    <option value="Meeting">Meeting</option>
+                                </select>
                             </div>
-                            <p className="text-sm text-surface-600 leading-relaxed">{item.summary}</p>
-                            <span className="text-[11px] text-surface-400 mt-1 block">By: {item.by}</span>
+                            <div>
+                                <label className="block text-xs font-semibold text-surface-600 mb-1.5">Direction</label>
+                                <select
+                                    value={newComm.direction}
+                                    onChange={(e) => setNewComm({ ...newComm, direction: e.target.value })}
+                                    className="w-full px-3 py-2.5 text-sm border border-surface-200 bg-surface-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                                >
+                                    <option value="Outbound">Outbound</option>
+                                    <option value="Inbound">Inbound</option>
+                                    <option value="In-person">In-person</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-xs font-semibold text-surface-600 mb-1.5">Summary</label>
+                            <textarea
+                                value={newComm.summary}
+                                onChange={(e) => setNewComm({ ...newComm, summary: e.target.value })}
+                                placeholder="Describe the interaction..."
+                                rows={3}
+                                className="w-full px-3 py-2.5 text-sm border border-surface-200 bg-surface-50 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none placeholder:text-surface-400"
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button variant="primary" size="sm" onClick={addCommunication}>Save Interaction</Button>
                         </div>
                     </div>
-                ))}
-            </div>
-        </GlassCard>
+                </GlassCard>
+            )}
+
+            <GlassCard title="Communication Log" icon={<MessageSquare size={16} />}>
+                {commsLog.length === 0 ? (
+                    <div className="text-center py-12 text-surface-400">
+                        <MessageSquare size={32} className="mx-auto mb-3 opacity-40" />
+                        <p className="text-sm">No communication history recorded.</p>
+                        <p className="text-xs text-surface-300 mt-1">Use the &quot;Log Interaction&quot; button to record calls, emails, or meetings.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-0 relative">
+                        {commsLog.map((item, idx) => (
+                            <div key={item.id} className="flex gap-4 relative pb-6 last:pb-0">
+                                {idx < commsLog.length - 1 && (
+                                    <div className="absolute top-10 left-[17px] bottom-0 w-px bg-surface-200/60" />
+                                )}
+                                <div className={cn(
+                                    'w-9 h-9 rounded-full flex items-center justify-center shrink-0 border',
+                                    typeColors[item.type] || 'bg-surface-50 text-surface-500 border-surface-200'
+                                )}>
+                                    {typeIcons[item.type] || <MessageSquare size={14} />}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-semibold text-surface-900">{item.type}</span>
+                                            <span className="text-[11px] text-surface-400 px-2 py-0.5 bg-surface-50 rounded-full">{item.direction}</span>
+                                        </div>
+                                        <span className="text-xs text-surface-400">{formatDate(item.date)}</span>
+                                    </div>
+                                    <p className="text-sm text-surface-600 leading-relaxed">{item.summary}</p>
+                                    <span className="text-[11px] text-surface-400 mt-1 block">By: {item.by}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </GlassCard>
+        </div>
     );
 }
 

@@ -21,6 +21,7 @@ interface Column<T> {
     label: string;
     sortable?: boolean;
     render?: (row: T) => React.ReactNode;
+    exportValue?: (row: T) => any;
     className?: string;
 }
 
@@ -34,6 +35,8 @@ interface DataTableProps<T> {
     onRowClick?: (row: T) => void;
     emptyMessage?: React.ReactNode;
     headerActions?: React.ReactNode;
+    exportable?: boolean;
+    onExport?: () => void;
     className?: string;
 }
 
@@ -92,6 +95,8 @@ export function DataTable<T>({
     onRowClick,
     emptyMessage = 'No records found',
     headerActions,
+    exportable = true,
+    onExport,
     className,
 }: DataTableProps<T>) {
     const [search, setSearch] = useState('');
@@ -116,6 +121,7 @@ export function DataTable<T>({
             setSearchWidth(searchFocused ? 240 : minW);
         }
     }, [search, searchFocused]);
+    
     const filteredData = useMemo(() => {
         if (!search.trim()) return data;
         const term = search.toLowerCase();
@@ -167,10 +173,16 @@ export function DataTable<T>({
     }, [sortKey, sortDir]);
 
     const handleExportCSV = useCallback(() => {
+        if (onExport) {
+            onExport();
+            return;
+        }
         const headers = columns.map((c) => c.label).join(',');
         const rows = sortedData.map((row) =>
             columns
                 .map((c) => {
+                    // Check if there is an export value function, otherwise rely on the key
+                    if (c.exportValue) return safeCsvCell(c.exportValue(row));
                     const val = (row as Record<string, unknown>)[c.key];
                     return safeCsvCell(val);
                 })
@@ -184,7 +196,7 @@ export function DataTable<T>({
         link.download = `IBMS_Export_${new Date().toISOString().slice(0, 10)}.csv`;
         link.click();
         URL.revokeObjectURL(url);
-    }, [columns, sortedData]);
+    }, [columns, sortedData, onExport]);
 
     const handlePageSizeChange = useCallback((newSize: number) => {
         setCurrentPageSize(newSize);
@@ -243,13 +255,15 @@ export function DataTable<T>({
                     </div>
                 )}
                 <div className="flex items-center gap-2 shrink-0 ml-auto">
-                    <button
-                        onClick={handleExportCSV}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-surface-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 rounded-lg hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 cursor-pointer transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
-                    >
-                        <FileSpreadsheet size={14} />
-                        Export CSV
-                    </button>
+                    {exportable && (
+                        <button
+                            onClick={handleExportCSV}
+                            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-surface-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 rounded-lg hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 cursor-pointer transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
+                        >
+                            <FileSpreadsheet size={14} />
+                            Export CSV
+                        </button>
+                    )}
                     {headerActions}
                 </div>
             </div>

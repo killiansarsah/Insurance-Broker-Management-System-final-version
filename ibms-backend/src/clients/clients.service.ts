@@ -75,16 +75,30 @@ export class ClientsService {
         lastName: dto.lastName,
         companyName: dto.companyName,
         phone: dto.phone,
+        alternatePhone: dto.alternatePhone,
         email: dto.email,
         region: dto.region,
         city: dto.city,
         digitalAddress: dto.digitalAddress,
+        postalAddress: dto.postalAddress,
         ghanaCardNumber: dto.ghanaCardNumber,
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
         gender: dto.gender,
+        nationality: dto.nationality,
+        maritalStatus: dto.maritalStatus,
         occupation: dto.occupation,
+        employerName: dto.employerName,
+        employerAddress: dto.employerAddress,
+        sourceOfFunds: dto.sourceOfFunds,
+        purposeOfRelationship: dto.purposeOfRelationship,
+        expectedVolume: dto.expectedVolume,
+        preferredCommunication: dto.preferredCommunication,
         tin: dto.tin,
         registrationNumber: dto.registrationNumber,
+        dateOfIncorporation: dto.dateOfIncorporation ? new Date(dto.dateOfIncorporation) : null,
+        industry: dto.industry,
+        contactPerson: dto.contactPerson,
+        contactPersonPhone: dto.contactPersonPhone,
         isPep: dto.isPep,
         eddRequired: dto.eddRequired,
       },
@@ -96,6 +110,34 @@ export class ClientsService {
         },
       },
     });
+
+    // Auto-create next-of-kin if inline data provided
+    if (dto.nextOfKinName && dto.nextOfKinPhone) {
+      await this.prisma.nextOfKin.create({
+        data: {
+          tenantId,
+          clientId: client.id,
+          fullName: dto.nextOfKinName,
+          relationship: dto.nextOfKinRelationship || 'Not specified',
+          phone: dto.nextOfKinPhone,
+          address: dto.nextOfKinAddress,
+        },
+      });
+    }
+
+    // Auto-create bank detail if inline data provided
+    if (dto.bankName && dto.bankAccountNumber) {
+      await this.prisma.bankDetail.create({
+        data: {
+          tenantId,
+          clientId: client.id,
+          bankName: dto.bankName,
+          accountName: dto.bankAccountName || '',
+          accountNumber: dto.bankAccountNumber,
+          branch: dto.bankBranch || '',
+        },
+      });
+    }
 
     if (client.email) {
       const clientName = client.firstName || client.companyName || 'Valued Client';
@@ -246,16 +288,30 @@ export class ClientsService {
         lastName: dto.lastName,
         companyName: dto.companyName,
         phone: dto.phone,
+        alternatePhone: dto.alternatePhone,
         email: dto.email,
         region: dto.region,
         city: dto.city,
         digitalAddress: dto.digitalAddress,
+        postalAddress: dto.postalAddress,
         ghanaCardNumber: dto.ghanaCardNumber,
         dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : undefined,
         gender: dto.gender,
+        nationality: dto.nationality,
+        maritalStatus: dto.maritalStatus,
         occupation: dto.occupation,
+        employerName: dto.employerName,
+        employerAddress: dto.employerAddress,
+        sourceOfFunds: dto.sourceOfFunds,
+        purposeOfRelationship: dto.purposeOfRelationship,
+        expectedVolume: dto.expectedVolume,
+        preferredCommunication: dto.preferredCommunication,
         tin: dto.tin,
         registrationNumber: dto.registrationNumber,
+        dateOfIncorporation: dto.dateOfIncorporation ? new Date(dto.dateOfIncorporation) : undefined,
+        industry: dto.industry,
+        contactPerson: dto.contactPerson,
+        contactPersonPhone: dto.contactPersonPhone,
         isPep: dto.isPep,
         eddRequired: dto.eddRequired,
       },

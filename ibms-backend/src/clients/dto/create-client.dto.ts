@@ -30,6 +30,10 @@ export class CreateClientDto {
   @IsNotEmpty()
   phone!: string;
 
+  @IsString()
+  @IsOptional()
+  alternatePhone?: string;
+
   @IsEmail()
   @IsOptional()
   email?: string;
@@ -48,6 +52,10 @@ export class CreateClientDto {
 
   @IsString()
   @IsOptional()
+  postalAddress?: string;
+
+  @IsString()
+  @IsOptional()
   ghanaCardNumber?: string;
 
   @IsDateString()
@@ -60,7 +68,39 @@ export class CreateClientDto {
 
   @IsString()
   @IsOptional()
+  nationality?: string;
+
+  @IsString()
+  @IsOptional()
+  maritalStatus?: string;
+
+  @IsString()
+  @IsOptional()
   occupation?: string;
+
+  @IsString()
+  @IsOptional()
+  employerName?: string;
+
+  @IsString()
+  @IsOptional()
+  employerAddress?: string;
+
+  @IsString()
+  @IsOptional()
+  sourceOfFunds?: string;
+
+  @IsString()
+  @IsOptional()
+  purposeOfRelationship?: string;
+
+  @IsString()
+  @IsOptional()
+  expectedVolume?: string;
+
+  @IsString()
+  @IsOptional()
+  preferredCommunication?: string;
 
   @IsString()
   @IsOptional()
@@ -70,6 +110,22 @@ export class CreateClientDto {
   @IsOptional()
   registrationNumber?: string;
 
+  @IsDateString()
+  @IsOptional()
+  dateOfIncorporation?: string;
+
+  @IsString()
+  @IsOptional()
+  industry?: string;
+
+  @IsString()
+  @IsOptional()
+  contactPerson?: string;
+
+  @IsString()
+  @IsOptional()
+  contactPersonPhone?: string;
+
   @IsBoolean()
   @IsOptional()
   isPep?: boolean;
@@ -77,4 +133,38 @@ export class CreateClientDto {
   @IsBoolean()
   @IsOptional()
   eddRequired?: boolean;
+
+  // Inline next-of-kin (created after client)
+  @IsString()
+  @IsOptional()
+  nextOfKinName?: string;
+
+  @IsString()
+  @IsOptional()
+  nextOfKinRelationship?: string;
+
+  @IsString()
+  @IsOptional()
+  nextOfKinPhone?: string;
+
+  @IsString()
+  @IsOptional()
+  nextOfKinAddress?: string;
+
+  // Inline bank details (created after client)
+  @IsString()
+  @IsOptional()
+  bankName?: string;
+
+  @IsString()
+  @IsOptional()
+  bankAccountName?: string;
+
+  @IsString()
+  @IsOptional()
+  bankAccountNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  bankBranch?: string;
 }

@@ -87,6 +87,22 @@ const INDUSTRIES = [
     'Retail', 'Technology', 'Trading', 'Transport', 'Other',
 ];
 
+const EXPECTED_VOLUMES = [
+    'Below GHS 5,000',
+    'GHS 5,000 – GHS 20,000',
+    'GHS 20,001 – GHS 50,000',
+    'GHS 50,001 – GHS 100,000',
+    'Above GHS 100,000 (triggers enhanced due diligence automatically)',
+];
+
+const BANK_NAMES = [
+    'GCB Bank', 'Ecobank Ghana', 'Absa Bank Ghana', 'Stanbic Bank Ghana',
+    'Fidelity Bank Ghana', 'Access Bank Ghana', 'Zenith Bank Ghana',
+    'CalBank', 'Republic Bank', 'First Atlantic Bank', 'GT Bank Ghana',
+    'Standard Chartered', 'Agricultural Development Bank (ADB)',
+    'National Investment Bank (NIB)', 'Prudential Bank', 'Others',
+];
+
 function InputField({
     label,
     required,
@@ -105,13 +121,15 @@ function InputField({
             <input
                 {...props}
                 className={cn(
-                    'w-full px-3 py-2.5 text-sm bg-surface-50 border rounded-[var(--radius-md)]',
-                    'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all',
+                    'w-full px-3 py-2.5 text-sm border rounded-[var(--radius-md)]',
+                    'focus:outline-none focus:ring-2 transition-all duration-300',
                     'placeholder:text-surface-400',
-                    error ? 'border-danger-400' : 'border-surface-200'
+                    error 
+                        ? 'border-danger-500 bg-danger-50/50 text-danger-900 focus:border-danger-500 focus:ring-danger-500/20' 
+                        : 'border-surface-200 bg-surface-50 focus:border-primary-500 focus:ring-primary-500/20'
                 )}
             />
-            {error && <p className="text-xs text-danger-500 mt-1">{error}</p>}
+            {error && <p className="text-xs text-danger-500 mt-1 font-medium animate-in fade-in slide-in-from-top-1">{error}</p>}
         </div>
     );
 }
@@ -203,6 +221,28 @@ export default function EditClientPage({ id }: { id: string }) {
     const [formInitialized, setFormInitialized] = useState(false);
     const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
 
+    const [documents, setDocuments] = useState<Record<string, File>>({});
+    const [previews, setPreviews] = useState<Record<string, string>>({});
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, id: string) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setDocuments(prev => ({ ...prev, [id]: file }));
+            
+            // Cleanup old preview URL to prevent memory leaks
+            if (previews[id] && previews[id] !== 'PDF_DOC') {
+                URL.revokeObjectURL(previews[id]);
+            }
+
+            if (file.type.startsWith('image/')) {
+                setPreviews(prev => ({ ...prev, [id]: URL.createObjectURL(file) }));
+            } else if (file.type === 'application/pdf') {
+                setPreviews(prev => ({ ...prev, [id]: 'PDF_DOC' }));
+            }
+            toast.success(`Document uploaded`, { description: file.name });
+        }
+    };
+
     useEffect(() => {
         if (client && !formInitialized) {
             setForm(buildFormFromClient(client));
@@ -237,7 +277,20 @@ export default function EditClientPage({ id }: { id: string }) {
 
     function update(field: keyof FormData, value: string) {
         setForm((prev) => ({ ...prev, [field]: value }));
-        if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+        
+        // Live phone validation requested by user (10 digit standard or +233)
+        if (['phone', 'alternatePhone', 'contactPersonPhone', 'nextOfKinPhone'].includes(field)) {
+            const clean = value.replace(/[\s\-]/g, '');
+            if (clean.length > 0 && clean.length < 10) {
+                setErrors((prev) => ({ ...prev, [field]: 'Enter 10 digits (e.g. 054...)' }));
+            } else if (clean.length >= 10 && !/^(0\d{9}|\+233\d{9})$/.test(clean)) {
+                setErrors((prev) => ({ ...prev, [field]: 'Invalid Ghana format' }));
+            } else {
+                if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+            }
+        } else {
+            if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+        }
     }
 
     function validateStep(s: number): boolean {
@@ -254,15 +307,27 @@ export default function EditClientPage({ id }: { id: string }) {
                 if (!form.companyName.trim()) newErrors.companyName = 'Required';
                 if (!form.registrationNumber.trim()) newErrors.registrationNumber = 'Required';
                 if (!form.tin.trim()) newErrors.tin = 'Required';
+                if (form.contactPersonPhone?.trim() && !/^(0\d{9}|\+233\d{9})$/.test(form.contactPersonPhone.replace(/\s/g, ''))) {
+                    newErrors.contactPersonPhone = 'Invalid phone format';
+                }
             }
         }
 
         if (s === 2) {
-            if (!form.phone.trim()) newErrors.phone = 'Required';
-            else if (!/^\+233\d{9}$/.test(form.phone.replace(/\s/g, '')))
-                newErrors.phone = 'Use format +233XXXXXXXXX';
+            if (!form.phone?.trim()) newErrors.phone = 'Required';
+            else if (!/^(0\d{9}|\+233\d{9})$/.test(form.phone.replace(/\s/g, '')))
+                newErrors.phone = 'Use format 0XXXXXXXXX or +233XXXXXXXXX';
+
+            if (form.alternatePhone?.trim() && !/^(0\d{9}|\+233\d{9})$/.test(form.alternatePhone.replace(/\s/g, ''))) {
+                newErrors.alternatePhone = 'Invalid format';
+            }
+
             if (!form.region) newErrors.region = 'Required';
-            if (!form.city.trim()) newErrors.city = 'Required';
+            if (!form.city?.trim()) newErrors.city = 'Required';
+
+            if (form.nextOfKinPhone?.trim() && !/^(0\d{9}|\+233\d{9})$/.test(form.nextOfKinPhone.replace(/\s/g, ''))) {
+                newErrors.nextOfKinPhone = 'Invalid phone number';
+            }
         }
 
         if (s === 3) {
@@ -297,17 +362,32 @@ export default function EditClientPage({ id }: { id: string }) {
                     lastName: form.lastName || undefined,
                     companyName: form.companyName || undefined,
                     phone: form.phone,
+                    alternatePhone: form.alternatePhone || undefined,
                     email: form.email || undefined,
                     region: form.region || undefined,
                     city: form.city || undefined,
                     digitalAddress: form.digitalAddress || undefined,
+                    postalAddress: form.postalAddress || undefined,
                     ghanaCardNumber: form.ghanaCardNumber || undefined,
                     dateOfBirth: form.dateOfBirth || undefined,
                     gender: form.gender || undefined,
+                    nationality: form.nationality || undefined,
+                    maritalStatus: form.maritalStatus || undefined,
                     occupation: form.occupation || undefined,
+                    employerName: form.employerName || undefined,
+                    employerAddress: form.employerAddress || undefined,
+                    sourceOfFunds: form.sourceOfFunds || undefined,
+                    purposeOfRelationship: form.purposeOfRelationship || undefined,
+                    expectedVolume: form.expectedVolume || undefined,
+                    preferredCommunication: form.preferredCommunication || undefined,
                     tin: form.tin || undefined,
                     registrationNumber: form.registrationNumber || undefined,
+                    dateOfIncorporation: form.dateOfIncorporation || undefined,
+                    industry: form.industry || undefined,
+                    contactPerson: form.contactPerson || undefined,
+                    contactPersonPhone: form.contactPersonPhone || undefined,
                     isPep: form.isPep,
+                    eddRequired: form.expectedVolume?.includes('Above GHS 100,000') ? true : undefined,
                 },
             },
             {
@@ -453,8 +533,8 @@ export default function EditClientPage({ id }: { id: string }) {
                             options={INDUSTRIES.map((i) => ({ label: i, value: i.toLowerCase() }))} />
                         <InputField label="Contact Person" value={form.contactPerson}
                             onChange={(e) => update('contactPerson', e.target.value)} placeholder="Primary contact name" />
-                        <InputField label="Contact Person Phone" value={form.contactPersonPhone}
-                            onChange={(e) => update('contactPersonPhone', e.target.value)} placeholder="+233XXXXXXXXX" />
+                        <InputField label="Contact Person Phone" value={form.contactPersonPhone} error={errors.contactPersonPhone}
+                            onChange={(e) => update('contactPersonPhone', e.target.value)} placeholder="024 123 4567" />
                     </div>
                 )}
 
@@ -463,9 +543,9 @@ export default function EditClientPage({ id }: { id: string }) {
                     <div className="space-y-6">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <InputField label="Phone Number" required value={form.phone} error={errors.phone}
-                                onChange={(e) => update('phone', e.target.value)} placeholder="+233XXXXXXXXX" />
-                            <InputField label="Alternate Phone" value={form.alternatePhone}
-                                onChange={(e) => update('alternatePhone', e.target.value)} placeholder="+233XXXXXXXXX" />
+                                onChange={(e) => update('phone', e.target.value)} placeholder="024 123 4567" />
+                            <InputField label="Alternate Phone" value={form.alternatePhone} error={errors.alternatePhone}
+                                onChange={(e) => update('alternatePhone', e.target.value)} placeholder="024 123 4567" />
                             <InputField label="Email" type="email" value={form.email}
                                 onChange={(e) => update('email', e.target.value)} placeholder="name@example.com" />
                             <InputField label="Digital Address" value={form.digitalAddress}
@@ -494,8 +574,8 @@ export default function EditClientPage({ id }: { id: string }) {
                                     onChange={(e) => update('nextOfKinName', e.target.value)} placeholder="Next of Kin Name" />
                                 <InputField label="Relationship" value={form.nextOfKinRelationship}
                                     onChange={(e) => update('nextOfKinRelationship', e.target.value)} placeholder="e.g. Spouse, Parent" />
-                                <InputField label="Phone Number" value={form.nextOfKinPhone}
-                                    onChange={(e) => update('nextOfKinPhone', e.target.value)} placeholder="+233XXXXXXXXX" />
+                                <InputField label="Phone Number" value={form.nextOfKinPhone} error={errors.nextOfKinPhone}
+                                    onChange={(e) => update('nextOfKinPhone', e.target.value)} placeholder="024 123 4567" />
                                 <InputField label="Address" value={form.nextOfKinAddress}
                                     onChange={(e) => update('nextOfKinAddress', e.target.value)} placeholder="Residential address" />
                             </div>
@@ -523,8 +603,9 @@ export default function EditClientPage({ id }: { id: string }) {
                                     { label: 'Business Insurance', value: 'business' },
                                     { label: 'Investment', value: 'investment' },
                                 ]} />
-                            <InputField label="Expected Transaction Volume (Annual)" value={form.expectedVolume}
-                                onChange={(e) => update('expectedVolume', e.target.value)} placeholder="e.g. GHS 50,000" />
+                            <SelectField label="Expected Transaction Volume (Annual)" value={form.expectedVolume}
+                                onChange={(e) => update('expectedVolume', e.target.value)}
+                                options={EXPECTED_VOLUMES.map((v) => ({ label: v, value: v }))} />
                             <div className="flex flex-col">
                                 <label className="block text-xs font-semibold text-surface-600 mb-1.5">Politically Exposed Person (PEP)?</label>
                                 <div className="flex gap-4 mt-2">
@@ -541,8 +622,9 @@ export default function EditClientPage({ id }: { id: string }) {
                         <div className="pt-4 border-t border-surface-100">
                             <h3 className="text-sm font-bold text-surface-900 mb-4">Banking Details (For Claims)</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <InputField label="Bank Name" value={form.bankName}
-                                    onChange={(e) => update('bankName', e.target.value)} placeholder="e.g. GCB Bank" />
+                                <SelectField label="Bank Name" value={form.bankName}
+                                    onChange={(e) => update('bankName', e.target.value)}
+                                    options={BANK_NAMES.map((b) => ({ label: b, value: b }))} />
                                 <InputField label="Account Name" value={form.bankAccountName}
                                     onChange={(e) => update('bankAccountName', e.target.value)} placeholder="Name on Account" />
                                 <InputField label="Account Number" value={form.bankAccountNumber}
@@ -569,17 +651,46 @@ export default function EditClientPage({ id }: { id: string }) {
                             </label>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {[
-                                    { label: 'Ghana Card (Front)', icon: <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to replace' },
-                                    { label: 'Ghana Card (Back)', icon: <CreditCard size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to replace' },
-                                    { label: 'Passport Photo', icon: <User size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Click to replace' },
-                                    { label: 'Proof of Address', icon: <MapPin size={24} className="mx-auto text-surface-300 mb-2" />, sub: 'Utility Bill/Bank Statement' },
-                                ].map((doc) => (
-                                    <div key={doc.label} onClick={() => { const inp = document.createElement('input'); inp.type = 'FILE'; inp.accept = '.pdf,.jpg,.jpeg,.png'; inp.onchange = () => { if (inp.files?.[0]) toast.success(`${doc.label} replaced`, { description: inp.files[0].name }); }; inp.click(); }} className="border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] p-4 text-center hover:border-primary-400 transition-colors cursor-pointer">
-                                        {doc.icon}
-                                        <p className="text-xs font-medium text-surface-600">{doc.label}</p>
-                                        <p className="text-[10px] text-surface-400 mt-1">{doc.sub}</p>
-                                    </div>
-                                ))}
+                                    { id: 'ghanaCardFront', label: 'Ghana Card (Front)', icon: <CreditCard size={24} className="mx-auto mb-2" />, sub: 'Click to replace' },
+                                    { id: 'ghanaCardBack', label: 'Ghana Card (Back)', icon: <CreditCard size={24} className="mx-auto mb-2" />, sub: 'Click to replace' },
+                                    { id: 'passportPhoto', label: 'Passport Photo', icon: <User size={24} className="mx-auto mb-2" />, sub: 'Click to replace' },
+                                    { id: 'proofOfAddress', label: 'Proof of Address', icon: <MapPin size={24} className="mx-auto mb-2" />, sub: 'Utility Bill/Bank Statement' },
+                                ].map((doc) => {
+                                    const previewUrl = previews[doc.id];
+                                    return (
+                                        <div key={doc.id} className="relative border-2 border-dashed border-surface-300 rounded-[var(--radius-md)] hover:border-primary-400 transition-colors overflow-hidden bg-surface-50 group flex flex-col items-center justify-center min-h-[140px]">
+                                            <input 
+                                                type="file" 
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                                onChange={(e) => handleFileUpload(e, doc.id)}
+                                                title={`Upload ${doc.label}`}
+                                            />
+                                            {previewUrl ? (
+                                                <div className="absolute inset-0 w-full h-full p-2 bg-white flex flex-col items-center justify-center pointer-events-none">
+                                                    {previewUrl === 'PDF_DOC' ? (
+                                                        <div className="flex flex-col items-center justify-center text-primary-600">
+                                                            <FileCheck size={32} className="mb-2" />
+                                                            <span className="text-sm font-semibold">PDF Uploaded</span>
+                                                        </div>
+                                                    ) : (
+                                                        <img src={previewUrl} alt={doc.label} className="w-full h-full object-contain rounded-sm" />
+                                                    )}
+                                                    <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <FileCheck size={24} className="text-white mb-2" />
+                                                        <span className="text-xs font-semibold text-white">Click to Replace</span>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 text-center text-surface-400 group-hover:text-primary-500 transition-colors pointer-events-none">
+                                                    {doc.icon}
+                                                    <p className="text-xs font-medium text-surface-600 group-hover:text-primary-600">{doc.label}</p>
+                                                    <p className="text-[10px] opacity-70 mt-1">{doc.sub}</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -596,35 +707,110 @@ export default function EditClientPage({ id }: { id: string }) {
                             <p className="text-sm text-surface-500 mt-1">Verify all changes before saving.</p>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 bg-surface-50 rounded-[var(--radius-md)] p-6">
-                            <ReviewField label="Client Type" value={form.type === 'CORPORATE' ? 'Corporate' : 'Individual'} />
-                            <ReviewField label="Name" value={displayName || '—'} />
-                            {form.type === 'INDIVIDUAL' && (
-                                <>
-                                    <ReviewField label="Date of Birth" value={form.dateOfBirth || '—'} />
-                                    <ReviewField label="Gender" value={form.gender || '—'} />
-                                    <ReviewField label="Marital Status" value={form.maritalStatus || '—'} />
-                                    <ReviewField label="Occupation" value={form.occupation || '—'} />
-                                    <ReviewField label="Employer" value={form.employerName || '—'} />
-                                    <ReviewField label="Ghana Card" value={form.ghanaCardNumber || '—'} />
-                                </>
-                            )}
-                            {form.type === 'CORPORATE' && (
-                                <>
-                                    <ReviewField label="Registration #" value={form.registrationNumber || '—'} />
-                                    <ReviewField label="TIN" value={form.tin || '—'} />
-                                    <ReviewField label="Industry" value={form.industry || '—'} />
-                                    <ReviewField label="Contact Person" value={form.contactPerson || '—'} />
-                                </>
-                            )}
-                            <ReviewField label="Phone" value={form.phone || '—'} />
-                            <ReviewField label="Email" value={form.email || '—'} />
-                            <ReviewField label="Region / City" value={`${form.region || '—'}, ${form.city || '—'}`} />
-                            <ReviewField label="Source of Funds" value={form.sourceOfFunds || '—'} />
-                            <ReviewField label="Bank" value={form.bankName ? `${form.bankName} (${form.bankAccountNumber})` : '—'} />
-                            <ReviewField label="PEP Status" value={form.isPep ? 'Politically Exposed Person' : 'No'} />
-                            <ReviewField label="Next of Kin" value={form.nextOfKinName || '—'} />
-                            <ReviewField label="Preferred Communication" value={form.preferredCommunication || '—'} />
+                        <div className="space-y-6">
+                            {/* Basic Info */}
+                            <div className="bg-surface-50 rounded-[var(--radius-md)] p-6">
+                                <h3 className="text-sm font-bold text-surface-900 mb-4 border-b border-surface-200 pb-2">Basic Info</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <ReviewField label="Client Type" value={form.type === 'CORPORATE' ? 'Corporate' : 'Individual'} />
+                                    <ReviewField label="Name" value={displayName || '—'} />
+                                    {form.type === 'INDIVIDUAL' ? (
+                                        <>
+                                            <ReviewField label="Date of Birth" value={form.dateOfBirth || '—'} />
+                                            <ReviewField label="Gender" value={form.gender || '—'} />
+                                            <ReviewField label="Nationality" value={form.nationality || '—'} />
+                                            <ReviewField label="Marital Status" value={form.maritalStatus || '—'} />
+                                            <ReviewField label="Occupation" value={form.occupation || '—'} />
+                                            <ReviewField label="Employer" value={form.employerName || '—'} />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <ReviewField label="Registration Number" value={form.registrationNumber || '—'} />
+                                            <ReviewField label="TIN" value={form.tin || '—'} />
+                                            <ReviewField label="Date of Incorporation" value={form.dateOfIncorporation || '—'} />
+                                            <ReviewField label="Industry" value={form.industry || '—'} />
+                                            <ReviewField label="Contact Person" value={form.contactPerson || '—'} />
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Contact & Family */}
+                            <div className="bg-surface-50 rounded-[var(--radius-md)] p-6">
+                                <h3 className="text-sm font-bold text-surface-900 mb-4 border-b border-surface-200 pb-2">Contact & Family</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <ReviewField label="Phone" value={form.phone || '—'} />
+                                    <ReviewField label="Alternate Phone" value={form.alternatePhone || '—'} />
+                                    <ReviewField label="Email" value={form.email || '—'} />
+                                    <ReviewField label="Digital Address" value={form.digitalAddress || '—'} />
+                                    <ReviewField label="Region / City" value={`${form.region || '—'}, ${form.city || '—'}`} />
+                                    <ReviewField label="Postal Address" value={form.postalAddress || '—'} />
+                                    <ReviewField label="Preferred Communication" value={form.preferredCommunication || '—'} />
+                                    <div className="col-span-full mt-2 pt-4 border-t border-surface-200/50">
+                                        <p className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-4">Next of Kin Details</p>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <ReviewField label="Name" value={form.nextOfKinName || '—'} />
+                                            <ReviewField label="Phone" value={form.nextOfKinPhone || '—'} />
+                                            <ReviewField label="Relationship" value={form.nextOfKinRelationship || '—'} />
+                                            <ReviewField label="Address" value={form.nextOfKinAddress || '—'} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* KYC & Banking */}
+                            <div className="bg-surface-50 rounded-[var(--radius-md)] p-6">
+                                <h3 className="text-sm font-bold text-surface-900 mb-4 border-b border-surface-200 pb-2">KYC & Banking</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <ReviewField label="Source of Funds" value={form.sourceOfFunds || '—'} />
+                                    <ReviewField label="Purpose of Relationship" value={form.purposeOfRelationship || '—'} />
+                                    <ReviewField label="Expected Volume" value={form.expectedVolume || '—'} />
+                                    <ReviewField label="PEP Status" value={form.isPep ? 'Politically Exposed Person' : 'No'} />
+                                    <ReviewField label="Bank Name" value={form.bankName || '—'} />
+                                    <ReviewField label="Account Name" value={form.bankAccountName || '—'} />
+                                    <ReviewField label="Account Number" value={form.bankAccountNumber || '—'} />
+                                    <ReviewField label="Bank Branch" value={form.bankBranch || '—'} />
+                                </div>
+                            </div>
+
+                            {/* ID Documents */}
+                            <div className="bg-surface-50 rounded-[var(--radius-md)] p-6">
+                                <h3 className="text-sm font-bold text-surface-900 mb-4 border-b border-surface-200 pb-2">ID Documents</h3>
+                                {form.type === 'INDIVIDUAL' && (
+                                    <div className="mb-6">
+                                        <ReviewField label="Ghana Card Number" value={form.ghanaCardNumber || '—'} />
+                                    </div>
+                                )}
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                    {[
+                                        { id: 'ghanaCardFront', label: 'Ghana Card (Front)' },
+                                        { id: 'ghanaCardBack', label: 'Ghana Card (Back)' },
+                                        { id: 'passportPhoto', label: 'Passport Photo' },
+                                        { id: 'proofOfAddress', label: 'Proof of Address' },
+                                    ].map((doc) => {
+                                        const previewUrl = previews[doc.id];
+                                        return (
+                                            <div key={doc.id}>
+                                                <p className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-2">{doc.label}</p>
+                                                <div className="h-24 bg-surface-100 rounded-[var(--radius-md)] overflow-hidden border border-surface-200 flex items-center justify-center">
+                                                    {previewUrl ? (
+                                                        previewUrl === 'PDF_DOC' ? (
+                                                            <div className="flex flex-col items-center justify-center text-primary-500">
+                                                                <FileCheck size={20} className="mb-1" />
+                                                                <span className="text-[10px] font-semibold">PDF</span>
+                                                            </div>
+                                                        ) : (
+                                                            <img src={previewUrl} alt={doc.label} className="w-full h-full object-contain bg-white" />
+                                                        )
+                                                    ) : (
+                                                        <span className="text-xs text-surface-400 font-medium text-center">Not Replaced</span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -656,8 +842,8 @@ export default function EditClientPage({ id }: { id: string }) {
 function ReviewField({ label, value }: { label: string; value: string }) {
     return (
         <div>
-            <p className="text-xs font-semibold text-surface-400 uppercase tracking-wider">{label}</p>
-            <p className="text-sm font-medium text-surface-800 mt-0.5 capitalize">{value}</p>
+            <p className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider">{label}</p>
+            <p className="text-sm font-medium text-surface-800 mt-1">{value || '—'}</p>
         </div>
     );
 }

@@ -118,7 +118,6 @@ export function Header() {
                     <button
                         onClick={() => {
                             setProfileOpen(!profileOpen);
-                            setNotificationsOpen(false);
                         }}
                         className="flex items-center gap-2.5 p-1.5 pr-3 hover:bg-surface-100 rounded-[var(--radius-full)] cursor-pointer transition-colors"
                     >
