@@ -16,7 +16,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-
 @Controller('departments')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class DepartmentsController {

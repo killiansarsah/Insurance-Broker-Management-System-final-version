@@ -28,7 +28,14 @@ export class ClaimsService {
     private readonly emailService: EnhancedEmailService,
   ) {}
 
-  private async generateClaimNumber(tenantId: string, client?: { claim: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
+  private async generateClaimNumber(
+    tenantId: string,
+    client?: {
+      claim: {
+        count: (args: { where: { tenantId: string } }) => Promise<number>;
+      };
+    },
+  ): Promise<string> {
     const db = client ?? this.prisma;
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const count = await db.claim.count({ where: { tenantId } });
@@ -91,7 +98,9 @@ export class ClaimsService {
   ) {
     const valid = this.getValidTransitions(claim.status);
     if (!valid.includes(toStatus)) {
-      throw new BadRequestException(`Invalid transition from ${claim.status} to ${toStatus}`);
+      throw new BadRequestException(
+        `Invalid transition from ${claim.status} to ${toStatus}`,
+      );
     }
 
     await tx.claimStatusHistory.create({
@@ -147,7 +156,9 @@ export class ClaimsService {
           claimAmount: dto.claimAmount ?? 0,
           intimationDate: now,
           acknowledgmentDeadline: this.addBusinessDays(now, 5),
-          processingDeadline: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+          processingDeadline: new Date(
+            now.getTime() + 30 * 24 * 60 * 60 * 1000,
+          ),
         },
       });
 
@@ -329,23 +340,37 @@ export class ClaimsService {
     dto: UpdateClaimDto,
   ) {
     const claim = await this.findOne(id, tenantId);
-    
+
     const updateData: Record<string, unknown> = {};
     if (dto.claimAmount !== undefined) updateData.claimAmount = dto.claimAmount;
-    if (dto.description !== undefined) updateData.incidentDescription = dto.description;
+    if (dto.description !== undefined)
+      updateData.incidentDescription = dto.description;
     if (dto.location !== undefined) updateData.incidentLocation = dto.location;
-    if (dto.insurerReference !== undefined) updateData.insurerReference = dto.insurerReference;
-    if (dto.insurerSubmissionDate !== undefined) updateData.insurerSubmissionDate = dto.insurerSubmissionDate;
-    if (dto.deductibleAmount !== undefined) updateData.deductibleAmount = dto.deductibleAmount;
+    if (dto.insurerReference !== undefined)
+      updateData.insurerReference = dto.insurerReference;
+    if (dto.insurerSubmissionDate !== undefined)
+      updateData.insurerSubmissionDate = dto.insurerSubmissionDate;
+    if (dto.deductibleAmount !== undefined)
+      updateData.deductibleAmount = dto.deductibleAmount;
     if (dto.notes !== undefined) updateData.appealNotes = dto.notes; // Basic mapping
 
-    if (Object.keys(updateData).length === 0 && dto.assessedAmount === undefined) {
+    if (
+      Object.keys(updateData).length === 0 &&
+      dto.assessedAmount === undefined
+    ) {
       throw new BadRequestException('No fields to update');
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
       if (dto.assessedAmount !== undefined) {
-        await this.enforceTransitionAndLog(tx, claim, 'ASSESSED', userId, tenantId, 'Assessed via update endpoint');
+        await this.enforceTransitionAndLog(
+          tx,
+          claim,
+          'ASSESSED',
+          userId,
+          tenantId,
+          'Assessed via update endpoint',
+        );
         updateData.assessedAmount = dto.assessedAmount;
         updateData.assessmentDate = new Date();
         updateData.status = 'ASSESSED';
@@ -379,8 +404,15 @@ export class ClaimsService {
     const isOverdue5Day = now > new Date(claim.acknowledgmentDeadline);
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await this.enforceTransitionAndLog(tx, claim, 'REGISTERED', userId, tenantId, dto.notes);
-      
+      await this.enforceTransitionAndLog(
+        tx,
+        claim,
+        'REGISTERED',
+        userId,
+        tenantId,
+        dto.notes,
+      );
+
       return await tx.claim.update({
         where: { id },
         data: {
@@ -413,8 +445,15 @@ export class ClaimsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await this.enforceTransitionAndLog(tx, claim, 'UNDER_REVIEW', userId, tenantId, dto.notes);
-      
+      await this.enforceTransitionAndLog(
+        tx,
+        claim,
+        'UNDER_REVIEW',
+        userId,
+        tenantId,
+        dto.notes,
+      );
+
       return await tx.claim.update({
         where: { id },
         data: {
@@ -456,7 +495,14 @@ export class ClaimsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await this.enforceTransitionAndLog(tx, claim, 'APPROVED', userId, tenantId, dto.notes);
+      await this.enforceTransitionAndLog(
+        tx,
+        claim,
+        'APPROVED',
+        userId,
+        tenantId,
+        dto.notes,
+      );
 
       return await tx.claim.update({
         where: { id },
@@ -506,7 +552,14 @@ export class ClaimsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await this.enforceTransitionAndLog(tx, claim, 'REJECTED', userId, tenantId, dto.notes);
+      await this.enforceTransitionAndLog(
+        tx,
+        claim,
+        'REJECTED',
+        userId,
+        tenantId,
+        dto.notes,
+      );
 
       return await tx.claim.update({
         where: { id },
@@ -553,7 +606,14 @@ export class ClaimsService {
     const isOverdue30Day = now > new Date(claim.processingDeadline);
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await this.enforceTransitionAndLog(tx, claim, 'SETTLED', userId, tenantId, dto.notes);
+      await this.enforceTransitionAndLog(
+        tx,
+        claim,
+        'SETTLED',
+        userId,
+        tenantId,
+        dto.notes,
+      );
 
       const settled = await tx.claim.update({
         where: { id },
@@ -601,7 +661,14 @@ export class ClaimsService {
     }
 
     const updated = await this.prisma.$transaction(async (tx) => {
-      await this.enforceTransitionAndLog(tx, claim, 'UNDER_REVIEW', userId, tenantId, dto.appealNotes);
+      await this.enforceTransitionAndLog(
+        tx,
+        claim,
+        'UNDER_REVIEW',
+        userId,
+        tenantId,
+        dto.appealNotes,
+      );
 
       return await tx.claim.update({
         where: { id },

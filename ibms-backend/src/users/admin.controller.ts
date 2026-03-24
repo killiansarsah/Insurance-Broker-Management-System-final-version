@@ -1,4 +1,10 @@
-import { Controller, Get, HttpException, HttpStatus, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  HttpException,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
@@ -17,7 +23,10 @@ export class AdminController {
     });
 
     if (count === 0) {
-      throw new HttpException('No super admin configured', HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        'No super admin configured',
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     return { exists: true, count };

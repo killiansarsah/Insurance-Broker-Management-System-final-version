@@ -58,7 +58,10 @@ import { PlatformAdminModule } from './platform-admin/platform-admin.module';
     ThrottlerModule.forRoot([
       {
         ttl: parseInt(process.env['THROTTLE_TTL'] || '60', 10) * 1000,
-        limit: process.env.NODE_ENV === 'production' ? parseInt(process.env['THROTTLE_LIMIT'] || '100', 10) : 10000,
+        limit:
+          process.env.NODE_ENV === 'production'
+            ? parseInt(process.env['THROTTLE_LIMIT'] || '100', 10)
+            : 10000,
       },
     ]),
 
@@ -73,8 +76,13 @@ import { PlatformAdminModule } from './platform-admin/platform-admin.module';
             level: config.get<string>('logLevel', 'info'),
             transport: isProduction
               ? undefined
-              : { target: 'pino-pretty', options: { colorize: true, singleLine: true } },
-            autoLogging: { ignore: (req: { url?: string }) => req.url === '/api/v1/health' },
+              : {
+                  target: 'pino-pretty',
+                  options: { colorize: true, singleLine: true },
+                },
+            autoLogging: {
+              ignore: (req: { url?: string }) => req.url === '/api/v1/health',
+            },
           },
         };
       },

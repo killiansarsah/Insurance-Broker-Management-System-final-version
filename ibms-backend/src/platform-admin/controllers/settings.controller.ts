@@ -19,14 +19,22 @@ export class SettingsController {
   @Get()
   async getSettings() {
     const settings = await this.prisma.platformSetting.findMany({
-      select: { key: true, value: true, updatedAt: true, updatedBy: { select: { email: true } } },
+      select: {
+        key: true,
+        value: true,
+        updatedAt: true,
+        updatedBy: { select: { email: true } },
+      },
     });
-    
+
     // Convert to a kv map
-    const data = settings.reduce((acc, curr) => {
-      acc[curr.key] = curr.value;
-      return acc;
-    }, {} as Record<string, unknown>);
+    const data = settings.reduce(
+      (acc, curr) => {
+        acc[curr.key] = curr.value;
+        return acc;
+      },
+      {} as Record<string, unknown>,
+    );
 
     return { data };
   }
@@ -37,7 +45,7 @@ export class SettingsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const keys = Object.keys(body);
-    
+
     // Batch upsert settings
     for (const key of keys) {
       await this.prisma.platformSetting.upsert({

@@ -40,9 +40,11 @@ async function bootstrap(): Promise<void> {
   const logger = new Logger('Bootstrap');
 
   // Security: Helmet with HSTS
-  app.use(helmet({
-    hsts: { maxAge: 31536000, includeSubDomains: true },
-  }));
+  app.use(
+    helmet({
+      hsts: { maxAge: 31536000, includeSubDomains: true },
+    }),
+  );
 
   // Cookie parsing (for refresh token cookies)
   app.use(cookieParser());
@@ -92,8 +94,8 @@ async function bootstrap(): Promise<void> {
       .setTitle('IBMS API')
       .setDescription(
         `Insurance Broker Management System API\n\n` +
-        `**Rate Limiting:** ${throttleLimit} requests per ${throttleTtl}s window per IP.\n` +
-        `Exceeding the limit returns HTTP 429 Too Many Requests.`,
+          `**Rate Limiting:** ${throttleLimit} requests per ${throttleTtl}s window per IP.\n` +
+          `Exceeding the limit returns HTTP 429 Too Many Requests.`,
       )
       .setVersion('1.0')
       .addBearerAuth(
@@ -122,7 +124,9 @@ async function bootstrap(): Promise<void> {
       where: { role: { in: ['PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN'] } },
     });
     if (superAdminCount === 0) {
-      logger.warn('⚠️ WARNING: No super admin user exists in the database. Run the seed script.');
+      logger.warn(
+        '⚠️ WARNING: No super admin user exists in the database. Run the seed script.',
+      );
     } else {
       logger.log(`✅ Super admin found (${superAdminCount} configured)`);
     }

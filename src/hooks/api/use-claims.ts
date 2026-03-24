@@ -118,7 +118,11 @@ export function useAddClaimDocument() {
     return useMutation({
         mutationFn: ({ claimId, data }: { claimId: string; data: Record<string, unknown> }) =>
             apiClient.post(`/claims/${claimId}/documents`, data),
-        onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['claims', vars.claimId, 'documents'] }),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: ['claims'] });
+            qc.invalidateQueries({ queryKey: ['claims', vars.claimId] });
+            qc.invalidateQueries({ queryKey: ['claims', vars.claimId, 'documents'] });
+        },
     });
 }
 
@@ -138,8 +142,9 @@ export function useAddClaimFollowUp() {
         mutationFn: ({ claimId, data }: { claimId: string; data: Record<string, unknown> }) =>
             apiClient.post(`/claims/${claimId}/follow-ups`, data),
         onSuccess: (_, vars) => {
-            qc.invalidateQueries({ queryKey: ['claims', vars.claimId, 'follow-ups'] });
+            qc.invalidateQueries({ queryKey: ['claims'] });
             qc.invalidateQueries({ queryKey: ['claims', vars.claimId] });
+            qc.invalidateQueries({ queryKey: ['claims', vars.claimId, 'follow-ups'] });
         },
     });
 }

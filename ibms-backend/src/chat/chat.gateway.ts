@@ -27,7 +27,9 @@ const onlineUsers = new Map<string, Set<string>>();
 @WebSocketGateway({
   namespace: '/chat',
   cors: {
-    origin: process.env['CORS_ORIGINS']?.split(',') || ['http://localhost:3000'],
+    origin: process.env['CORS_ORIGINS']?.split(',') || [
+      'http://localhost:3000',
+    ],
     credentials: true,
   },
 })
@@ -79,7 +81,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
         // First socket for this user — broadcast online
         this.server.emit('user_online', { userId: payload.sub });
       }
-      onlineUsers.get(payload.sub)!.add(client.id);
+      onlineUsers.get(payload.sub).add(client.id);
 
       this.logger.log(`Client connected: ${client.id} (user: ${payload.sub})`);
     } catch {

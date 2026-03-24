@@ -1,4 +1,14 @@
-import { Controller, Post, Param, Body, Res, Req, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  Body,
+  Res,
+  Req,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -12,7 +22,10 @@ import type { Response, Request } from 'express';
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env['NODE_ENV'] === 'production',
-  sameSite: process.env['NODE_ENV'] === 'production' ? ('strict' as const) : ('lax' as const),
+  sameSite:
+    process.env['NODE_ENV'] === 'production'
+      ? ('strict' as const)
+      : ('lax' as const),
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -42,11 +55,20 @@ export class ImpersonationController {
       targetUser = await this.prisma.user.findFirst({
         where: { id: body.userId, tenantId, isActive: true, deletedAt: null },
       });
-      if (!targetUser) throw new HttpException('Target user not found or inactive', HttpStatus.NOT_FOUND);
+      if (!targetUser)
+        throw new HttpException(
+          'Target user not found or inactive',
+          HttpStatus.NOT_FOUND,
+        );
     } else {
       // If no specific user is provided, impersonate the first active TENANT_ADMIN
       targetUser = await this.prisma.user.findFirst({
-        where: { tenantId, role: 'TENANT_ADMIN', isActive: true, deletedAt: null },
+        where: {
+          tenantId,
+          role: 'TENANT_ADMIN',
+          isActive: true,
+          deletedAt: null,
+        },
       });
       if (!targetUser) {
         // Fallback: any active user in the tenant
@@ -54,7 +76,11 @@ export class ImpersonationController {
           where: { tenantId, isActive: true, deletedAt: null },
         });
       }
-      if (!targetUser) throw new HttpException('No active users found in this tenant', HttpStatus.NOT_FOUND);
+      if (!targetUser)
+        throw new HttpException(
+          'No active users found in this tenant',
+          HttpStatus.NOT_FOUND,
+        );
     }
 
     // Generate tokens for the target user BUT include an impersonator claim
@@ -107,9 +133,7 @@ export class ImpersonationController {
   }
 
   @Post('exit')
-  async exitImpersonation(
-    @CurrentUser() adminUser: AuthenticatedUser,
-  ) {
+  async exitImpersonation(@CurrentUser() adminUser: AuthenticatedUser) {
     // If the frontend exits impersonation, it just switches back to its stored super admin token.
     // This endpoint primarily serves to log the end of the impersonation session.
     await this.audit.log({

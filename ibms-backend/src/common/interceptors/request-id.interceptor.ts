@@ -29,6 +29,10 @@ export class RequestIdInterceptor implements NestInterceptor {
     req.requestId = requestId;
     res.setHeader(REQUEST_ID_HEADER, requestId);
 
-    return next.handle().pipe(tap(() => { /* noop — ensures header is set even on success */ }));
+    return next.handle().pipe(
+      tap(() => {
+        /* noop — ensures header is set even on success */
+      }),
+    );
   }
 }

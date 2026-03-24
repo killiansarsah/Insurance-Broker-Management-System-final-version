@@ -50,7 +50,9 @@ export class TasksService {
         link: dto.link,
       },
       include: {
-        assignedTo: { select: { firstName: true, lastName: true, email: true } },
+        assignedTo: {
+          select: { firstName: true, lastName: true, email: true },
+        },
         createdBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -114,7 +116,18 @@ export class TasksService {
         where,
         skip,
         take: limit,
-        orderBy: { [['createdAt', 'updatedAt', 'dueDate', 'title', 'status', 'priority'].includes(sortBy) ? sortBy : 'createdAt']: sortOrder },
+        orderBy: {
+          [[
+            'createdAt',
+            'updatedAt',
+            'dueDate',
+            'title',
+            'status',
+            'priority',
+          ].includes(sortBy)
+            ? sortBy
+            : 'createdAt']: sortOrder,
+        },
         include: {
           assignedTo: {
             select: { id: true, firstName: true, lastName: true },
@@ -176,20 +189,27 @@ export class TasksService {
         priority: dto.priority,
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
         assignedToId: dto.assignedToId,
-        ...(dto.isCompleted !== undefined && { 
+        ...(dto.isCompleted !== undefined && {
           isCompleted: dto.isCompleted,
           completedAt: dto.isCompleted ? new Date() : null,
-          status: dto.isCompleted ? 'REGISTERED' : 'PENDING'
+          status: dto.isCompleted ? 'REGISTERED' : 'PENDING',
         }),
         ...(dto.status !== undefined && { status: dto.status }),
       },
       include: {
-        assignedTo: { select: { firstName: true, lastName: true, email: true } },
+        assignedTo: {
+          select: { firstName: true, lastName: true, email: true },
+        },
         createdBy: { select: { firstName: true, lastName: true } },
       },
     });
 
-    if (dto.assignedToId && dto.assignedToId !== task.assignedToId && updated.assignedTo?.email && updated.dueDate) {
+    if (
+      dto.assignedToId &&
+      dto.assignedToId !== task.assignedToId &&
+      updated.assignedTo?.email &&
+      updated.dueDate
+    ) {
       await this.emailService.sendTaskAssignment(
         updated.assignedTo.email,
         updated.assignedTo.firstName,

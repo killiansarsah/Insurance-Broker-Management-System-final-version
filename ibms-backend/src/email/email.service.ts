@@ -11,22 +11,33 @@ export class EmailService {
     const apiKey = this.config.get<string>('RESEND_API_KEY');
     if (apiKey) {
       this.resend = new Resend(apiKey);
-      this.logger.log('Email service initialized with Resend (production mode)');
+      this.logger.log(
+        'Email service initialized with Resend (production mode)',
+      );
     } else {
       this.resend = null;
-      this.logger.warn('RESEND_API_KEY not set — email service running in console-log mode');
+      this.logger.warn(
+        'RESEND_API_KEY not set — email service running in console-log mode',
+      );
     }
   }
 
   private get from(): string {
-    return this.config.get<string>('EMAIL_FROM', 'IBMS <onboarding@resend.dev>');
+    return this.config.get<string>(
+      'EMAIL_FROM',
+      'IBMS <onboarding@resend.dev>',
+    );
   }
 
   // ───────────────────────────────────────────────────────
   // Public email methods
   // ───────────────────────────────────────────────────────
 
-  async sendInvite(email: string, rawToken: string, frontendUrl: string): Promise<void> {
+  async sendInvite(
+    email: string,
+    rawToken: string,
+    frontendUrl: string,
+  ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
     const subject = 'You have been invited to IBMS';
     const html = `
@@ -60,7 +71,7 @@ export class EmailService {
     const subject = `Policy Renewal Reminder: ${policyNumber} - ${daysUntilExpiry} Days Remaining`;
     const urgency = daysUntilExpiry <= 30 ? 'URGENT' : 'UPCOMING';
     const urgencyColor = daysUntilExpiry <= 30 ? '#dc2626' : '#f59e0b';
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: ${urgencyColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
@@ -117,8 +128,13 @@ export class EmailService {
     notes?: string,
   ): Promise<void> {
     const subject = `Claim Update: ${claimNumber} - Status Changed to ${newStatus}`;
-    const statusColor = newStatus === 'APPROVED' ? '#10b981' : newStatus === 'REJECTED' ? '#ef4444' : '#3b82f6';
-    
+    const statusColor =
+      newStatus === 'APPROVED'
+        ? '#10b981'
+        : newStatus === 'REJECTED'
+          ? '#ef4444'
+          : '#3b82f6';
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: ${statusColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
@@ -149,9 +165,13 @@ export class EmailService {
             </table>
           </div>
 
-          ${notes ? `<div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin: 20px 0;">
+          ${
+            notes
+              ? `<div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin: 20px 0;">
             <p style="margin: 0; color: #1e40af; font-size: 14px;"><strong>Notes:</strong> ${notes}</p>
-          </div>` : ''}
+          </div>`
+              : ''
+          }
 
           <p style="color: #374151; margin: 20px 0;">If you have any questions about your claim, please contact your broker or claims department.</p>
           
@@ -173,8 +193,13 @@ export class EmailService {
     assignedBy: string,
   ): Promise<void> {
     const subject = `New Task Assigned: ${taskTitle}`;
-    const priorityColor = priority === 'HIGH' ? '#dc2626' : priority === 'MEDIUM' ? '#f59e0b' : '#10b981';
-    
+    const priorityColor =
+      priority === 'HIGH'
+        ? '#dc2626'
+        : priority === 'MEDIUM'
+          ? '#f59e0b'
+          : '#10b981';
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #2563eb; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
@@ -221,7 +246,7 @@ export class EmailService {
     brokerPhone: string,
   ): Promise<void> {
     const subject = 'Welcome to Our Insurance Services';
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: #10b981; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
@@ -268,7 +293,11 @@ export class EmailService {
     await this.send(email, subject, html);
   }
 
-  async sendPasswordReset(email: string, rawToken: string, frontendUrl: string): Promise<void> {
+  async sendPasswordReset(
+    email: string,
+    rawToken: string,
+    frontendUrl: string,
+  ): Promise<void> {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
     const subject = 'IBMS Password Reset';
     const html = `
@@ -305,11 +334,15 @@ export class EmailService {
         });
 
         if (error) {
-          this.logger.error(`Resend API error sending to ${to}: ${JSON.stringify(error)}`);
+          this.logger.error(
+            `Resend API error sending to ${to}: ${JSON.stringify(error)}`,
+          );
           return;
         }
 
-        this.logger.log(`Email sent successfully to ${to} [Resend ID: ${data?.id}]`);
+        this.logger.log(
+          `Email sent successfully to ${to} [Resend ID: ${data?.id}]`,
+        );
       } catch (err) {
         this.logger.error(`Failed to send email to ${to} via Resend`, err);
       }

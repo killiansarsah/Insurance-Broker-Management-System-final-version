@@ -179,7 +179,11 @@ export class DocumentsService {
         data: { isExpired: true },
       });
       await this.logAudit(tenantId, userId, 'document.archived', id);
-      return { deleted: false, archived: true, reason: 'NIC 7-year retention policy — document archived, not purged' };
+      return {
+        deleted: false,
+        archived: true,
+        reason: 'NIC 7-year retention policy — document archived, not purged',
+      };
     }
 
     await this.prisma.document.update({

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     Upload, Users, FileText, Shield,
     Download, ArrowRight, ArrowLeft, CheckCircle2,
-    AlertCircle, Loader2, Info
+    AlertCircle, Loader2, Info, Sparkles, Lock
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -121,6 +121,17 @@ export function SettingsDataImport() {
     const [parsedData, setParsedData] = useState<string[][]>([]);
     const [columns, setColumns] = useState<string[]>([]);
     const [mappings, setMappings] = useState<ImportColumnMapping[]>([]);
+    const [jobId, setJobId] = useState<string | null>(null);
+    const [sampleRow, setSampleRow] = useState<Record<string, string> | null>(null);
+
+    // AI mapping state
+    const [aiMappingStats, setAiMappingStats] = useState<{
+        total: number; highConfidence: number; mediumConfidence: number;
+        lowConfidence: number; unmapped: number; aiAssisted: boolean;
+    } | null>(null);
+    const [aiPrivacyNote, setAiPrivacyNote] = useState<string>('');
+    const [isDetectingMapping, setIsDetectingMapping] = useState(false);
+    const [mappingConfidences, setMappingConfidences] = useState<Record<string, 'high' | 'medium' | 'low'>>({});
 
     // Import state
     const [isImporting, setIsImporting] = useState(false);
@@ -138,65 +149,27 @@ export function SettingsDataImport() {
         setParsedData([]);
         setColumns([]);
         setMappings([]);
+        setJobId(null);
+        setSampleRow(null);
         setValidationErrors([]);
         setDuplicateCount(0);
         setValidRowCount(0);
         setIsScanning(false);
         setImportComplete(false);
         setImportedCount(0);
+        setAiMappingStats(null);
+        setAiPrivacyNote('');
+        setIsDetectingMapping(false);
+        setMappingConfidences({});
     }, []);
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
-        if (!selectedFile) return;
+        if (!selectedFile || !entityType) return;
 
         setFile(selectedFile);
+        setIsScanning(true);
         try {
-            const data = await parseFile(selectedFile);
-            setParsedData(data);
-            const cols = detectColumns(data);
-            setColumns(cols);
-
-            if (entityType) {
-                const autoMapped = autoMapColumns(cols, entityType);
-                setMappings(autoMapped);
-            }
-
-            setIsScanning(true);
-            setStep(3);
-            setTimeout(() => {
-                setIsScanning(false);
-            }, 1500);
-        } catch {
-            toast.error('Could not process the file');
-        }
-    };
-
-    const handleDropzoneClick = () => {
-        fileInputRef.current?.click();
-    };
-
-    const runValidation = useCallback(() => {
-        if (!entityType || parsedData.length <= 1) return;
-        const mappedRows = applyMappings(parsedData, mappings);
-        const allErrors: ImportValidationError[] = [];
-        mappedRows.forEach((row, index) => {
-            const rowErrors = validateRow(row, entityType, index + 2);
-            allErrors.push(...rowErrors);
-        });
-        const dupes = detectDuplicates(mappedRows, entityType, []);
-        const errorRowIndices = new Set(allErrors.map(e => e.row - 2));
-        setValidationErrors(allErrors);
-        setDuplicateCount(dupes.size);
-        setValidRowCount(mappedRows.length - dupes.size - errorRowIndices.size);
-    }, [entityType, parsedData, mappings]);
-
-    const handleImport = useCallback(async () => {
-        if (!entityType || !file) return;
-        setIsImporting(true);
-
-        try {
-            // Map entity type to backend dataType
             const dataTypeMap: Record<string, string> = {
                 universal: 'all',
                 clients: 'clients',
@@ -206,14 +179,140 @@ export function SettingsDataImport() {
             const dataType = dataTypeMap[entityType] || 'clients';
 
             const result = await apiClient.uploadWithFields<any>(
-                '/imports',
-                file,
+                '/imports/upload',
+                selectedFile,
                 { dataType },
             );
 
-            // Handle mixed import (all) vs single type import
-            const created = result?.summary?.totalCreated ?? result?.created ?? 0;
-            const errors = result?.summary?.totalErrors ?? result?.errors?.length ?? 0;
+            setJobId(result.jobId);
+            setColumns(result.headers || []);
+            setSampleRow(result.sampleRow || null);
+            
+            // Use basic mapping as baseline first
+            if (result.suggestedMapping && result.suggestedMapping.length > 0) {
+               const autoMapped: ImportColumnMapping[] = result.suggestedMapping.map((m: any) => ({
+                   sourceColumn: m.source,
+                   targetField: m.target,
+                   isRequired: false,
+               }));
+               setMappings(autoMapped);
+            } else {
+               const autoMapped = autoMapColumns(result.headers || [], entityType);
+               setMappings(autoMapped);
+            }
+
+            setStep(3);
+
+            // Now call AI detect-mapping in the background
+            if (result.jobId) {
+                setIsDetectingMapping(true);
+                try {
+                    const aiResult = await apiClient.post<any>(
+                        `/imports/${result.jobId}/detect-mapping`,
+                        {}
+                    );
+                    if (aiResult?.success && aiResult.mappings?.length > 0) {
+                        // Map AI snake_case keys to frontend camelCase keys
+                        const aiKeyToFrontendKey: Record<string, string> = {
+                            first_name: 'firstName', last_name: 'lastName', full_name: 'fullName',
+                            middle_name: 'middleName', company_name: 'companyName',
+                            date_of_birth: 'dateOfBirth', marital_status: 'maritalStatus',
+                            ghana_card_number: 'ghanaCardNumber', passport_number: 'passportNumber',
+                            drivers_licence: 'driversLicence', phone_primary: 'PHONE',
+                            phone_secondary: 'phoneSecondary', whatsapp_number: 'whatsappNumber',
+                            digital_address: 'digitalAddress', residential_address: 'residentialAddress',
+                            client_type: 'type', aml_risk: 'amlRiskLevel', source_of_funds: 'sourceOfFunds',
+                            purpose_of_relationship: 'purposeOfRelationship',
+                            expected_annual_volume: 'expectedAnnualVolume', bank_name: 'bankName',
+                            account_name: 'accountName', account_number: 'accountNumber',
+                            momo_network: 'momoNetwork', momo_number: 'momoNumber',
+                            momo_account_name: 'momoAccountName', assigned_officer: 'assignedOfficer',
+                            // Direct matches
+                            email: 'EMAIL', gender: 'gender', nationality: 'nationality',
+                            region: 'region', city: 'city', occupation: 'occupation',
+                            employer: 'employer', industry: 'industry', tin: 'tin',
+                            ssnit: 'ssnit', pep: 'pep', status: 'status', notes: 'notes',
+                            branch: 'branch',
+                        };
+                        const convertKey = (key: string): string => aiKeyToFrontendKey[key] || key;
+
+                        // Upgrade mappings with AI results
+                        const aiMapped: ImportColumnMapping[] = aiResult.mappings.map((m: any) => ({
+                            sourceColumn: m.theirColumn,
+                            targetField: m.ourField === 'SKIP' ? '' : convertKey(m.ourField),
+                            isRequired: false,
+                        }));
+                        setMappings(aiMapped);
+
+                        // Store confidence levels
+                        const confidences: Record<string, 'high' | 'medium' | 'low'> = {};
+                        aiResult.mappings.forEach((m: any) => {
+                            confidences[m.theirColumn] = m.confidence || 'low';
+                        });
+                        setMappingConfidences(confidences);
+
+                        setAiMappingStats(aiResult.stats);
+                        setAiPrivacyNote(aiResult.privacyNote || '');
+                        toast.success('AI Analysis Complete', { description: `${aiResult.stats?.highConfidence || 0} columns mapped with high confidence` });
+                    }
+                } catch (aiErr) {
+                    // AI failed silently — rule-based mappings are already applied
+                    console.warn('AI mapping failed, using rule-based fallback:', aiErr);
+                } finally {
+                    setIsDetectingMapping(false);
+                }
+            }
+        } catch (err: any) {
+            const message = err?.response?.data?.message || err?.message || 'Could not process the file via server';
+            toast.error(`Upload Failed: ${message}`);
+            setFile(null);
+        } finally {
+            setIsScanning(false);
+        }
+    };
+
+    const handleDropzoneClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const runValidation = useCallback(async () => {
+        if (!jobId || mappings.length === 0) return;
+        setIsScanning(true);
+        try {
+            // Convert array mapping to Record<source, target>
+            const mappingObj = mappings.reduce((acc, curr) => {
+               if (curr.targetField) acc[curr.sourceColumn] = curr.targetField;
+               return acc;
+            }, {} as Record<string, string>);
+
+            const result = await apiClient.post<{ success: boolean; summary: any }>(
+                `/imports/${jobId}/validate`,
+                { mapping: mappingObj }
+            );
+
+            setValidationErrors(result.summary?.errors ? Array(result.summary.errors).fill({} as any) : []);
+            setValidRowCount(result.summary?.valid || 0);
+            setDuplicateCount(0); // Backend returns combined errors
+            setStep(4);
+        } catch (err: any) {
+            toast.error('Validation failed on server');
+        } finally {
+            setIsScanning(false);
+        }
+    }, [jobId, mappings]);
+
+    const handleImport = useCallback(async () => {
+        if (!jobId) return;
+        setIsImporting(true);
+
+        try {
+            const result = await apiClient.post<any>(
+                `/imports/${jobId}/execute`,
+                {}
+            );
+
+            const created = result?.result?.created ?? result?.result?.summary?.totalCreated ?? 0;
+            const errors = result?.result?.errors?.length ?? result?.result?.summary?.totalErrors ?? 0;
 
             setImportedCount(created);
             setImportComplete(true);
@@ -224,12 +323,12 @@ export function SettingsDataImport() {
                 toast.success(`Import Successful — ${created} records created.`);
             }
         } catch (err: any) {
-            const message = err?.response?.data?.message || err?.message || 'Import failed';
-            toast.error(`Import Failed: ${message}`);
+            const message = err?.response?.data?.message || err?.message || 'Execution failed';
+            toast.error(`Execution Failed: ${message}`);
         } finally {
             setIsImporting(false);
         }
-    }, [entityType, file]);
+    }, [jobId]);
 
     return (
         <div className="h-full flex flex-col bg-slate-50 relative overflow-hidden">
@@ -418,7 +517,34 @@ export function SettingsDataImport() {
                                     <p className="text-[11px] font-black text-slate-900 uppercase tracking-widest mb-1.5">Migration Intelligence</p>
                                     <p className="text-[11px] text-slate-500 font-medium leading-relaxed">Auto-mapping works best with header-row formatted spreadsheets.</p>
                                 </div>
-                                <Button variant="ghost" size="sm" className="h-10 text-[10px] font-black uppercase tracking-widest text-primary-700 bg-white dark:bg-slate-800 border border-primary-100 hover:bg-primary-50 rounded-xl px-5" leftIcon={<Download size={14} />} onClick={() => toast.success('Template Downloaded', { description: 'Import template (XLSX) is being downloaded.' })}>Template</Button>
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-10 text-[10px] font-black uppercase tracking-widest text-primary-700 bg-white dark:bg-slate-800 border border-primary-100 hover:bg-primary-50 rounded-xl px-5" 
+                                    leftIcon={<Download size={14} />} 
+                                    onClick={async () => {
+                                        try {
+                                            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/imports/template/${entityType || 'clients'}`, {
+                                                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+                                            });
+                                            if (!response.ok) throw new Error('Download failed');
+                                            const blob = await response.blob();
+                                            const url = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = `${entityType || 'import'}_template.xlsx`;
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            window.URL.revokeObjectURL(url);
+                                            document.body.removeChild(a);
+                                            toast.success('Template Downloaded', { description: 'Import template (XLSX) has been downloaded.' });
+                                        } catch (error) {
+                                            toast.error('Failed to download template');
+                                        }
+                                    }}
+                                >
+                                    Template
+                                </Button>
                             </div>
 
                             <div className="flex justify-between pt-4">
@@ -427,11 +553,46 @@ export function SettingsDataImport() {
                         </motion.div>
                     ) : step === 3 ? (
                         <motion.div key="step3" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.02 }} className="space-y-6 max-w-7xl mx-auto py-2">
+                            {/* Privacy Transparency Card */}
+                            <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/60 flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                    <Lock size={20} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-black text-emerald-800 uppercase tracking-widest mb-1">Your client data stays on our servers</p>
+                                    <p className="text-[11px] text-emerald-700/80 font-medium leading-relaxed">Our AI analyses only the structure of your file — column names and anonymised examples. Your clients' Ghana Card numbers, names, and bank details are never shared externally.</p>
+                                    <p className="text-[10px] text-emerald-600/60 font-bold mt-1.5">Compliant with Ghana Data Protection Act 2012 (Act 843) · NIC Act 1061</p>
+                                </div>
+                            </div>
+
+                            {/* AI Status Bar */}
+                            {(isDetectingMapping || aiMappingStats) && (
+                                <div className="p-3 rounded-xl bg-white/60 border border-slate-100 flex items-center gap-3">
+                                    {isDetectingMapping ? (
+                                        <>
+                                            <div className="w-6 h-6 rounded-lg bg-primary-100 text-primary-600 flex items-center justify-center">
+                                                <Loader2 size={14} className="animate-spin" />
+                                            </div>
+                                            <span className="text-[10px] font-black text-primary-600 uppercase tracking-widest">AI is analysing your column structure...</span>
+                                        </>
+                                    ) : aiMappingStats && (
+                                        <>
+                                            <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                                <Sparkles size={14} />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-slate-600">
+                                                {aiMappingStats.aiAssisted ? 'AI-assisted mapping' : 'Rule-based mapping'} · <span className="text-emerald-600">{aiMappingStats.highConfidence} high</span> · <span className="text-amber-600">{aiMappingStats.mediumConfidence} medium</span> · <span className="text-red-500">{aiMappingStats.lowConfidence} low</span>
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
                                 <div className="lg:col-span-3 space-y-4">
                                     <div className="flex items-center justify-between">
-                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Matrix Alignment</h3>
-                                        <Badge variant="surface" className="text-[10px] uppercase tracking-[0.2em] font-black bg-slate-900 text-white px-3 py-1">{columns.length} Nodes Detected</Badge>
+                                        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Column Mapping</h3>
+                                        <Badge variant="surface" className="text-[10px] uppercase tracking-[0.2em] font-black bg-slate-900 text-white px-3 py-1">{columns.length} Columns Detected</Badge>
                                     </div>
                                     <div className="space-y-3 max-h-[500px] overflow-y-auto pr-4 custom-scrollbar-subtle">
                                         {mappings.map((mapping, idx) => (
@@ -440,11 +601,31 @@ export function SettingsDataImport() {
                                                 animate={{ opacity: 1, x: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
                                                 key={idx}
-                                                className="p-5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-white/50 rounded-2xl flex items-center gap-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all border-l-4 border-l-slate-200 hover:border-l-primary-500"
+                                                className={cn(
+                                                    "p-5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md border border-white/50 rounded-2xl flex items-center gap-6 hover:shadow-xl hover:shadow-slate-200/40 transition-all border-l-4",
+                                                    mappingConfidences[mapping.sourceColumn] === 'high' ? 'border-l-emerald-500' :
+                                                    mappingConfidences[mapping.sourceColumn] === 'medium' ? 'border-l-amber-400' :
+                                                    mappingConfidences[mapping.sourceColumn] === 'low' ? 'border-l-red-400' : 'border-l-slate-200 hover:border-l-primary-500'
+                                                )}
                                             >
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 opacity-60">Source Column</p>
+                                                    <div className="flex items-center gap-2 mb-1.5">
+                                                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest opacity-60">Source Column</p>
+                                                        {mappingConfidences[mapping.sourceColumn] && (
+                                                            <span className={cn(
+                                                                "text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full",
+                                                                mappingConfidences[mapping.sourceColumn] === 'high' ? 'bg-emerald-100 text-emerald-700' :
+                                                                mappingConfidences[mapping.sourceColumn] === 'medium' ? 'bg-amber-100 text-amber-700' :
+                                                                'bg-red-100 text-red-700'
+                                                            )}>
+                                                                {mappingConfidences[mapping.sourceColumn]}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                     <p className="font-black text-slate-900 text-sm truncate">{mapping.sourceColumn}</p>
+                                                    {sampleRow && mapping.sourceColumn in sampleRow && (
+                                                        <p className="text-[10px] text-slate-500 font-medium truncate mt-1.5 italic overflow-hidden w-full opacity-80" title={sampleRow[mapping.sourceColumn]}>Ex: {sampleRow[mapping.sourceColumn]}</p>
+                                                    )}
                                                 </div>
                                                 <div className="shrink-0 relative">
                                                     <motion.div

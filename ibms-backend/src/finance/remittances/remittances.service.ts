@@ -87,7 +87,12 @@ export class RemittancesService {
       include: {
         carrier: { select: { name: true, shortName: true } },
         policy: {
-          select: { policyNumber: true, client: { select: { firstName: true, lastName: true, companyName: true } } },
+          select: {
+            policyNumber: true,
+            client: {
+              select: { firstName: true, lastName: true, companyName: true },
+            },
+          },
         },
       },
     });

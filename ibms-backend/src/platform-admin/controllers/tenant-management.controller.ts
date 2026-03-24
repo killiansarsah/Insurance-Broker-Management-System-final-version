@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -46,20 +58,42 @@ export class TenantManagementController {
         take: limitNum,
         orderBy: { createdAt: 'desc' },
         include: {
-          _count: { select: { users: true, policies: true, clients: true, claims: true } },
-          subscriptions: { where: { status: 'ACTIVE' }, take: 1, select: { amountGhs: true, plan: true } },
-          nicCompliance: { select: { complianceScore: true, expiryDate: true } },
+          _count: {
+            select: {
+              users: true,
+              policies: true,
+              clients: true,
+              claims: true,
+            },
+          },
+          subscriptions: {
+            where: { status: 'ACTIVE' },
+            take: 1,
+            select: { amountGhs: true, plan: true },
+          },
+          nicCompliance: {
+            select: { complianceScore: true, expiryDate: true },
+          },
         },
       }),
       this.prisma.tenant.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Post()
   async create(
-    @Body() body: {
+    @Body()
+    body: {
       name: string;
       nicLicenseNumber?: string;
       nicExpiryDate?: string;
@@ -80,17 +114,33 @@ export class TenantManagementController {
     },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const slug = body.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const slug = body.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
 
-    const existingSlug = await this.prisma.tenant.findUnique({ where: { slug } });
-    if (existingSlug) throw new HttpException('A tenant with this name already exists', HttpStatus.CONFLICT);
+    const existingSlug = await this.prisma.tenant.findUnique({
+      where: { slug },
+    });
+    if (existingSlug)
+      throw new HttpException(
+        'A tenant with this name already exists',
+        HttpStatus.CONFLICT,
+      );
 
     if (body.subdomain) {
-      const existingSub = await this.prisma.tenant.findUnique({ where: { subdomain: body.subdomain } });
-      if (existingSub) throw new HttpException('Subdomain already taken', HttpStatus.CONFLICT);
+      const existingSub = await this.prisma.tenant.findUnique({
+        where: { subdomain: body.subdomain },
+      });
+      if (existingSub)
+        throw new HttpException('Subdomain already taken', HttpStatus.CONFLICT);
     }
 
-    const planAmounts = { BASIC: 299.00, PROFESSIONAL: 599.00, ENTERPRISE: 1299.00 };
+    const planAmounts = {
+      BASIC: 299.0,
+      PROFESSIONAL: 599.0,
+      ENTERPRISE: 1299.0,
+    };
     const amount = planAmounts[body.plan];
 
     const tenant = await this.prisma.tenant.create({
@@ -99,11 +149,15 @@ export class TenantManagementController {
         slug,
         subdomain: body.subdomain ?? slug,
         nicLicense: body.nicLicenseNumber ?? null,
-        nicLicenseExpiry: body.nicExpiryDate ? new Date(body.nicExpiryDate) : null,
+        nicLicenseExpiry: body.nicExpiryDate
+          ? new Date(body.nicExpiryDate)
+          : null,
         plan: body.plan,
         billingCycle: body.billingCycle,
         tenantStatus: body.trialDays ? 'TRIAL' : 'ACTIVE',
-        trialEndsAt: body.trialDays ? new Date(Date.now() + body.trialDays * 24 * 60 * 60 * 1000) : null,
+        trialEndsAt: body.trialDays
+          ? new Date(Date.now() + body.trialDays * 24 * 60 * 60 * 1000)
+          : null,
         address: body.address ?? null,
         phone: body.phone ?? null,
         adminEmail: body.adminEmail,
@@ -131,9 +185,10 @@ export class TenantManagementController {
 
     // Create subscription
     const now = new Date();
-    const periodEnd = body.billingCycle === 'ANNUAL'
-      ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
-      : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
+    const periodEnd =
+      body.billingCycle === 'ANNUAL'
+        ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+        : new Date(now.getFullYear(), now.getMonth() + 1, now.getDate());
 
     await this.prisma.subscription.create({
       data: {
@@ -177,12 +232,15 @@ export class TenantManagementController {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id },
       include: {
-        _count: { select: { users: true, policies: true, clients: true, claims: true } },
+        _count: {
+          select: { users: true, policies: true, clients: true, claims: true },
+        },
         subscriptions: { orderBy: { createdAt: 'desc' } },
         nicCompliance: true,
       },
     });
-    if (!tenant) throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    if (!tenant)
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
     return { data: tenant };
   }
 
@@ -193,9 +251,13 @@ export class TenantManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const before = await this.prisma.tenant.findUnique({ where: { id } });
-    if (!before) throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    if (!before)
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
 
-    const tenant = await this.prisma.tenant.update({ where: { id }, data: body });
+    const tenant = await this.prisma.tenant.update({
+      where: { id },
+      data: body,
+    });
 
     await this.audit.log({
       actorId: user.sub,
@@ -221,7 +283,11 @@ export class TenantManagementController {
     @Body() body: { reason: string },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    if (!body.reason) throw new HttpException('Reason is required for suspension', HttpStatus.BAD_REQUEST);
+    if (!body.reason)
+      throw new HttpException(
+        'Reason is required for suspension',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const tenant = await this.prisma.tenant.update({
       where: { id },
@@ -278,7 +344,8 @@ export class TenantManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
-    if (!tenant) throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    if (!tenant)
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
 
     await this.prisma.tenant.delete({ where: { id } });
 
@@ -302,19 +369,43 @@ export class TenantManagementController {
   @Get(':id/health')
   async getTenantHealth(@Param('id') id: string) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
-    if (!tenant) throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    if (!tenant)
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
 
-    const [userCount, policyCount, claimCount, clientCount, lastLogin, recentErrors, lastAuditEvents] = await Promise.all([
+    const [
+      userCount,
+      policyCount,
+      claimCount,
+      clientCount,
+      lastLogin,
+      recentErrors,
+      lastAuditEvents,
+    ] = await Promise.all([
       this.prisma.user.count({ where: { tenantId: id } }),
       this.prisma.policy.count({ where: { tenantId: id } }),
       this.prisma.claim.count({ where: { tenantId: id } }),
       this.prisma.client.count({ where: { tenantId: id } }),
-      this.prisma.user.findFirst({ where: { tenantId: id, lastLoginAt: { not: null } }, orderBy: { lastLoginAt: 'desc' }, select: { lastLoginAt: true } }),
-      this.prisma.errorLog.count({ where: { tenantId: id, createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } } }),
-      this.prisma.auditLog.findMany({ where: { tenantId: id }, orderBy: { createdAt: 'desc' }, take: 5 }),
+      this.prisma.user.findFirst({
+        where: { tenantId: id, lastLoginAt: { not: null } },
+        orderBy: { lastLoginAt: 'desc' },
+        select: { lastLoginAt: true },
+      }),
+      this.prisma.errorLog.count({
+        where: {
+          tenantId: id,
+          createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) },
+        },
+      }),
+      this.prisma.auditLog.findMany({
+        where: { tenantId: id },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+      }),
     ]);
 
-    const nicCompliance = await this.prisma.nicCompliance.findUnique({ where: { tenantId: id } });
+    const nicCompliance = await this.prisma.nicCompliance.findUnique({
+      where: { tenantId: id },
+    });
 
     return {
       data: {
@@ -333,9 +424,13 @@ export class TenantManagementController {
   }
 
   @Post(':id/export')
-  async exportData(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async exportData(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const tenant = await this.prisma.tenant.findUnique({ where: { id } });
-    if (!tenant) throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
+    if (!tenant)
+      throw new HttpException('Tenant not found', HttpStatus.NOT_FOUND);
 
     const [clients, policies, claims] = await Promise.all([
       this.prisma.client.findMany({ where: { tenantId: id } }),

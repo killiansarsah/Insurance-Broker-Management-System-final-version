@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Param, Body, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -41,22 +51,46 @@ export class NicComplianceController {
         skip,
         take: limitNum,
         orderBy: { complianceScore: 'asc' },
-        include: { tenant: { select: { name: true, adminEmail: true, phone: true } } },
+        include: {
+          tenant: { select: { name: true, adminEmail: true, phone: true } },
+        },
       }),
       this.prisma.nicCompliance.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Patch(':tenantId')
   async updateCompliance(
     @Param('tenantId') tenantId: string,
-    @Body() body: { complianceScore?: number; segregationCompliant?: boolean; levyStatus?: string; kycStatus?: string, licenceNumber?: string, expiryDate?: string },
+    @Body()
+    body: {
+      complianceScore?: number;
+      segregationCompliant?: boolean;
+      levyStatus?: string;
+      kycStatus?: string;
+      licenceNumber?: string;
+      expiryDate?: string;
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const before = await this.prisma.nicCompliance.findUnique({ where: { tenantId } });
-    if (!before) throw new HttpException('NIC compliance record not found', HttpStatus.NOT_FOUND);
+    const before = await this.prisma.nicCompliance.findUnique({
+      where: { tenantId },
+    });
+    if (!before)
+      throw new HttpException(
+        'NIC compliance record not found',
+        HttpStatus.NOT_FOUND,
+      );
 
     const record = await this.prisma.nicCompliance.update({
       where: { tenantId },
@@ -67,7 +101,10 @@ export class NicComplianceController {
       },
     });
 
-    const tenant = await this.prisma.tenant.findUnique({ where: { id: tenantId }, select: { name: true } });
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true },
+    });
 
     await this.audit.log({
       actorId: user.sub,

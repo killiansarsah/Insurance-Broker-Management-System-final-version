@@ -20,7 +20,9 @@ interface AuthenticatedSocket extends Socket {
 @WebSocketGateway({
   namespace: '/notifications',
   cors: {
-    origin: process.env['CORS_ORIGINS']?.split(',') || ['http://localhost:3000'],
+    origin: process.env['CORS_ORIGINS']?.split(',') || [
+      'http://localhost:3000',
+    ],
     credentials: true,
   },
 })
@@ -71,7 +73,7 @@ export class NotificationsGateway
       if (!this.userSockets.has(payload.sub)) {
         this.userSockets.set(payload.sub, new Set());
       }
-      this.userSockets.get(payload.sub)!.add(client.id);
+      this.userSockets.get(payload.sub).add(client.id);
 
       this.logger.log(
         `Notification socket connected: ${client.id} (user: ${payload.sub})`,

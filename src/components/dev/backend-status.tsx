@@ -76,33 +76,27 @@ export function BackendStatus() {
 
     if (status === 'checking') {
         return (
-            <div className="fixed bottom-4 right-4 bg-white border border-surface-200 rounded-lg shadow-lg p-4 flex items-center gap-3 z-50 animate-in fade-in slide-in-from-bottom-2">
-                <Loader2 size={20} className="animate-spin text-primary-500" />
-                <div>
-                    <p className="text-sm font-semibold text-surface-900">Checking Backend...</p>
-                    <p className="text-xs text-surface-500">{apiUrl}</p>
-                </div>
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm border border-surface-200 rounded-full shadow-md px-4 py-2 flex items-center gap-2 z-50 animate-in fade-in slide-in-from-bottom-2">
+                <Loader2 size={14} className="animate-spin text-primary-500" />
+                <p className="text-xs font-medium text-surface-600">Checking backend...</p>
             </div>
         );
     }
 
     if (status === 'connected') {
         return (
-            <div className="fixed bottom-4 right-4 bg-white border border-success-200 rounded-lg shadow-lg p-4 z-50 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-3">
-                    <Wifi size={20} className="text-success-500" />
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-success-900">Backend Connected</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <Database size={12} className="text-success-500" />
-                            <span className="text-xs text-success-600">
-                                DB: {detail.dbLatency !== undefined ? `${detail.dbLatency}ms` : 'OK'}
-                            </span>
-                        </div>
-                    </div>
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm border border-success-200 rounded-full shadow-md px-4 py-2 z-50 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2">
+                    <Wifi size={14} className="text-success-500" />
+                    <span className="text-xs font-medium text-success-700">Connected</span>
+                    <span className="text-[10px] text-success-500">·</span>
+                    <Database size={12} className="text-success-500" />
+                    <span className="text-[10px] text-success-600">
+                        {detail.dbLatency !== undefined ? `${detail.dbLatency}ms` : 'OK'}
+                    </span>
                     <button
                         onClick={() => setDismissed(true)}
-                        className="text-surface-400 hover:text-surface-600 text-xs ml-2"
+                        className="text-surface-400 hover:text-surface-600 text-xs ml-1"
                         aria-label="Dismiss"
                     >
                         ✕
@@ -114,31 +108,24 @@ export function BackendStatus() {
 
     if (status === 'degraded') {
         return (
-            <div className="fixed bottom-4 right-4 bg-white border border-warning-300 rounded-lg shadow-lg p-4 z-50 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-3">
-                    <CheckCircle size={20} className="text-warning-500" />
-                    <div className="flex-1">
-                        <p className="text-sm font-semibold text-warning-900">Backend Degraded</p>
-                        <div className="flex items-center gap-2 mt-0.5">
-                            <Database size={12} className="text-danger-500" />
-                            <span className="text-xs text-danger-600">Database is down</span>
-                        </div>
-                        {timeAgo && <p className="text-[10px] text-surface-400 mt-1">{timeAgo}</p>}
-                    </div>
+            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm border border-warning-300 rounded-full shadow-md px-4 py-2 z-50 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2">
+                    <CheckCircle size={14} className="text-warning-500" />
+                    <span className="text-xs font-medium text-warning-700">Degraded</span>
+                    <span className="text-[10px] text-warning-500">·</span>
+                    <Database size={12} className="text-danger-500" />
+                    <span className="text-[10px] text-danger-600">DB down</span>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="fixed bottom-4 right-4 bg-white border border-danger-200 rounded-lg shadow-lg p-4 z-50 animate-in fade-in slide-in-from-bottom-2">
-            <div className="flex items-center gap-3">
-                <WifiOff size={20} className="text-danger-500" />
-                <div className="flex-1">
-                    <p className="text-sm font-semibold text-danger-900">Backend Disconnected</p>
-                    <p className="text-xs text-danger-600">Cannot reach {apiUrl}</p>
-                    {timeAgo && <p className="text-[10px] text-surface-400 mt-1">{timeAgo}</p>}
-                </div>
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm border border-danger-200 rounded-full shadow-md px-4 py-2 z-50 animate-in fade-in slide-in-from-bottom-2">
+            <div className="flex items-center gap-2">
+                <WifiOff size={14} className="text-danger-500" />
+                <span className="text-xs font-medium text-danger-700">Disconnected</span>
+                <span className="text-[10px] text-danger-400">· {timeAgo}</span>
             </div>
         </div>
     );

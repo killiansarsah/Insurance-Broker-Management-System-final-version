@@ -34,7 +34,10 @@ export class IntegrationsController {
   /** GET /integrations/:serviceKey — get single integration */
   @Get(':serviceKey')
   @Roles('ADMIN', 'TENANT_ADMIN')
-  findOne(@Request() req: RequestWithUser, @Param('serviceKey') serviceKey: string) {
+  findOne(
+    @Request() req: RequestWithUser,
+    @Param('serviceKey') serviceKey: string,
+  ) {
     return this.service.findOne(req.user.tenantId, serviceKey);
   }
 
@@ -48,7 +51,10 @@ export class IntegrationsController {
   /** POST /integrations/disconnect/:serviceKey — disconnect */
   @Post('disconnect/:serviceKey')
   @Roles('ADMIN', 'TENANT_ADMIN')
-  disconnect(@Request() req: RequestWithUser, @Param('serviceKey') serviceKey: string) {
+  disconnect(
+    @Request() req: RequestWithUser,
+    @Param('serviceKey') serviceKey: string,
+  ) {
     return this.service.disconnect(req.user.tenantId, serviceKey);
   }
 
@@ -66,7 +72,10 @@ export class IntegrationsController {
   /** POST /integrations/:serviceKey/sync — trigger manual sync */
   @Post(':serviceKey/sync')
   @Roles('ADMIN', 'TENANT_ADMIN')
-  sync(@Request() req: RequestWithUser, @Param('serviceKey') serviceKey: string) {
+  sync(
+    @Request() req: RequestWithUser,
+    @Param('serviceKey') serviceKey: string,
+  ) {
     return this.service.recordSync(req.user.tenantId, serviceKey);
   }
 }

@@ -258,10 +258,17 @@ export function DataTable<T>({
                     {exportable && (
                         <button
                             onClick={handleExportCSV}
-                            className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-surface-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 rounded-lg hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 cursor-pointer transition-all duration-200 shadow-sm hover:shadow whitespace-nowrap"
+                            className="group relative inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-success-700 dark:text-success-400 bg-success-50/50 dark:bg-success-900/10 border border-success-200/50 dark:border-success-800/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_6px_16px_-4px_rgba(34,197,94,0.3)] dark:hover:shadow-[0_6px_16px_-4px_rgba(34,197,94,0.15)] hover:-translate-y-0.5 hover:bg-success-50 dark:hover:bg-success-900/30 hover:border-success-300/60 dark:hover:border-success-700/50 whitespace-nowrap"
                         >
-                            <FileSpreadsheet size={14} />
-                            Export CSV
+                            <span className="absolute inset-0 w-full h-full bg-gradient-to-tr from-success-400/0 via-success-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            
+                            <div className="relative flex items-center justify-center z-10 p-0.5 rounded-md text-success-600 dark:text-success-500 transition-colors duration-300">
+                                <FileSpreadsheet 
+                                    size={15} 
+                                    className="transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-[1.15] group-hover:-rotate-6 group-active:scale-95" 
+                                />
+                            </div>
+                            <span className="relative z-10 tracking-wide">Export</span>
                         </button>
                     )}
                     {headerActions}

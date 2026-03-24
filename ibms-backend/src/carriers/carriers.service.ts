@@ -11,7 +11,7 @@ import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CarriersService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   private async logAudit(
     tenantId: string,

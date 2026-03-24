@@ -285,10 +285,7 @@ export class ComplianceService {
           },
         ],
         AND: {
-          OR: [
-            { isPep: true },
-            { amlRiskLevel: { in: ['HIGH', 'CRITICAL'] } },
-          ],
+          OR: [{ isPep: true }, { amlRiskLevel: { in: ['HIGH', 'CRITICAL'] } }],
         },
       },
       select: {

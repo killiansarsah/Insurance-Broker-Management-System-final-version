@@ -1,6 +1,11 @@
 import { IsString, IsOptional, IsEnum, IsDateString } from 'class-validator';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
-import { TransactionType, PaymentMethod, PaymentStatus, AccountType } from '@prisma/client';
+import {
+  TransactionType,
+  PaymentMethod,
+  PaymentStatus,
+  AccountType,
+} from '@prisma/client';
 
 export class TransactionQueryDto extends PaginationDto {
   @IsEnum(TransactionType)

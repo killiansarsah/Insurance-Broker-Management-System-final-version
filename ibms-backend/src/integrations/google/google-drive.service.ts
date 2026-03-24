@@ -25,9 +25,7 @@ export class GoogleDriveService {
   /**
    * Find or create the root IBMS folder in Google Drive.
    */
-  private async getOrCreateRootFolder(
-    drive: drive_v3.Drive,
-  ): Promise<string> {
+  private async getOrCreateRootFolder(drive: drive_v3.Drive): Promise<string> {
     // Search for existing IBMS folder
     const response = await drive.files.list({
       q: "name = 'IBMS Documents' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
@@ -36,7 +34,7 @@ export class GoogleDriveService {
     });
 
     if (response.data.files?.length) {
-      return response.data.files[0].id!;
+      return response.data.files[0].id;
     }
 
     // Create root folder
@@ -48,7 +46,7 @@ export class GoogleDriveService {
       fields: 'id',
     });
 
-    return folder.data.id!;
+    return folder.data.id;
   }
 
   /**
@@ -66,7 +64,7 @@ export class GoogleDriveService {
     });
 
     if (response.data.files?.length) {
-      return response.data.files[0].id!;
+      return response.data.files[0].id;
     }
 
     const folder = await drive.files.create({
@@ -78,7 +76,7 @@ export class GoogleDriveService {
       fields: 'id',
     });
 
-    return folder.data.id!;
+    return folder.data.id;
   }
 
   /**
@@ -127,8 +125,8 @@ export class GoogleDriveService {
     );
 
     return {
-      driveFileId: uploaded.data.id!,
-      webViewLink: uploaded.data.webViewLink!,
+      driveFileId: uploaded.data.id,
+      webViewLink: uploaded.data.webViewLink,
     };
   }
 
@@ -207,7 +205,15 @@ export class GoogleDriveService {
   async listDriveFiles(
     tenantId: string,
     category?: string,
-  ): Promise<{ files: { id: string; name: string; mimeType: string; webViewLink: string; modifiedTime: string }[] }> {
+  ): Promise<{
+    files: {
+      id: string;
+      name: string;
+      mimeType: string;
+      webViewLink: string;
+      modifiedTime: string;
+    }[];
+  }> {
     const drive = await this.getDriveApi(tenantId);
     const rootId = await this.getOrCreateRootFolder(drive);
 
@@ -224,9 +230,9 @@ export class GoogleDriveService {
     });
 
     const files = (response.data.files ?? []).map((f) => ({
-      id: f.id!,
-      name: f.name!,
-      mimeType: f.mimeType!,
+      id: f.id,
+      name: f.name,
+      mimeType: f.mimeType,
       webViewLink: f.webViewLink ?? '',
       modifiedTime: f.modifiedTime ?? '',
     }));

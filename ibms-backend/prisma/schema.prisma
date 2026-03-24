@@ -57,6 +57,8 @@ model Tenant {
   tasks                   Task[]
   transactions            Transaction[]
   users                   User[]
+  importJobs              ImportJob[]
+  columnMappingTemplates  ColumnMappingTemplate[]
   ClaimDocument           ClaimDocument[]
   subscriptions           Subscription[]
   payments                PlatformPayment[]
@@ -140,6 +142,8 @@ model User {
   assignedTasks         Task[]               @relation("TaskAssignee")
   createdTasks          Task[]               @relation("TaskCreator")
   processedTransactions Transaction[]        @relation("TransactionProcessor")
+  createdImportJobs       ImportJob[]        @relation("JobCreator")
+  createdMappingTemplates ColumnMappingTemplate[] @relation("TemplateCreator")
   branch                Branch?              @relation(fields: [branchId], references: [id])
   department            Department?          @relation("DepartmentMember", fields: [departmentId], references: [id])
   tenant                Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1989,4 +1993,108 @@ model NicCompliance {
   tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("nic_compliance")
+}
+
+// ─── IMPORT SYSTEM ──────────────────────────────────────────
+
+enum ImportStatus {
+  PENDING
+  MAPPING
+  VALIDATING
+  READY
+  PROCESSING
+  COMPLETED
+  COMPLETED_WITH_ERRORS
+  FAILED
+  CANCELLED
+}
+
+enum ImportRowStatus {
+  PENDING
+  READY
+  WARNING
+  ERROR
+  DUPLICATE
+  IMPORTED
+  SKIPPED
+}
+
+model ImportJob {
+  id                  String          @id @default(uuid()) @db.Uuid
+  tenantId            String          @db.Uuid
+  createdById         String          @db.Uuid
+  dataType            String          // 'clients', 'policies', etc.
+  fileName            String
+  fileSize            Int
+  status              ImportStatus    @default(PENDING)
+  totalRows           Int             @default(0)
+  processedRows       Int             @default(0)
+  importedRows        Int             @default(0)
+  skippedRows         Int             @default(0)
+  errorRows           Int             @default(0)
+  warningRows         Int             @default(0)
+  duplicateRows       Int             @default(0)
+  rawFileData         Json?           // Parsed file contents (temporary)
+  detectedMappings    Json?           // AI/rule-based detected mappings
+  confirmedMappings   Json?           // User-confirmed mappings
+  validationResult    Json?           // Full validation result
+  mappingMethod       String?         // 'AI_HYBRID' | 'RULES' | 'AI'
+  mapping             Json?           // Legacy mapping field
+  resultReportUrl     String?
+  errorMessage        String?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+
+  tenant              Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy           User            @relation("JobCreator", fields: [createdById], references: [id])
+  rows                ImportJobRow[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@index([status])
+  @@map("import_jobs")
+}
+
+model ImportJobRow {
+  id              String          @id @default(uuid()) @db.Uuid
+  jobId           String          @db.Uuid
+  tenantId        String          @db.Uuid
+  rowIndex        Int
+  rawData         Json
+  mappedData      Json?
+  transformedData Json?           // After transformations
+  status          ImportRowStatus @default(PENDING)
+  clientId        String?         @db.Uuid  // Set if successfully imported
+  errors          Json?           // Array of ValidationIssue[]
+  warnings        Json?           // Array of ValidationIssue[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  job             ImportJob       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@index([jobId])
+  @@index([jobId, status])
+  @@map("import_job_rows")
+}
+
+model ColumnMappingTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  createdById String   @db.Uuid
+  name        String
+  dataType    String   // 'clients', 'policies'
+  mapping     Json     // The actual map: { sourceCol: systemField }
+  timesUsed   Int      @default(0)
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy   User     @relation("TemplateCreator", fields: [createdById], references: [id])
+
+  @@index([tenantId])
+  @@index([tenantId, dataType])
+  @@map("column_mapping_templates")
 }

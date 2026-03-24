@@ -25,7 +25,12 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_IMAGE_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
 const imageStorage = diskStorage({
@@ -42,11 +47,15 @@ function imageFileFilter(
   cb: (error: Error | null, acceptFile: boolean) => void,
 ) {
   if (!ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-    return cb(new BadRequestException('Only image files (JPEG, PNG, GIF, WebP) are allowed'), false);
+    return cb(
+      new BadRequestException(
+        'Only image files (JPEG, PNG, GIF, WebP) are allowed',
+      ),
+      false,
+    );
   }
   cb(null, true);
 }
-
 
 @Controller('settings')
 @UseGuards(JwtAuthGuard, RolesGuard)

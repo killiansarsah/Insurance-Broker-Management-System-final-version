@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Delete, Param, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -45,18 +55,38 @@ export class BackgroundJobsController {
       this.prisma.backgroundJob.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Post(':id/retry')
-  async retryJob(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async retryJob(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const job = await this.prisma.backgroundJob.findUnique({ where: { id } });
     if (!job) throw new HttpException('Job not found', HttpStatus.NOT_FOUND);
-    if (job.status !== 'FAILED') throw new HttpException('Only failed jobs can be retried', HttpStatus.BAD_REQUEST);
+    if (job.status !== 'FAILED')
+      throw new HttpException(
+        'Only failed jobs can be retried',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const updatedJob = await this.prisma.backgroundJob.update({
       where: { id },
-      data: { status: 'QUEUED', attempts: 0, errorMessage: null, nextRetryAt: null },
+      data: {
+        status: 'QUEUED',
+        attempts: 0,
+        errorMessage: null,
+        nextRetryAt: null,
+      },
     });
 
     await this.audit.log({
@@ -74,7 +104,10 @@ export class BackgroundJobsController {
   }
 
   @Delete(':id/discard')
-  async discardJob(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async discardJob(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const job = await this.prisma.backgroundJob.findUnique({ where: { id } });
     if (!job) throw new HttpException('Job not found', HttpStatus.NOT_FOUND);
 

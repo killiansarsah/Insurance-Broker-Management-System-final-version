@@ -26,12 +26,17 @@ export class EnhancedEmailService {
       this.logger.log('Enhanced Email service initialized with Resend');
     } else {
       this.resend = null;
-      this.logger.warn('Enhanced Email service: no RESEND_API_KEY — console-log mode');
+      this.logger.warn(
+        'Enhanced Email service: no RESEND_API_KEY — console-log mode',
+      );
     }
   }
 
   private get from(): string {
-    return this.config.get<string>('EMAIL_FROM', 'IBMS <onboarding@resend.dev>');
+    return this.config.get<string>(
+      'EMAIL_FROM',
+      'IBMS <onboarding@resend.dev>',
+    );
   }
 
   // Simplified email sending for now
@@ -44,11 +49,17 @@ export class EnhancedEmailService {
   ): Promise<string> {
     // For now, send directly until queue is properly set up
     await this.sendDirect(recipientEmail, subject, htmlContent);
-    this.logger.log(`Email sent directly: ${recipientEmail} - ${options.templateName}`);
+    this.logger.log(
+      `Email sent directly: ${recipientEmail} - ${options.templateName}`,
+    );
     return 'sent-directly';
   }
 
-  private async sendDirect(to: string, subject: string, html: string): Promise<void> {
+  private async sendDirect(
+    to: string,
+    subject: string,
+    html: string,
+  ): Promise<void> {
     if (this.resend) {
       try {
         const { data, error } = await this.resend.emails.send({
@@ -58,7 +69,9 @@ export class EnhancedEmailService {
           html,
         });
         if (error) {
-          this.logger.error(`Resend API error sending to ${to}: ${JSON.stringify(error)}`);
+          this.logger.error(
+            `Resend API error sending to ${to}: ${JSON.stringify(error)}`,
+          );
           return;
         }
         this.logger.log(`Email sent to ${to} [Resend ID: ${data?.id}]`);
@@ -78,7 +91,13 @@ export class EnhancedEmailService {
   }
 
   // Backward compatibility methods
-  async sendInvite(email: string, rawToken: string, frontendUrl: string, tenantId: string, userId?: string): Promise<void> {
+  async sendInvite(
+    email: string,
+    rawToken: string,
+    frontendUrl: string,
+    tenantId: string,
+    userId?: string,
+  ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
     const subject = 'You have been invited to IBMS';
     const html = `
@@ -96,7 +115,13 @@ export class EnhancedEmailService {
     });
   }
 
-  async sendPasswordReset(email: string, rawToken: string, frontendUrl: string, tenantId: string, userId?: string): Promise<void> {
+  async sendPasswordReset(
+    email: string,
+    rawToken: string,
+    frontendUrl: string,
+    tenantId: string,
+    userId?: string,
+  ): Promise<void> {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
     const subject = 'IBMS Password Reset';
     const html = `
@@ -128,7 +153,7 @@ export class EnhancedEmailService {
     const subject = `Policy Renewal Reminder: ${policyNumber} - ${daysUntilExpiry} Days Remaining`;
     const urgency = daysUntilExpiry <= 30 ? 'URGENT' : 'UPCOMING';
     const urgencyColor = daysUntilExpiry <= 30 ? '#dc2626' : '#f59e0b';
-    
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: ${urgencyColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
@@ -197,8 +222,13 @@ export class EnhancedEmailService {
     notes?: string,
   ): Promise<void> {
     const subject = `Claim Update: ${claimNumber} - Status Changed to ${newStatus}`;
-    const statusColor = newStatus === 'APPROVED' ? '#10b981' : newStatus === 'REJECTED' ? '#ef4444' : '#3b82f6';
-    
+    const statusColor =
+      newStatus === 'APPROVED'
+        ? '#10b981'
+        : newStatus === 'REJECTED'
+          ? '#ef4444'
+          : '#3b82f6';
+
     const html = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <div style="background: ${statusColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
@@ -229,9 +259,13 @@ export class EnhancedEmailService {
             </table>
           </div>
 
-          ${notes ? `<div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin: 20px 0;">
+          ${
+            notes
+              ? `<div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin: 20px 0;">
             <p style="margin: 0; color: #1e40af; font-size: 14px;"><strong>Notes:</strong> ${notes}</p>
-          </div>` : ''}
+          </div>`
+              : ''
+          }
 
           <p style="color: #374151; margin: 20px 0;">If you have any questions about your claim, please contact your broker or claims department.</p>
           

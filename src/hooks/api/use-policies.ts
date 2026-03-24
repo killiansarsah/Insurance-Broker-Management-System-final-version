@@ -113,6 +113,9 @@ export function usePayInstallment() {
     return useMutation({
         mutationFn: ({ policyId, id, data }: { policyId: string; id: string; data: Record<string, unknown> }) =>
             apiClient.patch(`/policies/${policyId}/installments/${id}/pay`, data),
-        onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['policies', vars.policyId] }),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: ['policies'] });
+            qc.invalidateQueries({ queryKey: ['policies', vars.policyId] });
+        },
     });
 }

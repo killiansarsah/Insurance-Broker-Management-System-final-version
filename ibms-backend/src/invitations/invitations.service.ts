@@ -206,7 +206,8 @@ export class InvitationsService {
       },
     });
 
-    let invitation: (InvitationRecord & { tenant: { name: string } }) | null = null;
+    let invitation: (InvitationRecord & { tenant: { name: string } }) | null =
+      null;
     for (const c of candidates) {
       const ok = await bcrypt.compare(rawToken, c.token);
       if (ok) {
@@ -256,11 +257,15 @@ export class InvitationsService {
       },
     });
 
-    let invitation: (InvitationRecord & { tenant: { id: string; name: string } }) | null = null;
+    let invitation:
+      | (InvitationRecord & { tenant: { id: string; name: string } })
+      | null = null;
     for (const c of candidates) {
       const ok = await bcrypt.compare(rawToken, c.token);
       if (ok) {
-        invitation = c as InvitationRecord & { tenant: { id: string; name: string } };
+        invitation = c as InvitationRecord & {
+          tenant: { id: string; name: string };
+        };
         break;
       }
     }

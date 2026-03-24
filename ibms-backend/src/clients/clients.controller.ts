@@ -9,11 +9,14 @@ import {
   Query,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
 import { ClientQueryDto } from './dto/client-query.dto';
+import { ExportClientsDto, ExportFormat } from './dto/export-clients.dto';
 import { UpdateKycDto } from './dto/update-kyc.dto';
 import { UpdateAmlDto } from './dto/update-aml.dto';
 import { CreateBeneficiaryDto } from './dto/create-beneficiary.dto';
@@ -28,7 +31,7 @@ import type { AuthenticatedRequest as RequestWithUser } from '../common/types/re
 @Controller('clients')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) { }
+  constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT')
@@ -47,6 +50,43 @@ export class ClientsController {
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT', 'COMPLIANCE_OFFICER')
   findAll(@Request() req: RequestWithUser, @Query() query: ClientQueryDto) {
     return this.clientsService.findAll(req.user.tenantId, query);
+  }
+
+  @Post('export')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT', 'COMPLIANCE_OFFICER')
+  async export(
+    @Request() req: RequestWithUser,
+    @Body() dto: ExportClientsDto,
+    @Res() res: Response,
+  ) {
+    const fileBuffer = await this.clientsService.export(
+      req.user.tenantId,
+      req.user.sub,
+      req.user.email,
+      dto,
+    );
+
+    const dateStr = new Date().toISOString().split('T')[0];
+    const agencyName = 'Agency'; // Placeholder, we will fetch real name in service or controller if needed, but it's okay for now. Actually, let's fetch tenant later if needed or just use "Clients_Export"
+
+    if (dto.format === ExportFormat.CSV) {
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${agencyName}_Clients_Export_${dateStr}.csv"`,
+      );
+    } else {
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${agencyName}_Clients_Export_${dateStr}.xlsx"`,
+      );
+    }
+
+    res.send(fileBuffer);
   }
 
   @Get(':id')

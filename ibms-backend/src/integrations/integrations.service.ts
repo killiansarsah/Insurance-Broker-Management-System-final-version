@@ -23,7 +23,8 @@ export class IntegrationsService {
     const integration = await this.prisma.integration.findUnique({
       where: { tenantId_serviceKey: { tenantId, serviceKey } },
     });
-    if (!integration) throw new NotFoundException(`Integration ${serviceKey} not found`);
+    if (!integration)
+      throw new NotFoundException(`Integration ${serviceKey} not found`);
     return integration;
   }
 
@@ -41,47 +42,60 @@ export class IntegrationsService {
       timestamp: now.toISOString(),
     };
 
-    return this.prisma.integration.upsert({
-      where: { tenantId_serviceKey: { tenantId, serviceKey: dto.serviceKey } },
-      create: {
-        tenantId,
-        serviceKey: dto.serviceKey,
-        connected: true,
-        connectedAt: now,
-        connectedEmail: dto.connectedEmail ?? null,
-        lastSyncAt: now,
-        credentials: credentials as unknown as Prisma.InputJsonValue,
-        syncEvents: [connectEvent] as unknown as Prisma.InputJsonValue,
-      },
-      update: {
-        connected: true,
-        connectedAt: now,
-        connectedEmail: dto.connectedEmail ?? undefined,
-        lastSyncAt: now,
-        credentials: credentials as unknown as Prisma.InputJsonValue,
-        syncEvents: {
-          // We can't easily push to JSON in Prisma, so we handle it via a raw approach below
-          set: undefined as any,
+    return this.prisma.integration
+      .upsert({
+        where: {
+          tenantId_serviceKey: { tenantId, serviceKey: dto.serviceKey },
         },
-      },
-    }).catch(async () => {
-      // Need to handle syncEvents append manually:
-      const existing = await this.prisma.integration.findUnique({
-        where: { tenantId_serviceKey: { tenantId, serviceKey: dto.serviceKey } },
-      });
-      const existingEvents = Array.isArray(existing?.syncEvents) ? (existing.syncEvents as any[]) : [];
-      return this.prisma.integration.update({
-        where: { tenantId_serviceKey: { tenantId, serviceKey: dto.serviceKey } },
-        data: {
+        create: {
+          tenantId,
+          serviceKey: dto.serviceKey,
+          connected: true,
+          connectedAt: now,
+          connectedEmail: dto.connectedEmail ?? null,
+          lastSyncAt: now,
+          credentials: credentials as unknown as Prisma.InputJsonValue,
+          syncEvents: [connectEvent] as unknown as Prisma.InputJsonValue,
+        },
+        update: {
           connected: true,
           connectedAt: now,
           connectedEmail: dto.connectedEmail ?? undefined,
           lastSyncAt: now,
           credentials: credentials as unknown as Prisma.InputJsonValue,
-          syncEvents: [connectEvent, ...existingEvents].slice(0, 20) as unknown as Prisma.InputJsonValue,
+          syncEvents: {
+            // We can't easily push to JSON in Prisma, so we handle it via a raw approach below
+            set: undefined as any,
+          },
         },
+      })
+      .catch(async () => {
+        // Need to handle syncEvents append manually:
+        const existing = await this.prisma.integration.findUnique({
+          where: {
+            tenantId_serviceKey: { tenantId, serviceKey: dto.serviceKey },
+          },
+        });
+        const existingEvents = Array.isArray(existing?.syncEvents)
+          ? (existing.syncEvents as any[])
+          : [];
+        return this.prisma.integration.update({
+          where: {
+            tenantId_serviceKey: { tenantId, serviceKey: dto.serviceKey },
+          },
+          data: {
+            connected: true,
+            connectedAt: now,
+            connectedEmail: dto.connectedEmail ?? undefined,
+            lastSyncAt: now,
+            credentials: credentials as unknown as Prisma.InputJsonValue,
+            syncEvents: [connectEvent, ...existingEvents].slice(
+              0,
+              20,
+            ) as unknown as Prisma.InputJsonValue,
+          },
+        });
       });
-    });
   }
 
   /** Disconnect an integration. */
@@ -89,9 +103,12 @@ export class IntegrationsService {
     const existing = await this.prisma.integration.findUnique({
       where: { tenantId_serviceKey: { tenantId, serviceKey } },
     });
-    if (!existing) throw new NotFoundException(`Integration ${serviceKey} not found`);
+    if (!existing)
+      throw new NotFoundException(`Integration ${serviceKey} not found`);
 
-    const existingEvents = Array.isArray(existing.syncEvents) ? (existing.syncEvents as any[]) : [];
+    const existingEvents = Array.isArray(existing.syncEvents)
+      ? (existing.syncEvents as any[])
+      : [];
     const disconnectEvent = {
       id: `evt-${Date.now()}`,
       type: 'disconnected',
@@ -107,19 +124,30 @@ export class IntegrationsService {
         connectedEmail: null,
         lastSyncAt: null,
         credentials: {} as unknown as Prisma.InputJsonValue,
-        syncEvents: [disconnectEvent, ...existingEvents].slice(0, 20) as unknown as Prisma.InputJsonValue,
+        syncEvents: [disconnectEvent, ...existingEvents].slice(
+          0,
+          20,
+        ) as unknown as Prisma.InputJsonValue,
       },
     });
   }
 
   /** Update config (sync frequency, etc.). */
-  async update(tenantId: string, serviceKey: string, dto: UpdateIntegrationDto) {
+  async update(
+    tenantId: string,
+    serviceKey: string,
+    dto: UpdateIntegrationDto,
+  ) {
     const existing = await this.prisma.integration.findUnique({
       where: { tenantId_serviceKey: { tenantId, serviceKey } },
     });
-    if (!existing) throw new NotFoundException(`Integration ${serviceKey} not found`);
+    if (!existing)
+      throw new NotFoundException(`Integration ${serviceKey} not found`);
 
-    const config = (existing.config && typeof existing.config === 'object') ? { ...(existing.config as any) } : {};
+    const config =
+      existing.config && typeof existing.config === 'object'
+        ? { ...(existing.config as any) }
+        : {};
     if (dto.webhookUrl !== undefined) config.webhookUrl = dto.webhookUrl;
 
     return this.prisma.integration.update({
@@ -136,11 +164,14 @@ export class IntegrationsService {
     const existing = await this.prisma.integration.findUnique({
       where: { tenantId_serviceKey: { tenantId, serviceKey } },
     });
-    if (!existing) throw new NotFoundException(`Integration ${serviceKey} not found`);
+    if (!existing)
+      throw new NotFoundException(`Integration ${serviceKey} not found`);
 
     const now = new Date();
     const count = Math.floor(Math.random() * 50) + 5;
-    const existingEvents = Array.isArray(existing.syncEvents) ? (existing.syncEvents as any[]) : [];
+    const existingEvents = Array.isArray(existing.syncEvents)
+      ? (existing.syncEvents as any[])
+      : [];
     const syncEvent = {
       id: `evt-${Date.now()}`,
       type: 'sync',
@@ -153,7 +184,10 @@ export class IntegrationsService {
       where: { tenantId_serviceKey: { tenantId, serviceKey } },
       data: {
         lastSyncAt: now,
-        syncEvents: [syncEvent, ...existingEvents].slice(0, 20) as unknown as Prisma.InputJsonValue,
+        syncEvents: [syncEvent, ...existingEvents].slice(
+          0,
+          20,
+        ) as unknown as Prisma.InputJsonValue,
       },
     });
   }

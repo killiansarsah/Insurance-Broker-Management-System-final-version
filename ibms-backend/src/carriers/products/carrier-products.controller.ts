@@ -21,7 +21,7 @@ import type { AuthenticatedRequest as RequestWithUser } from '../../common/types
 @Controller('carriers/:carrierId/products')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CarrierProductsController {
-  constructor(private readonly productsService: CarrierProductsService) { }
+  constructor(private readonly productsService: CarrierProductsService) {}
 
   @Post()
   @Roles('ADMIN', 'TENANT_ADMIN')

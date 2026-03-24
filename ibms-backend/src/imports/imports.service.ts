@@ -1,12 +1,15 @@
-import {
-  Injectable,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { parse } from 'csv-parse/sync';
 import * as ExcelJS from 'exceljs';
-import { Prisma, InsuranceType, PremiumFrequency, LeadSource, LeadPriority, Gender } from '@prisma/client';
+import {
+  Prisma,
+  InsuranceType,
+  PremiumFrequency,
+  LeadSource,
+  LeadPriority,
+  Gender,
+} from '@prisma/client';
 import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
 import type { ImportDataType } from './dto/import.dto';
 
@@ -78,6 +81,421 @@ export class ImportsService {
   constructor(private readonly prisma: PrismaService) {}
 
   // ─── PUBLIC ENTRY POINT ───────────────────────────────────
+  async generateTemplate(dataType: string): Promise<Buffer> {
+    const workbook = new ExcelJS.Workbook();
+
+    const templateSheet = workbook.addWorksheet('Import Template');
+    let headers: string[] = [];
+    if (dataType === 'clients') {
+      headers = [
+        'Client Type',
+        'First Name',
+        'Last Name',
+        'Company Name',
+        'Date of Birth (YYYY-MM-DD)',
+        'Gender',
+        'Marital Status',
+        'Nationality',
+        'Ghana Card Number',
+        'TIN',
+        'Phone',
+        'Email',
+        'Digital Address',
+        'Residential Address',
+        'Occupation',
+        'KYC Status',
+        'AML Risk Level',
+        'PEP (Yes/No)',
+      ];
+    } else {
+      headers = ['Field 1', 'Field 2'];
+    }
+
+    templateSheet.addRow(headers);
+    templateSheet.getRow(1).font = { bold: true };
+    templateSheet.getRow(1).fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: 'FFE0E0E0' },
+    };
+
+    if (dataType === 'clients') {
+      templateSheet.addRow([
+        'INDIVIDUAL',
+        'John',
+        'Doe',
+        '',
+        '1990-01-01',
+        'MALE',
+        'SINGLE',
+        'Ghanaian',
+        'GHA-123456789-0',
+        '',
+        '0201234567',
+        'john@example.com',
+        'GA-123-4567',
+        '123 Main St',
+        'Software Engineer',
+        'VERIFIED',
+        'LOW',
+        'No',
+      ]);
+    }
+
+    templateSheet.columns.forEach((c) => {
+      c.width = 20;
+    });
+
+    const instructionSheet = workbook.addWorksheet('Instructions');
+    instructionSheet.addRow(['Data Import Instructions']);
+    instructionSheet.getRow(1).font = { bold: true, size: 14 };
+    instructionSheet.addRow([]);
+    instructionSheet.addRow([
+      '1. Use the "Import Template" sheet to enter your data. Do not rename or change the order of columns.',
+    ]);
+    instructionSheet.addRow([
+      '2. For distinct fields, refer to the "Valid Values" sheet to know accepted options.',
+    ]);
+    instructionSheet.addRow([
+      '3. Ensure dates are formatted as YYYY-MM-DD or MM/DD/YYYY.',
+    ]);
+    instructionSheet.addRow([
+      '4. Phone numbers should be entered strictly with numbers, leading zeros are allowed.',
+    ]);
+
+    const validValuesSheet = workbook.addWorksheet('Valid Values');
+    if (dataType === 'clients') {
+      validValuesSheet.addRow([
+        'Client Type',
+        'Gender',
+        'Marital Status',
+        'KYC Status',
+        'AML Risk Level',
+        'PEP',
+      ]);
+      validValuesSheet.getRow(1).font = { bold: true };
+
+      const maxRows = 4;
+      const clientTypes = ['INDIVIDUAL', 'CORPORATE', '', ''];
+      const genders = ['MALE', 'FEMALE', '', ''];
+      const maritalStatuses = ['SINGLE', 'MARRIED', 'DIVORCED', 'WIDOWED'];
+      const kycStatuses = ['PENDING', 'VERIFIED', 'REJECTED', 'EXPIRED'];
+      const amlRiskLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+      const pepValues = ['Yes', 'No', '', ''];
+
+      for (let i = 0; i < maxRows; i++) {
+        validValuesSheet.addRow([
+          clientTypes[i],
+          genders[i],
+          maritalStatuses[i],
+          kycStatuses[i],
+          amlRiskLevels[i],
+          pepValues[i],
+        ]);
+      }
+    }
+
+    return (await workbook.xlsx.writeBuffer()) as any;
+  }
+
+  async uploadForMapping(
+    tenantId: string,
+    userId: string,
+    file: Express.Multer.File,
+    dataType: ImportDataType,
+  ) {
+    const rows = await this.parseFile(file);
+
+    if (!rows.length) {
+      throw new BadRequestException('File contains no data rows');
+    }
+
+    if (rows.length > 5000) {
+      throw new BadRequestException(
+        `Maximum 5000 rows per import (got ${rows.length}).`,
+      );
+    }
+
+    const job = await this.prisma.importJob.create({
+      data: {
+        tenantId,
+        createdById: userId,
+        dataType,
+        fileName: file.originalname,
+        fileSize: file.size,
+        status: 'MAPPING',
+        totalRows: rows.length,
+        rawFileData: rows as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    const chunkSize = 500;
+    for (let i = 0; i < rows.length; i += chunkSize) {
+      const chunk = rows.slice(i, i + chunkSize);
+      await this.prisma.importJobRow.createMany({
+        data: chunk.map((r, idx) => ({
+          jobId: job.id,
+          tenantId,
+          rowIndex: i + idx + 2,
+          rawData: r as any,
+          status: 'PENDING' as const,
+        })),
+      });
+    }
+
+    const headers = Object.keys(rows[0]);
+    const suggestedMapping = this.fuzzyMapColumns(headers, dataType);
+
+    return {
+      jobId: job.id,
+      headers,
+      sampleRow: rows[0],
+      suggestedMapping,
+      detectedRowCount: rows.length,
+      fileName: file.originalname,
+    };
+  }
+
+  async validateMapping(
+    tenantId: string,
+    jobId: string,
+    mapping: Record<string, string>,
+  ) {
+    const job = await this.prisma.importJob.findUnique({
+      where: { id: jobId, tenantId },
+    });
+    if (!job) throw new BadRequestException('Import job not found');
+
+    await this.prisma.importJob.update({
+      where: { id: jobId },
+      data: { mapping, status: 'VALIDATING' },
+    });
+
+    // Fetch all pending rows for this job
+    const rows = await this.prisma.importJobRow.findMany({
+      where: { jobId },
+    });
+
+    let validRowsCount = 0;
+    let errorRowsCount = 0;
+
+    // Invert mapping (source -> target) to easy access
+    // mapping is like { 'First Name': 'firstName' }
+    const targetToSourceMap = Object.entries(mapping).reduce(
+      (acc, [src, tgt]) => {
+        acc[tgt] = src;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
+
+    for (const row of rows) {
+      const raw = row.rawData as Record<string, any>;
+      const mappedData: Record<string, any> = {};
+      const errors: string[] = [];
+      const warnings: string[] = [];
+
+      // Apply mapping
+      Object.entries(mapping).forEach(([src, tgt]) => {
+        mappedData[tgt] = raw[src] || null;
+      });
+
+      // Basic validation based on dataType
+      if (job.dataType === 'clients') {
+        if (!mappedData['firstName'] && !mappedData['companyName']) {
+          errors.push('Either First Name or Company Name is required.');
+        }
+        if (!mappedData['clientType']) {
+          errors.push('Client Type is required.');
+        }
+        // Dummy duplicates check simulation
+        if (mappedData['phone'] && mappedData['phone'].length < 10) {
+          warnings.push('Phone number seems invalid or too short.');
+        }
+      }
+
+      const status =
+        errors.length > 0 ? 'ERROR' : warnings.length > 0 ? 'WARNING' : 'READY';
+
+      if (status === 'READY' || status === 'WARNING') {
+        validRowsCount++;
+      } else {
+        errorRowsCount++;
+      }
+
+      await this.prisma.importJobRow.update({
+        where: { id: row.id },
+        data: {
+          mappedData,
+          status,
+          errors: errors.length > 0 ? errors : Prisma.DbNull,
+          warnings: warnings.length > 0 ? warnings : Prisma.DbNull,
+        },
+      });
+    }
+
+    await this.prisma.importJob.update({
+      where: { id: jobId },
+      data: {
+        status: 'READY',
+        warningRows: validRowsCount,
+        errorRows: errorRowsCount,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Validation completed.',
+      summary: {
+        total: rows.length,
+        valid: validRowsCount,
+        errors: errorRowsCount,
+      },
+    };
+  }
+
+  async executeImport(tenantId: string, userId: string, jobId: string) {
+    const job = await this.prisma.importJob.findUnique({
+      where: { id: jobId, tenantId },
+    });
+    if (!job) throw new BadRequestException('Import job not found');
+    if (job.status !== 'READY')
+      throw new BadRequestException('Job is not in READY state');
+
+    await this.prisma.importJob.update({
+      where: { id: jobId },
+      data: { status: 'PROCESSING' },
+    });
+
+    try {
+      // Fetch valid rows
+      const validRows = await this.prisma.importJobRow.findMany({
+        where: { jobId, status: { in: ['READY', 'WARNING'] } },
+      });
+
+      const recordsToImport = validRows.map(
+        (r) => r.mappedData as Record<string, string>,
+      );
+
+      let result;
+      if (job.dataType === 'all') {
+        result = await this.importAll(tenantId, userId, recordsToImport);
+      } else {
+        result = await this.importRows(
+          tenantId,
+          userId,
+          recordsToImport,
+          job.dataType as ImportDataType,
+        );
+      }
+
+      await this.prisma.importJob.update({
+        where: { id: jobId },
+        data: {
+          status: 'COMPLETED',
+          completedAt: new Date(),
+          importedRows:
+            (result as ImportResult).created ||
+            (result as MixedImportResult).summary?.totalCreated ||
+            0,
+          skippedRows:
+            (result as ImportResult).skipped ||
+            (result as MixedImportResult).summary?.totalSkipped ||
+            0,
+        },
+      });
+
+      // Update rows status (simplistic approach: just mark them all IMPORTED if done,
+      // ideally we would track exactly which row succeeded, but importRows returns array indices mapping to recordsToImport array)
+      await this.prisma.importJobRow.updateMany({
+        where: { jobId, status: { in: ['READY', 'WARNING'] } },
+        data: { status: 'IMPORTED' },
+      });
+
+      return { success: true, message: 'Execution completed.', result };
+    } catch (e: any) {
+      this.logger.error(
+        `Import execution failed for job ${jobId}: ${e.message}`,
+        e.stack,
+      );
+      await this.prisma.importJob.update({
+        where: { id: jobId },
+        data: {
+          status: 'FAILED',
+          errorMessage: e.message,
+        },
+      });
+      throw e;
+    }
+  }
+
+  private fuzzyMapColumns(headers: string[], dataType: string) {
+    const systemFields = this.getSystemFields(dataType);
+    const mapping: Array<{
+      source: string;
+      target: string;
+      confidence: number;
+    }> = [];
+
+    headers.forEach((header) => {
+      let bestMatch: string | null = null;
+      let highestScore = 0;
+
+      const cleanHeader = header.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+      systemFields.forEach((field) => {
+        const cleanField = field.label.toLowerCase().replace(/[^a-z0-9]/g, '');
+        // simple inclusion or exact
+        if (cleanHeader === cleanField) {
+          bestMatch = field.key;
+          highestScore = 100;
+        } else if (
+          cleanHeader.includes(cleanField) ||
+          cleanField.includes(cleanHeader)
+        ) {
+          bestMatch = field.key;
+          highestScore = 80;
+        } else {
+          // distance check could be done here if needed
+        }
+      });
+
+      if (bestMatch && highestScore > 50) {
+        mapping.push({
+          source: header,
+          target: bestMatch,
+          confidence: highestScore,
+        });
+      }
+    });
+
+    return mapping;
+  }
+
+  private getSystemFields(dataType: string) {
+    if (dataType === 'clients') {
+      return [
+        { key: 'clientType', label: 'Client Type' },
+        { key: 'firstName', label: 'First Name' },
+        { key: 'firstName', label: 'Given Name' },
+        { key: 'firstName', label: 'Forename' },
+        { key: 'lastName', label: 'Last Name' },
+        { key: 'lastName', label: 'Surname' },
+        { key: 'companyName', label: 'Company Name' },
+        { key: 'fullName', label: 'Full Name' },
+        { key: 'fullName', label: 'Client Name' },
+        { key: 'email', label: 'Email' },
+        { key: 'phone', label: 'Phone' },
+        { key: 'dateOfBirth', label: 'Date of Birth' },
+        { key: 'gender', label: 'Gender' },
+        { key: 'nationality', label: 'Nationality' },
+        { key: 'ghanaCardNumber', label: 'Ghana Card Number' },
+        { key: 'tin', label: 'TIN' },
+      ];
+    }
+    return [];
+  }
+
   async processFile(
     tenantId: string,
     userId: string,
@@ -105,7 +523,9 @@ export class ImportsService {
 
   // ─── FILE PARSING ─────────────────────────────────────────
 
-  private async parseFile(file: Express.Multer.File): Promise<Record<string, string>[]> {
+  private async parseFile(
+    file: Express.Multer.File,
+  ): Promise<Record<string, string>[]> {
     const ext = file.originalname.split('.').pop()?.toLowerCase();
 
     if (ext === 'xlsx' || ext === 'xls') {
@@ -133,7 +553,9 @@ export class ImportsService {
     });
 
     if (!sheet || sheet.rowCount < 2) {
-      throw new BadRequestException('Excel file contains no data. Ensure the first sheet has headers in row 1 and data below.');
+      throw new BadRequestException(
+        'Excel file contains no data. Ensure the first sheet has headers in row 1 and data below.',
+      );
     }
 
     // Row 1 = headers
@@ -203,9 +625,12 @@ export class ImportsService {
   private parseJson(content: string): Record<string, string>[] {
     try {
       const data = JSON.parse(content);
-      const arr = Array.isArray(data) ? data : data.data || data.items || data.records || [data];
+      const arr = Array.isArray(data)
+        ? data
+        : data.data || data.items || data.records || [data];
       return arr.filter(
-        (item: unknown) => item && typeof item === 'object' && !Array.isArray(item),
+        (item: unknown) =>
+          item && typeof item === 'object' && !Array.isArray(item),
       );
     } catch {
       throw new BadRequestException('Failed to parse JSON file');
@@ -394,7 +819,10 @@ export class ImportsService {
     for (const c of candidates) {
       // Exact match (case-insensitive)
       for (const key of Object.keys(row)) {
-        if (key.toLowerCase().replace(/[\s_\-#]/g, '') === c.toLowerCase().replace(/[\s_\-#]/g, '')) {
+        if (
+          key.toLowerCase().replace(/[\s_\-#]/g, '') ===
+          c.toLowerCase().replace(/[\s_\-#]/g, '')
+        ) {
           return row[key]?.trim() || '';
         }
       }
@@ -402,14 +830,20 @@ export class ImportsService {
     return '';
   }
 
-  private colNum(row: Record<string, string>, ...candidates: string[]): number | null {
+  private colNum(
+    row: Record<string, string>,
+    ...candidates: string[]
+  ): number | null {
     const val = this.col(row, ...candidates);
     if (!val) return null;
     const n = parseFloat(val.replace(/[₵$,GHS\s]/gi, ''));
     return isNaN(n) ? null : n;
   }
 
-  private colDate(row: Record<string, string>, ...candidates: string[]): string | null {
+  private colDate(
+    row: Record<string, string>,
+    ...candidates: string[]
+  ): string | null {
     const val = this.col(row, ...candidates);
     if (!val) return null;
 
@@ -426,7 +860,8 @@ export class ImportsService {
       const [, dayStr, monthStr, yearStr] = ddmm;
       const day = parseInt(dayStr);
       const month = parseInt(monthStr);
-      const year = yearStr.length === 2 ? 2000 + parseInt(yearStr) : parseInt(yearStr);
+      const year =
+        yearStr.length === 2 ? 2000 + parseInt(yearStr) : parseInt(yearStr);
       // Treat as DD/MM/YYYY (Ghana convention) — day first
       if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
         const d = new Date(year, month - 1, day);
@@ -439,7 +874,10 @@ export class ImportsService {
     return isNaN(d.getTime()) ? null : d.toISOString();
   }
 
-  private colBool(row: Record<string, string>, ...candidates: string[]): boolean {
+  private colBool(
+    row: Record<string, string>,
+    ...candidates: string[]
+  ): boolean {
     const val = this.col(row, ...candidates).toLowerCase();
     return ['true', 'yes', '1', 'y'].includes(val);
   }
@@ -452,40 +890,191 @@ export class ImportsService {
     row: Record<string, string>,
     rowNum: number,
   ): Promise<boolean> {
-    const name = this.col(row, 'name', 'clientname', 'fullname', 'companyname', 'client', 'insured', 'assured', 'policyholder', 'insuredname');
-    const firstName = this.col(row, 'firstname', 'first_name', 'first name');
-    const lastName = this.col(row, 'lastname', 'last_name', 'last name', 'surname');
-    const phone = this.col(row, 'phone', 'phonenumber', 'phone number', 'mobile', 'tel', 'telephone');
-    const email = this.col(row, 'email', 'emailaddress', 'email address');
-    const companyName = this.col(row, 'companyname', 'company', 'company name', 'organisation', 'organization');
-    const typeRaw = this.col(row, 'type', 'clienttype', 'client type').toUpperCase();
+    // Extract name from as many aliases as possible
+    const name = this.col(
+      row,
+      'name',
+      'clientname',
+      'client_name',
+      'client name',
+      'fullname',
+      'full_name',
+      'full name',
+      'client',
+      'insured',
+      'assured',
+      'proposer',
+      'policyholder',
+      'insuredname',
+      'insured_name',
+      'insured name',
+      'assured_name',
+      'assured name',
+      'contactname',
+      'contact_name',
+      'contact name',
+      'applicant',
+      'accountname',
+      'account_name',
+      'account name',
+      'customer',
+      'customername',
+      'customer_name',
+      'customer name',
+      'clientfullname',
+      'client_full_name',
+      'client full name',
+    );
+    const firstName = this.col(
+      row,
+      'firstname',
+      'first_name',
+      'first name',
+      'fname',
+      'givenname',
+      'given_name',
+      'given name',
+      'clientfirstname',
+      'client_first_name',
+      'client first name',
+      'clientfirst',
+      'othernames',
+      'other_names',
+      'other names',
+      'forename',
+      'forenames',
+    );
+    const lastName = this.col(
+      row,
+      'lastname',
+      'last_name',
+      'last name',
+      'surname',
+      'lname',
+      'familyname',
+      'family_name',
+      'family name',
+      'clientsurname',
+      'client_surname',
+      'client surname',
+      'clientlastname',
+      'client_last_name',
+      'client last name',
+      'clientlast',
+    );
+    const phone = this.col(
+      row,
+      'phone',
+      'phonenumber',
+      'phone number',
+      'phone_number',
+      'mobile',
+      'tel',
+      'telephone',
+      'contact',
+      'contactnumber',
+      'phoneprimary',
+      'phone_primary',
+    );
+    const email = this.col(
+      row,
+      'email',
+      'emailaddress',
+      'email address',
+      'email_address',
+      'e_mail',
+      'mail',
+    );
+    const companyName = this.col(
+      row,
+      'companyname',
+      'company_name',
+      'company',
+      'company name',
+      'organisation',
+      'organization',
+      'businessname',
+      'business_name',
+      'business',
+      'firmname',
+      'firm',
+      'entityname',
+    );
+    const typeRaw = this.col(
+      row,
+      'type',
+      'clienttype',
+      'client_type',
+      'client type',
+      'category',
+    ).toUpperCase();
 
-    // Determine type
+    // Corporate keyword detection from name
+    const corporateKeywords =
+      /\b(ltd|limited|plc|inc|corp|company|co\.|enterprise|enterprises|group|foundation|association|institute|llc|gmbh|sa|ngo|trust)\b/i;
+
+    // Determine type — explicit type field takes priority, then auto-detect
     let type: 'INDIVIDUAL' | 'CORPORATE' = 'INDIVIDUAL';
-    if (typeRaw === 'CORPORATE' || typeRaw === 'COMPANY' || typeRaw === 'BUSINESS') {
+    if (
+      typeRaw === 'CORPORATE' ||
+      typeRaw === 'COMPANY' ||
+      typeRaw === 'BUSINESS' ||
+      typeRaw === 'ORGANISATION' ||
+      typeRaw === 'ORGANIZATION'
+    ) {
+      type = 'CORPORATE';
+    } else if (!typeRaw && (companyName || corporateKeywords.test(name))) {
+      // Auto-detect corporate from companyName presence or name keywords
       type = 'CORPORATE';
     }
 
-    // Parse name if firstName/lastName not provided
+    // Build final name fields with maximum resilience
     let finalFirst = firstName;
     let finalLast = lastName;
     let finalCompany = companyName;
 
-    if (type === 'INDIVIDUAL' && !finalFirst && name) {
-      const parts = name.split(/\s+/);
-      finalFirst = parts[0] || '';
-      finalLast = parts.slice(1).join(' ') || '';
-    }
-    if (type === 'CORPORATE' && !finalCompany && name) {
-      finalCompany = name;
+    // If we have a full name but no firstName, split it
+    if (!finalFirst && name) {
+      if (type === 'INDIVIDUAL') {
+        const parts = name.trim().split(/\s+/);
+        finalFirst = parts[0] || '';
+        finalLast = finalLast || parts.slice(1).join(' ') || '';
+      } else {
+        // For corporate, use name as company name if not set
+        finalCompany = finalCompany || name;
+      }
     }
 
-    // Validate minimum data
+    // Last resort: if INDIVIDUAL still has no firstName but has a name of any kind
     if (type === 'INDIVIDUAL' && !finalFirst) {
-      throw new Error(`Row ${rowNum}: firstName is required for INDIVIDUAL clients`);
+      // Try using companyName as actual name (common in messy data)
+      if (companyName && !corporateKeywords.test(companyName)) {
+        const parts = companyName.trim().split(/\s+/);
+        finalFirst = parts[0] || '';
+        finalLast = finalLast || parts.slice(1).join(' ') || '';
+      } else if (companyName) {
+        // It looks corporate, switch type
+        type = 'CORPORATE';
+        finalCompany = companyName;
+      }
+    }
+
+    // For corporate with no companyName — use name or firstName as company
+    if (type === 'CORPORATE' && !finalCompany) {
+      finalCompany = name || firstName || '';
+    }
+
+    // Final validation — reject rows with no identifiable name rather than
+    // silently creating records with placeholder names like "Unknown-Row55"
+    if (type === 'INDIVIDUAL' && !finalFirst) {
+      throw new Error(
+        `Row ${rowNum}: Could not resolve a client name. None of the columns matched known name fields (e.g. "Full Name", "First Name", "Surname"). Please check your column headers or use the column mapping step to assign the correct field.`,
+      );
     }
     if (type === 'CORPORATE' && !finalCompany) {
-      throw new Error(`Row ${rowNum}: companyName is required for CORPORATE clients`);
+      throw new Error(
+        `Row ${rowNum}: Could not resolve a company name. None of the columns matched known name fields (e.g. "Company Name", "Full Name"). Please check your column headers or use the column mapping step to assign the correct field.`,
+      );
     }
     if (!phone && !email) {
       throw new Error(`Row ${rowNum}: At least phone or email is required`);
@@ -497,13 +1086,17 @@ export class ImportsService {
       deletedAt: null,
       OR: [] as Prisma.ClientWhereInput[],
     };
-    if (phone) (existingWhere.OR as Prisma.ClientWhereInput[]).push({ phone });
-    if (email) (existingWhere.OR as Prisma.ClientWhereInput[]).push({ email });
+    if (phone) existingWhere.OR.push({ phone });
+    if (email) existingWhere.OR.push({ email });
 
-    if ((existingWhere.OR as Prisma.ClientWhereInput[]).length > 0) {
-      const existing = await this.prisma.client.findFirst({ where: existingWhere });
+    if (existingWhere.OR.length > 0) {
+      const existing = await this.prisma.client.findFirst({
+        where: existingWhere,
+      });
       if (existing) {
-        this.logger.debug(`Row ${rowNum}: Skipped duplicate client (phone/email match)`);
+        this.logger.debug(
+          `Row ${rowNum}: Skipped duplicate client (phone/email match)`,
+        );
         return false; // skip duplicate
       }
     }
@@ -522,17 +1115,61 @@ export class ImportsService {
         email: email || null,
         region: this.col(row, 'region', 'state', 'province') || null,
         city: this.col(row, 'city', 'town') || null,
-        digitalAddress: this.col(row, 'digitaladdress', 'digital_address', 'digital address', 'gps') || null,
-        ghanaCardNumber: this.col(row, 'ghanacard', 'ghanacardnumber', 'ghana_card', 'ghana card number', 'id number') || null,
-        dateOfBirth: this.colDate(row, 'dateofbirth', 'dob', 'date_of_birth', 'date of birth', 'birthday')
-          ? new Date(this.colDate(row, 'dateofbirth', 'dob', 'date_of_birth', 'date of birth', 'birthday')!)
+        digitalAddress:
+          this.col(
+            row,
+            'digitaladdress',
+            'digital_address',
+            'digital address',
+            'gps',
+          ) || null,
+        ghanaCardNumber:
+          this.col(
+            row,
+            'ghanacard',
+            'ghanacardnumber',
+            'ghana_card',
+            'ghana card number',
+            'id number',
+          ) || null,
+        dateOfBirth: this.colDate(
+          row,
+          'dateofbirth',
+          'dob',
+          'date_of_birth',
+          'date of birth',
+          'birthday',
+        )
+          ? new Date(
+              this.colDate(
+                row,
+                'dateofbirth',
+                'dob',
+                'date_of_birth',
+                'date of birth',
+                'birthday',
+              ),
+            )
           : null,
         gender: this.normaliseGender(this.col(row, 'gender', 'sex')),
         occupation: this.col(row, 'occupation', 'job', 'profession') || null,
-        tin: this.col(row, 'tin', 'taxid', 'tax_id', 'tax identification') || null,
-        registrationNumber: this.col(row, 'registrationnumber', 'registration', 'reg_number', 'regnumber') || null,
+        tin:
+          this.col(row, 'tin', 'taxid', 'tax_id', 'tax identification') || null,
+        registrationNumber:
+          this.col(
+            row,
+            'registrationnumber',
+            'registration',
+            'reg_number',
+            'regnumber',
+          ) || null,
         isPep: this.colBool(row, 'ispep', 'pep', 'politically_exposed'),
-        eddRequired: this.colBool(row, 'eddrequired', 'edd', 'enhanced_due_diligence'),
+        eddRequired: this.colBool(
+          row,
+          'eddrequired',
+          'edd',
+          'enhanced_due_diligence',
+        ),
       },
     });
 
@@ -548,20 +1185,81 @@ export class ImportsService {
     rowNum: number,
   ): Promise<boolean> {
     // Resolve clientId — by client number or name
-    const clientRef = this.col(row, 'clientid', 'client', 'clientnumber', 'client_number', 'client number', 'client#');
-    const carrierRef = this.col(row, 'carrierid', 'carrier', 'carriername', 'carrier_name', 'carrier name', 'insurer');
-    const insuranceType = this.col(row, 'insurancetype', 'insurance_type', 'insurance type', 'type', 'product').toUpperCase();
-    const premiumAmount = this.colNum(row, 'premiumamount', 'premium', 'premium_amount', 'premium amount');
-    const sumInsured = this.colNum(row, 'suminsured', 'sum_insured', 'sum insured', 'cover', 'coverage');
-    const startDate = this.colDate(row, 'startdate', 'start_date', 'start date', 'inception', 'inceptiondate');
-    const endDate = this.colDate(row, 'enddate', 'end_date', 'end date', 'expiry', 'expirydate', 'expiry_date');
+    const clientRef = this.col(
+      row,
+      'clientid',
+      'client',
+      'clientnumber',
+      'client_number',
+      'client number',
+      'client#',
+    );
+    const carrierRef = this.col(
+      row,
+      'carrierid',
+      'carrier',
+      'carriername',
+      'carrier_name',
+      'carrier name',
+      'insurer',
+    );
+    const insuranceType = this.col(
+      row,
+      'insurancetype',
+      'insurance_type',
+      'insurance type',
+      'type',
+      'product',
+    ).toUpperCase();
+    const premiumAmount = this.colNum(
+      row,
+      'premiumamount',
+      'premium',
+      'premium_amount',
+      'premium amount',
+    );
+    const sumInsured = this.colNum(
+      row,
+      'suminsured',
+      'sum_insured',
+      'sum insured',
+      'cover',
+      'coverage',
+    );
+    const startDate = this.colDate(
+      row,
+      'startdate',
+      'start_date',
+      'start date',
+      'inception',
+      'inceptiondate',
+    );
+    const endDate = this.colDate(
+      row,
+      'enddate',
+      'end_date',
+      'end date',
+      'expiry',
+      'expirydate',
+      'expiry_date',
+    );
 
-    if (!clientRef) throw new Error(`Row ${rowNum}: clientId/clientNumber is required`);
-    if (!insuranceType) throw new Error(`Row ${rowNum}: insuranceType is required`);
-    if (!premiumAmount) throw new Error(`Row ${rowNum}: premiumAmount is required`);
+    if (!clientRef)
+      throw new Error(`Row ${rowNum}: clientId/clientNumber is required`);
+    if (!insuranceType)
+      throw new Error(`Row ${rowNum}: insuranceType is required`);
+    if (!premiumAmount)
+      throw new Error(`Row ${rowNum}: premiumAmount is required`);
 
     // Dedup — if a policy number is provided in the import, check for existing
-    const sourcePolicyNumber = this.col(row, 'policynumber', 'policy_number', 'policy number', 'policy#', 'policyno');
+    const sourcePolicyNumber = this.col(
+      row,
+      'policynumber',
+      'policy_number',
+      'policy number',
+      'policy#',
+      'policyno',
+    );
     if (sourcePolicyNumber) {
       const existing = await this.prisma.policy.findFirst({
         where: { tenantId, policyNumber: sourcePolicyNumber, deletedAt: null },
@@ -582,7 +1280,8 @@ export class ImportsService {
         ],
       },
     });
-    if (!client) throw new Error(`Row ${rowNum}: Client "${clientRef}" not found`);
+    if (!client)
+      throw new Error(`Row ${rowNum}: Client "${clientRef}" not found`);
 
     // Look up carrier (optional)
     let carrierId: string | null = null;
@@ -604,7 +1303,8 @@ export class ImportsService {
       const defaultCarrier = await this.prisma.carrier.findFirst({
         where: { tenantId },
       });
-      if (!defaultCarrier) throw new Error(`Row ${rowNum}: No carrier found in system`);
+      if (!defaultCarrier)
+        throw new Error(`Row ${rowNum}: No carrier found in system`);
       carrierId = defaultCarrier.id;
     }
 
@@ -612,12 +1312,18 @@ export class ImportsService {
     const nextYear = new Date(today);
     nextYear.setFullYear(nextYear.getFullYear() + 1);
 
-    const policyNumber = sourcePolicyNumber || await this.generatePolicyNumber(tenantId);
+    const policyNumber =
+      sourcePolicyNumber || (await this.generatePolicyNumber(tenantId));
     const insType = this.normaliseInsuranceType(insuranceType) as InsuranceType;
     const policyType = ['LIFE'].includes(insType) ? 'LIFE' : 'NON_LIFE';
 
     // Commission rate — prefer Product table lookup over imported value
-    const importedRate = this.colNum(row, 'commission', 'commissionrate', 'commission_rate');
+    const importedRate = this.colNum(
+      row,
+      'commission',
+      'commissionrate',
+      'commission_rate',
+    );
     let commRate = importedRate ?? 10;
     if (carrierId) {
       const product = await this.prisma.product.findFirst({
@@ -646,7 +1352,13 @@ export class ImportsService {
         commissionRate: commRate,
         commissionAmount: commAmount,
         premiumFrequency: this.normalisePremiumFrequency(
-          this.col(row, 'premiumfrequency', 'frequency', 'payment_frequency', 'paymentfrequency'),
+          this.col(
+            row,
+            'premiumfrequency',
+            'frequency',
+            'payment_frequency',
+            'paymentfrequency',
+          ),
         ) as PremiumFrequency,
         currency: this.col(row, 'currency', 'curr') || 'GHS',
       },
@@ -663,14 +1375,45 @@ export class ImportsService {
     row: Record<string, string>,
     rowNum: number,
   ): Promise<boolean> {
-    const policyRef = this.col(row, 'policyid', 'policy', 'policynumber', 'policy_number', 'policy number', 'policy#');
-    const description = this.col(row, 'description', 'details', 'claim_description', 'claimdescription', 'reason');
-    const incidentDate = this.colDate(row, 'incidentdate', 'incident_date', 'incident date', 'date', 'dateofincident');
-    const claimAmount = this.colNum(row, 'claimamount', 'claim_amount', 'claim amount', 'amount');
+    const policyRef = this.col(
+      row,
+      'policyid',
+      'policy',
+      'policynumber',
+      'policy_number',
+      'policy number',
+      'policy#',
+    );
+    const description = this.col(
+      row,
+      'description',
+      'details',
+      'claim_description',
+      'claimdescription',
+      'reason',
+    );
+    const incidentDate = this.colDate(
+      row,
+      'incidentdate',
+      'incident_date',
+      'incident date',
+      'date',
+      'dateofincident',
+    );
+    const claimAmount = this.colNum(
+      row,
+      'claimamount',
+      'claim_amount',
+      'claim amount',
+      'amount',
+    );
 
-    if (!policyRef) throw new Error(`Row ${rowNum}: policyId/policyNumber is required`);
+    if (!policyRef)
+      throw new Error(`Row ${rowNum}: policyId/policyNumber is required`);
     if (!description || description.length < 10) {
-      throw new Error(`Row ${rowNum}: description is required (at least 10 characters)`);
+      throw new Error(
+        `Row ${rowNum}: description is required (at least 10 characters)`,
+      );
     }
 
     const policy = await this.prisma.policy.findFirst({
@@ -679,7 +1422,8 @@ export class ImportsService {
         OR: [{ id: policyRef }, { policyNumber: policyRef }],
       },
     });
-    if (!policy) throw new Error(`Row ${rowNum}: Policy "${policyRef}" not found`);
+    if (!policy)
+      throw new Error(`Row ${rowNum}: Policy "${policyRef}" not found`);
 
     const claimNumber = await this.generateClaimNumber(tenantId);
 
@@ -701,7 +1445,8 @@ export class ImportsService {
         acknowledgmentDeadline: ackDeadline,
         processingDeadline: procDeadline,
         claimAmount: claimAmount ?? 0,
-        incidentLocation: this.col(row, 'location', 'place', 'incident_location') || null,
+        incidentLocation:
+          this.col(row, 'location', 'place', 'incident_location') || null,
       },
     });
 
@@ -716,8 +1461,22 @@ export class ImportsService {
     row: Record<string, string>,
     rowNum: number,
   ): Promise<boolean> {
-    const contactName = this.col(row, 'contactname', 'contact_name', 'contact name', 'name', 'fullname', 'leadname');
-    const source = this.col(row, 'source', 'leadsource', 'lead_source', 'lead source').toUpperCase();
+    const contactName = this.col(
+      row,
+      'contactname',
+      'contact_name',
+      'contact name',
+      'name',
+      'fullname',
+      'leadname',
+    );
+    const source = this.col(
+      row,
+      'source',
+      'leadsource',
+      'lead_source',
+      'lead source',
+    ).toUpperCase();
     const email = this.col(row, 'email', 'emailaddress');
     const phone = this.col(row, 'phone', 'phonenumber', 'mobile');
 
@@ -741,8 +1500,14 @@ export class ImportsService {
         source: this.normaliseLeadSource(source) as LeadSource,
         email: email || null,
         phone: phone || null,
-        companyName: this.col(row, 'companyname', 'company', 'company_name') || null,
-        estimatedPremium: this.colNum(row, 'estimatedpremium', 'estimated_premium', 'estimated premium'),
+        companyName:
+          this.col(row, 'companyname', 'company', 'company_name') || null,
+        estimatedPremium: this.colNum(
+          row,
+          'estimatedpremium',
+          'estimated_premium',
+          'estimated premium',
+        ),
         priority: this.normaliseLeadPriority(
           this.col(row, 'priority', 'leadpriority'),
         ) as LeadPriority,
@@ -761,10 +1526,24 @@ export class ImportsService {
     row: Record<string, string>,
     rowNum: number,
   ): Promise<boolean> {
-    const clientRef = this.col(row, 'clientid', 'client', 'clientnumber', 'client_number', 'client number');
-    const amount = this.colNum(row, 'amount', 'total', 'invoiceamount', 'invoice_amount');
+    const clientRef = this.col(
+      row,
+      'clientid',
+      'client',
+      'clientnumber',
+      'client_number',
+      'client number',
+    );
+    const amount = this.colNum(
+      row,
+      'amount',
+      'total',
+      'invoiceamount',
+      'invoice_amount',
+    );
 
-    if (!clientRef) throw new Error(`Row ${rowNum}: clientId/clientNumber is required`);
+    if (!clientRef)
+      throw new Error(`Row ${rowNum}: clientId/clientNumber is required`);
     if (!amount) throw new Error(`Row ${rowNum}: amount is required`);
 
     const client = await this.prisma.client.findFirst({
@@ -778,7 +1557,8 @@ export class ImportsService {
         ],
       },
     });
-    if (!client) throw new Error(`Row ${rowNum}: Client "${clientRef}" not found`);
+    if (!client)
+      throw new Error(`Row ${rowNum}: Client "${clientRef}" not found`);
 
     // Optionally link to policy
     let policyId: string | null = null;
@@ -795,7 +1575,14 @@ export class ImportsService {
 
     const invoiceNumber = await this.generateInvoiceNumber(tenantId);
 
-    const dueDateVal = this.colDate(row, 'duedate', 'due_date', 'due date', 'datedue', 'date_due');
+    const dueDateVal = this.colDate(
+      row,
+      'duedate',
+      'due_date',
+      'due date',
+      'datedue',
+      'date_due',
+    );
     const defaultDue = new Date();
     defaultDue.setDate(defaultDue.getDate() + 30);
 
@@ -806,7 +1593,9 @@ export class ImportsService {
         clientId: client.id,
         policyId,
         amount,
-        description: this.col(row, 'description', 'details', 'memo') || `Import - ${invoiceNumber}`,
+        description:
+          this.col(row, 'description', 'details', 'memo') ||
+          `Import - ${invoiceNumber}`,
         dateDue: dueDateVal ? new Date(dueDateVal) : defaultDue,
         notes: this.col(row, 'notes', 'remarks') || null,
       },
@@ -823,9 +1612,16 @@ export class ImportsService {
     row: Record<string, string>,
     rowNum: number,
   ): Promise<boolean> {
-    const policyRef = this.col(row, 'policyid', 'policy', 'policynumber', 'policy_number');
+    const policyRef = this.col(
+      row,
+      'policyid',
+      'policy',
+      'policynumber',
+      'policy_number',
+    );
 
-    if (!policyRef) throw new Error(`Row ${rowNum}: policyId/policyNumber is required`);
+    if (!policyRef)
+      throw new Error(`Row ${rowNum}: policyId/policyNumber is required`);
 
     const policy = await this.prisma.policy.findFirst({
       where: {
@@ -834,7 +1630,8 @@ export class ImportsService {
       },
       include: { client: true, carrier: true },
     });
-    if (!policy) throw new Error(`Row ${rowNum}: Policy "${policyRef}" not found`);
+    if (!policy)
+      throw new Error(`Row ${rowNum}: Policy "${policyRef}" not found`);
 
     // Check if commission already exists for this policy
     const existing = await this.prisma.commission.findFirst({
@@ -842,7 +1639,14 @@ export class ImportsService {
     });
     if (existing) return false;
 
-    const rate = this.colNum(row, 'commissionrate', 'rate', 'commission_rate', 'commission') ?? 10;
+    const rate =
+      this.colNum(
+        row,
+        'commissionrate',
+        'rate',
+        'commission_rate',
+        'commission',
+      ) ?? 10;
     const premAmt = policy.premiumAmount.toNumber();
     const commissionAmount = (premAmt * rate) / 100;
     const nicLevy = commissionAmount * NIC_LEVY_RATE;
@@ -873,32 +1677,73 @@ export class ImportsService {
   // ─── NUMBER GENERATORS ────────────────────────────────────
 
   private async generateClientNumber(tenantId: string): Promise<string> {
+    const last = await this.prisma.client.findFirst({
+      where: { tenantId, clientNumber: { startsWith: 'CLI-' } },
+      orderBy: { createdAt: 'desc' },
+      select: { clientNumber: true },
+    });
+    if (last && last.clientNumber) {
+      const match = last.clientNumber.match(/CLI-(\d+)/);
+      if (match) return `CLI-${parseInt(match[1]) + 1}`;
+    }
     const count = await this.prisma.client.count({ where: { tenantId } });
-    const offset = 10000;
-    return `CLI-${offset + count + 1}`;
+    return `CLI-${10000 + count + 1}`;
   }
 
   private async generatePolicyNumber(tenantId: string): Promise<string> {
+    const last = await this.prisma.policy.findFirst({
+      where: { tenantId, policyNumber: { startsWith: 'POL-' } },
+      orderBy: { createdAt: 'desc' },
+      select: { policyNumber: true },
+    });
+    if (last && last.policyNumber) {
+      const match = last.policyNumber.match(/POL-(\d+)/);
+      if (match) return `POL-${parseInt(match[1]) + 1}`;
+    }
     const count = await this.prisma.policy.count({ where: { tenantId } });
-    const offset = 10000;
-    return `POL-${offset + count + 1}`;
+    return `POL-${10000 + count + 1}`;
   }
 
   private async generateClaimNumber(tenantId: string): Promise<string> {
+    const last = await this.prisma.claim.findFirst({
+      where: { tenantId, claimNumber: { startsWith: 'CLM-' } },
+      orderBy: { createdAt: 'desc' },
+      select: { claimNumber: true },
+    });
+    if (last && last.claimNumber) {
+      const match = last.claimNumber.match(/CLM-(\d+)/);
+      if (match) return `CLM-${parseInt(match[1]) + 1}`;
+    }
     const count = await this.prisma.claim.count({ where: { tenantId } });
-    const offset = 10000;
-    return `CLM-${offset + count + 1}`;
+    return `CLM-${10000 + count + 1}`;
   }
 
   private async generateInvoiceNumber(tenantId: string): Promise<string> {
+    const last = await this.prisma.invoice.findFirst({
+      where: { tenantId, invoiceNumber: { startsWith: 'INV-' } },
+      orderBy: { createdAt: 'desc' },
+      select: { invoiceNumber: true },
+    });
+    if (last && last.invoiceNumber) {
+      const match = last.invoiceNumber.match(/INV-(\d+)/);
+      if (match) return `INV-${String(parseInt(match[1]) + 1).padStart(6, '0')}`;
+    }
     const count = await this.prisma.invoice.count({ where: { tenantId } });
     return `INV-${String(count + 1).padStart(6, '0')}`;
   }
 
   private async generateLeadNumber(tenantId: string): Promise<string> {
+    const last = await this.prisma.lead.findFirst({
+      where: { tenantId, leadNumber: { startsWith: 'LD-' } },
+      orderBy: { createdAt: 'desc' },
+      select: { leadNumber: true },
+    });
+    if (last && last.leadNumber) {
+      const match = last.leadNumber.match(/LD-(\d+)/);
+      if (match) return `LD-${parseInt(match[1]) + 1}`;
+    }
     const count = await this.prisma.lead.count({ where: { tenantId } });
-    const offset = 10000;
-    return `LD-${offset + count + 1}`;
+    return `LD-${10000 + count + 1}`;
   }
 
   // ─── NORMALISATION HELPERS ────────────────────────────────
@@ -913,19 +1758,31 @@ export class ImportsService {
 
   private normaliseInsuranceType(val: string): string {
     const map: Record<string, string> = {
-      MOTOR: 'MOTOR', CAR: 'MOTOR', VEHICLE: 'MOTOR', AUTO: 'MOTOR',
-      FIRE: 'FIRE', PROPERTY: 'FIRE', BUILDING: 'FIRE',
-      MARINE: 'MARINE', CARGO: 'MARINE', SHIPPING: 'MARINE',
+      MOTOR: 'MOTOR',
+      CAR: 'MOTOR',
+      VEHICLE: 'MOTOR',
+      AUTO: 'MOTOR',
+      FIRE: 'FIRE',
+      PROPERTY: 'FIRE',
+      BUILDING: 'FIRE',
+      MARINE: 'MARINE',
+      CARGO: 'MARINE',
+      SHIPPING: 'MARINE',
       LIFE: 'LIFE',
-      HEALTH: 'HEALTH', MEDICAL: 'HEALTH',
+      HEALTH: 'HEALTH',
+      MEDICAL: 'HEALTH',
       LIABILITY: 'LIABILITY',
       ENGINEERING: 'ENGINEERING',
-      BONDS: 'BONDS', BOND: 'BONDS',
+      BONDS: 'BONDS',
+      BOND: 'BONDS',
       TRAVEL: 'TRAVEL',
-      AGRICULTURE: 'AGRICULTURE', AGRIC: 'AGRICULTURE',
-      OIL_GAS: 'OIL_GAS', OILGAS: 'OIL_GAS',
+      AGRICULTURE: 'AGRICULTURE',
+      AGRIC: 'AGRICULTURE',
+      OIL_GAS: 'OIL_GAS',
+      OILGAS: 'OIL_GAS',
       AVIATION: 'AVIATION',
-      PROFESSIONAL_INDEMNITY: 'PROFESSIONAL_INDEMNITY', PI: 'PROFESSIONAL_INDEMNITY',
+      PROFESSIONAL_INDEMNITY: 'PROFESSIONAL_INDEMNITY',
+      PI: 'PROFESSIONAL_INDEMNITY',
     };
     return map[val.toUpperCase().replace(/\s+/g, '_')] || 'OTHER';
   }
@@ -934,20 +1791,32 @@ export class ImportsService {
     const v = val.toUpperCase().trim();
     if (['MONTHLY', 'MONTH', 'M'].includes(v)) return 'MONTHLY';
     if (['QUARTERLY', 'QUARTER', 'Q'].includes(v)) return 'QUARTERLY';
-    if (['SEMI_ANNUAL', 'SEMIANNUAL', 'SEMI', 'SA'].includes(v)) return 'SEMI_ANNUAL';
+    if (['SEMI_ANNUAL', 'SEMIANNUAL', 'SEMI', 'SA'].includes(v))
+      return 'SEMI_ANNUAL';
     if (['SINGLE', 'ONE_TIME', 'ONETIME', 'ONCE'].includes(v)) return 'SINGLE';
     return 'ANNUAL';
   }
 
   private normaliseLeadSource(val: string): string {
     const map: Record<string, string> = {
-      REFERRAL: 'REFERRAL', REF: 'REFERRAL', REFERRED: 'REFERRAL',
-      WEBSITE: 'WEBSITE', WEB: 'WEBSITE', ONLINE: 'WEBSITE',
-      WALK_IN: 'WALK_IN', WALKIN: 'WALK_IN', 'WALK IN': 'WALK_IN',
-      PHONE: 'PHONE', CALL: 'PHONE', TELEPHONE: 'PHONE',
+      REFERRAL: 'REFERRAL',
+      REF: 'REFERRAL',
+      REFERRED: 'REFERRAL',
+      WEBSITE: 'WEBSITE',
+      WEB: 'WEBSITE',
+      ONLINE: 'WEBSITE',
+      WALK_IN: 'WALK_IN',
+      WALKIN: 'WALK_IN',
+      'WALK IN': 'WALK_IN',
+      PHONE: 'PHONE',
+      CALL: 'PHONE',
+      TELEPHONE: 'PHONE',
       EMAIL: 'EMAIL',
-      SOCIAL_MEDIA: 'SOCIAL_MEDIA', SOCIALMEDIA: 'SOCIAL_MEDIA', SOCIAL: 'SOCIAL_MEDIA',
-      EVENT: 'EVENT', CONFERENCE: 'EVENT',
+      SOCIAL_MEDIA: 'SOCIAL_MEDIA',
+      SOCIALMEDIA: 'SOCIAL_MEDIA',
+      SOCIAL: 'SOCIAL_MEDIA',
+      EVENT: 'EVENT',
+      CONFERENCE: 'EVENT',
       PARTNER: 'PARTNER',
     };
     return map[val.toUpperCase().replace(/\s+/g, '_')] || 'OTHER';

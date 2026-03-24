@@ -7,7 +7,7 @@ export const IMPORT_DATA_TYPES = [
   'leads',
   'invoices',
   'commissions',
-  'all',         // mixed / auto-detect from column headers
+  'all', // mixed / auto-detect from column headers
 ] as const;
 
 export type ImportDataType = (typeof IMPORT_DATA_TYPES)[number];

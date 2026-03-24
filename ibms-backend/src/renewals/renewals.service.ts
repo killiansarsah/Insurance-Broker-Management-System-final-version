@@ -214,12 +214,12 @@ export class RenewalsService {
   async sendRenewalReminders() {
     this.logger.log('Sending policy renewal reminder emails...');
     const now = new Date();
-    
+
     // Send reminders for policies expiring in 90, 60, and 30 days
     for (const daysAhead of [90, 60, 30]) {
       const targetDate = new Date();
       targetDate.setDate(targetDate.getDate() + daysAhead);
-      
+
       // Find policies expiring on this specific day
       const policies = await this.prisma.policy.findMany({
         where: {
@@ -244,7 +244,8 @@ export class RenewalsService {
       for (const policy of policies) {
         if (!policy.client.email) continue;
 
-        const clientName = policy.client.companyName || 
+        const clientName =
+          policy.client.companyName ||
           `${policy.client.firstName} ${policy.client.lastName}`;
 
         try {
@@ -273,10 +274,14 @@ export class RenewalsService {
     this.logger.log('Renewal reminder emails sent.');
   }
 
-  async notifyAllForTenant(tenantId: string): Promise<{ sent: number; skipped: number; failed: number }> {
+  async notifyAllForTenant(
+    tenantId: string,
+  ): Promise<{ sent: number; skipped: number; failed: number }> {
     this.logger.log(`Manual bulk notify triggered for tenant ${tenantId}`);
     const now = new Date();
-    let sent = 0, skipped = 0, failed = 0;
+    let sent = 0,
+      skipped = 0,
+      failed = 0;
 
     for (const daysAhead of [90, 60, 30]) {
       const targetDate = new Date();
@@ -304,9 +309,13 @@ export class RenewalsService {
       });
 
       for (const policy of policies) {
-        if (!policy.client.email) { skipped++; continue; }
+        if (!policy.client.email) {
+          skipped++;
+          continue;
+        }
 
-        const clientName = policy.client.companyName ||
+        const clientName =
+          policy.client.companyName ||
           `${policy.client.firstName} ${policy.client.lastName}`;
 
         try {
@@ -330,7 +339,9 @@ export class RenewalsService {
       }
     }
 
-    this.logger.log(`Bulk notify complete for tenant ${tenantId}: ${sent} sent, ${skipped} skipped, ${failed} failed`);
+    this.logger.log(
+      `Bulk notify complete for tenant ${tenantId}: ${sent} sent, ${skipped} skipped, ${failed} failed`,
+    );
     return { sent, skipped, failed };
   }
 }

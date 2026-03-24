@@ -17,9 +17,16 @@ import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
 
 @Injectable()
 export class PoliciesService {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-  private async generatePolicyNumber(tenantId: string, client?: { policy: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
+  private async generatePolicyNumber(
+    tenantId: string,
+    client?: {
+      policy: {
+        count: (args: { where: { tenantId: string } }) => Promise<number>;
+      };
+    },
+  ): Promise<string> {
     const db = client ?? this.prisma;
     const today = new Date();
     const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
@@ -146,21 +153,21 @@ export class PoliciesService {
           coverageDetails: dto.coverageDetails,
           vehicleDetails: dto.vehicleDetails
             ? {
-              create:
-                dto.vehicleDetails as unknown as Prisma.VehicleDetailCreateWithoutPolicyInput,
-            }
+                create:
+                  dto.vehicleDetails as unknown as Prisma.VehicleDetailCreateWithoutPolicyInput,
+              }
             : undefined,
           propertyDetails: dto.propertyDetails
             ? {
-              create:
-                dto.propertyDetails as unknown as Prisma.PropertyDetailCreateWithoutPolicyInput,
-            }
+                create:
+                  dto.propertyDetails as unknown as Prisma.PropertyDetailCreateWithoutPolicyInput,
+              }
             : undefined,
           marineDetails: dto.marineDetails
             ? {
-              create:
-                dto.marineDetails as unknown as Prisma.MarineDetailCreateWithoutPolicyInput,
-            }
+                create:
+                  dto.marineDetails as unknown as Prisma.MarineDetailCreateWithoutPolicyInput,
+              }
             : undefined,
         },
       });
@@ -266,6 +273,7 @@ export class PoliciesService {
           },
           carrier: { select: { id: true, name: true } },
           product: { select: { id: true, name: true } },
+          broker: { select: { id: true, firstName: true, lastName: true } },
         },
       }),
       this.prisma.policy.aggregate({
@@ -274,8 +282,32 @@ export class PoliciesService {
       }),
     ]);
 
+    const now = new Date();
+    const mappedItems = items.map((policy) => {
+      const expiry = new Date(policy.expiryDate);
+      const diffTime = expiry.getTime() - now.getTime();
+      const daysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { client, carrier, broker, ...rest } = policy as any;
+      const clientName = client?.companyName
+        ? client.companyName
+        : `${client?.firstName || ''} ${client?.lastName || ''}`.trim() || 'Unknown Client';
+      const brokerName = broker
+        ? `${broker.firstName} ${broker.lastName}`
+        : 'Unassigned';
+
+      return {
+        ...rest,
+        clientName,
+        insurerName: carrier?.name || 'Unknown Insurer',
+        brokerName,
+        daysToExpiry,
+      };
+    });
+
     return {
-      items,
+      items: mappedItems,
       meta: {
         total,
         page,
@@ -337,11 +369,15 @@ export class PoliciesService {
     dto: UpdatePolicyDto,
   ) {
     const updateData: Record<string, unknown> = {};
-    if (dto.premiumAmount !== undefined) updateData.premiumAmount = dto.premiumAmount;
+    if (dto.premiumAmount !== undefined)
+      updateData.premiumAmount = dto.premiumAmount;
     if (dto.sumInsured !== undefined) updateData.sumInsured = dto.sumInsured;
-    if (dto.endDate !== undefined) updateData.expiryDate = new Date(dto.endDate);
-    if (dto.coverageDetails !== undefined) updateData.coverageDetails = dto.coverageDetails;
-    if (dto.premiumFrequency !== undefined) updateData.premiumFrequency = dto.premiumFrequency;
+    if (dto.endDate !== undefined)
+      updateData.expiryDate = new Date(dto.endDate);
+    if (dto.coverageDetails !== undefined)
+      updateData.coverageDetails = dto.coverageDetails;
+    if (dto.premiumFrequency !== undefined)
+      updateData.premiumFrequency = dto.premiumFrequency;
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException('No fields to update');
     }
@@ -380,7 +416,9 @@ export class PoliciesService {
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
     if (policy.status !== 'DRAFT' && policy.status !== 'COVER_NOTE')
-      throw new BadRequestException('Only DRAFT or COVER_NOTE policies can be bound');
+      throw new BadRequestException(
+        'Only DRAFT or COVER_NOTE policies can be bound',
+      );
 
     return await this.prisma.$transaction(async (tx) => {
       const bound = await tx.policy.update({
@@ -464,9 +502,7 @@ export class PoliciesService {
                 title: `Renewal Reminder: ${policyNum} (${daysBefore}d)`,
                 description: `Policy ${policyNum} expires in ${daysBefore} days. Initiate renewal process.`,
                 startDate: reminderDate,
-                endDate: new Date(
-                  reminderDate.getTime() + 30 * 60 * 1000,
-                ),
+                endDate: new Date(reminderDate.getTime() + 30 * 60 * 1000),
                 type: 'POLICY',
                 createdById: userId,
               },
@@ -514,7 +550,9 @@ export class PoliciesService {
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
     if (policy.status !== 'DRAFT')
-      throw new BadRequestException('Only DRAFT policies can be issued as cover notes');
+      throw new BadRequestException(
+        'Only DRAFT policies can be issued as cover notes',
+      );
 
     return await this.prisma.$transaction(async (tx) => {
       const updated = await tx.policy.update({
@@ -587,7 +625,8 @@ export class PoliciesService {
       const policy = await tx.policy.findUnique({
         where: { id, tenantId },
       });
-      if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+      if (!policy)
+        throw new NotFoundException(`Policy with ID ${id} not found`);
       if (policy.status !== 'ACTIVE')
         throw new BadRequestException('Only ACTIVE policies can be lapsed');
 
@@ -623,7 +662,8 @@ export class PoliciesService {
       const policy = await tx.policy.findUnique({
         where: { id, tenantId },
       });
-      if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+      if (!policy)
+        throw new NotFoundException(`Policy with ID ${id} not found`);
       if (policy.status !== 'LAPSED')
         throw new BadRequestException('Only LAPSED policies can be reinstated');
 

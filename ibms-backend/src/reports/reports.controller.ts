@@ -5,7 +5,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
@@ -76,7 +75,13 @@ export class ReportsController {
     @Query('quarter') quarter: string,
   ) {
     const y = parseInt(year) || new Date().getFullYear();
-    const q = Math.min(4, Math.max(1, parseInt(quarter) || Math.ceil((new Date().getMonth() + 1) / 3)));
+    const q = Math.min(
+      4,
+      Math.max(
+        1,
+        parseInt(quarter) || Math.ceil((new Date().getMonth() + 1) / 3),
+      ),
+    );
     return this.reportsService.nicQuarterlyReturn(req.user.tenantId, y, q);
   }
 
@@ -112,6 +117,10 @@ export class ReportsController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.reportsService.ficSuspiciousTransactions(req.user.tenantId, from, to);
+    return this.reportsService.ficSuspiciousTransactions(
+      req.user.tenantId,
+      from,
+      to,
+    );
   }
 }

@@ -49,9 +49,15 @@ export class PlatformAuditService {
           resourceType: payload.resourceType ?? null,
           resourceId: payload.resourceId ?? null,
           description: payload.description,
-          beforeState: payload.beforeState ? (payload.beforeState as Prisma.InputJsonValue) : undefined,
-          afterState: payload.afterState ? (payload.afterState as Prisma.InputJsonValue) : undefined,
-          metadata: payload.metadata ? (payload.metadata as Prisma.InputJsonValue) : undefined,
+          beforeState: payload.beforeState
+            ? (payload.beforeState as Prisma.InputJsonValue)
+            : undefined,
+          afterState: payload.afterState
+            ? (payload.afterState as Prisma.InputJsonValue)
+            : undefined,
+          metadata: payload.metadata
+            ? (payload.metadata as Prisma.InputJsonValue)
+            : undefined,
           ipAddress: payload.ipAddress ?? null,
           userAgent: payload.userAgent ?? null,
           requestId: payload.requestId ?? null,
@@ -96,8 +102,14 @@ export class PlatformAuditService {
     }
     if (params.startDate || params.endDate) {
       where.createdAt = {};
-      if (params.startDate) (where.createdAt as Record<string, unknown>).gte = new Date(params.startDate);
-      if (params.endDate) (where.createdAt as Record<string, unknown>).lte = new Date(params.endDate);
+      if (params.startDate)
+        (where.createdAt as Record<string, unknown>).gte = new Date(
+          params.startDate,
+        );
+      if (params.endDate)
+        (where.createdAt as Record<string, unknown>).lte = new Date(
+          params.endDate,
+        );
     }
 
     const [data, total] = await Promise.all([
@@ -110,6 +122,9 @@ export class PlatformAuditService {
       this.prisma.platformAuditLog.count({ where }),
     ]);
 
-    return { data, meta: { page, limit, total, totalPages: Math.ceil(total / limit) } };
+    return {
+      data,
+      meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    };
   }
 }

@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Post,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, UseGuards, Request } from '@nestjs/common';
 import { GoogleCalendarService } from './google-calendar.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -24,10 +19,7 @@ export class GoogleCalendarController {
   @Post('pull')
   @Roles('ADMIN', 'TENANT_ADMIN')
   pull(@Request() req: RequestWithUser) {
-    return this.calendarService.pullFromGoogle(
-      req.user.tenantId,
-      req.user.sub,
-    );
+    return this.calendarService.pullFromGoogle(req.user.tenantId, req.user.sub);
   }
 
   @Post('sync')

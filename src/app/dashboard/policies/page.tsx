@@ -51,9 +51,9 @@ function exportToCsv(policies: any[]) {
     const headers = ['Policy #', 'Client', 'Type', 'Coverage', 'Status', 'Insurer', 'Premium (GHS)', 'Sum Insured (GHS)', 'Inception', 'Expiry', 'Broker', 'Commission Rate', 'Commission Amt', 'Payment Status'];
     const rows = policies.map(p => [
         p.policyNumber, p.clientName, p.insuranceType, p.coverageType || '', p.status,
-        p.insurerName, p.premiumAmount.toFixed(2), p.sumInsured.toFixed(2),
+        p.insurerName, Number(p.premiumAmount || 0).toFixed(2), Number(p.sumInsured || 0).toFixed(2),
         (p.inceptionDate as string), p.expiryDate, p.brokerName,
-        `${p.commissionRate}%`, p.commissionAmount.toFixed(2), p.paymentStatus,
+        `${p.commissionRate || 0}%`, Number(p.commissionAmount || 0).toFixed(2), p.paymentStatus,
     ]);
     const csv = [headers, ...rows].map(r => r.map(c => safeCsvCell(c)).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -70,7 +70,7 @@ export default function PoliciesPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
-    const { data: policiesData, isLoading } = usePolicies();
+    const { data: policiesData, isLoading } = usePolicies({ limit: 5000 });
     const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
     
     const BROKERS = useMemo(() => 
@@ -329,25 +329,6 @@ export default function PoliciesPage() {
                             </Button>
                         </Link>
                     )}
-                    <Link href="/dashboard/integrations#bulk-import">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
-                            leftIcon={<Upload size={14} className="text-primary-500 group-hover:-translate-y-0.5 transition-transform" />}
-                        >
-                            Import
-                        </Button>
-                    </Link>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-success-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
-                        leftIcon={<Download size={14} className="text-success-500 group-hover:translate-y-0.5 transition-transform" />}
-                        onClick={() => exportToCsv(filtered)}
-                    >
-                        Export CSV
-                    </Button>
                     <Link href="/dashboard/policies/new">
                         <Button 
                             variant="primary" 
@@ -467,6 +448,30 @@ export default function PoliciesPage() {
                     typeParam
                         ? `No ${typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor'} policies found.`
                         : 'No policies found.'
+                }
+                exportable={true}
+                onExport={() => exportToCsv(filtered)}
+                headerActions={
+                    <Link 
+                        href="/dashboard/integrations#bulk-import"
+                        className="group relative inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-primary-700 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_6px_16px_-4px_rgba(14,165,233,0.3)] dark:hover:shadow-[0_6px_16px_-4px_rgba(14,165,233,0.15)] hover:-translate-y-0.5 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-300/60 dark:hover:border-primary-700/50 whitespace-nowrap"
+                    >
+                        {/* Subtle primary glow overlay */}
+                        <span className="absolute inset-0 w-full h-full bg-gradient-to-tr from-primary-400/0 via-primary-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                        
+                        {/* Bouncing Upload Icon */}
+                        <div className="relative overflow-hidden flex items-center justify-center w-[15px] h-[15px] z-10 p-0.5 mt-0.5 text-primary-600 dark:text-primary-500 transition-colors duration-300">
+                             <Upload 
+                                 size={15} 
+                                 className="absolute transition-transform duration-500 ease-[cubic-bezier(0.8,0,0.2,1)] group-hover:-translate-y-full group-hover:opacity-0" 
+                             />
+                             <Upload 
+                                 size={15} 
+                                 className="absolute translate-y-full opacity-0 transition-all duration-500 ease-[cubic-bezier(0.8,0,0.2,1)] group-hover:translate-y-0 group-hover:opacity-100 group-active:scale-95" 
+                             />
+                        </div>
+                        <span className="relative z-10 tracking-wide">Import</span>
+                    </Link>
                 }
             />
         </div>

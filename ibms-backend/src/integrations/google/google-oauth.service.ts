@@ -66,7 +66,7 @@ export class GoogleOAuthService {
     const { data: userInfo } = await oauth2.userinfo.get();
 
     const credentials: StoredCredentials = {
-      access_token: tokens.access_token!,
+      access_token: tokens.access_token,
       refresh_token: tokens.refresh_token,
       expiry_date: tokens.expiry_date ?? Date.now() + 3600_000,
       token_type: tokens.token_type ?? 'Bearer',
@@ -143,7 +143,9 @@ export class GoogleOAuthService {
 
     const creds = integration.credentials as unknown as StoredCredentials;
     if (!creds?.refresh_token) {
-      throw new BadRequestException('No Google credentials found. Please reconnect.');
+      throw new BadRequestException(
+        'No Google credentials found. Please reconnect.',
+      );
     }
 
     const client = this.createOAuth2Client();
@@ -160,7 +162,7 @@ export class GoogleOAuthService {
       const { credentials: newTokens } = await client.refreshAccessToken();
 
       const updated: StoredCredentials = {
-        access_token: newTokens.access_token!,
+        access_token: newTokens.access_token,
         refresh_token: newTokens.refresh_token ?? creds.refresh_token,
         expiry_date: newTokens.expiry_date ?? Date.now() + 3600_000,
         token_type: newTokens.token_type ?? 'Bearer',

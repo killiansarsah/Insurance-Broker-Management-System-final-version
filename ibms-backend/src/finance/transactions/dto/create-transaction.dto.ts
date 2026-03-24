@@ -8,7 +8,12 @@ import {
   IsPositive,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { TransactionType, PaymentMethod, MoMoNetwork, AccountType } from '@prisma/client';
+import {
+  TransactionType,
+  PaymentMethod,
+  MoMoNetwork,
+  AccountType,
+} from '@prisma/client';
 
 export class CreateTransactionDto {
   @IsEnum(TransactionType)

@@ -21,7 +21,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-
 @Controller('calendar/events')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class CalendarController {
@@ -41,7 +40,9 @@ export class CalendarController {
     @Query('to') to: string,
   ) {
     if (!from || !to) {
-      throw new BadRequestException('from and to query parameters are required');
+      throw new BadRequestException(
+        'from and to query parameters are required',
+      );
     }
     return this.calendarService.findAll(
       req.user.tenantId,

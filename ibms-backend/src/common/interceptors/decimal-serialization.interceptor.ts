@@ -11,7 +11,12 @@ import { Prisma } from '@prisma/client';
 type Decimal = Prisma.Decimal;
 
 function convertDecimals(obj: unknown): unknown {
-  if (obj && typeof obj === 'object' && 'toNumber' in obj && typeof (obj as any).toNumber === 'function') {
+  if (
+    obj &&
+    typeof obj === 'object' &&
+    'toNumber' in obj &&
+    typeof (obj as any).toNumber === 'function'
+  ) {
     return (obj as any).toNumber();
   }
   if (obj === null || obj === undefined) {
@@ -35,7 +40,10 @@ function convertDecimals(obj: unknown): unknown {
 
 @Injectable()
 export class DecimalSerializationInterceptor implements NestInterceptor {
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<unknown> {
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<unknown> {
     return next.handle().pipe(map(convertDecimals));
   }
 }

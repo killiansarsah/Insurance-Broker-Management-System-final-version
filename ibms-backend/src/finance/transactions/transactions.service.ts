@@ -18,7 +18,14 @@ export class TransactionsService {
     private readonly invoicesService: InvoicesService,
   ) {}
 
-  private async generateTransactionNumber(tenantId: string, client?: { transaction: { count: (args: { where: { tenantId: string } }) => Promise<number> } }): Promise<string> {
+  private async generateTransactionNumber(
+    tenantId: string,
+    client?: {
+      transaction: {
+        count: (args: { where: { tenantId: string } }) => Promise<number>;
+      };
+    },
+  ): Promise<string> {
     const db = client ?? this.prisma;
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const count = await db.transaction.count({ where: { tenantId } });
@@ -55,7 +62,10 @@ export class TransactionsService {
     }
 
     return await this.prisma.$transaction(async (tx) => {
-      const transactionNumber = await this.generateTransactionNumber(tenantId, tx);
+      const transactionNumber = await this.generateTransactionNumber(
+        tenantId,
+        tx,
+      );
 
       const transaction = await tx.transaction.create({
         data: {
@@ -219,19 +229,33 @@ export class TransactionsService {
   async ledgerSummary(tenantId: string) {
     const [clientAcc, agencyAcc] = await Promise.all([
       this.prisma.transaction.aggregate({
-        where: { tenantId, accountType: 'CLIENT_ACCOUNT', paymentStatus: 'PAID' },
+        where: {
+          tenantId,
+          accountType: 'CLIENT_ACCOUNT',
+          paymentStatus: 'PAID',
+        },
         _sum: { amount: true },
         _count: { id: true },
       }),
       this.prisma.transaction.aggregate({
-        where: { tenantId, accountType: 'AGENCY_ACCOUNT', paymentStatus: 'PAID' },
+        where: {
+          tenantId,
+          accountType: 'AGENCY_ACCOUNT',
+          paymentStatus: 'PAID',
+        },
         _sum: { amount: true },
         _count: { id: true },
       }),
     ]);
     return {
-      clientAccount: { total: clientAcc._sum.amount || 0, count: clientAcc._count.id },
-      agencyAccount: { total: agencyAcc._sum.amount || 0, count: agencyAcc._count.id },
+      clientAccount: {
+        total: clientAcc._sum.amount || 0,
+        count: clientAcc._count.id,
+      },
+      agencyAccount: {
+        total: agencyAcc._sum.amount || 0,
+        count: agencyAcc._count.id,
+      },
     };
   }
 

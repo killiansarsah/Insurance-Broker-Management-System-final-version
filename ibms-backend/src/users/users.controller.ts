@@ -20,7 +20,7 @@ import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 @Controller('users')
 export class UsersController {
-  constructor(private users: UsersService) { }
+  constructor(private users: UsersService) {}
 
   @Get()
   @Roles('TENANT_ADMIN', 'ADMIN')

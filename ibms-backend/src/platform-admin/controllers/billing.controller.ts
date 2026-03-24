@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Param, Body, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -44,7 +54,15 @@ export class BillingController {
       this.prisma.subscription.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Get('subscriptions/:id')
@@ -56,18 +74,28 @@ export class BillingController {
         payments: { orderBy: { createdAt: 'desc' }, take: 10 },
       },
     });
-    if (!subscription) throw new HttpException('Subscription not found', HttpStatus.NOT_FOUND);
+    if (!subscription)
+      throw new HttpException('Subscription not found', HttpStatus.NOT_FOUND);
     return { data: subscription };
   }
 
   @Patch('subscriptions/:id')
   async updateSubscription(
     @Param('id') id: string,
-    @Body() body: { status?: 'ACTIVE' | 'OVERDUE' | 'CANCELLED' | 'TRIAL'; plan?: 'BASIC' | 'PROFESSIONAL' | 'ENTERPRISE'; amountGhs?: number },
+    @Body()
+    body: {
+      status?: 'ACTIVE' | 'OVERDUE' | 'CANCELLED' | 'TRIAL';
+      plan?: 'BASIC' | 'PROFESSIONAL' | 'ENTERPRISE';
+      amountGhs?: number;
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const before = await this.prisma.subscription.findUnique({ where: { id }, include: { tenant: true } });
-    if (!before) throw new HttpException('Subscription not found', HttpStatus.NOT_FOUND);
+    const before = await this.prisma.subscription.findUnique({
+      where: { id },
+      include: { tenant: true },
+    });
+    if (!before)
+      throw new HttpException('Subscription not found', HttpStatus.NOT_FOUND);
 
     const subscription = await this.prisma.subscription.update({
       where: { id },
@@ -117,6 +145,14 @@ export class BillingController {
       this.prisma.platformPayment.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 }

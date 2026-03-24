@@ -38,7 +38,10 @@ export class OverviewController {
       this.prisma.tenant.count(),
       this.prisma.tenant.count({ where: { isActive: true } }),
       this.prisma.tenant.count({ where: { createdAt: { gte: startOfMonth } } }),
-      this.prisma.subscription.findMany({ where: { status: 'ACTIVE' }, select: { amountGhs: true } }),
+      this.prisma.subscription.findMany({
+        where: { status: 'ACTIVE' },
+        select: { amountGhs: true },
+      }),
       this.prisma.subscription.findMany({
         where: {
           status: 'ACTIVE',
@@ -46,13 +49,18 @@ export class OverviewController {
         },
         select: { amountGhs: true },
       }),
-      this.prisma.nicCompliance.count({ where: { complianceScore: { lt: 50 } } }),
+      this.prisma.nicCompliance.count({
+        where: { complianceScore: { lt: 50 } },
+      }),
       this.prisma.errorLog.count({ where: { createdAt: { gte: last24h } } }),
       this.prisma.user.count({ where: { lastLoginAt: { gte: last30min } } }),
     ]);
 
     const mrr = subscriptions.reduce((sum, s) => sum + Number(s.amountGhs), 0);
-    const lastMrr = lastMonthSubscriptions.reduce((sum, s) => sum + Number(s.amountGhs), 0);
+    const lastMrr = lastMonthSubscriptions.reduce(
+      (sum, s) => sum + Number(s.amountGhs),
+      0,
+    );
     const mrrGrowth = lastMrr > 0 ? ((mrr - lastMrr) / lastMrr) * 100 : 0;
     const arr = mrr * 12;
 
@@ -68,7 +76,10 @@ export class OverviewController {
         nicFlags,
         errorsLast24h,
         activeSessions,
-        activeTenantsPercent: totalTenants > 0 ? Number(((activeTenants / totalTenants) * 100).toFixed(1)) : 0,
+        activeTenantsPercent:
+          totalTenants > 0
+            ? Number(((activeTenants / totalTenants) * 100).toFixed(1))
+            : 0,
       },
     };
   }
@@ -81,20 +92,39 @@ export class OverviewController {
 
     for (let i = 11; i >= 0; i--) {
       const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59);
-      const label = start.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+      const end = new Date(
+        now.getFullYear(),
+        now.getMonth() - i + 1,
+        0,
+        23,
+        59,
+        59,
+      );
+      const label = start.toLocaleDateString('en-US', {
+        month: 'short',
+        year: '2-digit',
+      });
 
       const [total, active, subs] = await Promise.all([
         this.prisma.tenant.count({ where: { createdAt: { lte: end } } }),
-        this.prisma.tenant.count({ where: { createdAt: { lte: end }, isActive: true } }),
+        this.prisma.tenant.count({
+          where: { createdAt: { lte: end }, isActive: true },
+        }),
         this.prisma.subscription.findMany({
-          where: { status: 'ACTIVE', currentPeriodStart: { lte: end }, currentPeriodEnd: { gte: start } },
+          where: {
+            status: 'ACTIVE',
+            currentPeriodStart: { lte: end },
+            currentPeriodEnd: { gte: start },
+          },
           select: { amountGhs: true },
         }),
       ]);
 
       months.push({ month: label, total, active });
-      revenue.push({ month: label, revenue: subs.reduce((s, sub) => s + Number(sub.amountGhs), 0) });
+      revenue.push({
+        month: label,
+        revenue: subs.reduce((s, sub) => s + Number(sub.amountGhs), 0),
+      });
     }
 
     // MRR by plan
@@ -105,7 +135,7 @@ export class OverviewController {
       _count: true,
     });
 
-    const mrrByPlan = planBreakdown.map(p => ({
+    const mrrByPlan = planBreakdown.map((p) => ({
       plan: p.plan,
       mrr: Number(p._sum.amountGhs ?? 0),
       count: p._count,
@@ -122,7 +152,14 @@ export class OverviewController {
       { day: 'Sun', success: 2100, failed: 8 },
     ];
 
-    return { data: { tenantGrowth: months, monthlyRevenue: revenue, mrrByPlan, apiVolume } };
+    return {
+      data: {
+        tenantGrowth: months,
+        monthlyRevenue: revenue,
+        mrrByPlan,
+        apiVolume,
+      },
+    };
   }
 
   @Get('activity-feed')
@@ -165,7 +202,10 @@ export class OverviewController {
       rank: i + 1,
       name: t.name,
       policyCount: t._count.policies,
-      percentOfTotal: totalPolicies > 0 ? Number(((t._count.policies / totalPolicies) * 100).toFixed(1)) : 0,
+      percentOfTotal:
+        totalPolicies > 0
+          ? Number(((t._count.policies / totalPolicies) * 100).toFixed(1))
+          : 0,
     }));
 
     return { data };

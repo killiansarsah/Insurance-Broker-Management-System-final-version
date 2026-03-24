@@ -64,7 +64,10 @@ export function useUpdateKyc() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
             apiClient.patch(`/clients/${id}/kyc`, data),
-        onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['clients', vars.id] }),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: ['clients'] });
+            qc.invalidateQueries({ queryKey: ['clients', vars.id] });
+        },
     });
 }
 
@@ -73,7 +76,10 @@ export function useUpdateAml() {
     return useMutation({
         mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
             apiClient.patch(`/clients/${id}/aml`, data),
-        onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['clients', vars.id] }),
+        onSuccess: (_, vars) => {
+            qc.invalidateQueries({ queryKey: ['clients'] });
+            qc.invalidateQueries({ queryKey: ['clients', vars.id] });
+        },
     });
 }
 

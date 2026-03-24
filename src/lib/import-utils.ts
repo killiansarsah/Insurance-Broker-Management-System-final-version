@@ -63,8 +63,8 @@ function validateNumber(value: string): string | null {
 
 // --- Client Fields ---
 const CLIENT_FIELDS: FieldDef[] = [
-    { key: 'firstName', label: 'First Name', required: true, aliases: ['first name', 'first_name', 'fname', 'given name', 'insured'] },
-    { key: 'lastName', label: 'Last Name', required: true, aliases: ['last name', 'last_name', 'lname', 'surname', 'family name'] },
+    { key: 'firstName', label: 'First Name', required: true, aliases: ['first name', 'first_name', 'fname', 'given name', 'insured', 'client first name', 'client_first_name', 'forename', 'forenames', 'other names', 'other_names', 'othernames'] },
+    { key: 'lastName', label: 'Last Name', required: true, aliases: ['last name', 'last_name', 'lname', 'surname', 'family name', 'client surname', 'client_surname', 'client last name', 'client_last_name', 'family_name'] },
     { key: 'type', label: 'Client Type', required: false, aliases: ['client type', 'type', 'category'] },
     { key: 'ghanaCardNumber', label: 'Ghana Card Number', required: true, aliases: ['ghana card', 'ghana card number', 'ghana_card', 'national id', 'id number', 'card number'] },
     { key: 'PHONE', label: 'Phone', required: true, aliases: ['PHONE', 'phone number', 'mobile', 'tel', 'telephone', 'contact'], validate: validatePhone },

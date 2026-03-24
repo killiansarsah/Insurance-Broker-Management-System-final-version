@@ -33,7 +33,7 @@ export class EmailTemplatesService {
     let compiled = htmlContent;
 
     // Replace variables in format {{variableName}}
-    Object.keys(data).forEach(key => {
+    Object.keys(data).forEach((key) => {
       const regex = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
       compiled = compiled.replace(regex, String(data[key] || ''));
     });

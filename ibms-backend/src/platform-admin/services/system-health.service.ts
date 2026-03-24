@@ -42,7 +42,8 @@ export class SystemHealthService {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
       const responseTimeMs = Date.now() - start;
-      const status: ServiceHealthStatus = responseTimeMs > 1000 ? 'DEGRADED' : 'HEALTHY';
+      const status: ServiceHealthStatus =
+        responseTimeMs > 1000 ? 'DEGRADED' : 'HEALTHY';
       return { serviceName: 'PostgreSQL Database', status, responseTimeMs };
     } catch (error) {
       return {
@@ -125,7 +126,12 @@ export class SystemHealthService {
     return this.prisma.systemHealthCheck.findMany({
       where: { checkedAt: { gte: since } },
       orderBy: { checkedAt: 'asc' },
-      select: { serviceName: true, status: true, checkedAt: true, responseTimeMs: true },
+      select: {
+        serviceName: true,
+        status: true,
+        checkedAt: true,
+        responseTimeMs: true,
+      },
     });
   }
 

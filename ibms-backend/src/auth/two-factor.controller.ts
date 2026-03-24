@@ -1,4 +1,11 @@
-import { Controller, Post, Body, Request, UseGuards, HttpCode } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Request,
+  UseGuards,
+  HttpCode,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
 import { TwoFactorService } from './two-factor.service.js';
@@ -23,20 +30,14 @@ export class TwoFactorController {
   @Post('enable')
   @HttpCode(200)
   @ApiOperation({ summary: 'Verify TOTP token and enable 2FA' })
-  async enable(
-    @Request() req: AuthRequest,
-    @Body() body: { token: string },
-  ) {
+  async enable(@Request() req: AuthRequest, @Body() body: { token: string }) {
     return this.twoFactor.enableTwoFactor(req.user.sub, body.token);
   }
 
   @Post('disable')
   @HttpCode(200)
   @ApiOperation({ summary: 'Disable 2FA (requires valid token)' })
-  async disable(
-    @Request() req: AuthRequest,
-    @Body() body: { token: string },
-  ) {
+  async disable(@Request() req: AuthRequest, @Body() body: { token: string }) {
     return this.twoFactor.disableTwoFactor(req.user.sub, body.token);
   }
 }

@@ -70,7 +70,7 @@ export class AuthService {
     private config: ConfigService,
     private tenants: TenantsService,
     private email: EmailService,
-  ) { }
+  ) {}
   private readonly logger = new Logger(AuthService.name);
 
   private userToDto(user: UserRecord) {
@@ -116,7 +116,9 @@ export class AuthService {
     });
 
     if (activeTokens.length >= this.MAX_SESSIONS_PER_USER) {
-      const toRevoke = activeTokens.slice(this.MAX_SESSIONS_PER_USER - 1).map(t => t.id);
+      const toRevoke = activeTokens
+        .slice(this.MAX_SESSIONS_PER_USER - 1)
+        .map((t) => t.id);
       await this.prisma.refreshToken.updateMany({
         where: { id: { in: toRevoke } },
         data: { revokedAt: new Date() },
@@ -161,11 +163,17 @@ export class AuthService {
       // No tenant slug — auto-resolve by looking up email across all tenants
       const candidates = (await this.prisma.user.findMany({
         where: { email, deletedAt: null, isActive: true },
-        include: { tenant: { select: { id: true, name: true, slug: true, isActive: true } } },
-      })) as (UserRecord & { tenant: { id: string; name: string; slug: string; isActive: boolean } })[];
+        include: {
+          tenant: {
+            select: { id: true, name: true, slug: true, isActive: true },
+          },
+        },
+      })) as (UserRecord & {
+        tenant: { id: string; name: string; slug: string; isActive: boolean };
+      })[];
 
       // Filter to active tenants only
-      const active = candidates.filter(c => c.tenant.isActive);
+      const active = candidates.filter((c) => c.tenant.isActive);
 
       if (active.length === 0) {
         throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -175,7 +183,10 @@ export class AuthService {
         // Multiple tenants — return list for user to choose
         return {
           requiresTenantSelection: true,
-          tenants: active.map(c => ({ slug: c.tenant.slug, name: c.tenant.name })),
+          tenants: active.map((c) => ({
+            slug: c.tenant.slug,
+            name: c.tenant.name,
+          })),
         };
       }
 
@@ -355,7 +366,11 @@ export class AuthService {
       role: user.role,
     });
 
-    return { accessToken, user: this.userToDto(user), refreshRaw: newCreated.raw };
+    return {
+      accessToken,
+      user: this.userToDto(user),
+      refreshRaw: newCreated.raw,
+    };
   }
 
   async forgotPassword(email: string, tenantSlug?: string) {
@@ -377,7 +392,7 @@ export class AuthService {
         ...(tenantIdStr && { tenantId: tenantIdStr }),
       },
     })) as UserRecord | null;
-    
+
     if (!user) return generic;
 
     const raw = crypto.randomBytes(32).toString('hex');
@@ -395,7 +410,10 @@ export class AuthService {
       },
     });
 
-    const frontendUrl = this.config.get<string>('FRONTEND_URL', 'http://localhost:3000');
+    const frontendUrl = this.config.get<string>(
+      'FRONTEND_URL',
+      'http://localhost:3000',
+    );
     await this.email.sendPasswordReset(user.email, raw, frontendUrl);
 
     return generic;

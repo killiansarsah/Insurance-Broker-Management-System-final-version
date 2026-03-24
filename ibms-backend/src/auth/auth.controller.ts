@@ -26,9 +26,10 @@ const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
   secure: process.env['NODE_ENV'] === 'production',
   // Use 'lax' for cross-origin across ports on same top-level domain (localhost) in development, 'strict' in production
-  sameSite: process.env['NODE_ENV'] === 'production'
-    ? ('strict' as const)
-    : ('lax' as const),
+  sameSite:
+    process.env['NODE_ENV'] === 'production'
+      ? ('strict' as const)
+      : ('lax' as const),
   path: '/',
   maxAge: 7 * 24 * 60 * 60 * 1000,
 };
@@ -63,7 +64,11 @@ export class AuthController {
 
     // If 2FA is required, return challenge (no tokens)
     if ('requiresTwoFactor' in result) {
-      return { requiresTwoFactor: true, userId: result.userId, tenantId: result.tenantId };
+      return {
+        requiresTwoFactor: true,
+        userId: result.userId,
+        tenantId: result.tenantId,
+      };
     }
 
     res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
@@ -94,7 +99,10 @@ export class AuthController {
       return { error: 'Invalid credentials' };
     }
 
-    const isValid = this.twoFactor.verifyToken(dbUser.twoFactorSecret, body.token);
+    const isValid = this.twoFactor.verifyToken(
+      dbUser.twoFactorSecret,
+      body.token,
+    );
     if (!isValid) {
       return { error: 'Invalid verification code' };
     }
@@ -136,7 +144,10 @@ export class AuthController {
     await this.auth.logout(raw);
     res.clearCookie('refreshToken', REFRESH_COOKIE_OPTIONS);
     // Also explicitly clear the legacy path cookie to rescue browsers poisoned from before the fix!
-    res.clearCookie('refreshToken', { ...REFRESH_COOKIE_OPTIONS, path: '/api/v1/auth/refresh' });
+    res.clearCookie('refreshToken', {
+      ...REFRESH_COOKIE_OPTIONS,
+      path: '/api/v1/auth/refresh',
+    });
     return { success: true };
   }
 

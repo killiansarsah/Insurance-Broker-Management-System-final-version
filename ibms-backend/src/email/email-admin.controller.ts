@@ -18,9 +18,9 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { TenantId } from '../common/decorators/tenant-id.decorator';
 import { EnhancedEmailService } from './enhanced-email.service';
 import { EmailTemplatesService } from './email-templates.service';
-import { 
-  EmailLogQueryDto, 
-  UpdateEmailPreferencesDto 
+import {
+  EmailLogQueryDto,
+  UpdateEmailPreferencesDto,
 } from './dto/email-preferences.dto';
 import {
   CreateEmailTemplateDto,
@@ -74,15 +74,25 @@ export class EmailAdminController {
       dateFrom: thirtyDaysAgo,
     });
 
-    const totalSent = stats.logs.filter((log: any) => log.status === 'SENT').length;
-    const totalFailed = stats.logs.filter((log: any) => log.status === 'FAILED').length;
-    const successRate = totalSent + totalFailed > 0 ? (totalSent / (totalSent + totalFailed)) * 100 : 0;
+    const totalSent = stats.logs.filter(
+      (log: any) => log.status === 'SENT',
+    ).length;
+    const totalFailed = stats.logs.filter(
+      (log: any) => log.status === 'FAILED',
+    ).length;
+    const successRate =
+      totalSent + totalFailed > 0
+        ? (totalSent / (totalSent + totalFailed)) * 100
+        : 0;
 
     // Group by template
-    const byTemplate = stats.logs.reduce((acc: Record<string, number>, log: any) => {
-      acc[log.templateName] = (acc[log.templateName] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const byTemplate = stats.logs.reduce(
+      (acc: Record<string, number>, log: any) => {
+        acc[log.templateName] = (acc[log.templateName] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     return {
       totalEmails: stats.logs.length,
@@ -143,10 +153,14 @@ export class EmailAdminController {
     @TenantId() tenantId: string,
     @CurrentUser('email') userEmail: string,
     @Param('id') id: string,
-    @Body() testData: { recipientEmail?: string; templateData?: Record<string, any> },
+    @Body()
+    testData: { recipientEmail?: string; templateData?: Record<string, any> },
   ) {
     // Template testing not available until database migration
-    throw new HttpException('Template testing will be available after database migration', HttpStatus.NOT_IMPLEMENTED);
+    throw new HttpException(
+      'Template testing will be available after database migration',
+      HttpStatus.NOT_IMPLEMENTED,
+    );
   }
 }
 

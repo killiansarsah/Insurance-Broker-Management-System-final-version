@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Delete, Param, Body, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -38,17 +49,37 @@ export class AnnouncementsController {
         skip,
         take: limitNum,
         orderBy: { createdAt: 'desc' },
-        include: { _count: { select: { reads: true } }, createdBy: { select: { firstName: true, lastName: true } } },
+        include: {
+          _count: { select: { reads: true } },
+          createdBy: { select: { firstName: true, lastName: true } },
+        },
       }),
       this.prisma.announcement.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Post()
   async create(
-    @Body() body: { title: string; body: string; type: 'INFO'|'WARNING'|'CRITICAL'|'MAINTENANCE'; targetType: 'ALL'|'BY_PLAN'|'SPECIFIC'; targetIds?: string[]; delivery: 'IN_APP'|'EMAIL'|'BOTH'; isPinned?: boolean },
+    @Body()
+    body: {
+      title: string;
+      body: string;
+      type: 'INFO' | 'WARNING' | 'CRITICAL' | 'MAINTENANCE';
+      targetType: 'ALL' | 'BY_PLAN' | 'SPECIFIC';
+      targetIds?: string[];
+      delivery: 'IN_APP' | 'EMAIL' | 'BOTH';
+      isPinned?: boolean;
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const announcement = await this.prisma.announcement.create({
@@ -61,21 +92,37 @@ export class AnnouncementsController {
         delivery: body.delivery,
         isPinned: body.isPinned ?? false,
         createdById: user.sub,
-        sentAt: new Date(), 
+        sentAt: new Date(),
       },
     });
 
     // Determine target users
     let targetUsers = [];
     if (body.targetType === 'ALL') {
-      targetUsers = await this.prisma.user.findMany({ where: { isActive: true }, select: { id: true, tenantId: true } });
+      targetUsers = await this.prisma.user.findMany({
+        where: { isActive: true },
+        select: { id: true, tenantId: true },
+      });
     } else if (body.targetType === 'BY_PLAN') {
       // Find tenants on Enterprise plan
-      const enterpriseTenants = await this.prisma.tenant.findMany({ where: { plan: 'ENTERPRISE' }, select: { id: true } });
-      const tenantIds = enterpriseTenants.map(t => t.id);
-      targetUsers = await this.prisma.user.findMany({ where: { tenantId: { in: tenantIds }, isActive: true }, select: { id: true, tenantId: true } });
-    } else if (body.targetType === 'SPECIFIC' && body.targetIds && body.targetIds.length > 0) {
-      targetUsers = await this.prisma.user.findMany({ where: { tenantId: { in: body.targetIds }, isActive: true }, select: { id: true, tenantId: true } });
+      const enterpriseTenants = await this.prisma.tenant.findMany({
+        where: { plan: 'ENTERPRISE' },
+        select: { id: true },
+      });
+      const tenantIds = enterpriseTenants.map((t) => t.id);
+      targetUsers = await this.prisma.user.findMany({
+        where: { tenantId: { in: tenantIds }, isActive: true },
+        select: { id: true, tenantId: true },
+      });
+    } else if (
+      body.targetType === 'SPECIFIC' &&
+      body.targetIds &&
+      body.targetIds.length > 0
+    ) {
+      targetUsers = await this.prisma.user.findMany({
+        where: { tenantId: { in: body.targetIds }, isActive: true },
+        select: { id: true, tenantId: true },
+      });
     }
 
     // Map priority
@@ -86,18 +133,18 @@ export class AnnouncementsController {
     // Dispatch system notifications immediately to the selected users
     if (['IN_APP', 'BOTH'].includes(body.delivery)) {
       await Promise.allSettled(
-        targetUsers.map(u => 
+        targetUsers.map((u) =>
           this.notificationsService.create(u.tenantId, {
             userId: u.id,
             title: `System Announcement: ${body.title}`,
             message: body.body,
             type: NotificationType.SYSTEM,
             priority,
-          })
-        )
+          }),
+        ),
       );
     }
-    
+
     // Delivery via EMAIL is handled implicitly by background mailer in full-scale deployment
     // Currently relying on just IN_APP for realtime visibility.
 
@@ -116,9 +163,13 @@ export class AnnouncementsController {
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const ann = await this.prisma.announcement.findUnique({ where: { id } });
-    if (!ann) throw new HttpException('Announcement not found', HttpStatus.NOT_FOUND);
+    if (!ann)
+      throw new HttpException('Announcement not found', HttpStatus.NOT_FOUND);
 
     await this.prisma.announcement.delete({ where: { id } });
 

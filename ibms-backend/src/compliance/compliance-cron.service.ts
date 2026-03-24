@@ -69,9 +69,7 @@ export class ComplianceCronService {
       }
     }
 
-    this.logger.log(
-      `Flagged ${overdue.length} complaints for NIC escalation`,
-    );
+    this.logger.log(`Flagged ${overdue.length} complaints for NIC escalation`);
   }
 
   // ─── CLAIMS 90-DAY SETTLEMENT SLA ──────────────────
@@ -208,15 +206,14 @@ export class ComplianceCronService {
           title: `Renewal Due: ${policy.policyNumber}`,
           message: `Policy ${policy.policyNumber} for ${clientName} expires in ${daysLeft} days (${policy.expiryDate.toISOString().slice(0, 10)}). Initiate renewal process.`,
           type: 'RENEWAL',
-          priority: daysLeft <= 7 ? 'URGENT' : daysLeft <= 14 ? 'HIGH' : 'MEDIUM',
+          priority:
+            daysLeft <= 7 ? 'URGENT' : daysLeft <= 14 ? 'HIGH' : 'MEDIUM',
           link: `/dashboard/renewals`,
         });
       }
     }
 
-    this.logger.log(
-      `Sent ${expiringPolicies.length} renewal notices`,
-    );
+    this.logger.log(`Sent ${expiringPolicies.length} renewal notices`);
   }
 
   // ─── BROKER LICENCE EXPIRY ALERTS ────────────────────
@@ -241,7 +238,7 @@ export class ComplianceCronService {
 
     for (const tenant of tenants) {
       const daysLeft = Math.ceil(
-        (tenant.nicLicenseExpiry!.getTime() - now.getTime()) /
+        (tenant.nicLicenseExpiry.getTime() - now.getTime()) /
           (1000 * 60 * 60 * 24),
       );
 
@@ -262,7 +259,7 @@ export class ComplianceCronService {
         await this.notifications.create(tenant.id, {
           userId: admin.id,
           title: `NIC Licence Expiry: ${daysLeft} days remaining`,
-          message: `${tenant.name}'s NIC operating licence expires on ${tenant.nicLicenseExpiry!.toISOString().slice(0, 10)}. Renewal must be submitted before expiry to avoid regulatory sanctions.`,
+          message: `${tenant.name}'s NIC operating licence expires on ${tenant.nicLicenseExpiry.toISOString().slice(0, 10)}. Renewal must be submitted before expiry to avoid regulatory sanctions.`,
           type: 'COMPLIANCE',
           priority,
           link: `/dashboard/compliance`,
@@ -332,8 +329,6 @@ export class ComplianceCronService {
       }
     }
 
-    this.logger.log(
-      `Processed ${clients.length} KYC/AML alerts`,
-    );
+    this.logger.log(`Processed ${clients.length} KYC/AML alerts`);
   }
 }

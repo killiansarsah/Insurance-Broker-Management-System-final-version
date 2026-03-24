@@ -4,7 +4,10 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { EmailService } from './email.service';
 import { EnhancedEmailService } from './enhanced-email.service';
 import { EmailTemplatesService } from './email-templates.service';
-import { EmailAdminController, EmailPreferencesController } from './email-admin.controller';
+import {
+  EmailAdminController,
+  EmailPreferencesController,
+} from './email-admin.controller';
 
 @Global()
 @Module({

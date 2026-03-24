@@ -14,7 +14,9 @@ export class GoogleCalendarService {
   ) {}
 
   /** Get an authenticated Google Calendar API instance. */
-  private async getCalendarApi(tenantId: string): Promise<calendar_v3.Calendar> {
+  private async getCalendarApi(
+    tenantId: string,
+  ): Promise<calendar_v3.Calendar> {
     const auth = await this.googleOAuth.getAuthenticatedClient(
       tenantId,
       'google-calendar',
@@ -26,7 +28,9 @@ export class GoogleCalendarService {
    * Push IBMS events to Google Calendar.
    * Creates/updates events that don't yet have a googleEventId, or whose data changed.
    */
-  async pushToGoogle(tenantId: string): Promise<{ pushed: number; errors: string[] }> {
+  async pushToGoogle(
+    tenantId: string,
+  ): Promise<{ pushed: number; errors: string[] }> {
     const calendar = await this.getCalendarApi(tenantId);
 
     // Get all non-cancelled events, with attendees for push
@@ -200,7 +204,9 @@ export class GoogleCalendarService {
 
     await this.logSyncEvent(tenantId, 'pull', pulled, errors.length);
 
-    this.logger.log(`Pull completed: ${pulled} pulled, ${skipped} skipped, ${errors.length} errors`);
+    this.logger.log(
+      `Pull completed: ${pulled} pulled, ${skipped} skipped, ${errors.length} errors`,
+    );
     return { pulled, skipped, errors };
   }
 
@@ -210,7 +216,10 @@ export class GoogleCalendarService {
   async syncAll(
     tenantId: string,
     userId: string,
-  ): Promise<{ push: { pushed: number; errors: string[] }; pull: { pulled: number; skipped: number; errors: string[] } }> {
+  ): Promise<{
+    push: { pushed: number; errors: string[] };
+    pull: { pulled: number; skipped: number; errors: string[] };
+  }> {
     const push = await this.pushToGoogle(tenantId);
     const pull = await this.pullFromGoogle(tenantId, userId);
     return { push, pull };
@@ -219,7 +228,10 @@ export class GoogleCalendarService {
   /**
    * Delete a Google Calendar event when an IBMS event is cancelled.
    */
-  async deleteFromGoogle(tenantId: string, googleEventId: string): Promise<void> {
+  async deleteFromGoogle(
+    tenantId: string,
+    googleEventId: string,
+  ): Promise<void> {
     try {
       const calendar = await this.getCalendarApi(tenantId);
       await calendar.events.delete({
@@ -239,11 +251,14 @@ export class GoogleCalendarService {
     gEvent: calendar_v3.Schema$Event,
   ): CalendarEventType {
     const summary = (gEvent.summary ?? '').toLowerCase();
-    if (summary.includes('policy') || summary.includes('renewal')) return 'POLICY';
+    if (summary.includes('policy') || summary.includes('renewal'))
+      return 'POLICY';
     if (summary.includes('claim')) return 'CLAIM';
     if (summary.includes('team') || summary.includes('standup')) return 'TEAM';
-    if (summary.includes('compliance') || summary.includes('audit')) return 'COMPLIANCE';
-    if (summary.includes('payment') || summary.includes('invoice')) return 'PAYMENT';
+    if (summary.includes('compliance') || summary.includes('audit'))
+      return 'COMPLIANCE';
+    if (summary.includes('payment') || summary.includes('invoice'))
+      return 'PAYMENT';
     return 'MEETING';
   }
 

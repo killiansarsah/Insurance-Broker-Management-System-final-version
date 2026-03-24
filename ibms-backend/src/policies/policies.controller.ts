@@ -22,7 +22,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-
 @Controller('policies')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class PoliciesController {
@@ -74,7 +73,11 @@ export class PoliciesController {
   @Post(':id/cover-note')
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   issueCoverNote(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.policiesService.issueCoverNote(id, req.user.tenantId, req.user.sub);
+    return this.policiesService.issueCoverNote(
+      id,
+      req.user.tenantId,
+      req.user.sub,
+    );
   }
 
   @Post(':id/cancel')

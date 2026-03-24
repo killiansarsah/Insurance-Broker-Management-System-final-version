@@ -1,4 +1,14 @@
-import { Controller, Get, Patch, Param, Body, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -55,7 +65,15 @@ export class ErrorTrackingController {
       this.prisma.errorLog.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Patch(':id')
@@ -65,14 +83,17 @@ export class ErrorTrackingController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const before = await this.prisma.errorLog.findUnique({ where: { id } });
-    if (!before) throw new HttpException('Error log not found', HttpStatus.NOT_FOUND);
+    if (!before)
+      throw new HttpException('Error log not found', HttpStatus.NOT_FOUND);
 
     const errorLog = await this.prisma.errorLog.update({
       where: { id },
       data: {
         ...(body.resolved !== undefined && { resolved: body.resolved }),
         ...(body.notes && { notes: body.notes }),
-        ...(body.resolved ? { resolvedAt: new Date(), resolvedById: user.sub } : {}),
+        ...(body.resolved
+          ? { resolvedAt: new Date(), resolvedById: user.sub }
+          : {}),
       },
     });
 
@@ -84,7 +105,9 @@ export class ErrorTrackingController {
       action: body.resolved ? 'ERROR_RESOLVED' : 'ERROR_UPDATED',
       resourceType: 'ErrorLog',
       resourceId: id,
-      description: body.resolved ? `Resolved error: ${errorLog.errorType}` : `Updated error notes: ${errorLog.errorType}`,
+      description: body.resolved
+        ? `Resolved error: ${errorLog.errorType}`
+        : `Updated error notes: ${errorLog.errorType}`,
       metadata: { notes: body.notes },
     });
 

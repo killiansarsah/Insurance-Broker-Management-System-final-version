@@ -15,7 +15,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-
 @Controller()
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class RenewalsController {
@@ -88,13 +87,20 @@ export class RenewalsController {
     const destinationEmail = overrideEmail || policy.client.email;
 
     if (!destinationEmail) {
-      return { success: false, message: 'No destination email — client has no email address and no override was provided.' };
+      return {
+        success: false,
+        message:
+          'No destination email — client has no email address and no override was provided.',
+      };
     }
 
-    const clientName = policy.client.companyName || `${policy.client.firstName} ${policy.client.lastName}`;
+    const clientName =
+      policy.client.companyName ||
+      `${policy.client.firstName} ${policy.client.lastName}`;
     const now = new Date();
     const daysUntilExpiry = Math.ceil(
-      (new Date(policy.expiryDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      (new Date(policy.expiryDate).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
     );
 
     await this.renewalsService['emailService'].sendPolicyRenewalReminder(
@@ -116,7 +122,9 @@ export class RenewalsController {
   @Post('renewals/notify-all')
   @Roles('ADMIN', 'TENANT_ADMIN')
   async notifyAll(@Request() req: RequestWithUser) {
-    const result = await this.renewalsService.notifyAllForTenant(req.user.tenantId);
+    const result = await this.renewalsService.notifyAllForTenant(
+      req.user.tenantId,
+    );
     return {
       success: true,
       message: `Bulk reminders complete: ${result.sent} sent, ${result.skipped} skipped (no email), ${result.failed} failed.`,

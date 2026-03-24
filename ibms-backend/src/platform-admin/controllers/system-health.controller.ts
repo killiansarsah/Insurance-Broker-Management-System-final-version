@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -48,14 +56,21 @@ export class SystemHealthController {
     const incidents = await this.prisma.incident.findMany({
       orderBy: { createdAt: 'desc' },
       take: 50,
-      include: { createdBy: { select: { firstName: true, lastName: true, email: true } } },
+      include: {
+        createdBy: { select: { firstName: true, lastName: true, email: true } },
+      },
     });
     return { data: incidents };
   }
 
   @Post('incidents')
   async createIncident(
-    @Body() body: { title: string; severity: 'INFO' | 'WARN' | 'CRITICAL'; affectedServices: string[] },
+    @Body()
+    body: {
+      title: string;
+      severity: 'INFO' | 'WARN' | 'CRITICAL';
+      affectedServices: string[];
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const incident = await this.prisma.incident.create({
@@ -85,7 +100,12 @@ export class SystemHealthController {
   @Patch('incidents/:id')
   async updateIncident(
     @Param('id') id: string,
-    @Body() body: { status?: 'OPEN' | 'RESOLVED'; rootCause?: string; resolutionNotes?: string },
+    @Body()
+    body: {
+      status?: 'OPEN' | 'RESOLVED';
+      rootCause?: string;
+      resolutionNotes?: string;
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const before = await this.prisma.incident.findUnique({ where: { id } });

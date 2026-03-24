@@ -27,11 +27,7 @@ export class RemittancesController {
   @Post()
   @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER')
   create(@Request() req: RequestWithUser, @Body() dto: CreateRemittanceDto) {
-    return this.remittancesService.create(
-      req.user.tenantId,
-      req.user.sub,
-      dto,
-    );
+    return this.remittancesService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()

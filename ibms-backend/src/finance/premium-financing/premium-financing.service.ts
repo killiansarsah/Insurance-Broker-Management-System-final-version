@@ -18,7 +18,9 @@ export class PremiumFinancingService {
 
   private async generatePfNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const count = await this.prisma.premiumFinancing.count({ where: { tenantId } });
+    const count = await this.prisma.premiumFinancing.count({
+      where: { tenantId },
+    });
     const hex = randomBytes(3).toString('hex').toUpperCase();
     return `PF-${dateStr}-${String(count + 1).padStart(4, '0')}-${hex}`;
   }

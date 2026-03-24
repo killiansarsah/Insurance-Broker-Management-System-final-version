@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Param, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Param,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -31,7 +40,8 @@ export class EmailLogsController {
 
     const where: Record<string, unknown> = {};
     if (status) where.status = status;
-    if (recipient) where.recipientEmail = { contains: recipient, mode: 'insensitive' };
+    if (recipient)
+      where.recipientEmail = { contains: recipient, mode: 'insensitive' };
     if (tenantId) where.tenantId = tenantId;
 
     const [data, total] = await Promise.all([
@@ -45,13 +55,25 @@ export class EmailLogsController {
       this.prisma.emailLog.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Post(':id/resend')
-  async resendEmail(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async resendEmail(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const log = await this.prisma.emailLog.findUnique({ where: { id } });
-    if (!log) throw new HttpException('Email log not found', HttpStatus.NOT_FOUND);
+    if (!log)
+      throw new HttpException('Email log not found', HttpStatus.NOT_FOUND);
 
     // In a real implementation, you would trigger the email service here based on the log's templateName and payload
     // For now, we simulate resending by updating the status to SENT

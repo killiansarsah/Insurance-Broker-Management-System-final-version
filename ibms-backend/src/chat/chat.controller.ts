@@ -16,7 +16,6 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import type { RequestWithUser } from '../common/types/request.types.js';
 
-
 @Controller('chat')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')

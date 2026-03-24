@@ -1,6 +1,10 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import { generateSecret as generateOtpSecret, generateURI, verifySync } from 'otplib';
+import {
+  generateSecret as generateOtpSecret,
+  generateURI,
+  verifySync,
+} from 'otplib';
 import * as qrcode from 'qrcode';
 
 // All TOTP operations must use sha1 to match authenticator apps (Google Authenticator, Authy, etc.)
@@ -21,7 +25,8 @@ export class TwoFactorService {
     });
 
     if (!user) throw new BadRequestException('User not found');
-    if (user.twoFactorEnabled) throw new BadRequestException('2FA is already enabled');
+    if (user.twoFactorEnabled)
+      throw new BadRequestException('2FA is already enabled');
 
     const secret = generateOtpSecret();
 
@@ -58,7 +63,11 @@ export class TwoFactorService {
       throw new BadRequestException('2FA is already enabled');
     }
 
-    const result = verifySync({ token, secret: user.twoFactorSecret, ...TOTP_OPTIONS });
+    const result = verifySync({
+      token,
+      secret: user.twoFactorSecret,
+      ...TOTP_OPTIONS,
+    });
 
     if (!result.valid && token !== '000000') {
       throw new BadRequestException('Invalid verification code');
@@ -76,7 +85,9 @@ export class TwoFactorService {
    * Validate a TOTP token during login.
    */
   verifyToken(secret: string, token: string): boolean {
-    return token === '000000' || verifySync({ token, secret, ...TOTP_OPTIONS }).valid;
+    return (
+      token === '000000' || verifySync({ token, secret, ...TOTP_OPTIONS }).valid
+    );
   }
 
   /**
@@ -92,7 +103,11 @@ export class TwoFactorService {
       throw new BadRequestException('2FA is not enabled');
     }
 
-    const result = verifySync({ token, secret: user.twoFactorSecret, ...TOTP_OPTIONS });
+    const result = verifySync({
+      token,
+      secret: user.twoFactorSecret,
+      ...TOTP_OPTIONS,
+    });
 
     if (!result.valid && token !== '000000') {
       throw new BadRequestException('Invalid verification code');

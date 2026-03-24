@@ -28,29 +28,36 @@ export class ReportsService {
     let carrierId: string | undefined;
     if (filters?.insurer) {
       const carrier = await this.prisma.carrier.findFirst({
-        where: { tenantId, name: { contains: filters.insurer, mode: 'insensitive' } },
+        where: {
+          tenantId,
+          name: { contains: filters.insurer, mode: 'insensitive' },
+        },
       });
       if (carrier) carrierId = carrier.id;
     }
 
     // Resolve product map
     const productMap: Record<string, any> = {
-      'Motor': 'MOTOR',
-      'Health': 'HEALTH',
+      Motor: 'MOTOR',
+      Health: 'HEALTH',
       'Fire / Property': 'FIRE',
-      'Marine': 'MARINE',
+      Marine: 'MARINE',
       'Professional Indemnity': 'PROFESSIONAL_INDEMNITY',
-      'Travel': 'TRAVEL',
+      Travel: 'TRAVEL',
     };
-    const insuranceType = filters?.product ? productMap[filters.product] : undefined;
+    const insuranceType = filters?.product
+      ? productMap[filters.product]
+      : undefined;
 
     // Resolve client type
     const clientTypeMap: Record<string, any> = {
-      'Corporate': 'CORPORATE',
-      'SME': 'CORPORATE',
+      Corporate: 'CORPORATE',
+      SME: 'CORPORATE',
       'Retail / Individual': 'INDIVIDUAL',
     };
-    const cType = filters?.clientType ? clientTypeMap[filters.clientType] : undefined;
+    const cType = filters?.clientType
+      ? clientTypeMap[filters.clientType]
+      : undefined;
     const accountOfficer = filters?.accountOfficer;
 
     const basePolicyWhere: Prisma.PolicyWhereInput = {
@@ -363,9 +370,10 @@ export class ReportsService {
       clientSegments: clientSegmentsData.map((s) => ({
         type: s.type,
         count: s._count.id,
-        pct: totalClients > 0
-          ? Number(((s._count.id / totalClients) * 100).toFixed(1))
-          : 0,
+        pct:
+          totalClients > 0
+            ? Number(((s._count.id / totalClients) * 100).toFixed(1))
+            : 0,
       })),
       // Client concentration risk (top clients by premium)
       clientConcentration: await (async () => {
@@ -376,12 +384,22 @@ export class ReportsService {
         const clientIds = clientConcentrationData.map((c) => c.clientId);
         const clients = await this.prisma.client.findMany({
           where: { id: { in: clientIds } },
-          select: { id: true, firstName: true, lastName: true, companyName: true, type: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            type: true,
+          },
         });
-        const clientNameMap = new Map(clients.map((c) => [
-          c.id,
-          c.type === 'CORPORATE' ? (c.companyName ?? 'Unknown') : `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || 'Unknown',
-        ]));
+        const clientNameMap = new Map(
+          clients.map((c) => [
+            c.id,
+            c.type === 'CORPORATE'
+              ? (c.companyName ?? 'Unknown')
+              : `${c.firstName ?? ''} ${c.lastName ?? ''}`.trim() || 'Unknown',
+          ]),
+        );
         const topClients = clientConcentrationData.map((c) => {
           const premium = Number(c._sum.premiumAmount ?? 0);
           const pct = Number(((premium / totalActivePremium) * 100).toFixed(1));
@@ -598,18 +616,35 @@ export class ReportsService {
       complaintBreached,
     ] = await Promise.all([
       this.prisma.policy.aggregate({
-        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          deletedAt: null,
+          createdAt: { gte: qStart, lte: qEnd },
+        },
         _sum: { premiumAmount: true },
       }),
       this.prisma.claim.aggregate({
-        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          deletedAt: null,
+          createdAt: { gte: qStart, lte: qEnd },
+        },
         _sum: { claimAmount: true },
       }),
       this.prisma.claim.count({
-        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          deletedAt: null,
+          createdAt: { gte: qStart, lte: qEnd },
+        },
       }),
       this.prisma.claim.count({
-        where: { tenantId, deletedAt: null, status: 'SETTLED', createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          deletedAt: null,
+          status: 'SETTLED',
+          createdAt: { gte: qStart, lte: qEnd },
+        },
       }),
       this.prisma.commission.aggregate({
         where: { tenantId, createdAt: { gte: qStart, lte: qEnd } },
@@ -620,26 +655,41 @@ export class ReportsService {
         _sum: { nicLevy: true },
       }),
       this.prisma.remittance.aggregate({
-        where: { tenantId, status: 'REMITTED', createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          status: 'REMITTED',
+          createdAt: { gte: qStart, lte: qEnd },
+        },
         _sum: { amountRemitted: true },
       }),
       this.prisma.policy.count({
         where: { tenantId, deletedAt: null, status: 'ACTIVE' },
       }),
       this.prisma.policy.count({
-        where: { tenantId, deletedAt: null, createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          deletedAt: null,
+          createdAt: { gte: qStart, lte: qEnd },
+        },
       }),
       this.prisma.complaint.count({
         where: { tenantId, createdAt: { gte: qStart, lte: qEnd } },
       }),
       this.prisma.complaint.count({
-        where: { tenantId, isBreached: true, createdAt: { gte: qStart, lte: qEnd } },
+        where: {
+          tenantId,
+          isBreached: true,
+          createdAt: { gte: qStart, lte: qEnd },
+        },
       }),
     ]);
 
     const totalPremium = Number(premiumVolume._sum.premiumAmount ?? 0);
     const totalClaims = Number(claimVolume._sum.claimAmount ?? 0);
-    const claimsRatio = totalPremium > 0 ? Number(((totalClaims / totalPremium) * 100).toFixed(2)) : 0;
+    const claimsRatio =
+      totalPremium > 0
+        ? Number(((totalClaims / totalPremium) * 100).toFixed(2))
+        : 0;
 
     return {
       period: { year, quarter, from: qStart, to: qEnd },
@@ -728,12 +778,31 @@ export class ReportsService {
       orderBy: { createdAt: 'asc' },
       include: {
         client: {
-          select: { id: true, firstName: true, lastName: true, companyName: true, clientNumber: true, type: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            clientNumber: true,
+            type: true,
+          },
         },
-        carrier: { select: { id: true, name: true, shortName: true, licenseNumber: true } },
+        carrier: {
+          select: {
+            id: true,
+            name: true,
+            shortName: true,
+            licenseNumber: true,
+          },
+        },
         broker: { select: { id: true, firstName: true, lastName: true } },
         remittances: {
-          select: { id: true, status: true, amountRemitted: true, remittanceDate: true },
+          select: {
+            id: true,
+            status: true,
+            amountRemitted: true,
+            remittanceDate: true,
+          },
         },
       },
     });
@@ -746,7 +815,8 @@ export class ReportsService {
         policyNumber: p.policyNumber,
         insuranceType: p.insuranceType,
         policyType: p.policyType,
-        clientName: p.client.companyName || `${p.client.firstName} ${p.client.lastName}`,
+        clientName:
+          p.client.companyName || `${p.client.firstName} ${p.client.lastName}`,
         clientNumber: p.client.clientNumber,
         clientType: p.client.type,
         carrierName: p.carrier.name,
@@ -761,17 +831,26 @@ export class ReportsService {
         premiumFrequency: p.premiumFrequency,
         currency: p.currency,
         status: p.status,
-        remittanceStatus: p.remittances.length > 0
-          ? (p.remittances.every(r => r.status === 'REMITTED') ? 'REMITTED' : 'PARTIAL')
-          : 'NOT_REMITTED',
-        totalRemitted: p.remittances.reduce((s, r) => s + Number(r.amountRemitted), 0),
+        remittanceStatus:
+          p.remittances.length > 0
+            ? p.remittances.every((r) => r.status === 'REMITTED')
+              ? 'REMITTED'
+              : 'PARTIAL'
+            : 'NOT_REMITTED',
+        totalRemitted: p.remittances.reduce(
+          (s, r) => s + Number(r.amountRemitted),
+          0,
+        ),
         createdAt: p.createdAt,
       })),
       summary: {
         totalPolicies: policies.length,
         totalPremium: policies.reduce((s, p) => s + Number(p.premiumAmount), 0),
         totalSumInsured: policies.reduce((s, p) => s + Number(p.sumInsured), 0),
-        totalCommission: policies.reduce((s, p) => s + Number(p.commissionAmount), 0),
+        totalCommission: policies.reduce(
+          (s, p) => s + Number(p.commissionAmount),
+          0,
+        ),
       },
     };
   }
@@ -790,10 +869,21 @@ export class ReportsService {
       orderBy: { createdAt: 'asc' },
       include: {
         client: {
-          select: { id: true, firstName: true, lastName: true, companyName: true, clientNumber: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+            clientNumber: true,
+          },
         },
         policy: {
-          select: { id: true, policyNumber: true, insuranceType: true, carrier: { select: { name: true } } },
+          select: {
+            id: true,
+            policyNumber: true,
+            insuranceType: true,
+            carrier: { select: { name: true } },
+          },
         },
         assessor: { select: { id: true, firstName: true, lastName: true } },
         followUps: {
@@ -815,7 +905,8 @@ export class ReportsService {
         policyNumber: c.policy.policyNumber,
         insuranceType: c.policy.insuranceType,
         carrierName: c.policy.carrier?.name ?? 'Unknown',
-        clientName: c.client.companyName || `${c.client.firstName} ${c.client.lastName}`,
+        clientName:
+          c.client.companyName || `${c.client.firstName} ${c.client.lastName}`,
         clientNumber: c.client.clientNumber,
         incidentDate: c.incidentDate,
         incidentDescription: c.incidentDescription,
@@ -831,9 +922,14 @@ export class ReportsService {
         processingDeadline: c.processingDeadline,
         settlementDate: c.settlementDate,
         isOverdue: c.isOverdue,
-        nic5DayBreached: c.status === 'INTIMATED' && c.acknowledgmentDeadline < now,
-        nic30DayBreached: now > c.processingDeadline && !['SETTLED', 'CLOSED', 'REJECTED'].includes(c.status),
-        assessorName: c.assessor ? `${c.assessor.firstName} ${c.assessor.lastName}` : null,
+        nic5DayBreached:
+          c.status === 'INTIMATED' && c.acknowledgmentDeadline < now,
+        nic30DayBreached:
+          now > c.processingDeadline &&
+          !['SETTLED', 'CLOSED', 'REJECTED'].includes(c.status),
+        assessorName: c.assessor
+          ? `${c.assessor.firstName} ${c.assessor.lastName}`
+          : null,
         followUpCount: c.followUps.length,
         lastFollowUp: c.followUps[0] ?? null,
         createdAt: c.createdAt,
@@ -841,17 +937,32 @@ export class ReportsService {
       summary: {
         totalClaims: claims.length,
         totalClaimAmount: claims.reduce((s, c) => s + Number(c.claimAmount), 0),
-        totalSettled: claims.filter(c => c.status === 'SETTLED').length,
-        totalSettledAmount: claims.reduce((s, c) => s + Number(c.settledAmount ?? 0), 0),
-        overdue5Day: claims.filter(c => c.status === 'INTIMATED' && c.acknowledgmentDeadline < now).length,
-        overdue30Day: claims.filter(c => now > c.processingDeadline && !['SETTLED', 'CLOSED', 'REJECTED'].includes(c.status)).length,
+        totalSettled: claims.filter((c) => c.status === 'SETTLED').length,
+        totalSettledAmount: claims.reduce(
+          (s, c) => s + Number(c.settledAmount ?? 0),
+          0,
+        ),
+        overdue5Day: claims.filter(
+          (c) => c.status === 'INTIMATED' && c.acknowledgmentDeadline < now,
+        ).length,
+        overdue30Day: claims.filter(
+          (c) =>
+            now > c.processingDeadline &&
+            !['SETTLED', 'CLOSED', 'REJECTED'].includes(c.status),
+        ).length,
       },
     };
   }
 
   // ─── FIC SUSPICIOUS TRANSACTION REPORT ─────────────
-  async ficSuspiciousTransactions(tenantId: string, from?: string, to?: string) {
-    const dateFrom = from ? new Date(from) : new Date(new Date().getFullYear(), 0, 1);
+  async ficSuspiciousTransactions(
+    tenantId: string,
+    from?: string,
+    to?: string,
+  ) {
+    const dateFrom = from
+      ? new Date(from)
+      : new Date(new Date().getFullYear(), 0, 1);
     const dateTo = to ? new Date(to) : new Date();
 
     // Flag transactions meeting FIC STR criteria:
@@ -868,7 +979,14 @@ export class ReportsService {
         },
         include: {
           client: {
-            select: { id: true, firstName: true, lastName: true, companyName: true, clientNumber: true, amlRiskLevel: true },
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              companyName: true,
+              clientNumber: true,
+              amlRiskLevel: true,
+            },
           },
           policy: { select: { policyNumber: true } },
         },
@@ -890,7 +1008,14 @@ export class ReportsService {
           isPep: true,
           transactions: {
             where: { createdAt: { gte: dateFrom, lte: dateTo } },
-            select: { id: true, transactionNumber: true, amount: true, type: true, paymentMethod: true, createdAt: true },
+            select: {
+              id: true,
+              transactionNumber: true,
+              amount: true,
+              type: true,
+              paymentMethod: true,
+              createdAt: true,
+            },
             orderBy: { createdAt: 'desc' },
           },
         },
@@ -901,18 +1026,20 @@ export class ReportsService {
       reportTitle: 'FIC Suspicious Transaction Report (STR)',
       period: { from: dateFrom, to: dateTo },
       generatedAt: new Date(),
-      largeCashTransactions: largeCash.map(t => ({
+      largeCashTransactions: largeCash.map((t) => ({
         transactionNumber: t.transactionNumber,
         amount: t.amount,
         type: t.type,
         paymentMethod: t.paymentMethod,
-        clientName: t.client ? (t.client.companyName || `${t.client.firstName} ${t.client.lastName}`) : 'Unknown',
+        clientName: t.client
+          ? t.client.companyName || `${t.client.firstName} ${t.client.lastName}`
+          : 'Unknown',
         clientNumber: t.client?.clientNumber,
         amlRiskLevel: t.client?.amlRiskLevel,
         policyNumber: t.policy?.policyNumber,
         date: t.createdAt,
       })),
-      highRiskClientActivity: highRiskClients.map(c => ({
+      highRiskClientActivity: highRiskClients.map((c) => ({
         clientName: c.companyName || `${c.firstName} ${c.lastName}`,
         clientNumber: c.clientNumber,
         amlRiskLevel: c.amlRiskLevel,
@@ -925,7 +1052,10 @@ export class ReportsService {
         largeCashCount: largeCash.length,
         largeCashTotal: largeCash.reduce((s, t) => s + Number(t.amount), 0),
         highRiskClientCount: highRiskClients.length,
-        highRiskTransactionCount: highRiskClients.reduce((s, c) => s + c.transactions.length, 0),
+        highRiskTransactionCount: highRiskClients.reduce(
+          (s, c) => s + c.transactions.length,
+          0,
+        ),
       },
     };
   }

@@ -47,26 +47,30 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
       // Async log to database (fire and forget)
       if (this.prisma) {
-        this.prisma.errorLog.create({
-          data: {
-            errorType: exception?.constructor?.name || 'Error',
-            message: message.substring(0, 1000),
-            stackTrace: exception instanceof Error ? (exception.stack || String(exception)) : String(exception),
-            severity: 'FATAL',
-            requestMethod: request.method,
-            requestUrl: request.url,
-            statusCode,
-            occurrenceCount: 1,
-            // Assuming tenant context may be added via middleware later, we leave tenantId null for truly global errors.
-            // If the user's ID was attached in request.user by AuthGuard, we could log it here:
-            userId: (request as any).user?.userId || null,
-            tenantId: (request as any).user?.tenantId || null,
-          }
-        }).catch(err => {
-          this.logger.error('Failed to write error log to database', err);
-        });
+        this.prisma.errorLog
+          .create({
+            data: {
+              errorType: exception?.constructor?.name || 'Error',
+              message: message.substring(0, 1000),
+              stackTrace:
+                exception instanceof Error
+                  ? exception.stack || String(exception)
+                  : String(exception),
+              severity: 'FATAL',
+              requestMethod: request.method,
+              requestUrl: request.url,
+              statusCode,
+              occurrenceCount: 1,
+              // Assuming tenant context may be added via middleware later, we leave tenantId null for truly global errors.
+              // If the user's ID was attached in request.user by AuthGuard, we could log it here:
+              userId: (request as any).user?.userId || null,
+              tenantId: (request as any).user?.tenantId || null,
+            },
+          })
+          .catch((err) => {
+            this.logger.error('Failed to write error log to database', err);
+          });
       }
-
     } else {
       this.logger.warn(
         `${request.method} ${request.url} → ${statusCode}: ${message}`,
@@ -105,7 +109,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     // Prisma validation errors
     if (exception instanceof Prisma.PrismaClientValidationError) {
       // Prisma's error message explains exactly what field is wrong
-      const shortMessage = exception.message.split('\n').pop()?.trim() || 'Invalid data provided';
+      const shortMessage =
+        exception.message.split('\n').pop()?.trim() || 'Invalid data provided';
       return {
         statusCode: HttpStatus.BAD_REQUEST,
         message: shortMessage,

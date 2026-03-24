@@ -36,5 +36,10 @@ export class PolicyDetailResponseDto extends PolicyResponseDto {
   endorsements?: Record<string, unknown>[];
   installments?: Record<string, unknown>[];
   documents?: Record<string, unknown>[];
-  claims?: { id: string; claimNumber: string; status: string; claimAmount: number }[];
+  claims?: {
+    id: string;
+    claimNumber: string;
+    status: string;
+    claimAmount: number;
+  }[];
 }

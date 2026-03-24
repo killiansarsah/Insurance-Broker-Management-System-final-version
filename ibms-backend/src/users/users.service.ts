@@ -28,7 +28,7 @@ interface UserRecord {
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   private toResponseDto(user: UserRecord) {
     return {
@@ -371,7 +371,9 @@ export class UsersService {
       data: {
         tenantId,
         userId: currentUserId,
-        action: departmentId ? 'user.department.assigned' : 'user.department.removed',
+        action: departmentId
+          ? 'user.department.assigned'
+          : 'user.department.removed',
         entity: 'user',
         entityId: id,
         after: { departmentId } as unknown as Prisma.InputJsonValue,

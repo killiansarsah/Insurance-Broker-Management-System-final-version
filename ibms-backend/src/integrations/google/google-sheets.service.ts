@@ -38,7 +38,11 @@ export class GoogleSheetsService {
     exportType: ExportType,
     dateFrom?: string,
     dateTo?: string,
-  ): Promise<{ spreadsheetUrl: string; spreadsheetId: string; rowCount: number }> {
+  ): Promise<{
+    spreadsheetUrl: string;
+    spreadsheetId: string;
+    rowCount: number;
+  }> {
     const sheets = await this.getSheetsApi(tenantId);
     const { headers, rows } = await this.getData(
       tenantId,
@@ -61,7 +65,7 @@ export class GoogleSheetsService {
       },
     });
 
-    const spreadsheetId = spreadsheet.data.spreadsheetId!;
+    const spreadsheetId = spreadsheet.data.spreadsheetId;
 
     // Write header + data rows
     const allRows = [headers, ...rows];
@@ -107,7 +111,7 @@ export class GoogleSheetsService {
       },
     });
 
-    const spreadsheetUrl = spreadsheet.data.spreadsheetUrl!;
+    const spreadsheetUrl = spreadsheet.data.spreadsheetUrl;
 
     // Log sync event
     await this.logSyncEvent(tenantId, exportType, rows.length);
@@ -207,7 +211,9 @@ export class GoogleSheetsService {
 
     const rows = policies.map((p) => [
       p.policyNumber,
-      p.client ? `${p.client.firstName ?? ''} ${p.client.lastName ?? ''}`.trim() : '',
+      p.client
+        ? `${p.client.firstName ?? ''} ${p.client.lastName ?? ''}`.trim()
+        : '',
       p.carrier?.name ?? '',
       p.insuranceType,
       p.status,
@@ -397,7 +403,9 @@ export class GoogleSheetsService {
       );
       return [
         p.policyNumber,
-        p.client ? `${p.client.firstName ?? ''} ${p.client.lastName ?? ''}`.trim() : '',
+        p.client
+          ? `${p.client.firstName ?? ''} ${p.client.lastName ?? ''}`.trim()
+          : '',
         p.carrier?.name ?? '',
         p.insuranceType,
         Number(p.premiumAmount),

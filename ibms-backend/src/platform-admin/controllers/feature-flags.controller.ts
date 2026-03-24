@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -30,11 +41,23 @@ export class FeatureFlagsController {
 
   @Post()
   async createFlag(
-    @Body() body: { key: string; label: string; description?: string; globalEnabled?: boolean; starterEnabled?: boolean; proEnabled?: boolean; enterpriseEnabled?: boolean },
+    @Body()
+    body: {
+      key: string;
+      label: string;
+      description?: string;
+      globalEnabled?: boolean;
+      starterEnabled?: boolean;
+      proEnabled?: boolean;
+      enterpriseEnabled?: boolean;
+    },
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    const existing = await this.prisma.featureFlag.findUnique({ where: { key: body.key } });
-    if (existing) throw new HttpException('Flag key already exists', HttpStatus.CONFLICT);
+    const existing = await this.prisma.featureFlag.findUnique({
+      where: { key: body.key },
+    });
+    if (existing)
+      throw new HttpException('Flag key already exists', HttpStatus.CONFLICT);
 
     const flag = await this.prisma.featureFlag.create({
       data: { ...body, updatedById: user.sub },
@@ -61,7 +84,8 @@ export class FeatureFlagsController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const before = await this.prisma.featureFlag.findUnique({ where: { id } });
-    if (!before) throw new HttpException('Flag not found', HttpStatus.NOT_FOUND);
+    if (!before)
+      throw new HttpException('Flag not found', HttpStatus.NOT_FOUND);
 
     const flag = await this.prisma.featureFlag.update({
       where: { id },
@@ -83,12 +107,15 @@ export class FeatureFlagsController {
   }
 
   @Delete(':id')
-  async deleteFlag(@Param('id') id: string, @CurrentUser() user: AuthenticatedUser) {
+  async deleteFlag(
+    @Param('id') id: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
     const flag = await this.prisma.featureFlag.findUnique({ where: { id } });
     if (!flag) throw new HttpException('Flag not found', HttpStatus.NOT_FOUND);
 
     await this.prisma.featureFlag.delete({ where: { id } });
-    
+
     await this.audit.log({
       actorId: user.sub,
       actorEmail: user.email,

@@ -1,4 +1,16 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+  HttpException,
+  HttpStatus,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -68,12 +80,21 @@ export class UserManagementController {
       this.prisma.user.count({ where }),
     ]);
 
-    return { data, meta: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) } };
+    return {
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    };
   }
 
   @Post()
   async createPlatformAdmin(
-    @Body() body: {
+    @Body()
+    body: {
       firstName: string;
       lastName: string;
       email: string;
@@ -84,11 +105,17 @@ export class UserManagementController {
   ) {
     // Only a PLATFORM_SUPER_ADMIN can create another super admin
     if (user.role !== 'PLATFORM_SUPER_ADMIN') {
-      throw new HttpException('Only Platform Super Admins can create new super admin accounts', HttpStatus.FORBIDDEN);
+      throw new HttpException(
+        'Only Platform Super Admins can create new super admin accounts',
+        HttpStatus.FORBIDDEN,
+      );
     }
 
-    const existingUser = await this.prisma.user.findFirst({ where: { email: body.email } });
-    if (existingUser) throw new HttpException('Email already exists', HttpStatus.CONFLICT);
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email: body.email },
+    });
+    if (existingUser)
+      throw new HttpException('Email already exists', HttpStatus.CONFLICT);
 
     const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
     const passwordHash = await bcrypt.hash(tempPassword, 12);
@@ -118,7 +145,9 @@ export class UserManagementController {
       description: `New super admin created: ${newUser.email} (${body.role})`,
     });
 
-    return { data: { user: { id: newUser.id, email: newUser.email }, tempPassword } };
+    return {
+      data: { user: { id: newUser.id, email: newUser.email }, tempPassword },
+    };
   }
 
   @Patch(':id')
@@ -128,11 +157,15 @@ export class UserManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     if (id === user.sub && (body.role || body.isActive !== undefined)) {
-      throw new HttpException('You cannot modify your own role or active status', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'You cannot modify your own role or active status',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const before = await this.prisma.user.findUnique({ where: { id } });
-    if (!before) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!before)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     const updatedUser = await this.prisma.user.update({
       where: { id },
@@ -162,10 +195,15 @@ export class UserManagementController {
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
   ) {
-    if (id === user.sub) throw new HttpException('You cannot delete yourself', HttpStatus.BAD_REQUEST);
+    if (id === user.sub)
+      throw new HttpException(
+        'You cannot delete yourself',
+        HttpStatus.BAD_REQUEST,
+      );
 
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!targetUser)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     await this.prisma.user.update({
       where: { id },
@@ -194,7 +232,8 @@ export class UserManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!targetUser)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
     const passwordHash = await bcrypt.hash(tempPassword, 12);
@@ -225,7 +264,8 @@ export class UserManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!targetUser)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     // Invalidate sessions by deleting refresh tokens and bumping lockedUntil purely for session invalidation (auth layer will reject)
     // Wait, locking the user is too aggressive just for logout. Better to just delete refresh tokens.
@@ -253,7 +293,8 @@ export class UserManagementController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    if (!targetUser)
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
     await this.prisma.user.update({
       where: { id },
@@ -279,7 +320,11 @@ export class UserManagementController {
   async getOnlineUsers() {
     const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
     const users = await this.prisma.user.findMany({
-      where: { lastLoginAt: { gte: thirtyMinsAgo }, isActive: true, deletedAt: null },
+      where: {
+        lastLoginAt: { gte: thirtyMinsAgo },
+        isActive: true,
+        deletedAt: null,
+      },
       orderBy: { lastLoginAt: 'desc' },
       take: 50,
       select: {

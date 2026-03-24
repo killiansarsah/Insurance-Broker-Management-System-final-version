@@ -80,7 +80,9 @@ export class CalendarService {
       const toDate = new Date(to);
 
       if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
-        throw new BadRequestException('Invalid date format. Use ISO 8601 format (YYYY-MM-DD)');
+        throw new BadRequestException(
+          'Invalid date format. Use ISO 8601 format (YYYY-MM-DD)',
+        );
       }
 
       const diffDays =

@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Post,
-  Query,
-  UseGuards,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, Query, UseGuards, Request } from '@nestjs/common';
 import { GoogleSheetsService } from './google-sheets.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -20,7 +14,14 @@ export class GoogleSheetsController {
   @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
   export(
     @Request() req: RequestWithUser,
-    @Query('type') exportType: 'clients' | 'policies' | 'claims' | 'commissions' | 'financial' | 'renewals',
+    @Query('type')
+    exportType:
+      | 'clients'
+      | 'policies'
+      | 'claims'
+      | 'commissions'
+      | 'financial'
+      | 'renewals',
     @Query('from') dateFrom?: string,
     @Query('to') dateTo?: string,
   ) {

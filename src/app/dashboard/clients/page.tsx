@@ -33,10 +33,11 @@ import { formatCurrency, formatPhone, formatDate, cn, getClientDisplayName } fro
 import { toast } from 'sonner';
 import type { Client, ClientStatus, KycStatus, AmlRiskLevel, ClientType } from '@/types';
 import Link from 'next/link';
+import { ClientExportModal } from '@/components/features/clients/client-export-modal';
 
 export default function ClientsPage() {
     const router = useRouter();
-    const { data: clientsData, isLoading } = useClients();
+    const { data: clientsData, isLoading } = useClients({ limit: 5000 });
     const clients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
     
     const totalClients = clients.length;
@@ -56,6 +57,7 @@ export default function ClientsPage() {
     const [filterBroker, setFilterBroker] = useState('');
     const [filterDateFrom, setFilterDateFrom] = useState('');
     const [filterDateTo, setFilterDateTo] = useState('');
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     const filteredClients = clients.filter((c) => {
         if (filterStatus && c.status !== filterStatus) return false;
@@ -77,31 +79,16 @@ export default function ClientsPage() {
 
     const activeFilterCount = [filterStatus, filterKyc, filterRisk, filterType, filterBroker, filterDateFrom, filterDateTo].filter(Boolean).length;
 
+    const activeFiltersParams = {
+        status: filterStatus || undefined,
+        kycStatus: filterKyc || undefined,
+        amlRiskLevel: filterRisk || undefined,
+        type: filterType || undefined,
+        search: undefined
+    };
+
     function handleExport() {
-        const headers = ['Client #', 'Name', 'Type', 'Status', 'KYC', 'Risk', 'Phone', 'Email', 'Active Policies', 'Total Premium', 'Broker', 'Created'];
-        const rows = filteredClients.map(c => [
-            c.clientNumber,
-            getClientDisplayName(c),
-            c.type,
-            c.status,
-            c.kycStatus,
-            c.amlRiskLevel,
-            c.phone,
-            c.email || '',
-            String(c.activePolicies),
-            String(c.totalPremium),
-            c.assignedBrokerName || '',
-            formatDate(c.createdAt as string),
-        ]);
-        const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v}"`).join(','))].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `clients-export-${new Date().toISOString().slice(0, 10)}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        toast.success(`Exported ${filteredClients.length} clients to CSV`);
+        setIsExportModalOpen(true);
     }
 
     const kpis = totalClients > 0 ? [
@@ -366,25 +353,6 @@ export default function ClientsPage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <Link href="/dashboard/integrations#bulk-import">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-primary-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
-                            leftIcon={<Upload size={14} className="text-primary-500 group-hover:-translate-y-0.5 transition-transform" />}
-                        >
-                            Import
-                        </Button>
-                    </Link>
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="bg-white hover:bg-surface-50 text-surface-700 border-surface-200 shadow-sm transition-all duration-300 hover:shadow-md hover:border-success-300 hover:-translate-y-0.5 font-semibold group rounded-full px-4"
-                        leftIcon={<Download size={14} className="text-success-500 group-hover:translate-y-0.5 transition-transform" />} 
-                        onClick={handleExport}
-                    >
-                        Export
-                    </Button>
                     <Link href="/dashboard/clients/new">
                         <Button 
                             variant="primary" 
@@ -619,6 +587,36 @@ export default function ClientsPage() {
                 onRowClick={(row) => router.push(`/dashboard/clients/${row.id}`)}
                 emptyMessage="No clients match the current filters."
                 onExport={handleExport}
+                headerActions={
+                    <Link 
+                        href="/dashboard/integrations#bulk-import"
+                        className="group relative inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-primary-700 dark:text-primary-400 bg-primary-50/50 dark:bg-primary-900/10 border border-primary-200/50 dark:border-primary-800/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_6px_16px_-4px_rgba(14,165,233,0.3)] dark:hover:shadow-[0_6px_16px_-4px_rgba(14,165,233,0.15)] hover:-translate-y-0.5 hover:bg-primary-50 dark:hover:bg-primary-900/30 hover:border-primary-300/60 dark:hover:border-primary-700/50 whitespace-nowrap"
+                    >
+                        {/* Subtle primary glow overlay */}
+                        <span className="absolute inset-0 w-full h-full bg-gradient-to-tr from-primary-400/0 via-primary-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                        
+                        {/* Bouncing Upload Icon */}
+                        <div className="relative overflow-hidden flex items-center justify-center w-[15px] h-[15px] z-10 p-0.5 mt-0.5 text-primary-600 dark:text-primary-500 transition-colors duration-300">
+                             <Upload 
+                                 size={15} 
+                                 className="absolute transition-transform duration-500 ease-[cubic-bezier(0.8,0,0.2,1)] group-hover:-translate-y-full group-hover:opacity-0" 
+                             />
+                             <Upload 
+                                 size={15} 
+                                 className="absolute translate-y-full opacity-0 transition-all duration-500 ease-[cubic-bezier(0.8,0,0.2,1)] group-hover:translate-y-0 group-hover:opacity-100 group-active:scale-95" 
+                             />
+                        </div>
+                        <span className="relative z-10 tracking-wide">Import</span>
+                    </Link>
+                }
+            />
+
+            <ClientExportModal 
+                isOpen={isExportModalOpen}
+                setIsOpen={setIsExportModalOpen}
+                activeFilters={activeFiltersParams}
+                totalClients={totalClients}
+                filteredCount={filteredClients.length}
             />
         </div>
     );
