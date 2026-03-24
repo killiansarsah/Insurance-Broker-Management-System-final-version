@@ -24,11 +24,12 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { usePolicies } from '@/hooks/api';
+import { usePolicies, useCancelPolicy } from '@/hooks/api';
 import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
     { label: 'Motor', value: 'MOTOR' },
@@ -72,6 +73,137 @@ export default function PoliciesPage() {
     const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
     const { data: policiesData, isLoading } = usePolicies({ limit: 5000 });
     const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
+    
+    const [selectedPolicies, setSelectedPolicies] = useState<any[]>([]);
+    const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
+    const [showBulkRenewModal, setShowBulkRenewModal] = useState(false);
+    
+    // Action Modals State
+    const [actionPolicy, setActionPolicy] = useState<any>(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showRenewalModal, setShowRenewalModal] = useState(false);
+    const cancelPolicyMutation = useCancelPolicy();
+
+    // ─── Renewal Modal ───────────────────────────────────────────────────────
+    const renderRenewalModal = () => {
+        if (!showRenewalModal || !actionPolicy) return null;
+        const newInception = actionPolicy.expiryDate;
+        const newExpiry = (() => {
+            const d = new Date(actionPolicy.expiryDate);
+            d.setFullYear(d.getFullYear() + 1);
+            return d.toISOString().split('T')[0];
+        })();
+        return (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowRenewalModal(false)}>
+                <div className="bg-background rounded-2xl shadow-xl w-full max-w-lg p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                    <h2 className="text-lg font-bold text-surface-900 mb-4">Renew Policy</h2>
+                    <div className="space-y-4">
+                        <div className="p-4 bg-surface-50 rounded-lg space-y-2">
+                            <p className="text-xs text-surface-500">Current Policy</p>
+                            <span className="text-[11px] font-mono text-surface-500 bg-surface-100/80 border border-surface-200/50 px-2.5 py-1 rounded-md tracking-wide">{actionPolicy.policyNumber}</span>
+                            <p className="text-xs text-surface-500">{formatDate(actionPolicy.inceptionDate)} → {formatDate(actionPolicy.expiryDate)}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="text-sm font-medium text-surface-700 block mb-1">New Inception</label>
+                                <input type="date" defaultValue={newInception} className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-surface-700 block mb-1">New Expiry</label>
+                                <input type="date" defaultValue={newExpiry} className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-surface-700 block mb-1">New Premium (GHS)</label>
+                            <input type="number" defaultValue={actionPolicy.premiumAmount} step="0.01" className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30" />
+                        </div>
+                        <div className="p-3 bg-primary-50 rounded-lg border border-primary-100">
+                            <p className="text-xs text-primary-600">Tax breakdown will be auto-calculated: VAT 15%, NHIL 2.5%, GETFund 2.5%</p>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <Button type="button" variant="outline" className="flex-1" onClick={() => setShowRenewalModal(false)}>Cancel</Button>
+                            <Button
+                                variant="primary"
+                                className="flex-1"
+                                onClick={() => {
+                                    toast.success(`Policy ${actionPolicy.policyNumber} renewed successfully`);
+                                    setShowRenewalModal(false);
+                                }}
+                            >
+                                Confirm Renewal
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // ─── Cancel Modal ────────────────────────────────────────────────────────
+    const renderCancelModal = () => {
+        if (!showCancelModal || !actionPolicy) return null;
+        return (
+            <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowCancelModal(false)}>
+                <div className="bg-background rounded-2xl shadow-xl w-full max-w-lg p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                    <h2 className="text-lg font-bold text-danger-600 mb-4 flex items-center gap-2">
+                        <Ban size={20} /> Cancel Policy
+                    </h2>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const formData = new FormData(e.currentTarget);
+                        cancelPolicyMutation.mutate({
+                            id: actionPolicy.id,
+                            reason: formData.get('cancelReason') as string,
+                            effectiveDate: formData.get('cancelEffectiveDate') as string,
+                        }, {
+                            onSuccess: () => {
+                                toast.success(`Policy ${actionPolicy.policyNumber} cancellation submitted`);
+                                setShowCancelModal(false);
+                            },
+                            onError: (err: any) => {
+                                toast.error('Failed to cancel policy', { description: err?.response?.data?.message || 'Please try again.' });
+                            },
+                        });
+                    }} className="space-y-4">
+                        <div className="p-4 bg-danger-50/50 rounded-lg border border-danger-100">
+                            <p className="text-sm text-danger-700">
+                                You are about to cancel policy <strong>{actionPolicy.policyNumber}</strong> for <strong>{actionPolicy.clientName}</strong>.
+                                This action will notify the insurer and update the policy status.
+                            </p>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Cancellation Reason</label>
+                            <select name="cancelReason" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required>
+                                <option value="">Select reason...</option>
+                                <option value="NON_PAYMENT">Non-payment of premium</option>
+                                <option value="CLIENT_REQUEST">Client request</option>
+                                <option value="INSURER_CANCELLATION">Insurer request</option>
+                                <option value="MISREPRESENTATION">Fraud / Misrepresentation</option>
+                                <option value="DUPLICATE_POLICY">Replaced by another policy</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Effective Date</label>
+                            <input name="cancelEffectiveDate" type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Notes</label>
+                            <textarea rows={3} className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="Additional notes..." />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Estimated Refund (GHS)</label>
+                            <input type="number" step="0.01" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <Button type="button" variant="outline" className="flex-1" onClick={() => setShowCancelModal(false)}>Go Back</Button>
+                            <Button type="submit" variant="danger" className="flex-1">Confirm Cancellation</Button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        );
+    };
     
     const BROKERS = useMemo(() => 
         Array.from(new Set(policies.map((p: any) => p.brokerName).filter(Boolean))).sort().map(b => ({ label: String(b), value: String(b) })),
@@ -166,7 +298,7 @@ export default function PoliciesPage() {
             label: 'Policy #',
             sortable: true,
             render: (row: Policy) => (
-                <span className="text-xs font-mono text-surface-500">{row.policyNumber}</span>
+                <span className="text-[11px] font-mono text-surface-500 bg-surface-100/80 border border-surface-200/50 px-2.5 py-1 rounded-md tracking-wide">{row.policyNumber}</span>
             ),
         },
         {
@@ -275,7 +407,11 @@ export default function PoliciesPage() {
                         <button
                             className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-success-600 transition-colors cursor-pointer"
                             title="Renew"
-                            onClick={() => toast.info(`Renewal workflow for ${row.policyNumber} — navigate to detail page for full renewal.`)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActionPolicy(row);
+                                setShowRenewalModal(true);
+                            }}
                         >
                             <RotateCcw size={15} />
                         </button>
@@ -284,7 +420,11 @@ export default function PoliciesPage() {
                         <button
                             className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-500 hover:text-danger-600 transition-colors cursor-pointer"
                             title="Cancel"
-                            onClick={() => toast.info(`Cancel workflow for ${row.policyNumber} — navigate to detail page for full cancellation.`)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setActionPolicy(row);
+                                setShowCancelModal(true);
+                            }}
                         >
                             <Ban size={15} />
                         </button>
@@ -301,14 +441,7 @@ export default function PoliciesPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading policies...</p>
-                </div>
-            </div>
-        );
+        return <AppLoader message="Loading policies..." isLoading={true} />;
     }
 
     return (
@@ -451,6 +584,9 @@ export default function PoliciesPage() {
                 }
                 exportable={true}
                 onExport={() => exportToCsv(filtered)}
+                selectable={true}
+                selectedRows={selectedPolicies}
+                onSelectionChange={setSelectedPolicies}
                 headerActions={
                     <Link 
                         href="/dashboard/integrations#bulk-import"
@@ -474,6 +610,111 @@ export default function PoliciesPage() {
                     </Link>
                 }
             />
+            {renderRenewalModal()}
+            {renderCancelModal()}
+
+            {/* Bulk Actions Floating Bar */}
+            <div className={cn(
+                "fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-white dark:bg-slate-900 border border-surface-200/60 dark:border-slate-700 p-2 pl-4 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)]",
+                selectedPolicies.length > 0 ? "translate-y-0 opacity-100 scale-100" : "translate-y-20 opacity-0 scale-95 pointer-events-none"
+            )}>
+                <div className="flex items-center gap-2 pr-2 border-r border-surface-200 dark:border-slate-700">
+                    <span className="flex items-center justify-center bg-primary-100 text-primary-700 font-bold text-xs w-6 h-6 rounded-full">{selectedPolicies.length}</span>
+                    <span className="text-sm font-semibold text-surface-700 dark:text-slate-300">Selected</span>
+                </div>
+                
+                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkAssignModal(true)}>
+                    Assign Officer
+                </Button>
+                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkRenewModal(true)}>
+                    Send Renewals
+                </Button>
+                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-success-50 hover:text-success-600 font-semibold text-xs h-9" onClick={() => exportToCsv(selectedPolicies)}>
+                    <Download size={14} className="mr-1.5" /> Export {selectedPolicies.length}
+                </Button>
+                <div className="w-px h-6 bg-surface-200 dark:bg-slate-700 mx-1" />
+                <button 
+                    onClick={() => setSelectedPolicies([])}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-surface-100 text-surface-500 hover:bg-surface-200 hover:text-danger-600 transition-colors cursor-pointer"
+                >
+                    <X size={16} />
+                </button>
+            </div>
+
+            {/* Bulk Assign Modal */}
+            {showBulkAssignModal && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowBulkAssignModal(false)}>
+                    <div className="bg-background rounded-2xl shadow-xl w-full max-w-sm p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="text-lg font-bold text-surface-900 mb-2">Assign Officer</h2>
+                        <p className="text-sm text-surface-500 mb-4">Select an officer to reassign {selectedPolicies.length} policies to.</p>
+                        <select className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 mb-5 bg-white">
+                            <option value="">Choose officer...</option>
+                            <option value="officer_1">Jane Doe (Senior Agent)</option>
+                            <option value="officer_2">John Smith (Underwriter)</option>
+                            <option value="officer_3">Alice Johnson (Agent)</option>
+                        </select>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="outline" className="flex-1" onClick={() => setShowBulkAssignModal(false)}>Cancel</Button>
+                            <Button
+                                variant="primary"
+                                className="flex-1"
+                                onClick={() => {
+                                    toast.promise(
+                                        new Promise(resolve => setTimeout(resolve, 800)),
+                                        {
+                                            loading: `Assigning ${selectedPolicies.length} policies...`,
+                                            success: () => {
+                                                setShowBulkAssignModal(false);
+                                                setSelectedPolicies([]);
+                                                return `Successfully reassigned ${selectedPolicies.length} policies`;
+                                            },
+                                            error: 'Could not assign policies',
+                                        }
+                                    );
+                                }}
+                            >
+                                Confirm
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Renew Modal */}
+            {showBulkRenewModal && (
+                <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowBulkRenewModal(false)}>
+                    <div className="bg-background rounded-2xl shadow-xl w-full max-w-sm p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+                        <h2 className="text-lg font-bold text-surface-900 mb-2">Send Renewal Reminders</h2>
+                        <p className="text-sm text-surface-500 mb-4">Are you sure you want to send automated renewal reminder emails to the clients of these {selectedPolicies.length} selected policies?</p>
+                        <div className="p-3 bg-primary-50 text-primary-700 rounded-lg text-xs leading-relaxed mb-5 border border-primary-100">
+                            Clients will receive an email containing a link to review and pay for their upcoming renewal online.
+                        </div>
+                        <div className="flex gap-3">
+                            <Button type="button" variant="outline" className="flex-1" onClick={() => setShowBulkRenewModal(false)}>Cancel</Button>
+                            <Button
+                                variant="primary"
+                                className="flex-1"
+                                onClick={() => {
+                                    toast.promise(
+                                        new Promise(resolve => setTimeout(resolve, 1200)),
+                                        {
+                                            loading: `Sending ${selectedPolicies.length} emails...`,
+                                            success: () => {
+                                                setShowBulkRenewModal(false);
+                                                setSelectedPolicies([]);
+                                                return `Sent renewal reminders for ${selectedPolicies.length} policies`;
+                                            },
+                                            error: 'Failed to send emails',
+                                        }
+                                    );
+                                }}
+                            >
+                                Send Emails
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

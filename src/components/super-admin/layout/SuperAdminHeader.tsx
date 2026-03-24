@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUiStore } from '@/stores/ui-store';
 import { ImpersonationBanner } from '@/components/super-admin/ImpersonationBanner';
-import { Bell, Menu, UserCircle, Sun, Moon } from 'lucide-react';
+import { Bell, Menu, UserCircle, Sun, Moon, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { NotificationsPopover } from '@/components/features/notifications';
@@ -88,6 +88,13 @@ export function SuperAdminHeader() {
               title="Light Mode"
             >
               <Sun size={14} />
+            </button>
+            <button
+              onClick={() => setTheme('system')}
+              className={`p-1.5 rounded-full transition-all flex items-center justify-center ${currentTheme === 'system' ? 'bg-[#1D9E75] text-[#021a13] shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}
+              title="System Mode"
+            >
+              <Monitor size={14} />
             </button>
             <button
               onClick={() => setTheme('dark')}

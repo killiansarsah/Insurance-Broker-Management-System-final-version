@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 const themes = [
     { value: 'light', label: 'Classic Light', desc: 'Clean and bright interface with high contrast.', icon: 'light_mode' },
     { value: 'dark', label: 'Premium Dark', desc: 'Deep slate tones for reduced eye strain.', icon: 'dark_mode' },
+    { value: 'system', label: 'System Auto', desc: 'Syncs automatically with your device time and OS preference.', icon: 'schedule' },
     { value: 'glass', label: 'Liquid Glass', desc: 'Modern frosted effects and vibrant accents.', icon: 'blur_on' },
 ] as const;
 
@@ -38,11 +39,11 @@ export function SettingsAppearance() {
                     <h3 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-[0.2em]">Interface Appearance</h3>
                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Theme</span>
                 </div>
-                <div className="p-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {themes.map((t) => (
                         <button
                             key={t.value}
-                            onClick={() => setTheme(t.value as 'light' | 'dark' | 'glass')}
+                            onClick={() => setTheme(t.value as 'light' | 'dark' | 'glass' | 'system')}
                             className={cn(
                                 "p-8 rounded-3xl border-2 text-left transition-all relative flex flex-col gap-4 group",
                                 currentTheme === t.value

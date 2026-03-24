@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     ArrowLeft,
     ArrowRight,
@@ -38,9 +38,23 @@ export default function NewClaimPage() {
     const createClaimMutation = useCreateClaim();
     const allPolicies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
 
+    const searchParams = useSearchParams();
+    const policyIdParam = searchParams.get('policyId');
+
     // Form State
     const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
+
+    // Pre-fill Policy if routed directly
+    useEffect(() => {
+        if (policyIdParam && allPolicies.length > 0 && !selectedPolicy) {
+            const extPolicy = allPolicies.find((p: any) => p.id === policyIdParam);
+            if (extPolicy) {
+                setSelectedPolicy(extPolicy);
+                setStep(2); // Automatically skip to Incident Details
+            }
+        }
+    }, [policyIdParam, allPolicies, selectedPolicy]);
     const [perilType, setPerilType] = useState('Fire');
     const [incidentDate, setIncidentDate] = useState('');
     const [description, setDescription] = useState('');

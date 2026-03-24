@@ -336,6 +336,7 @@ export class PoliciesService {
         },
         carrier: true,
         product: true,
+        broker: { select: { id: true, firstName: true, lastName: true } },
         vehicleDetails: true,
         propertyDetails: true,
         marineDetails: true,
@@ -358,7 +359,27 @@ export class PoliciesService {
     });
 
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
-    return policy;
+
+    const { client, carrier, broker, ...rest } = policy as any;
+    const clientName = client?.companyName
+      ? client.companyName
+      : `${client?.firstName || ''} ${client?.lastName || ''}`.trim() || 'Unknown Client';
+    const brokerName = broker
+      ? `${broker.firstName} ${broker.lastName}`
+      : 'Unassigned';
+
+    const now = new Date();
+    const expiry = new Date(policy.expiryDate);
+    const diffTime = expiry.getTime() - now.getTime();
+    const daysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    return {
+      ...policy,
+      clientName,
+      insurerName: carrier?.name || 'Unknown Insurer',
+      brokerName,
+      daysToExpiry,
+    };
   }
 
   // ─── UPDATE ─────────────────────────────────────────
@@ -369,15 +390,24 @@ export class PoliciesService {
     dto: UpdatePolicyDto,
   ) {
     const updateData: Record<string, unknown> = {};
+    if (dto.policyNumber !== undefined)
+      updateData.policyNumber = dto.policyNumber;
     if (dto.premiumAmount !== undefined)
       updateData.premiumAmount = dto.premiumAmount;
     if (dto.sumInsured !== undefined) updateData.sumInsured = dto.sumInsured;
+    if (dto.startDate !== undefined)
+      updateData.inceptionDate = new Date(dto.startDate);
     if (dto.endDate !== undefined)
       updateData.expiryDate = new Date(dto.endDate);
     if (dto.coverageDetails !== undefined)
       updateData.coverageDetails = dto.coverageDetails;
     if (dto.premiumFrequency !== undefined)
       updateData.premiumFrequency = dto.premiumFrequency;
+    if (dto.commission !== undefined) {
+      updateData.commissionRate = dto.commission;
+      const premium = dto.premiumAmount ?? 0;
+      updateData.commissionAmount = (premium * dto.commission) / 100;
+    }
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException('No fields to update');
     }

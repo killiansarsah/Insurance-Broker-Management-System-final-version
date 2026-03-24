@@ -27,6 +27,7 @@ import { useLeads } from '@/hooks/api';
 import { formatCurrency, formatDate, cn, getInitials } from '@/lib/utils';
 import type { Lead, LeadStatus, LeadPriority } from '@/types';
 import Link from 'next/link';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 // --- Lead Pipeline Stages ---
 const LEAD_STAGES = [
@@ -103,14 +104,7 @@ export default function LeadsPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading leads...</p>
-                </div>
-            </div>
-        );
+        return <AppLoader message="Loading leads..." isLoading={true} />;
     }
 
     return (

@@ -1,5 +1,5 @@
-import { SkeletonListPage } from '@/components/ui/skeleton';
+import { AppLoader } from '@/components/ui/AppLoader';
 
-export default function DashboardLoading() {
-    return <SkeletonListPage />;
+export default function Loading() {
+    return <AppLoader message="Loading Dashboard..." isLoading={true} />;
 }

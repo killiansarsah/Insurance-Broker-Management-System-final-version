@@ -18,10 +18,7 @@ import { useLead } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import { toast } from 'sonner';
-
-
-
-
+import { AppLoader } from '@/components/ui/AppLoader';
 const LEAD_STAGES = [
     { key: 'NEW', label: 'New', color: 'bg-blue-500' },
     { key: 'CONTACTED', label: 'Contacted', color: 'bg-indigo-500' },
@@ -37,11 +34,7 @@ export default function LeadDetailPage({ id }: { id: string }) {
     const { data: lead, isLoading } = useLead(id) as { data: Record<string, any> | undefined; isLoading: boolean };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
+        return <AppLoader message="Loading lead details..." isLoading={true} />;
     }
 
     if (!lead) {

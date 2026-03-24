@@ -23,6 +23,7 @@ import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { useComplaint } from '@/hooks/api';
+import { AppLoader } from '@/components/ui/AppLoader';
 import { formatDate, cn } from '@/lib/utils';
 import { Complaint } from '@/types';
 import { BackButton } from '@/components/ui/back-button';
@@ -71,11 +72,7 @@ export default function ComplaintDetailPage({ id }: { id: string }) {
     const complaint = complaintData as Complaint | undefined;
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
+        return <AppLoader message="Loading complaint details..." isLoading={true} />;
     }
     if (!complaint) return <div>Complaint not found</div>;
 

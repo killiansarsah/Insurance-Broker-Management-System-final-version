@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
-import { PageLoader } from '@/components/ui';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { isAuthenticated, isLoading, checkAuth } = useAuthStore();
@@ -26,17 +26,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
     if (!mounted || isLoading) {
         return (
-            <div className="h-screen w-screen flex items-center justify-center bg-surface-50">
-                <PageLoader message="Verifying session..." />
-            </div>
+            <AppLoader message="Verifying session..." isLoading={true} fullScreen={true} />
         );
     }
 
     if (!isAuthenticated) {
         return (
-            <div className="h-screen w-screen flex items-center justify-center bg-surface-50">
-                <PageLoader message="Signing out..." />
-            </div>
+            <AppLoader message="Signing out..." isLoading={true} fullScreen={true} />
         );
     }
 

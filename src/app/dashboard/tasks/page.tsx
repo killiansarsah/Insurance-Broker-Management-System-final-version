@@ -33,8 +33,8 @@ const ConfirmationModal = dynamic(
     () => import('@/components/ui/confirmation-modal').then(m => ({ default: m.ConfirmationModal })),
     { ssr: false }
 );
-
 import { AnimatePresence, motion } from 'framer-motion';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 // ─── Task shape expected by UI components ───
 interface Task {
@@ -421,11 +421,7 @@ export default function TasksPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-[60vh]">
-                <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-            </div>
-        );
+        return <AppLoader message="Loading workspace tasks..." isLoading={true} />;
     }
 
     return (

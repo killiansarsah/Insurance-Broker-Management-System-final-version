@@ -23,6 +23,7 @@ import {
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
+import { AppLoader } from '@/components/ui/AppLoader';
 import { useClaim, useClaimFollowUps, useAddClaimFollowUp, useClaimDocuments, useAddClaimDocument } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Claim } from '@/types';
@@ -70,11 +71,7 @@ export default function ClaimDetailPage({ id }: { id: string }) {
     const addDocumentMutation = useAddClaimDocument();
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
+        return <AppLoader message="Loading claim details..." isLoading={true} />;
     }
     if (!claim) return <div>Claim not found</div>;
 

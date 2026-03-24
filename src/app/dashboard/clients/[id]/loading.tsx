@@ -1,5 +1,5 @@
-import { SkeletonDetailPage } from '@/components/ui/skeleton';
+import { AppLoader } from '@/components/ui/AppLoader';
 
-export default function ClientDetailLoading() {
-    return <SkeletonDetailPage tabs={5} />;
+export default function Loading() {
+    return <AppLoader message="Loading client details..." isLoading={true} />;
 }

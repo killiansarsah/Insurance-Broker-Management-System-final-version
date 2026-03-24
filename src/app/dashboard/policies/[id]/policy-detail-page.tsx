@@ -42,11 +42,13 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { AppLoader } from '@/components/ui/AppLoader';
+import { AnimatedExpiryBadge } from '@/components/ui/animated-expiry-badge';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { formatCurrency, cn, formatDate } from '@/lib/utils';
 import { BackButton } from '@/components/ui/back-button';
 import type { Policy } from '@/types';
-import { usePolicy, useClaims, useCarrier, useDocuments } from '@/hooks/api';
+import { usePolicy, useClaims, useCarrier, useDocuments, useCreateEndorsement, useCancelPolicy } from '@/hooks/api';
 import { toast } from 'sonner';
 import { usePaymentStore } from '@/stores/payment-store';
 import { generateReceipt } from '@/lib/generate-receipt';
@@ -103,16 +105,20 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     const carrier = carrierRaw as any;
     const policyTransactions = useMemo(() => transactions.filter(t => t.policyId === policyId), [transactions, policyId]);
 
+    const clientName = policy?.client?.companyName || 
+        (policy?.client?.firstName ? `${policy.client.firstName} ${policy.client?.lastName || ''}`.trim() : null) || 
+        policy?.clientName || 
+        'Unknown Client';
+
+    const createEndorsementMutation = useCreateEndorsement();
+    const cancelPolicyMutation = useCancelPolicy();
+
     // Fetch persisted documents linked to this policy
     const { data: apiDocsRaw } = useDocuments({ linkedEntityType: 'POLICY', linkedEntityId: policyId });
     const apiDocuments: any[] = ((apiDocsRaw as any)?.items ?? (Array.isArray(apiDocsRaw) ? apiDocsRaw : []));
 
     if (policyLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
+        return <AppLoader message="Loading policy details..." isLoading={true} />;
     }
 
     if (!policy) {
@@ -234,13 +240,13 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     <h3 className="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Client</h3>
                     <div className="flex items-center gap-3 mb-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center text-primary-700 font-bold text-lg">
-                            {policy.clientName?.charAt(0) || '?'}
+                            {clientName.charAt(0)}
                         </div>
                         <div>
                             <Link href={`/dashboard/clients/${policy.clientId}`} className="text-base font-bold text-surface-900 hover:text-primary-600 transition-colors">
-                                {policy.clientName || 'Unknown Client'}
+                                {clientName}
                             </Link>
-                            <p className="text-xs text-surface-500">ID: {policy.clientId}</p>
+                            <p className="text-xs text-surface-500">{policy.client?.email || policy.client?.phone || 'Policy Holder'}</p>
                         </div>
                     </div>
                     <Link href={`/dashboard/clients/${policy.clientId}`}>
@@ -275,7 +281,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 <Card className="p-5">
                     <h3 className="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Broker</h3>
                     <p className="font-semibold text-surface-900">{policy.brokerName}</p>
-                    <p className="text-xs text-surface-500 mt-1">ID: {policy.brokerId}</p>
+
                 </Card>
 
                 {/* Commission */}
@@ -350,7 +356,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         ['Policy Type', policy.policyType],
                         ['NIC Class of Business', policy.nicClassOfBusiness || '—'],
                         ['Product', policy.productName || '—'],
-                        ['Client', policy.clientName || 'Unknown Client'],
+                        ['Client', clientName],
                         ['Insurer', policy.insurerName],
                         ['Broker', policy.brokerName],
                         ['Sum Insured', formatCurrency(policy.sumInsured)],
@@ -993,12 +999,28 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     <h2 className="text-lg font-bold text-surface-900 mb-4">Add Endorsement</h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();
-                        toast.success('Endorsement submitted for approval');
-                        setShowEndorsementModal(false);
+                        const formData = new FormData(e.currentTarget);
+                        createEndorsementMutation.mutate({
+                            policyId: policy.id,
+                            data: {
+                                type: formData.get('endorsementType') as string,
+                                effectiveDate: formData.get('effectiveDate') as string,
+                                description: formData.get('description') as string,
+                                premiumAdjustment: parseFloat(formData.get('premiumAdjustment') as string) || 0,
+                            },
+                        }, {
+                            onSuccess: () => {
+                                toast.success('Endorsement submitted for approval');
+                                setShowEndorsementModal(false);
+                            },
+                            onError: (err: any) => {
+                                toast.error('Failed to create endorsement', { description: err?.response?.data?.message || 'Please try again.' });
+                            },
+                        });
                     }} className="space-y-4">
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Endorsement Type</label>
-                            <select className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30">
+                            <select name="endorsementType" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30">
                                 <option value="COVERAGE_CHANGE">Addition</option>
                                 <option value="COVERAGE_CHANGE">Deletion</option>
                                 <option value="SUM_INSURED_CHANGE">Alteration</option>
@@ -1008,15 +1030,15 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         </div>
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Effective Date</label>
-                            <input type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
+                            <input name="effectiveDate" type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
                         </div>
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Description</label>
-                            <textarea rows={3} className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required placeholder="Describe the endorsement..." />
+                            <textarea name="description" rows={3} className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required placeholder="Describe the endorsement..." />
                         </div>
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Premium Adjustment (GHS)</label>
-                            <input type="number" step="0.01" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
+                            <input name="premiumAdjustment" type="number" step="0.01" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" placeholder="0.00" />
                         </div>
                         <div className="flex gap-3 pt-2">
                             <Button type="button" variant="outline" className="flex-1" onClick={() => setShowEndorsementModal(false)}>Cancel</Button>
@@ -1044,7 +1066,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     <div className="space-y-4">
                         <div className="p-4 bg-surface-50 rounded-lg space-y-2">
                             <p className="text-xs text-surface-500">Current Policy</p>
-                            <p className="font-mono text-sm font-semibold">{policy.policyNumber}</p>
+                            <span className="text-[11px] font-mono text-surface-500 bg-surface-100/80 border border-surface-200/50 px-2.5 py-1 rounded-md tracking-wide">{policy.policyNumber}</span>
                             <p className="text-xs text-surface-500">{formatDate(policy.inceptionDate)} → {formatDate(policy.expiryDate)}</p>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -1094,18 +1116,30 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     </h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();
-                        toast.success(`Policy ${policy.policyNumber} cancellation submitted`);
-                        setShowCancelModal(false);
+                        const formData = new FormData(e.currentTarget);
+                        cancelPolicyMutation.mutate({
+                            id: policy.id,
+                            reason: formData.get('cancelReason') as string,
+                            effectiveDate: formData.get('cancelEffectiveDate') as string,
+                        }, {
+                            onSuccess: () => {
+                                toast.success(`Policy ${policy.policyNumber} cancellation submitted`);
+                                setShowCancelModal(false);
+                            },
+                            onError: (err: any) => {
+                                toast.error('Failed to cancel policy', { description: err?.response?.data?.message || 'Please try again.' });
+                            },
+                        });
                     }} className="space-y-4">
                         <div className="p-4 bg-danger-50/50 rounded-lg border border-danger-100">
                             <p className="text-sm text-danger-700">
-                                You are about to cancel policy <strong>{policy.policyNumber}</strong> for <strong>{policy.clientName}</strong>.
+                                You are about to cancel policy <strong>{policy.policyNumber}</strong> for <strong>{clientName}</strong>.
                                 This action will notify the insurer and update the policy status.
                             </p>
                         </div>
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Cancellation Reason</label>
-                            <select className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required>
+                            <select name="cancelReason" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required>
                                 <option value="">Select reason...</option>
                                 <option value="NON_PAYMENT">Non-payment of premium</option>
                                 <option value="CLIENT_REQUEST">Client request</option>
@@ -1117,7 +1151,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         </div>
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Effective Date</label>
-                            <input type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
+                            <input name="cancelEffectiveDate" type="date" className="w-full border border-surface-200 dark:border-slate-700 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500/30" required />
                         </div>
                         <div>
                             <label className="text-sm font-medium text-surface-700 dark:text-slate-300 block mb-1">Notes</label>
@@ -1171,19 +1205,13 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 </div>
 
                 {/* Expiry Countdown */}
+                {/* Expiry Countdown */}
                 {policy.status === 'ACTIVE' && (
-                    <div className={cn(
-                        'px-4 py-3 rounded-xl border flex items-center gap-3',
-                        isExpiringSoon
-                            ? 'bg-danger-50 border-danger-100 text-danger-700'
-                            : 'bg-surface-50 border-surface-200 text-surface-600'
-                    )}>
-                        <Clock size={20} className={isExpiringSoon ? 'text-danger-500' : 'text-surface-400'} />
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-wider opacity-80">Expires In</p>
-                            <p className="text-lg font-bold tabular-nums leading-none">{policy.daysToExpiry ?? 0} days</p>
-                        </div>
-                    </div>
+                    <AnimatedExpiryBadge 
+                        expiryDate={policy.expiryDate} 
+                        daysToExpiry={policy.daysToExpiry ?? 0} 
+                        isExpiringSoon={isExpiringSoon} 
+                    />
                 )}
             </div>
 
@@ -1211,7 +1239,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                     variant="outline"
                     size="sm"
                     leftIcon={<ClipboardList size={16} />}
-                    onClick={() => toast.info('Navigate to Claims → New Claim to file a claim for this policy')}
+                    onClick={() => router.push(`/dashboard/claims/new?policyId=${policy.id}`)}
                 >
                     Claim
                 </Button>
@@ -1229,18 +1257,10 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 <Button
                     variant="ghost"
                     size="sm"
-                    leftIcon={<Download size={16} />}
-                    onClick={() => toast.info('Policy schedule download started')}
+                    leftIcon={<Pencil size={16} />}
+                    onClick={() => router.push(`/dashboard/policies/${policyId}/edit`)}
                 >
-                    Schedule
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    leftIcon={<Mail size={16} />}
-                    onClick={() => toast.info('Renewal reminder email sent')}
-                >
-                    Reminder
+                    Edit
                 </Button>
             </div>
 
@@ -1294,7 +1314,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 policyId={policy.id}
                 policyNumber={policy.policyNumber}
                 clientId={policy.clientId}
-                clientName={policy.clientName}
+                clientName={clientName}
                 outstandingBalance={policy.outstandingBalance ?? 0}
                 currency={policy.currency}
             />

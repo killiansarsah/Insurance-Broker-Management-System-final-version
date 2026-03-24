@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { AppLoader } from '@/components/ui/AppLoader';
 import { toast } from 'sonner';
 import {
     FileText,
@@ -666,11 +667,7 @@ export default function PremiumFinancingPage() {
     const strokeDash = (collectionPct / 100) * circumference;
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-            </div>
-        );
+        return <AppLoader message="Loading premium financing..." isLoading={true} />;
     }
 
     return (

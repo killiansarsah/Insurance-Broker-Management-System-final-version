@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useCarrier, useCarrierProducts } from '@/hooks/api';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { AppLoader } from '@/components/ui/AppLoader';
 import { cn } from '@/lib/utils';
 import { useState, useMemo } from 'react';
 import {
@@ -87,27 +88,6 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
         }, {} as Record<string, CarrierProduct[]>);
     }, [products]);
 
-    // Split into Motor vs Others as requested by user
-    const motorProducts = groupedProducts['MOTOR'] || [];
-    const otherProducts = Object.entries(groupedProducts)
-        .filter(([cat]) => cat !== 'MOTOR')
-        .flatMap(([, items]) => items);
-
-    if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
-    }
-
-    if (!carrier) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24 animate-fade-in">
-                <p className="text-surface-500 text-lg">Carrier not found.</p>
-            </div>
-        );
-    }
 
     return (
         <div className="w-full space-y-8 pb-20 animate-fade-in relative max-w-7xl mx-auto">

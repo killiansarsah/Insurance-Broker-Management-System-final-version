@@ -91,20 +91,10 @@ const StepIndicator = ({ step }: { step: number }) => {
     );
 };
 
+import { AppLoader } from '@/components/ui/AppLoader';
+
 const MinimalistLoader = ({ message }: { message: string }) => (
-    <div className="flex flex-col items-center justify-center p-20 space-y-6">
-        <div className="relative">
-            <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-12 h-12 rounded-full border-2 border-surface-200 border-t-primary-600"
-            />
-        </div>
-        <div className="text-center space-y-1">
-            <h4 className="text-lg font-bold text-surface-900">{message}</h4>
-            <p className="text-sm text-surface-500">Just a moment please...</p>
-        </div>
-    </div>
+    <AppLoader message={message} fullScreen={false} />
 );
 
 // ============================================================

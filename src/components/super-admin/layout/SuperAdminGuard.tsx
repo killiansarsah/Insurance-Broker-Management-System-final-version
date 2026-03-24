@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSuperAdminAuth } from '@/hooks/super-admin/useSuperAdminAuth';
 import { ShieldAlert } from 'lucide-react';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 /**
  * SuperAdminGuard — Ensures the user has Super Admin privileges.
@@ -31,11 +32,7 @@ export function SuperAdminGuard({ children }: { children: React.ReactNode }) {
   }, [isChecking, isAuthenticated, router]);
 
   if (isChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#021a13]">
-        <div className="w-8 h-8 rounded-full border-t-2 border-r-2 border-[#1D9E75] animate-spin" />
-      </div>
-    );
+    return <AppLoader message="Verifying access level..." isLoading={true} fullScreen={true} />;
   }
 
   // If we're authenticated but clearly not a super admin, show strict 403

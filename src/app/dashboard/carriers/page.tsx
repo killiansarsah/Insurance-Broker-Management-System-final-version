@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCarriers } from '@/hooks/api/use-carriers';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 type CarrierType = 'NON_LIFE' | 'LIFE' | 'REINSURER';
 
@@ -121,14 +122,7 @@ export default function CarriersPage() {
     ];
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading carriers...</p>
-                </div>
-            </div>
-        );
+        return <AppLoader message="Loading carriers..." isLoading={true} />;
     }
 
     return (

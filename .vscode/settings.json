@@ -22,5 +22,6 @@
     },
     "workbench.browser.openLocalhostLinks": true,
     "workbench.browser.enableChatTools": true,
-    "terminal.integrated.suggest.insertTrailingSpace": false
+    "terminal.integrated.suggest.insertTrailingSpace": false,
+    "postman.settings.dotenv-detection-notification-visibility": false
 }

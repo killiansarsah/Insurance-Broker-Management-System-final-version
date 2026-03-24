@@ -76,6 +76,7 @@ interface FormData {
     insurerName: string;
     inceptionDate: string;
     expiryDate: string;
+    policyNumber: string;
     sumInsured: number;
     premiumRate: number;
     premiumAmount: number;
@@ -103,13 +104,17 @@ interface FormData {
     cargoDescription: string;
 }
 
+const todayStr = new Date().toISOString().split('T')[0];
+const oneYearLater = (() => { const d = new Date(); d.setFullYear(d.getFullYear() + 1); return d.toISOString().split('T')[0]; })();
+
 const INITIAL_FORM: FormData = {
     clientId: '',
     clientName: '',
     insuranceType: '',
     insurerName: '',
-    inceptionDate: new Date().toISOString().split('T')[0],
-    expiryDate: '',
+    inceptionDate: todayStr,
+    expiryDate: oneYearLater,
+    policyNumber: '',
     sumInsured: 0,
     premiumRate: 0,
     premiumAmount: 0,
@@ -212,8 +217,8 @@ export default function NewPolicyPage() {
                 const rate = field === 'premiumRate' ? (value as number) : prev.premiumRate;
                 next.premiumAmount = Math.round((sum * rate) / 100);
             }
-            // Auto-set expiry to 1 year from inception
-            if (field === 'inceptionDate' && value && !prev.expiryDate) {
+            // Auto-set expiry to 1 year from inception (always recalculate)
+            if (field === 'inceptionDate' && value) {
                 const d = new Date(value as string);
                 d.setFullYear(d.getFullYear() + 1);
                 next.expiryDate = d.toISOString().split('T')[0];
@@ -248,6 +253,7 @@ export default function NewPolicyPage() {
                 premiumFrequency: form.premiumFrequency,
                 currency: form.currency,
                 commission: form.commissionRate ? (form.premiumAmount * form.commissionRate / 100) : undefined,
+                policyNumber: form.policyNumber || undefined,
                 coverageDetails: form.coverageDetails || undefined,
             };
 
@@ -486,6 +492,19 @@ export default function NewPolicyPage() {
                 {/* ─── Step 3: Coverage Details ────────────────────────────────── */}
                 {step === 3 && (
                     <div className="flex flex-col gap-6 items-center w-full">
+                        {/* Policy Number (Official) */}
+                        <div className="w-full max-w-2xl">
+                            <label className="block text-xs font-medium text-surface-600 mb-1.5">Official Policy Number <span className="text-surface-400 font-normal">(optional — from insurer)</span></label>
+                            <input
+                                type="text"
+                                placeholder="e.g. SIC/MOT/ACC/2025/001234"
+                                className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 font-mono text-sm"
+                                value={form.policyNumber}
+                                onChange={(e) => update('policyNumber', e.target.value)}
+                            />
+                            <p className="text-[11px] text-surface-400 mt-1">Leave blank to auto-generate a tracking number. You can add the official number later via Edit.</p>
+                        </div>
+
                         <div className="grid grid-cols-2 gap-4 w-full max-w-2xl">
                             <div>
                                 <label className="block text-xs font-medium text-surface-600 mb-1.5">Inception Date</label>
@@ -497,7 +516,7 @@ export default function NewPolicyPage() {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Expiry Date</label>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Expiry Date <span className="text-surface-400 font-normal">(auto: +1 year)</span></label>
                                 <input
                                     type="date"
                                     className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500"

@@ -41,6 +41,7 @@ import { StatusBadge } from '@/components/data-display/status-badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 type TabId = 'overview' | 'personal' | 'policies' | 'claims' | 'documents' | 'communication' | 'beneficiaries';
 
@@ -92,11 +93,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
     }, [client]);
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
+        return <AppLoader message="Loading client profile..." isLoading={true} />;
     }
 
     if (!client) {

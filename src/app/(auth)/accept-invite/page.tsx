@@ -4,6 +4,7 @@ import { Suspense } from 'react';
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api-client';
+import { AppLoader } from '@/components/ui/AppLoader';
 import { useAuthStore } from '@/stores/auth-store';
 import type { User } from '@/types';
 
@@ -85,14 +86,7 @@ function AcceptInviteContent() {
     };
 
     if (status === 'loading') {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
-                <div className="text-center">
-                    <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <p className="text-[var(--text-secondary)]">Validating invitation...</p>
-                </div>
-            </div>
-        );
+        return <AppLoader message="Validating invitation..." isLoading={true} />;
     }
 
     if (status === 'invalid') {
@@ -200,13 +194,7 @@ function AcceptInviteContent() {
 
 export default function AcceptInvitePage() {
     return (
-        <Suspense
-            fallback={
-                <div className="min-h-screen flex items-center justify-center bg-[var(--bg-primary)]">
-                    <div className="w-8 h-8 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-                </div>
-            }
-        >
+        <Suspense fallback={<AppLoader message="Loading invitation details..." fullScreen={true} />}>
             <AcceptInviteContent />
         </Suspense>
     );

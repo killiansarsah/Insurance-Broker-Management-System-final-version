@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCarriers } from '@/hooks/api/use-carriers';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 type ProductCategory = string;
 
@@ -107,14 +108,7 @@ export default function ProductsPage() {
     ];
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading products...</p>
-                </div>
-            </div>
-        );
+        return <AppLoader message="Loading products..." isLoading={true} />;
     }
 
     return (

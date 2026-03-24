@@ -1,2 +1,5 @@
-import { SkeletonListPage } from '@/components/ui/skeleton';
-export default function Loading() { return <SkeletonListPage />; }
+import { AppLoader } from '@/components/ui/AppLoader';
+
+export default function Loading() {
+    return <AppLoader message="Loading claims..." isLoading={true} />;
+}

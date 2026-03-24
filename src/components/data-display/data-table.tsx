@@ -38,6 +38,11 @@ interface DataTableProps<T> {
     exportable?: boolean;
     onExport?: () => void;
     className?: string;
+
+    // Selection Props
+    selectable?: boolean;
+    selectedRows?: T[];
+    onSelectionChange?: (rows: T[]) => void;
 }
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -47,7 +52,7 @@ const PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
 // Memoized row — prevents re-renders caused by parent state unrelated to row data
 // (e.g. search input width animation, focus state, pagination UI changes)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const MemoTableRow = memo(function MemoTableRow({ row, columns, index, onRowClick }: {
+const MemoTableRow = memo(function MemoTableRow({ row, columns, index, onRowClick, selectable, isSelected, onToggleSelection }: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     row: any;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,6 +60,9 @@ const MemoTableRow = memo(function MemoTableRow({ row, columns, index, onRowClic
     index: number;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     onRowClick?: (row: any) => void;
+    selectable?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: (row: any) => void;
 }) {
     return (
         <tr
@@ -68,6 +76,20 @@ const MemoTableRow = memo(function MemoTableRow({ row, columns, index, onRowClic
             )}
             style={{ animationDelay: `${index * 25}ms` }}
         >
+            {selectable && (
+                <td className="px-5 py-4 w-[50px] whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <input 
+                        type="checkbox" 
+                        aria-label="Select row"
+                        className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500/50 cursor-pointer bg-white dark:bg-slate-800 transition-all checked:bg-primary-600 checked:border-primary-600"
+                        checked={isSelected}
+                        onChange={(e) => {
+                            e.stopPropagation();
+                            onToggleSelection?.(row);
+                        }}
+                    />
+                </td>
+            )}
             {columns.map((col) => (
                 <td
                     key={col.key}
@@ -98,6 +120,9 @@ export function DataTable<T>({
     exportable = true,
     onExport,
     className,
+    selectable = false,
+    selectedRows = [],
+    onSelectionChange,
 }: DataTableProps<T>) {
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -171,6 +196,26 @@ export function DataTable<T>({
         }
         setPage(1);
     }, [sortKey, sortDir]);
+
+    const isAllSelected = filteredData.length > 0 && filteredData.every(row => selectedRows?.includes(row));
+    const isSomeSelected = filteredData.length > 0 && filteredData.some(row => selectedRows?.includes(row));
+
+    const handleSelectAll = useCallback(() => {
+        if (!onSelectionChange) return;
+        if (isAllSelected) {
+            onSelectionChange([]);
+        } else {
+            onSelectionChange([...filteredData]);
+        }
+    }, [isAllSelected, filteredData, onSelectionChange]);
+
+    const handleToggleSelection = useCallback((row: T) => {
+        if (!onSelectionChange) return;
+        const newArray = selectedRows?.includes(row)
+            ? selectedRows.filter(r => r !== row)
+            : [...(selectedRows || []), row];
+        onSelectionChange(newArray);
+    }, [selectedRows, onSelectionChange]);
 
     const handleExportCSV = useCallback(() => {
         if (onExport) {
@@ -296,6 +341,22 @@ export function DataTable<T>({
                 <table className="w-full text-sm">
                     <thead>
                         <tr className="border-b-2 border-surface-100">
+                            {selectable && (
+                                <th className="px-5 py-3.5 w-12 text-left bg-white dark:bg-slate-900">
+                                    <input 
+                                        type="checkbox" 
+                                        aria-label="Select all rows"
+                                        className="w-4 h-4 rounded border-surface-300 text-primary-600 focus:ring-primary-500/50 cursor-pointer bg-white dark:bg-slate-800 transition-all checked:bg-primary-600 checked:border-primary-600"
+                                        checked={isAllSelected}
+                                        ref={(input) => {
+                                            if (input) {
+                                                input.indeterminate = isSomeSelected && !isAllSelected;
+                                            }
+                                        }}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
+                            )}
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
@@ -357,6 +418,9 @@ export function DataTable<T>({
                                     columns={columns}
                                     index={i}
                                     onRowClick={onRowClick}
+                                    selectable={selectable}
+                                    isSelected={selectedRows?.includes(row)}
+                                    onToggleSelection={handleToggleSelection}
                                 />
                             ))
                         )}

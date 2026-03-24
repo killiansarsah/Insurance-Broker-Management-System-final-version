@@ -193,7 +193,19 @@ function SidebarCompanyHeader() {
 function GlobalRail() {
     const { searchOpen, setSearchOpen, currentTheme, setTheme } = useUiStore();
     const { logoUrl } = useProfileStore();
-    const isDark = currentTheme === 'dark';
+    const [systemIsDark, setSystemIsDark] = useState(false);
+
+    useEffect(() => {
+        if (currentTheme === 'system') {
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            setSystemIsDark(mq.matches);
+            const handler = (e: MediaQueryListEvent) => setSystemIsDark(e.matches);
+            mq.addEventListener('change', handler);
+            return () => mq.removeEventListener('change', handler);
+        }
+    }, [currentTheme]);
+
+    const isDark = currentTheme === 'dark' || (currentTheme === 'system' && systemIsDark);
 
     return (
         <div className="w-[48px] h-full flex flex-col items-center py-4 bg-white dark:bg-slate-900 border-r border-surface-200 dark:border-slate-700/60 shrink-0 z-20">

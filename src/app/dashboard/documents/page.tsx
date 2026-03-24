@@ -31,6 +31,7 @@ const DocumentPreviewModal = dynamic(
 import { CustomSelect } from '@/components/ui/select-custom';
 import { toast } from 'sonner';
 import type { Document } from '@/types';
+import { AppLoader } from '@/components/ui/AppLoader';
 
 export default function DocumentsPage() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -54,14 +55,7 @@ export default function DocumentsPage() {
     };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-96">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-                    <p className="mt-4 text-sm text-surface-500">Loading documents...</p>
-                </div>
-            </div>
-        );
+        return <AppLoader message="Loading documents..." isLoading={true} />;
     }
     return (
         <div className="space-y-6 animate-fade-in">

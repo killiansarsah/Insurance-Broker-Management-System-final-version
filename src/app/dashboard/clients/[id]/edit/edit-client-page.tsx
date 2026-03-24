@@ -22,6 +22,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { useClient } from '@/hooks/api';
 import { useUpdateClient } from '@/hooks/api/use-clients';
 import { getClientDisplayName } from '@/lib/utils';
+import { AppLoader } from '@/components/ui/AppLoader';
 import { toast } from 'sonner';
 
 const STEPS = [
@@ -251,11 +252,7 @@ export default function EditClientPage({ id }: { id: string }) {
     }, [client, formInitialized]);
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center py-24 animate-fade-in">
-                <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
-            </div>
-        );
+        return <AppLoader message="Loading client data..." isLoading={true} />;
     }
 
     if (!client) {
