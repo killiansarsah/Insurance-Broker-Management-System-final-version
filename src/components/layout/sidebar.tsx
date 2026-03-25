@@ -266,27 +266,36 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
         : pathname;
 
     const isChildActive = (childHref: string) => {
-        // If child href has query params, compare full URL; otherwise compare just the path
         if (childHref.includes('?')) {
-            return fullPath === childHref;
+            const [base, query] = childHref.split('?');
+            // Check if the base path matches
+            if (normalizePath(pathname) !== normalizePath(base)) return false;
+
+            // Check if all params in childHref are preset and match in the current URL
+            const childParams = new URLSearchParams(query);
+            for (const [key, value] of childParams.entries()) {
+                if (searchParams.get(key) !== value) return false;
+            }
+            return true;
         }
         return normalizePath(pathname) === normalizePath(childHref);
     };
 
     const isActive =
         normalizePath(pathname) === normalizePath(item.href) ||
+        (item.href !== '/dashboard' && pathname.startsWith(item.href + '/')) ||
         item.children?.some((child) => isChildActive(child.href));
 
     const hasChildren = item.children && item.children.length > 0;
 
     // Auto-expand. Initialize from current path, then keep in sync via useEffect
     const [expanded, setExpanded] = useState(() =>
-        !!(item.children?.some((child) => isChildActive(child.href)))
+        isActive
     );
 
     // Re-evaluate whenever the route changes (handles direct URL navigation)
     useEffect(() => {
-        if (item.children?.some((child) => isChildActive(child.href))) {
+        if (isActive) {
             setExpanded(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -385,7 +394,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                                     'flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-all duration-200',
                                     'hover:translate-x-1',
                                     childActive
-                                        ? 'text-primary-700 font-bold bg-primary-50 dark:bg-primary-900/30 border-l-[3px] border-primary-500 pl-2.5'
+                                        ? 'text-primary-700 dark:text-primary-400 font-bold bg-primary-50 dark:bg-primary-900/40 border-l-[3px] border-primary-500 pl-2.5 shadow-sm ring-1 ring-primary-200/50 dark:ring-primary-700/30'
                                         : 'text-surface-500 dark:text-slate-400 hover:text-surface-900 dark:hover:text-slate-200 hover:bg-surface-50 dark:hover:bg-slate-800 border-l-[3px] border-transparent'
                                 )}
                             >

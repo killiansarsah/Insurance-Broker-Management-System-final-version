@@ -215,7 +215,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                                 value={selectedTenant}
                                                 onChange={(e) => setSelectedTenant(e.target.value)}
                                                 required
-                                                className="block w-full rounded-xl border border-surface-200 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 appearance-none cursor-pointer"
+                                                className="block w-full rounded-xl border border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-800 py-3 pl-11 pr-4 text-sm text-surface-900 dark:text-slate-200 outline-none transition-all focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 appearance-none cursor-pointer"
                                             >
                                                 {tenantOptions.map((t) => (
                                                     <option key={t.slug} value={t.slug}>{t.name}</option>
@@ -239,7 +239,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                 </form>
                             ) : (
                                 /* ─── Main Login Form ────────────────────── */
-                                <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-surface-100">
+                                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-surface-100 dark:border-slate-700">
                                     <form onSubmit={handleSignIn} className="space-y-7">
                                         {/* Email Field */}
                                         <div className="space-y-3">
@@ -253,7 +253,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                                     id="signin-email"
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
-                                                    className="block w-full rounded-xl border-2 border-surface-200 bg-white/90 py-5 px-5 text-base text-surface-900 placeholder:text-surface-400 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white group-hover:border-surface-300"
+                                                    className="block w-full rounded-xl border-2 border-surface-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 py-5 px-5 text-base text-surface-900 dark:text-slate-200 placeholder:text-surface-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white dark:focus:bg-slate-800 group-hover:border-surface-300 dark:group-hover:border-slate-600"
                                                     placeholder="name@insurance-firm.com"
                                                     required
                                                     autoComplete="email"
@@ -274,14 +274,14 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                                     id="signin-password"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    className="block w-full rounded-xl border-2 border-surface-200 bg-white/90 py-5 px-5 pr-14 text-base text-surface-900 placeholder:text-surface-400 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white group-hover:border-surface-300"
+                                                    className="block w-full rounded-xl border-2 border-surface-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 py-5 px-5 pr-14 text-base text-surface-900 dark:text-slate-200 placeholder:text-surface-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white dark:focus:bg-slate-800 group-hover:border-surface-300 dark:group-hover:border-slate-600"
                                                     placeholder="••••••••"
                                                     required
                                                     autoComplete="current-password"
                                                 />
                                                 <button
                                                     type="button"
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-primary-500 transition-all duration-200 p-2 rounded-lg hover:bg-primary-50 cursor-pointer"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-surface-400 hover:text-primary-500 transition-all duration-200 p-2 rounded-lg hover:bg-primary-50 dark:hover:bg-slate-800 cursor-pointer"
                                                     onClick={() => setShowPassword(!showPassword)}
                                                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                                                 >

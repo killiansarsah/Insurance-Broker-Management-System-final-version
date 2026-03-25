@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useMemo } from 'react';
 import { Modal } from './modal';
@@ -143,7 +143,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                                 "flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 backdrop-blur-md border",
                                 section === btn.id
                                     ? "bg-primary-500 text-white border-primary-400 shadow-lg scale-110"
-                                    : "bg-white/40 text-slate-500 border-slate-200 hover:bg-white/60"
+                                    : "bg-white/40 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-white/60 dark:hover:bg-slate-800/60"
                             )}
                         >
                             <btn.icon size={14} className={cn(section === btn.id ? "animate-pulse" : "")} />
@@ -157,7 +157,7 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     <div className="w-8 h-8 rounded-full bg-success-50 text-success-500 flex items-center justify-center border border-success-100 shadow-sm">
                         <ShieldCheck size={18} fill="currentColor" fillOpacity={0.1} />
                     </div>
-                    <h2 className="text-xl font-bold text-slate-800 tracking-tight">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
                         {section.charAt(0).toUpperCase() + section.slice(1)} Quote Calculator
                     </h2>
                 </div>

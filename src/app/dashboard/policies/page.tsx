@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     FileText,
@@ -48,23 +50,90 @@ const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
     { label: 'Other', value: 'OTHER' },
 ];
 
-function exportToCsv(policies: any[]) {
-    const headers = ['Policy #', 'Client', 'Type', 'Coverage', 'Status', 'Insurer', 'Premium (GHS)', 'Sum Insured (GHS)', 'Inception', 'Expiry', 'Broker', 'Commission Rate', 'Commission Amt', 'Payment Status'];
-    const rows = policies.map(p => [
-        p.policyNumber, p.clientName, p.insuranceType, p.coverageType || '', p.status,
-        p.insurerName, Number(p.premiumAmount || 0).toFixed(2), Number(p.sumInsured || 0).toFixed(2),
-        (p.inceptionDate as string), p.expiryDate, p.brokerName,
-        `${p.commissionRate || 0}%`, Number(p.commissionAmount || 0).toFixed(2), p.paymentStatus,
-    ]);
-    const csv = [headers, ...rows].map(r => r.map(c => safeCsvCell(c)).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `policies-export-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Exported ${policies.length} policies to CSV`);
+async function exportToExcel(policies: any[]) {
+    try {
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('Policies');
+
+        const headers = [
+            'POLICY NUMBER', 'CLIENT', 'INSURANCE TYPE', 'COVERAGE',
+            'STATUS', 'INSURER', 'PREMIUM (GHS)', 'SUM INSURED (GHS)',
+            'INCEPTION', 'EXPIRY', 'BROKER', 'COMMISSION RATE',
+            'COMMISSION AMT', 'PAYMENT STATUS'
+        ];
+
+        // 1. Title Rows
+        sheet.mergeCells('A1:N1');
+        const titleCell = sheet.getCell('A1');
+        titleCell.value = `IBMS — Policies Export — ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+        titleCell.font = { bold: true, size: 14 };
+
+        sheet.mergeCells('A2:N2');
+        const subTitleCell = sheet.getCell('A2');
+        subTitleCell.value = `Total policies: ${policies.length} | Generated: ${new Date().toLocaleString('en-GB')}`;
+
+        // Blank Row 3
+        sheet.addRow([]);
+
+        // 2. Header Row Styling
+        const headerRow = sheet.getRow(4);
+        headerRow.values = headers;
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FF085041' }, // Deep IBMS green
+        };
+
+        // Freeze top 4 rows
+        sheet.views = [{ state: 'frozen', ySplit: 4 }];
+
+        // 3. Data Rows & Alternating Colors
+        policies.forEach((p, index) => {
+            const rowData = [
+                p.policyNumber || '-',
+                p.clientName || '-',
+                p.insuranceType || '-',
+                p.coverageType || '-',
+                p.status || '-',
+                p.insurerName || '-',
+                Number(p.premiumAmount || 0),
+                Number(p.sumInsured || 0),
+                p.inceptionDate ? new Date(p.inceptionDate).toLocaleDateString('en-GB') : '-',
+                p.expiryDate ? new Date(p.expiryDate).toLocaleDateString('en-GB') : '-',
+                p.brokerName || '-',
+                p.commissionRate ? `${p.commissionRate}%` : '0%',
+                Number(p.commissionAmount || 0),
+                p.paymentStatus || '-'
+            ];
+
+            const row = sheet.addRow(rowData);
+            row.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: index % 2 === 0 ? 'FFFFFFFF' : 'FFF0FAF6' }, // Alternating rows
+            };
+        });
+
+        // 4. Footer & Column Widths
+        const bottomRow = sheet.addRow([`Total records exported: ${policies.length}`]);
+        bottomRow.font = { bold: true };
+
+        sheet.columns.forEach((column) => {
+            column.width = 18;
+        });
+        sheet.getColumn(2).width = 30; // Client Config
+        sheet.getColumn(6).width = 25; // Insurer Config
+
+        // 5. Generate and Download
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `Policies_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+        toast.success(`Exported ${policies.length} policies to Excel`);
+    } catch (error) {
+        console.error('Export error:', error);
+        toast.error('Failed to generate Excel file');
+    }
 }
 
 export default function PoliciesPage() {
@@ -583,7 +652,7 @@ export default function PoliciesPage() {
                         : 'No policies found.'
                 }
                 exportable={true}
-                onExport={() => exportToCsv(filtered)}
+                onExport={() => exportToExcel(filtered)}
                 selectable={true}
                 selectedRows={selectedPolicies}
                 onSelectionChange={setSelectedPolicies}
@@ -629,7 +698,7 @@ export default function PoliciesPage() {
                 <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkRenewModal(true)}>
                     Send Renewals
                 </Button>
-                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-success-50 hover:text-success-600 font-semibold text-xs h-9" onClick={() => exportToCsv(selectedPolicies)}>
+                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-success-50 hover:text-success-600 font-semibold text-xs h-9" onClick={() => exportToExcel(selectedPolicies)}>
                     <Download size={14} className="mr-1.5" /> Export {selectedPolicies.length}
                 </Button>
                 <div className="w-px h-6 bg-surface-200 dark:bg-slate-700 mx-1" />

@@ -64,8 +64,8 @@ export function CustomSelect({
                     'inline-flex items-center justify-between gap-1.5 px-4 py-2.5 text-xs font-medium border rounded-[var(--radius-md)] transition-all cursor-pointer shadow-sm',
                     className?.includes('w-full') ? 'w-full' : '',
                     value !== null && value !== undefined && value !== ''
-                        ? 'text-surface-900 bg-white border-primary-200'
-                        : 'text-surface-400 bg-surface-50 border-surface-200 hover:bg-white hover:text-surface-600 hover:border-surface-300'
+                        ? 'text-surface-900 dark:text-slate-200 bg-white dark:bg-slate-800 border-primary-200 dark:border-slate-700'
+                        : 'text-surface-400 dark:text-slate-500 bg-surface-50 dark:bg-slate-900 border-surface-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800 hover:text-surface-600 dark:hover:text-slate-300 hover:border-surface-300 dark:hover:border-slate-700'
                 )}
             >
                 <div className="flex items-center gap-2 truncate">
@@ -91,7 +91,7 @@ export function CustomSelect({
                 </div>
                 <ChevronDown
                     size={16}
-                    className={cn('text-surface-400 transition-transform duration-300 ml-2 shrink-0', open && 'rotate-180')}
+                    className={cn('text-surface-400 dark:text-slate-500 transition-transform duration-300 ml-2 shrink-0', open && 'rotate-180')}
                 />
             </button>
 
@@ -103,7 +103,7 @@ export function CustomSelect({
                         exit={{ opacity: 0, y: position === 'top' ? -10 : 10, scale: 0.95 }}
                         transition={{ duration: 0.2, ease: 'easeOut' }}
                         className={cn(
-                            'absolute min-w-[140px] bg-white/95 dark:bg-slate-800/95 backdrop-blur-xl border border-surface-200/50 dark:border-slate-600/50 rounded-2xl shadow-2xl z-[100] overflow-hidden',
+                            'absolute min-w-[140px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-surface-200/50 dark:border-slate-700/50 rounded-2xl shadow-2xl z-[100] overflow-hidden',
                             position === 'top' ? 'bottom-full mb-2' : 'top-full mt-2',
                             align === 'right' ? 'right-0' : 'left-0'
                         )}
@@ -118,10 +118,11 @@ export function CustomSelect({
                                         setOpen(false);
                                     }}
                                     className={cn(
-                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left hover:bg-primary-50/50 transition-colors cursor-pointer uppercase tracking-tight',
+                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left transition-colors cursor-pointer uppercase tracking-tight',
+                                        'hover:bg-primary-50/50 dark:hover:bg-slate-800/80',
                                         value === opt.value
-                                            ? 'text-primary-600 bg-primary-50/80 shadow-inner'
-                                            : 'text-surface-600'
+                                            ? 'text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 shadow-inner'
+                                            : 'text-surface-600 dark:text-slate-400'
                                     )}
                                 >
                                     <span>{opt.label}</span>
