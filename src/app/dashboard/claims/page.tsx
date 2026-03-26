@@ -394,7 +394,9 @@ export default function ClaimsPage() {
                             <div className="flex items-center gap-1.5">
                                 <StatusBadge status={c.status as any} />
                                 {c.isOverdue && (
-                                    <AlertTriangle size={12} className="text-danger-500" title="NIC deadline breached" />
+                                    <span title="NIC deadline breached" className="flex">
+                                        <AlertTriangle size={12} className="text-danger-500" />
+                                    </span>
                                 )}
                             </div>
                         )
