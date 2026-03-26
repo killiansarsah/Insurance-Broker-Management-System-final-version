@@ -35,6 +35,13 @@ export function useRenewals(params?: { daysAhead?: number; insuranceType?: strin
     });
 }
 
+export function useLapsedRenewals() {
+    return useQuery({
+        queryKey: ['renewals', 'lapsed'],
+        queryFn: () => apiClient.get<RenewalPolicy[]>('/renewals/lapsed'),
+    });
+}
+
 export function useRenewPolicy() {
     const qc = useQueryClient();
     return useMutation({

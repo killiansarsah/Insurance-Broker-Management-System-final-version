@@ -31,11 +31,11 @@ import { DataTable } from '@/components/data-display/data-table';
 import { Card } from '@/components/ui/card';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { useRenewals } from '@/hooks/api/use-renewals';
+import { useRenewals, useLapsedRenewals } from '@/hooks/api/use-renewals';
 import { useAuthStore } from '@/stores/auth-store';
 
 // ─── Local Types & Config ───
-type UrgencyLevel = 'CRITICAL' | 'URGENT' | 'IMPORTANT' | 'UPCOMING';
+type UrgencyLevel = 'CRITICAL' | 'URGENT' | 'IMPORTANT' | 'UPCOMING' | 'LAPSED';
 type RenewalWorkflowStatus = 'PENDING' | 'CONTACTED' | 'QUOTED' | 'RENEWED' | 'LOST';
 
 interface Renewal {
@@ -70,6 +70,7 @@ const URGENCY_CONFIG: Record<UrgencyLevel, { label: string; bg: string; color: s
     URGENT: { label: 'Urgent', bg: 'bg-warning-50', color: 'text-warning-700', border: 'border-warning-200', dot: 'bg-warning-500' },
     IMPORTANT: { label: 'Important', bg: 'bg-amber-50', color: 'text-amber-700', border: 'border-amber-200', dot: 'bg-amber-500' },
     UPCOMING: { label: 'Upcoming', bg: 'bg-blue-50', color: 'text-blue-700', border: 'border-blue-200', dot: 'bg-blue-500' },
+    LAPSED: { label: 'Lapsed', bg: 'bg-surface-100', color: 'text-surface-700', border: 'border-surface-300', dot: 'bg-surface-500' },
 };
 
 const WORKFLOW_STATUS_CONFIG: Record<RenewalWorkflowStatus, { label: string; bg: string; color: string }> = {
@@ -88,7 +89,8 @@ const LOST_REASON_LABEL: Record<string, string> = {
     other: 'Other reason',
 };
 
-function getUrgencyLevel(daysToExpiry: number): UrgencyLevel {
+function getUrgencyLevel(daysToExpiry: number, status?: string): UrgencyLevel {
+    if (status === 'EXPIRED' || status === 'LAPSED') return 'LAPSED';
     if (daysToExpiry < 0 || daysToExpiry <= 7) return 'CRITICAL';
     if (daysToExpiry <= 30) return 'URGENT';
     if (daysToExpiry <= 60) return 'IMPORTANT';
@@ -97,7 +99,7 @@ function getUrgencyLevel(daysToExpiry: number): UrgencyLevel {
 
 function mapApiToRenewal(r: any): Renewal {
     const clientName = r.client?.companyName || `${r.client?.firstName || ''} ${r.client?.lastName || ''}`.trim() || 'Unknown';
-    const days = r.daysUntilExpiry ?? 0;
+    const days = r.daysSinceExpiry ? -Math.abs(r.daysSinceExpiry) : (r.daysUntilExpiry ?? 0);
     return {
         id: r.id,
         policyNumber: r.policyNumber || '',
@@ -113,18 +115,25 @@ function mapApiToRenewal(r: any): Renewal {
         commissionRate: r.commissionRate || 0,
         expiryDate: r.expiryDate,
         daysToExpiry: days,
-        urgencyLevel: getUrgencyLevel(days),
-        renewalStatus: 'PENDING',
+        urgencyLevel: getUrgencyLevel(days, r.status),
+        renewalStatus: r.renewalStatus || 'PENDING',
         assignedAgent: r.broker ? `${r.broker.firstName} ${r.broker.lastName}` : 'Unassigned',
-        contactAttempts: 0,
+        contactAttempts: r.renewalLogs ? r.renewalLogs.filter((L: any) => L.logType === 'CONTACT' || L.logType === 'EMAIL_SENT').length : 0,
         coverageType: r.product?.name || r.insuranceType,
+        lostReason: r.lapseReason,
         reminders: [],
-        notes: [],
+        notes: (r.renewalLogs || []).map((l: any) => ({
+            id: l.id,
+            type: l.logType === 'EMAIL_SENT' ? 'email' : l.logType === 'STATUS_CHANGE' ? 'system' : 'contact',
+            author: l.createdBy ? 'Agent' : 'System',
+            date: l.createdAt,
+            content: l.details || l.title
+        })),
     };
 }
 
 // ─── Pipeline Tab Types ───
-type PipelineTab = 'all' | 'OVERDUE' | '0-30' | '31-60' | '61-90';
+type PipelineTab = 'all' | 'OVERDUE' | '0-30' | '31-60' | '61-90' | 'LAPSED';
 
 // ─── Urgency Badge Component ───
 function UrgencyBadge({ level }: { level: UrgencyLevel }) {
@@ -149,10 +158,12 @@ function WorkflowBadge({ status }: { status: RenewalWorkflowStatus }) {
 
 // ─── Renewal Detail Modal ───
 function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: () => void }) {
-    const premiumChange = renewal.proposedPremium - renewal.currentPremium;
+    const [isProcessing, setIsProcessing] = useState(false);
+    const [proposedPremium, setProposedPremium] = useState(renewal.proposedPremium);
+    const premiumChange = proposedPremium - renewal.currentPremium;
     const premiumChangePct = ((premiumChange / renewal.currentPremium) * 100).toFixed(1);
     const isIncrease = premiumChange > 0;
-    const expectedCommission = renewal.proposedPremium * (renewal.commissionRate / 100);
+    const expectedCommission = proposedPremium * (renewal.commissionRate / 100);
 
     // ESC key to close + body scroll lock
     useEffect(() => {
@@ -231,8 +242,17 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                 <p className="text-lg font-bold text-surface-900">{formatCurrency(renewal.currentPremium)}</p>
                             </div>
                             <div className="text-center p-3 bg-surface-50 rounded-lg">
-                                <p className="text-[10px] uppercase font-semibold text-surface-500">Proposed Premium</p>
-                                <p className="text-lg font-bold text-primary-600">{formatCurrency(renewal.proposedPremium)}</p>
+                                <p className="text-[10px] uppercase font-semibold text-surface-500 mb-1">Proposed Premium</p>
+                                <div className="flex items-center justify-center gap-1">
+                                    <span className="text-primary-600 font-bold">GHS</span>
+                                    <input
+                                        type="number"
+                                        value={proposedPremium}
+                                        onChange={(e) => setProposedPremium(Number(e.target.value))}
+                                        className="w-24 bg-transparent text-center text-lg font-bold text-primary-600 focus:outline-none border-b border-primary-200 focus:border-primary-500 transition-colors"
+                                        title="Edit Proposed Premium"
+                                    />
+                                </div>
                             </div>
                             <div className="text-center p-3 bg-surface-50 rounded-lg">
                                 <p className="text-[10px] uppercase font-semibold text-surface-500">Change</p>
@@ -371,35 +391,86 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                     {/* Action Buttons */}
                     {renewal.renewalStatus !== 'RENEWED' && renewal.renewalStatus !== 'LOST' && (
                         <div className="flex flex-wrap gap-2 pt-2 border-t border-surface-200">
-                            <Button
-                                variant="primary"
-                                leftIcon={<Phone size={16} />}
-                                onClick={() => toast.info('Calling Client', { description: `Initiating call to ${renewal.clientName} at ${renewal.clientPhone}` })}
-                            >
-                                Contact Client
-                            </Button>
-                            <Button
-                                variant="outline"
-                                leftIcon={<Send size={16} />}
-                                onClick={() => toast.success('Reminder Sent', { description: `Renewal reminder sent to ${renewal.clientEmail}` })}
-                            >
-                                Send Reminder
-                            </Button>
-                            <Button
-                                variant="outline"
-                                leftIcon={<Mail size={16} />}
-                                onClick={() => toast.info('Email Client', { description: `Opening email draft for ${renewal.clientEmail}` })}
-                            >
-                                Email Quote
-                            </Button>
-                            <Button
-                                variant="primary"
-                                className="bg-success-600 hover:bg-success-700 ml-auto"
-                                leftIcon={<CheckCircle2 size={16} />}
-                                onClick={() => toast.success('Renewal Processed', { description: `Renewal for ${renewal.policyNumber} has been initiated.` })}
-                            >
-                                Process Renewal
-                            </Button>
+                            {renewal.urgencyLevel === 'LAPSED' ? (
+                                <>
+                                    <Button
+                                        variant="outline"
+                                        leftIcon={<Phone size={16} />}
+                                        onClick={() => toast.info('Call to Reinstate', { description: `Calling ${renewal.clientName} to discuss reinstatement.` })}
+                                    >
+                                        Call to Reinstate
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        leftIcon={<Send size={16} />}
+                                        onClick={() => toast.info('Write Fresh Policy', { description: `Redirecting to create a new policy for ${renewal.clientName}.` })}
+                                    >
+                                        Write Fresh Policy
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        className="ml-auto"
+                                        leftIcon={<XCircle size={16} />}
+                                        onClick={() => toast.error('Record Declined/Lost', { description: `Marking policy ${renewal.policyNumber} as lost.` })}
+                                    >
+                                        Record Lost/Switch
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Button
+                                        variant="primary"
+                                        leftIcon={<Phone size={16} />}
+                                        onClick={() => toast.info('Calling Client', { description: `Initiating call to ${renewal.clientName} at ${renewal.clientPhone}` })}
+                                    >
+                                        Contact Client
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        leftIcon={<Send size={16} />}
+                                        onClick={() => toast.success('Reminder Sent', { description: `Renewal reminder sent to ${renewal.clientEmail}` })}
+                                    >
+                                        Send Reminder
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        leftIcon={<Mail size={16} />}
+                                        onClick={() => toast.info('Email Quote', { description: `Opening email draft for ${renewal.clientEmail}` })}
+                                    >
+                                        Email Quote
+                                    </Button>
+                                    <Button
+                                        variant="primary"
+                                        className="bg-success-600 hover:bg-success-700 ml-auto"
+                                        leftIcon={<CheckCircle2 size={16} />}
+                                        disabled={isProcessing}
+                                        onClick={async () => {
+                                            setIsProcessing(true);
+                                            try {
+                                                const { apiClient } = await import('@/lib/api-client');
+                                                const res = await apiClient.post<{success: boolean; data: any}>(`/renewals/renew/${renewal.id}`, {
+                                                    premiumAmount: proposedPremium,
+                                                    sumInsured: renewal.sumInsured,
+                                                    notes: 'Renewal Processed from Pipeline'
+                                                });
+                                                if (res.success) {
+                                                    toast.success('Renewal Processed', { description: `New Draft Policy ${res.data.policyNumber} created.` });
+                                                    onClose();
+                                                    window.location.reload();
+                                                } else {
+                                                    toast.error('Processing Failed', { description: 'Could not process renewal.' });
+                                                }
+                                            } catch (e: any) {
+                                                toast.error('Error', { description: e.message || 'Failed to process renewal.' });
+                                            } finally {
+                                                setIsProcessing(false);
+                                            }
+                                        }}
+                                    >
+                                        {isProcessing ? 'Processing...' : 'Process Renewal'}
+                                    </Button>
+                                </>
+                            )}
                         </div>
                     )}
                 </div>
@@ -426,13 +497,18 @@ function InfoCard({ label, value, icon }: { label: string; value: string; icon: 
 export default function RenewalsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { data: renewalsApiData, isLoading } = useRenewals({ daysAhead: 90 });
+    const [selectedRenewals, setSelectedRenewals] = useState<Renewal[]>([]);
+    
+    // Setup queries
+    const { data: renewalsApiData } = useRenewals({ daysAhead: 90 });
+    const { data: lapsedApiData } = useLapsedRenewals(); // Must be imported at bottom of this diff via auto-imports or explicit
     const currentUserEmail = useAuthStore((s) => s.user?.email);
 
     const allRenewals: Renewal[] = useMemo(() => {
         const raw = Array.isArray(renewalsApiData) ? renewalsApiData : (renewalsApiData as any)?.data ?? [];
-        return raw.map(mapApiToRenewal);
-    }, [renewalsApiData]);
+        const rawLapsed = Array.isArray(lapsedApiData) ? lapsedApiData : (lapsedApiData as any)?.data ?? [];
+        return [...raw.map(mapApiToRenewal), ...rawLapsed.map(mapApiToRenewal)];
+    }, [renewalsApiData, lapsedApiData]);
 
     // Pipeline tab
     const tabParam = (searchParams.get('tab') as PipelineTab) || 'all';
@@ -455,15 +531,19 @@ export default function RenewalsPage() {
     const renewalSummary = useMemo(() => {
         const overdue = allRenewals.filter(r => r.daysToExpiry < 0);
         const next30 = allRenewals.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30);
-        const next60 = allRenewals.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60);
-        const next90 = allRenewals.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90);
-        const totalPremium = allRenewals.reduce((s, r) => s + r.currentPremium, 0);
+        const next60 = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 30 && r.daysToExpiry <= 60);
+        const next90 = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 60 && r.daysToExpiry <= 90);
+        const lapsed = allRenewals.filter(r => r.urgencyLevel === 'LAPSED');
+        const activeRenewals = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED');
+        
+        const totalPremium = activeRenewals.reduce((s, r) => s + r.currentPremium, 0);
         return {
-            total: allRenewals.length, active: allRenewals.length,
+            total: allRenewals.length, active: activeRenewals.length,
             overdue: overdue.length, overdueAmount: overdue.reduce((s, r) => s + r.currentPremium, 0),
             next30: next30.length, next30Amount: next30.reduce((s, r) => s + r.currentPremium, 0),
             next60: next60.length, next60Amount: next60.reduce((s, r) => s + r.currentPremium, 0),
             next90: next90.length, next90Amount: next90.reduce((s, r) => s + r.currentPremium, 0),
+            lapsedCount: lapsed.length, lapsedAmount: lapsed.reduce((s, r) => s + r.currentPremium, 0),
             totalPremiumAtRisk: totalPremium, renewedCount: 0, renewedPremium: 0,
             lostCount: 0, lostPremium: 0, renewalRate: 0,
             critical: allRenewals.filter(r => r.urgencyLevel === 'CRITICAL').length,
@@ -475,21 +555,24 @@ export default function RenewalsPage() {
 
     // Pipeline tabs configuration
     const pipelineTabs: { id: PipelineTab; label: string; count: number; color: string; amount?: number }[] = useMemo(() => [
-        { id: 'all', label: 'All', count: renewalSummary.total, color: 'text-surface-700' },
+        { id: 'all', label: 'All', count: renewalSummary.active, color: 'text-surface-700' },
         { id: 'OVERDUE', label: 'Overdue', count: renewalSummary.overdue, color: 'text-danger-600', amount: renewalSummary.overdueAmount },
         { id: '0-30', label: '0\u201330 Days', count: renewalSummary.next30, color: 'text-warning-600', amount: renewalSummary.next30Amount },
         { id: '31-60', label: '31\u201360 Days', count: renewalSummary.next60, color: 'text-amber-600', amount: renewalSummary.next60Amount },
         { id: '61-90', label: '61\u201390 Days', count: renewalSummary.next90, color: 'text-blue-600', amount: renewalSummary.next90Amount },
+        { id: 'LAPSED', label: 'Win-Back / Lapsed', count: renewalSummary.lapsedCount, color: 'text-surface-600', amount: renewalSummary.lapsedAmount },
     ], [renewalSummary]);
 
     // Filtered data
     const filteredRenewals = useMemo(() => {
         let data = [...allRenewals];
         switch (activeTab) {
-            case 'OVERDUE': data = data.filter(r => r.daysToExpiry < 0); break;
-            case '0-30': data = data.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30); break;
-            case '31-60': data = data.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60); break;
-            case '61-90': data = data.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90); break;
+            case 'all': data = data.filter(r => r.urgencyLevel !== 'LAPSED'); break;
+            case 'OVERDUE': data = data.filter(r => r.daysToExpiry < 0 && r.urgencyLevel !== 'LAPSED'); break;
+            case '0-30': data = data.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry >= 0 && r.daysToExpiry <= 30); break;
+            case '31-60': data = data.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 30 && r.daysToExpiry <= 60); break;
+            case '61-90': data = data.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 60 && r.daysToExpiry <= 90); break;
+            case 'LAPSED': data = data.filter(r => r.urgencyLevel === 'LAPSED'); break;
         }
         if (workflowFilter !== 'all') data = data.filter(r => r.renewalStatus === workflowFilter);
         if (agentFilter !== 'all') data = data.filter(r => r.assignedAgent === agentFilter);
@@ -499,6 +582,7 @@ export default function RenewalsPage() {
 
     const handleTabChange = (tab: PipelineTab) => {
         setActiveTab(tab);
+        setSelectedRenewals([]); // Clear selected rows when switching tabs
         router.push(`/dashboard/renewals?tab=${tab}`, { scroll: false });
     };
 
@@ -650,7 +734,7 @@ export default function RenewalsPage() {
             </Card>
 
             {/* Urgency Summary Badges (when showing "all" or active tabs) */}
-            {!['RENEWED', 'LOST'].includes(activeTab) && (
+            {!['RENEWED', 'LAPSED'].includes(activeTab) && selectedRenewals.length === 0 && (
                 <div className="flex flex-wrap items-center gap-3">
                     <span className="text-xs font-semibold text-surface-500 uppercase tracking-wide">Urgency:</span>
                     {renewalSummary.critical > 0 && (
@@ -680,9 +764,80 @@ export default function RenewalsPage() {
                 </div>
             )}
 
+            {/* Bulk Action Bar */}
+            {selectedRenewals.length > 0 && (
+                <Card padding="none" className="p-3 bg-primary-50 border-primary-200 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 text-primary-800">
+                            <div className="w-8 h-8 rounded-full bg-primary-100 flex items-center justify-center">
+                                <CheckCircle2 size={16} className="text-primary-600" />
+                            </div>
+                            <span className="font-semibold text-sm">{selectedRenewals.length} {selectedRenewals.length === 1 ? 'policy' : 'policies'} selected</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-48">
+                                <CustomSelect
+                                    value=""
+                                    onChange={async (v) => {
+                                        if (v) {
+                                            try {
+                                                const { apiClient } = await import('@/lib/api-client');
+                                                const policyIds = selectedRenewals.map(r => r.id);
+                                                const res = await apiClient.post<{success: boolean; message: string; count?: number}>('/renewals/bulk-assign', { policyIds, brokerId: v });
+                                                if (res.success) {
+                                                    toast.success('Brokers Reassigned', { description: res.message });
+                                                    refetch();
+                                                    setSelectedRenewals([]);
+                                                } else {
+                                                    toast.error('Assignment Failed', { description: res.message });
+                                                }
+                                            } catch (e) {
+                                                toast.error('Error', { description: 'Failed to assign brokers.' });
+                                            }
+                                        }
+                                    }}
+                                    options={[
+                                        { value: '', label: 'Assign Agent...' },
+                                        { value: 'broker_1', label: 'Kwame Mensah' }, // These should eventually be fetched dynamically
+                                        { value: 'broker_2', label: 'Esi Osei' },
+                                    ]}
+                                    placeholder="Assign Agent..."
+                                />
+                            </div>
+                            <Button
+                                variant="outline"
+                                className="bg-white hover:bg-surface-50"
+                                leftIcon={<Mail size={16} />}
+                                onClick={async () => {
+                                    try {
+                                        const { apiClient } = await import('@/lib/api-client');
+                                        const policyIds = selectedRenewals.map(r => r.id);
+                                        const res = await apiClient.post<{success: boolean; message: string}>('/renewals/bulk-remind', { policyIds });
+                                        if (res.success) {
+                                            toast.success('Bulk Reminders Distributed', { description: res.message });
+                                            refetch();
+                                            setSelectedRenewals([]);
+                                        } else {
+                                            toast.error('Reminders Failed', { description: res.message });
+                                        }
+                                    } catch (e) {
+                                        toast.error('Error', { description: 'Failed to send bulk reminders.' });
+                                    }
+                                }}
+                            >
+                                Send Reminders
+                            </Button>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
             {/* Data Table */}
             <DataTable
                 data={filteredRenewals}
+                selectable={true}
+                selectedRows={selectedRenewals}
+                onSelectionChange={setSelectedRenewals as any}
                 columns={[
                     {
                         key: 'policyNumber',

@@ -8,7 +8,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { InsuranceType, PremiumFrequency } from '@prisma/client';
+import { InsuranceType, PremiumFrequency, RenewalStatus, LapseReason } from '@prisma/client';
 import { CreateVehicleDetailsDto } from './details/create-vehicle-details.dto';
 import { CreatePropertyDetailsDto } from './details/create-property-details.dto';
 import { CreateMarineDetailsDto } from './details/create-marine-details.dto';
@@ -75,4 +75,12 @@ export class CreatePolicyDto {
   @ValidateNested()
   @Type(() => CreateMarineDetailsDto)
   marineDetails?: CreateMarineDetailsDto;
+
+  @IsEnum(RenewalStatus)
+  @IsOptional()
+  renewalStatus?: RenewalStatus;
+
+  @IsEnum(LapseReason)
+  @IsOptional()
+  lapseReason?: LapseReason;
 }

@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Put,
   Param,
   Query,
   Body,
@@ -45,6 +46,12 @@ export class RenewalsController {
       req.user.tenantId,
       daysAhead ? parseInt(daysAhead, 10) : 90,
     );
+  }
+
+  @Get('renewals/lapsed')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  getLapsedPolicies(@Request() req: RequestWithUser) {
+    return this.renewalsService.getLapsedPolicies(req.user.tenantId);
   }
 
   @Post('policies/:id/renew')
@@ -130,5 +137,59 @@ export class RenewalsController {
       message: `Bulk reminders complete: ${result.sent} sent, ${result.skipped} skipped (no email), ${result.failed} failed.`,
       ...result,
     };
+  }
+
+  @Post('renewals/bulk-remind')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  async bulkRemind(
+    @Request() req: RequestWithUser,
+    @Body() dto: { policyIds: string[] }
+  ) {
+    const result = await this.renewalsService.bulkSendReminders(req.user.tenantId, dto.policyIds, req.user.sub);
+    return {
+      success: true,
+      message: `Bulk action complete: ${result.sent} sent, ${result.skipped} skipped, ${result.failed} failed.`,
+      ...result,
+    };
+  }
+
+  @Post('renewals/bulk-assign')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  async bulkAssign(
+    @Request() req: RequestWithUser,
+    @Body() dto: { policyIds: string[], brokerId: string }
+  ) {
+    const result = await this.renewalsService.bulkAssignBroker(req.user.tenantId, dto.policyIds, dto.brokerId, req.user.sub);
+    return {
+      success: true,
+      message: `Assigned ${result.count} policies successfully.`,
+      ...result,
+    };
+  }
+
+
+  @Get('renewals/templates')
+  @Roles('ADMIN', 'TENANT_ADMIN')
+  async getTemplates(@Request() req: RequestWithUser) {
+    return this.renewalsService.getTemplates(req.user.tenantId);
+  }
+
+  @Put('renewals/templates/:id')
+  @Roles('ADMIN', 'TENANT_ADMIN')
+  async updateTemplate(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: any
+  ) {
+    return this.renewalsService.updateTemplate(req.user.tenantId, id, dto);
+  }
+
+  @Get('renewals/report')
+  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  async getReport(
+    @Request() req: RequestWithUser,
+    @Query('days') days?: string
+  ) {
+    return this.renewalsService.getRenewalReport(req.user.tenantId, days ? parseInt(days, 10) : 90);
   }
 }

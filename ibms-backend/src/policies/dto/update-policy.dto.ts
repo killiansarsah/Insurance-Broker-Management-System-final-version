@@ -11,5 +11,7 @@ export class UpdatePolicyDto extends PartialType(
     'coverageDetails',
     'premiumFrequency',
     'commission',
+    'renewalStatus',
+    'lapseReason',
   ]),
 ) {}

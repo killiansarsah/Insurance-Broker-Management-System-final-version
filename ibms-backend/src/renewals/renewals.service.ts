@@ -55,19 +55,60 @@ export class RenewalsService {
         },
         product: { select: { id: true, name: true } },
         carrier: { select: { id: true, name: true } },
+        renewalLogs: { orderBy: { createdAt: 'desc' } },
       },
       orderBy: { expiryDate: 'asc' },
     });
 
-    return policies.map((policy) => {
+    return policies.map((p) => {
       const daysUntilExpiry = Math.ceil(
-        (new Date(policy.expiryDate).getTime() - now.getTime()) /
-          (1000 * 60 * 60 * 24),
+        (p.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
       return {
-        ...policy,
+        ...p,
         daysUntilExpiry,
-        renewalStatus: daysUntilExpiry <= 30 ? 'URGENT' : 'UPCOMING',
+        urgencyLevel:
+          daysUntilExpiry < 0
+            ? 'OVERDUE'
+            : daysUntilExpiry <= 30
+              ? 'URGENT'
+              : 'UPCOMING',
+      };
+    });
+  }
+
+  async getLapsedPolicies(tenantId: string) {
+    const policies = await this.prisma.policy.findMany({
+      where: {
+        tenantId,
+        status: { in: ['EXPIRED', 'LAPSED'] },
+      },
+      include: {
+        client: {
+          select: {
+            id: true,
+            companyName: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            email: true,
+          },
+        },
+        product: { select: { id: true, name: true } },
+        carrier: { select: { id: true, name: true } },
+        renewalLogs: { orderBy: { createdAt: 'desc' } },
+      },
+      orderBy: { expiryDate: 'desc' },
+    });
+
+    return policies.map((p) => {
+      const daysSinceExpiry = Math.ceil(
+        (new Date().getTime() - p.expiryDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      return {
+        ...p,
+        daysSinceExpiry,
+        isReinstatementEligible: daysSinceExpiry <= 30, // Example: 30 days grace period rule
       };
     });
   }
@@ -163,6 +204,24 @@ export class RenewalsService {
             originalPolicyId: oldPolicy.id,
             newPolicyId: newPolicy.id,
           } as Prisma.InputJsonObject,
+        },
+      });
+
+      // Update old policy's renewal status to drop it from the pipeline
+      await tx.policy.update({
+        where: { id: oldPolicy.id },
+        data: { renewalStatus: 'RENEWED' },
+      });
+
+      // Insert Renewal Log
+      await tx.renewalLog.create({
+        data: {
+          tenantId,
+          policyId: oldPolicy.id,
+          logType: 'STATUS_CHANGE',
+          title: 'Policy Renewed',
+          details: `Draft policy ${newPolicy.policyNumber} generated.`,
+          createdBy: userId,
         },
       });
 
@@ -343,5 +402,170 @@ export class RenewalsService {
       `Bulk notify complete for tenant ${tenantId}: ${sent} sent, ${skipped} skipped, ${failed} failed`,
     );
     return { sent, skipped, failed };
+  }
+
+  async bulkSendReminders(tenantId, policyIds, userId) {
+    const policies = await this.prisma.policy.findMany({
+      where: { tenantId, id: { in: policyIds } },
+      include: {
+        client: { select: { email: true, firstName: true, lastName: true, companyName: true } },
+        carrier: { select: { name: true } },
+      },
+    });
+
+    const templates = await this.prisma.renewalTemplate.findMany({
+      where: { tenantId, isActive: true },
+      orderBy: { triggerDays: 'desc' },
+    });
+
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true, nicLicense: true, phone: true, email: true },
+    });
+
+    let sent = 0, skipped = 0, failed = 0;
+    const now = new Date();
+
+    for (const policy of policies) {
+      if (!policy.client?.email) { skipped++; continue; }
+
+      const daysUntilExpiry = Math.ceil((policy.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const tpl = templates.find((t) => t.triggerDays >= daysUntilExpiry) ?? templates[templates.length - 1];
+
+      try {
+        if (tpl) {
+          const vars = {
+            client_first_name: policy.client.firstName || policy.client.companyName || 'Valued Client',
+            policy_number: policy.policyNumber,
+            insurance_type: policy.insuranceType,
+            expiry_date: policy.expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            days_remaining: String(Math.max(0, daysUntilExpiry)),
+            current_premium: 'GHS ' + Number(policy.premiumAmount).toLocaleString(),
+            carrier_name: policy.carrier ? policy.carrier.name : '',
+            vehicle_reg: '',
+            property_address: '',
+            officer_name: '',
+            officer_phone: '',
+            agency_name: tenant ? tenant.name : '',
+            agency_nic_number: tenant ? tenant.nicLicense : '',
+            agency_phone: tenant ? tenant.phone : '',
+            agency_email: tenant ? tenant.email : '',
+          };
+          await this.emailService.sendFromRenewalTemplate(policy.client.email, tpl.subject, tpl.htmlContent, vars);
+        } else {
+          const clientName = policy.client.companyName || policy.client.firstName + ' ' + policy.client.lastName;
+          await this.emailService.sendPolicyRenewalReminder(
+            policy.client.email,
+            clientName,
+            policy.policyNumber,
+            policy.expiryDate,
+            daysUntilExpiry,
+            Number(policy.premiumAmount),
+            policy.insuranceType,
+          );
+        }
+        sent++;
+        await this.prisma.renewalLog.create({
+          data: {
+            tenantId,
+            policyId: policy.id,
+            createdBy: userId,
+            logType: 'EMAIL_SENT',
+            title: 'Bulk Reminder Sent',
+            details: 'Manual bulk reminder dispatched to ' + policy.client.email,
+          },
+        });
+      } catch (error) {
+        this.logger.error('Failed bulk reminder for ' + policy.policyNumber, error);
+        failed++;
+      }
+    }
+
+    return { sent, skipped, failed };
+  }
+
+  async bulkAssignBroker(tenantId, policyIds, brokerId, userId) {
+    await this.prisma.policy.updateMany({
+      where: { tenantId, id: { in: policyIds } },
+      data: { brokerId },
+    });
+    const logs = policyIds.map((id) => ({
+      tenantId, policyId: id, createdBy: userId,
+      logType: 'STATUS_CHANGE',
+      title: 'Broker Reassigned',
+      details: 'Assigned via bulk action',
+    }));
+    if (logs.length > 0) await this.prisma.renewalLog.createMany({ data: logs });
+    return { success: true, count: policyIds.length };
+  }
+
+  async bulkUpdateStatus(tenantId, policyIds, status, userId) {
+    await this.prisma.policy.updateMany({
+      where: { tenantId, id: { in: policyIds } },
+      data: { renewalStatus: status },
+    });
+    const logs = policyIds.map((id) => ({
+      tenantId, policyId: id, createdBy: userId,
+      logType: 'STATUS_CHANGE',
+      title: 'Status Updated',
+      details: 'Bulk status update to ' + status,
+    }));
+    if (logs.length > 0) await this.prisma.renewalLog.createMany({ data: logs });
+    return { success: true, count: policyIds.length };
+  }
+
+  async getTemplates(tenantId) {
+    return this.prisma.renewalTemplate.findMany({
+      where: { tenantId },
+      orderBy: { triggerDays: 'desc' },
+    });
+  }
+
+  async updateTemplate(tenantId, id, data) {
+    return this.prisma.renewalTemplate.update({
+      where: { id, tenantId },
+      data,
+    });
+  }
+
+  async getRenewalReport(tenantId, days = 90) {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + days);
+    const now = new Date();
+
+    const upcoming = await this.prisma.policy.findMany({
+      where: { tenantId, status: 'ACTIVE', expiryDate: { gte: now, lte: futureDate } },
+      select: { insuranceType: true, premiumAmount: true },
+    });
+
+    const pastDue = await this.prisma.policy.findMany({
+      where: { tenantId, expiryDate: { gte: cutoff, lt: now } },
+      select: { insuranceType: true, premiumAmount: true, status: true, renewalStatus: true },
+    });
+
+    const lapsed = await this.prisma.policy.count({ where: { tenantId, status: 'LAPSED' } });
+    const totalDue = pastDue.length;
+    const totalRenewed = pastDue.filter(p => p.renewalStatus === 'RENEWED').length;
+    const renewalRate = totalDue > 0 ? (totalRenewed / totalDue) * 100 : 0;
+    const upcomingRevenue = upcoming.reduce((s, p) => s + Number(p.premiumAmount), 0);
+    const atRiskRevenue = upcomingRevenue * ((100 - renewalRate) / 100);
+
+    const typeMap = new Map();
+    for (const p of pastDue) {
+      if (!typeMap.has(p.insuranceType)) typeMap.set(p.insuranceType, { due: 0, renewed: 0 });
+      const entry = typeMap.get(p.insuranceType);
+      entry.due++;
+      if (p.renewalStatus === 'RENEWED') entry.renewed++;
+    }
+    const byType = [...typeMap.entries()].map(([insuranceType, { due, renewed }]) => ({
+      insuranceType,
+      due,
+      renewed,
+      rate: due > 0 ? (renewed / due) * 100 : 0,
+    }));
+
+    return { totalDue, totalRenewed, renewalRate, atRiskRevenue, upcomingRevenue, lapsedCount: lapsed, byType };
   }
 }

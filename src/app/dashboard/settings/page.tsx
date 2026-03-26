@@ -10,6 +10,7 @@ import { SettingsSecurityDetails } from '@/components/features/settings/settings
 import { SettingsAppearance } from '@/components/features/settings/settings-appearance';
 import { SettingsAccessControl } from '@/components/features/settings/settings-access-control';
 import { SettingsTerms } from '@/components/features/settings/settings-terms';
+import { SettingsRenewals } from '@/components/features/settings/settings-renewals';
 
 // Lazy-load Material Symbols font only on this page (saves ~600KB on all other pages)
 const MATERIAL_SYMBOLS_HREF = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap';
@@ -26,7 +27,7 @@ function useLoadMaterialSymbols() {
     }, []);
 }
 
-type Tab = 'overview' | 'profile' | 'organization' | 'communications' | 'security' | 'experience' | 'access' | 'terms';
+type Tab = 'overview' | 'profile' | 'organization' | 'communications' | 'security' | 'experience' | 'access' | 'terms' | 'renewals';
 
 const tabTitles: Record<Tab, { heading: string; subtitle: string }> = {
     overview: { heading: 'System Settings', subtitle: 'Central hub for managing your personal workspace and enterprise configuration.' },
@@ -37,6 +38,7 @@ const tabTitles: Record<Tab, { heading: string; subtitle: string }> = {
     experience: { heading: 'App Experience', subtitle: 'Customize the interface, theme, and dashboard layout.' },
     access: { heading: 'Access Control', subtitle: 'Manage system users, roles, and administrative permissions.' },
     terms: { heading: 'Terms & Legal', subtitle: 'Review and manage your acceptance of platform policies.' },
+    renewals: { heading: 'Renewal Engine', subtitle: 'Manage email templates and automation rules for policy renewals.' },
 };
 
 export default function SettingsPage() {
@@ -87,6 +89,17 @@ export default function SettingsPage() {
             ]
         },
         {
+            id: 'renewals' as Tab,
+            title: 'Renewal Engine',
+            description: 'Configure automated email templates and renewal rules.',
+            icon: 'autorenew',
+            color: 'teal',
+            items: [
+                { label: 'Email Templates', id: 'renewals' as Tab },
+                { label: 'Automation Rules', id: 'renewals' as Tab },
+            ]
+        },
+        {
             id: 'security' as Tab,
             title: 'Security',
             description: 'Configure multi-factor authentication and password requirements.',
@@ -128,6 +141,7 @@ export default function SettingsPage() {
         blue: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
         indigo: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400',
         emerald: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
+        teal: 'bg-teal-50 text-teal-600 dark:bg-teal-900/20 dark:text-teal-400',
         amber: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
         purple: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
         rose: 'bg-rose-50 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400',
@@ -242,6 +256,7 @@ export default function SettingsPage() {
                 {activeTab === 'experience' && <SettingsAppearance />}
                 {activeTab === 'access' && <SettingsAccessControl />}
                 {activeTab === 'terms' && <SettingsTerms />}
+                {activeTab === 'renewals' && <SettingsRenewals />}
             </div>
         </div>
     );

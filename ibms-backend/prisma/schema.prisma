@@ -52,6 +52,7 @@ model Tenant {
   notifications          Notification[]
   policies               Policy[]
   premiumFinancing       PremiumFinancing[]
+  renewalTemplates       RenewalTemplate[]
   quotes                 Quote[]
   remittances            Remittance[]
   tasks                  Task[]
@@ -396,6 +397,24 @@ model BankDetail {
   @@map("bank_details")
 }
 
+enum RenewalStatus {
+  NOT_STARTED
+  CONTACTED
+  QUOTE_SENT
+  NEGOTIATING
+  CONFIRMED
+  RENEWED
+  DECLINED
+}
+
+enum LapseReason {
+  NON_PAYMENT
+  CLIENT_DECLINED
+  UNREACHABLE
+  SWITCHED_INSURER
+  COVERAGE_NO_LONGER_NEEDED
+}
+
 model Policy {
   id                 String               @id @default(uuid()) @db.Uuid
   tenantId           String               @db.Uuid
@@ -425,6 +444,8 @@ model Policy {
   coverageDetails    String?
   isRenewal          Boolean              @default(false)
   previousPolicyId   String?              @db.Uuid
+  renewalStatus      RenewalStatus        @default(NOT_STARTED)
+  lapseReason        LapseReason?
   cancellationReason CancellationReason?
   cancellationDate   DateTime?
   createdAt          DateTime             @default(now())
@@ -448,6 +469,7 @@ model Policy {
   remittances        Remittance[]
   transactions       Transaction[]
   vehicleDetails     VehicleDetail?
+  renewalLogs        RenewalLog[]
 
   @@unique([tenantId, policyNumber])
   @@index([tenantId])
@@ -2113,4 +2135,38 @@ model ColumnMappingTemplate {
   @@index([tenantId])
   @@index([tenantId, dataType])
   @@map("column_mapping_templates")
+}
+
+model RenewalTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid
+  name        String
+  subject     String
+  htmlContent String   @db.Text
+  triggerDays Int // e.g., 90, 60, 30
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("renewal_templates")
+}
+
+model RenewalLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  policyId  String   @db.Uuid
+  tenantId  String   @db.Uuid
+  logType   String // 'EMAIL_SENT', 'STATUS_CHANGE', 'NOTE_ADDED'
+  title     String
+  details   String?  @db.Text
+  createdAt DateTime @default(now())
+  createdBy String?  @db.Uuid // null if system CRON
+
+  policy Policy @relation(fields: [policyId], references: [id], onDelete: Cascade)
+
+  @@index([policyId])
+  @@index([tenantId])
+  @@map("renewal_logs")
 }

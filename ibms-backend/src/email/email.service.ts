@@ -358,4 +358,62 @@ export class EmailService {
     this.logger.log(`Subject: ${subject}`);
     this.logger.log('='.repeat(80) + '\n');
   }
+
+  /**
+   * Replaces all 15 template variables in a subject/body string with actual data.
+   */
+  renderTemplate(template: string, vars: Record<string, string>): string {
+    return Object.entries(vars).reduce(
+      (txt, [key, value]) => txt.replaceAll(`{{${key}}}`, value ?? ''),
+      template,
+    );
+  }
+
+  /**
+   * Sends an email built from a DB-stored `RenewalTemplate` record.
+   * Accepts pre-resolved variable values — caller is responsible for building the map.
+   */
+  async sendFromRenewalTemplate(
+    toEmail: string,
+    templateSubject: string,
+    templateBody: string,
+    vars: {
+      client_first_name: string;
+      policy_number: string;
+      insurance_type: string;
+      expiry_date: string;
+      days_remaining: string;
+      current_premium: string;
+      carrier_name: string;
+      vehicle_reg: string;
+      property_address: string;
+      officer_name: string;
+      officer_phone: string;
+      agency_name: string;
+      agency_nic_number: string;
+      agency_phone: string;
+      agency_email: string;
+    },
+  ): Promise<void> {
+    const resolvedSubject = this.renderTemplate(templateSubject, vars as Record<string, string>);
+    const resolvedBody = this.renderTemplate(templateBody, vars as Record<string, string>);
+
+    // Convert plain-text body to simple HTML
+    const html = `
+      <div style="font-family: Arial, sans-serif; max-width: 620px; margin: 0 auto; color: #1f2937;">
+        <div style="background: #1e3a5f; color: white; padding: 20px 28px; border-radius: 10px 10px 0 0;">
+          <h2 style="margin: 0; font-size: 20px;">${resolvedSubject}</h2>
+        </div>
+        <div style="background: #f9fafb; padding: 28px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; white-space: pre-line; line-height: 1.7;">
+          ${resolvedBody}
+        </div>
+        <p style="color: #9ca3af; font-size: 11px; text-align: center; margin-top: 12px;">
+          ${vars.agency_name} · NIC Lic: ${vars.agency_nic_number} · ${vars.agency_phone}
+        </p>
+      </div>
+    `;
+
+    await this.send(toEmail, resolvedSubject, html);
+  }
 }
+
