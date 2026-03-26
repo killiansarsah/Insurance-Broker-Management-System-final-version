@@ -45,6 +45,75 @@ export class UpdateClaimDto {
   @IsString()
   @IsOptional()
   notes?: string;
+
+  @IsString()
+  @IsOptional()
+  policeReportNumber?: string;
+
+  @Type(() => Date)
+  @IsDateString()
+  @IsOptional()
+  closedDate?: Date;
+
+  @Type(() => Date)
+  @IsDateString()
+  @IsOptional()
+  siteVisitDate?: Date;
+
+  @IsString()
+  @IsOptional()
+  damageDescription?: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  repairEstimate?: number;
+
+  @Type(() => Number)
+  @IsNumber()
+  @IsOptional()
+  recommendedSettlement?: number;
+
+  @IsString()
+  @IsOptional()
+  assessorNotes?: string;
+
+  @IsString()
+  @IsOptional()
+  paymentMethod?: string;
+
+  @IsString()
+  @IsOptional()
+  paymentReference?: string;
+
+  @Type(() => Date)
+  @IsDateString()
+  @IsOptional()
+  paymentDate?: Date;
+
+  @IsString()
+  @IsOptional()
+  thirdPartyName?: string;
+
+  @IsString()
+  @IsOptional()
+  thirdPartyPhone?: string;
+
+  @IsString()
+  @IsOptional()
+  thirdPartyVehicleReg?: string;
+
+  @IsString()
+  @IsOptional()
+  thirdPartyInsurer?: string;
+
+  @IsString()
+  @IsOptional()
+  thirdPartyClaimRef?: string;
+
+  @IsString()
+  @IsOptional()
+  faultAssessment?: string;
 }
 
 export class AcknowledgeClaimDto {

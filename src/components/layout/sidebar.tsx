@@ -97,8 +97,9 @@ const navigation: NavSection[] = [
                 href: '/dashboard/claims',
                 icon: <Shield size={18} />,
                 children: [
-                    { label: 'Motor', href: '/dashboard/claims?type=motor' },
-                    { label: 'Other Policies', href: '/dashboard/claims?type=non-motor' },
+                    { label: 'All Claims', href: '/dashboard/claims' },
+                    { label: 'NIC Monitor', href: '/dashboard/claims/nic-monitor' },
+                    { label: 'NIC Register', href: '/dashboard/claims/nic-register' },
                 ],
             },
             {
