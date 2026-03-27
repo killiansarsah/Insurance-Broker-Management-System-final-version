@@ -973,7 +973,7 @@ export default function ExpensesPage() {
                                                         options={EXPENSE_CATEGORIES}
                                                     />
                                                 ) : (
-                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-100 text-[10px] font-semibold text-surface-600 whitespace-nowrap">
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-surface-100 dark:bg-slate-800 text-[10px] font-semibold text-surface-600 dark:text-slate-300 whitespace-nowrap">
                                                         {CATEGORY_LABEL[exp.category]}
                                                     </span>
                                                 )}
@@ -1073,14 +1073,14 @@ export default function ExpensesPage() {
                                                     <div className="flex items-center justify-center gap-1">
                                                         <button
                                                             onClick={saveEdit}
-                                                            className="p-1.5 rounded-md bg-success-50 text-success-600 hover:bg-success-100 transition-colors cursor-pointer"
+                                                            className="p-1.5 rounded-md bg-success-50 dark:bg-success-900/30 text-success-600 dark:text-success-400 hover:bg-success-100 dark:hover:bg-success-900/50 transition-colors cursor-pointer"
                                                             title="Save"
                                                         >
                                                             <Save size={14} />
                                                         </button>
                                                         <button
                                                             onClick={cancelEdit}
-                                                            className="p-1.5 rounded-md bg-surface-100 text-surface-500 hover:bg-surface-200 transition-colors cursor-pointer"
+                                                            className="p-1.5 rounded-md bg-surface-100 dark:bg-slate-800 text-surface-500 dark:text-slate-400 hover:bg-surface-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                                                             title="Cancel"
                                                         >
                                                             <X size={14} />

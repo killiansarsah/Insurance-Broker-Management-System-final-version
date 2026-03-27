@@ -33,10 +33,12 @@ import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { useRenewals, useLapsedRenewals } from '@/hooks/api/use-renewals';
 import { useAuthStore } from '@/stores/auth-store';
+import { useUsers } from '@/hooks/api/useUsers';
+import Link from 'next/link';
 
 // ─── Local Types & Config ───
 type UrgencyLevel = 'CRITICAL' | 'URGENT' | 'IMPORTANT' | 'UPCOMING' | 'LAPSED';
-type RenewalWorkflowStatus = 'PENDING' | 'CONTACTED' | 'QUOTED' | 'RENEWED' | 'LOST';
+type RenewalWorkflowStatus = 'NOT_STARTED' | 'PENDING' | 'CONTACTED' | 'QUOTED' | 'RENEWED' | 'LOST';
 
 interface Renewal {
     id: string;
@@ -74,12 +76,15 @@ const URGENCY_CONFIG: Record<UrgencyLevel, { label: string; bg: string; color: s
 };
 
 const WORKFLOW_STATUS_CONFIG: Record<RenewalWorkflowStatus, { label: string; bg: string; color: string }> = {
+    NOT_STARTED: { label: 'Not Started', bg: 'bg-surface-50', color: 'text-surface-500' },
     PENDING: { label: 'Pending', bg: 'bg-surface-100', color: 'text-surface-700' },
     CONTACTED: { label: 'Contacted', bg: 'bg-blue-50', color: 'text-blue-700' },
     QUOTED: { label: 'Quoted', bg: 'bg-amber-50', color: 'text-amber-700' },
     RENEWED: { label: 'Renewed', bg: 'bg-success-50', color: 'text-success-700' },
     LOST: { label: 'Lost', bg: 'bg-danger-50', color: 'text-danger-700' },
 };
+
+const FALLBACK_STATUS_CONFIG = { label: 'Unknown', bg: 'bg-surface-50', color: 'text-surface-400' };
 
 const LOST_REASON_LABEL: Record<string, string> = {
     price: 'Price too high',
@@ -116,7 +121,7 @@ function mapApiToRenewal(r: any): Renewal {
         expiryDate: r.expiryDate,
         daysToExpiry: days,
         urgencyLevel: getUrgencyLevel(days, r.status),
-        renewalStatus: r.renewalStatus || 'PENDING',
+        renewalStatus: r.renewalStatus || 'NOT_STARTED',
         assignedAgent: r.broker ? `${r.broker.firstName} ${r.broker.lastName}` : 'Unassigned',
         contactAttempts: r.renewalLogs ? r.renewalLogs.filter((L: any) => L.logType === 'CONTACT' || L.logType === 'EMAIL_SENT').length : 0,
         coverageType: r.product?.name || r.insuranceType,
@@ -148,7 +153,7 @@ function UrgencyBadge({ level }: { level: UrgencyLevel }) {
 
 // ─── Workflow Status Badge ───
 function WorkflowBadge({ status }: { status: RenewalWorkflowStatus }) {
-    const config = WORKFLOW_STATUS_CONFIG[status];
+    const config = WORKFLOW_STATUS_CONFIG[status] || FALLBACK_STATUS_CONFIG;
     return (
         <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full ${config.bg} ${config.color}`}>
             {config.label}
@@ -196,8 +201,12 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                 <Shield size={20} className="text-warning-600" />
                             </div>
                             <div>
-                                <h2 className="text-lg font-bold text-surface-900">Renewal Details</h2>
-                                <p className="text-sm text-surface-500 font-mono">{renewal.policyNumber}</p>
+                                <h2 className="text-lg font-bold text-surface-900 dark:text-white leading-tight">Renewal Details</h2>
+                                <div className="mt-1.5">
+                                    <span className="inline-block text-xl font-mono font-bold text-surface-900 dark:text-white bg-surface-100/50 dark:bg-slate-800/50 border border-surface-200/50 dark:border-slate-700 border-dashed px-3 py-1 rounded-lg tracking-wider">
+                                        {renewal.policyNumber}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <button
@@ -500,9 +509,18 @@ export default function RenewalsPage() {
     const [selectedRenewals, setSelectedRenewals] = useState<Renewal[]>([]);
     
     // Setup queries
-    const { data: renewalsApiData } = useRenewals({ daysAhead: 90 });
+    const { data: renewalsApiData, refetch } = useRenewals({ daysAhead: 90 });
     const { data: lapsedApiData } = useLapsedRenewals(); // Must be imported at bottom of this diff via auto-imports or explicit
     const currentUserEmail = useAuthStore((s) => s.user?.email);
+
+    // Dynamic broker list for bulk assign
+    const { data: usersData } = useUsers();
+    const brokerOptions = useMemo(() => {
+        const users = Array.isArray(usersData) ? usersData : (usersData as any)?.data ?? [];
+        return users
+            .filter((u: any) => u.role === 'BROKER' || u.role === 'ADMIN' || u.role === 'TENANT_ADMIN')
+            .map((u: any) => ({ value: u.id, label: `${u.firstName} ${u.lastName}` }));
+    }, [usersData]);
 
     const allRenewals: Renewal[] = useMemo(() => {
         const raw = Array.isArray(renewalsApiData) ? renewalsApiData : (renewalsApiData as any)?.data ?? [];
@@ -620,6 +638,11 @@ export default function RenewalsPage() {
                     >
                         Test Email Reminder
                     </Button>
+                    <Link href="/dashboard/renewals/reports">
+                        <Button variant="outline" leftIcon={<BarChart3 size={16} />}>
+                            Reports
+                        </Button>
+                    </Link>
                     <Button
                         variant="primary"
                         leftIcon={<Send size={16} />}
@@ -798,8 +821,7 @@ export default function RenewalsPage() {
                                     }}
                                     options={[
                                         { value: '', label: 'Assign Agent...' },
-                                        { value: 'broker_1', label: 'Kwame Mensah' }, // These should eventually be fetched dynamically
-                                        { value: 'broker_2', label: 'Esi Osei' },
+                                        ...brokerOptions,
                                     ]}
                                     placeholder="Assign Agent..."
                                 />
@@ -844,10 +866,9 @@ export default function RenewalsPage() {
                         label: 'Policy',
                         sortable: true,
                         render: (r) => (
-                            <div>
-                                <p className="font-mono font-medium text-surface-800 text-xs">{r.policyNumber}</p>
-                                <p className="text-[11px] text-surface-500 capitalize">{r.insuranceType} • {r.coverageType || r.policyType}</p>
-                            </div>
+                            <span className="inline-block text-[11px] font-mono font-medium text-surface-600 dark:text-slate-300 bg-surface-100 dark:bg-slate-800 border border-surface-200 dark:border-slate-700 px-2.5 py-1 rounded-md tracking-wide">
+                                {r.policyNumber}
+                            </span>
                         ),
                     },
                     {
@@ -861,12 +882,7 @@ export default function RenewalsPage() {
                             </div>
                         ),
                     },
-                    {
-                        key: 'insurerName',
-                        label: 'Insurer',
-                        sortable: true,
-                        render: (r) => <span className="text-sm text-surface-700">{r.insurerName}</span>,
-                    },
+
                     {
                         key: 'currentPremium',
                         label: 'Premium',
@@ -961,6 +977,7 @@ export default function RenewalsPage() {
                             label="Status"
                             options={[
                                 { label: 'All Statuses', value: 'all' },
+                                { label: 'Not Started', value: 'NOT_STARTED' },
                                 { label: 'Pending', value: 'PENDING' },
                                 { label: 'Contacted', value: 'CONTACTED' },
                                 { label: 'Quoted', value: 'QUOTED' },

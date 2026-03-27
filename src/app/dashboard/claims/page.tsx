@@ -244,13 +244,13 @@ export default function ClaimsPage() {
                                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer',
                                 isActive
                                     ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                                    : 'bg-white text-surface-600 border-surface-200 hover:border-primary-300 hover:text-primary-600'
+                                    : 'bg-white dark:bg-slate-800 text-surface-600 dark:text-slate-300 border-surface-200 dark:border-slate-700 hover:border-primary-300 dark:hover:border-primary-700 hover:text-primary-600 dark:hover:text-primary-400'
                             )}
                         >
                             {s.label}
                             <span className={cn(
                                 'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold',
-                                isActive ? 'bg-white/20 text-white' : 'bg-surface-100 text-surface-500'
+                                isActive ? 'bg-white/20 text-white' : 'bg-surface-100 dark:bg-slate-700 text-surface-500 dark:text-slate-400'
                             )}>
                                 {count}
                             </span>
@@ -265,14 +265,14 @@ export default function ClaimsPage() {
                         'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-200 cursor-pointer',
                         overdueOnly
                             ? 'bg-danger-600 text-white border-danger-600 shadow-sm'
-                            : 'bg-white text-danger-600 border-danger-200 hover:border-danger-300'
+                            : 'bg-white dark:bg-slate-800 text-danger-600 dark:text-danger-400 border-danger-200 dark:border-danger-900/50 hover:border-danger-300 dark:hover:border-danger-800'
                     )}
                 >
                     <AlertTriangle size={11} />
                     Overdue
                     <span className={cn(
                         'inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold',
-                        overdueOnly ? 'bg-white/20 text-white' : 'bg-danger-50 text-danger-500'
+                        overdueOnly ? 'bg-white/20 text-white' : 'bg-danger-50 dark:bg-danger-900/30 text-danger-500 dark:text-danger-400'
                     )}>
                         {statusCounts['OVERDUE'] ?? 0}
                     </span>
@@ -325,7 +325,7 @@ export default function ClaimsPage() {
                         label: 'Claim #',
                         sortable: true,
                         render: (c) => (
-                            <span className="text-[11px] font-mono text-surface-500 bg-surface-100/80 border border-surface-200/50 px-2.5 py-1 rounded-md tracking-wide">
+                            <span className="text-[11px] font-mono font-medium text-surface-600 dark:text-slate-300 bg-surface-100 dark:bg-slate-800 border border-surface-200 dark:border-slate-700 px-2.5 py-1 rounded-md tracking-wide">
                                 {c.claimNumber}
                             </span>
                         )

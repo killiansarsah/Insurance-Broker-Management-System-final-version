@@ -164,6 +164,7 @@ export class AuthController {
   }
 
   @Public()
+  @Throttle({ default: { ttl: 3600000, limit: 5 } })
   @Post('reset-password')
   async reset(
     @Body() body: ResetPasswordDto,

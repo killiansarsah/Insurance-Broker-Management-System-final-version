@@ -108,27 +108,33 @@ export function CustomSelect({
                             align === 'right' ? 'right-0' : 'left-0'
                         )}
                     >
-                        <div className="py-1 max-h-[300px] overflow-y-auto scrollbar-hide">
-                            {normalizedOptions.map((opt) => (
-                                <button
-                                    key={opt.value}
-                                    type="button"
-                                    onClick={() => {
-                                        onChange(opt.value);
-                                        setOpen(false);
-                                    }}
-                                    className={cn(
-                                        'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left transition-colors cursor-pointer uppercase tracking-tight',
-                                        'hover:bg-primary-50/50 dark:hover:bg-slate-800/80',
-                                        value === opt.value
-                                            ? 'text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 shadow-inner'
-                                            : 'text-surface-600 dark:text-slate-400'
-                                    )}
-                                >
-                                    <span>{opt.label}</span>
-                                    {value === opt.value && <Check size={12} className="text-primary-500" />}
-                                </button>
-                            ))}
+                        <div className="py-1 max-h-[300px] overflow-y-auto scrollbar-hide min-h-[40px]">
+                            {normalizedOptions.length === 0 ? (
+                                <div className="px-4 py-3 text-[11px] font-bold text-surface-400 dark:text-slate-500 italic uppercase tracking-wider text-center">
+                                    No options found
+                                </div>
+                            ) : (
+                                normalizedOptions.map((opt) => (
+                                    <button
+                                        key={opt.value}
+                                        type="button"
+                                        onClick={() => {
+                                            onChange(opt.value);
+                                            setOpen(false);
+                                        }}
+                                        className={cn(
+                                            'flex items-center justify-between w-full px-4 py-2.5 text-[11px] font-bold text-left transition-colors cursor-pointer uppercase tracking-tight',
+                                            'hover:bg-primary-50/50 dark:hover:bg-slate-800/80',
+                                            value === opt.value
+                                                ? 'text-primary-600 dark:text-primary-400 bg-primary-50/80 dark:bg-primary-900/30 shadow-inner'
+                                                : 'text-surface-600 dark:text-slate-400'
+                                        )}
+                                    >
+                                        <span>{opt.label}</span>
+                                        {value === opt.value && <Check size={12} className="text-primary-500" />}
+                                    </button>
+                                ))
+                            )}
                         </div>
                     </motion.div>
                 )}

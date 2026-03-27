@@ -677,7 +677,7 @@ export default function PremiumFinancingPage() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: 'spring', damping: 25 }}
-                className="pf-modal-header rounded-2xl px-7 py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="pf-modal-header rounded-xl px-5 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
             >
                 <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-1">
@@ -716,7 +716,7 @@ export default function PremiumFinancingPage() {
                 className="grid grid-cols-1 lg:grid-cols-12 gap-4"
             >
                 {/* Hero Stat — dark gradient banner */}
-                <div className="lg:col-span-5 pf-modal-header rounded-2xl p-6 flex items-center gap-6 relative overflow-hidden min-h-[180px]">
+                <div className="lg:col-span-5 pf-modal-header rounded-xl p-5 flex items-center gap-6 relative overflow-hidden">
                     <div className="relative z-10 flex items-center gap-6 w-full">
                         {/* Circular Collection Gauge */}
                         <div className="relative flex-shrink-0">
@@ -738,7 +738,7 @@ export default function PremiumFinancingPage() {
                         {/* Hero Text */}
                         <div className="flex-1">
                             <p className="text-[11px] font-extrabold text-white/90 uppercase tracking-[0.25em] mb-1">Total Financed</p>
-                            <p className="text-3xl font-black text-white tracking-tighter">{formatCurrency(pfSummary.totalFinanced)}</p>
+                            <p className="text-2xl font-black text-white tracking-tighter">{formatCurrency(pfSummary.totalFinanced)}</p>
                             <div className="flex items-center gap-4 mt-3">
                                 <span className="text-xs font-bold text-white/80">{(pfSummary.active ?? 0) + (pfSummary.completed ?? 0)} agreements</span>
                                 <span className="text-[11px] font-bold text-success-300 bg-success-500/20 px-2.5 py-0.5 rounded-full">
@@ -756,18 +756,18 @@ export default function PremiumFinancingPage() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.15 }}
-                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                        className="pf-section-card p-3.5 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2 rounded-lg bg-blue-500/10 text-blue-600">
                                 <CreditCard size={18} />
                             </div>
-                            <span className="text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{pfSummary.active}</span>
+                            <span className="text-[11px] font-black text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/20 px-2 py-0.5 rounded-full">{pfSummary.active}</span>
                         </div>
                         <div>
-                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Active</p>
-                            <p className="text-sm font-black text-surface-900 tracking-tight mt-0.5">{formatCurrency(pfSummary.totalOutstanding)}</p>
-                            <p className="text-[11px] font-medium text-surface-500 mt-1">outstanding</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Active</p>
+                            <p className="text-sm font-black text-surface-900 dark:text-white tracking-tight mt-0.5">{formatCurrency(pfSummary.totalOutstanding)}</p>
+                            <p className="text-[11px] font-medium text-surface-500 dark:text-surface-400 mt-1">outstanding</p>
                         </div>
                     </motion.div>
 
@@ -776,20 +776,20 @@ export default function PremiumFinancingPage() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                        className="pf-section-card p-3.5 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2 rounded-lg bg-danger-500/10 text-danger-600">
                                 <AlertTriangle size={18} />
                             </div>
                             {pfSummary.defaulted > 0 && (
-                                <span className="text-[11px] font-black text-danger-600 bg-danger-50 px-2 py-0.5 rounded-full animate-pulse">{pfSummary.defaulted}</span>
+                                <span className="text-[11px] font-black text-danger-600 dark:text-danger-400 bg-danger-50 dark:bg-danger-500/20 px-2 py-0.5 rounded-full animate-pulse">{pfSummary.defaulted}</span>
                             )}
                         </div>
                         <div>
-                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Overdue</p>
-                            <p className="text-sm font-black text-danger-700 tracking-tight mt-0.5">{formatCurrency(pfSummary.overdueAmount)}</p>
-                            <p className="text-[11px] font-medium text-surface-500 mt-1">{pfSummary.defaulted} defaulted</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Overdue</p>
+                            <p className="text-sm font-black text-danger-700 dark:text-danger-400 tracking-tight mt-0.5">{formatCurrency(pfSummary.overdueAmount)}</p>
+                            <p className="text-[11px] font-medium text-surface-500 dark:text-surface-400 mt-1">{pfSummary.defaulted} defaulted</p>
                         </div>
                     </motion.div>
 
@@ -798,18 +798,18 @@ export default function PremiumFinancingPage() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.25 }}
-                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                        className="pf-section-card p-3.5 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2 rounded-lg bg-success-500/10 text-success-600">
                                 <CheckCircle2 size={18} />
                             </div>
-                            <span className="text-[11px] font-black text-success-700 bg-success-50 px-2 py-0.5 rounded-full">{pfSummary.completed}</span>
+                            <span className="text-[11px] font-black text-success-700 dark:text-success-400 bg-success-50 dark:bg-success-500/20 px-2 py-0.5 rounded-full">{pfSummary.completed}</span>
                         </div>
                         <div>
-                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Completed</p>
-                            <p className="text-sm font-black text-success-700 tracking-tight mt-0.5">{pfSummary.completed} settled</p>
-                            <p className="text-[11px] font-medium text-surface-500 mt-1">fully repaid</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Completed</p>
+                            <p className="text-sm font-black text-success-700 dark:text-success-400 tracking-tight mt-0.5">{pfSummary.completed} settled</p>
+                            <p className="text-[11px] font-medium text-surface-500 dark:text-surface-400 mt-1">fully repaid</p>
                         </div>
                     </motion.div>
 
@@ -818,18 +818,18 @@ export default function PremiumFinancingPage() {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="pf-section-card p-4 flex flex-col justify-between group hover:shadow-md"
+                        className="pf-section-card p-3.5 flex flex-col justify-between group hover:shadow-md"
                     >
                         <div className="flex items-center justify-between mb-3">
                             <div className="p-2 rounded-lg bg-warning-500/10 text-warning-600">
                                 <Clock size={18} />
                             </div>
-                            <span className="text-[11px] font-black text-warning-700 bg-warning-50 px-2 py-0.5 rounded-full">{pfSummary.underReview}</span>
+                            <span className="text-[11px] font-black text-warning-700 dark:text-warning-400 bg-warning-50 dark:bg-warning-500/20 px-2 py-0.5 rounded-full">{pfSummary.underReview}</span>
                         </div>
                         <div>
-                            <p className="text-[11px] font-extrabold text-surface-500 uppercase tracking-wider">Pending</p>
-                            <p className="text-sm font-black text-surface-900 tracking-tight mt-0.5">{pfSummary.underReview + pfSummary.submitted} in queue</p>
-                            <p className="text-[11px] font-medium text-surface-500 mt-1">{pfSummary.approved} approved</p>
+                            <p className="text-[11px] font-extrabold text-surface-500 dark:text-surface-400 uppercase tracking-wider">Pending</p>
+                            <p className="text-sm font-black text-surface-900 dark:text-white tracking-tight mt-0.5">{pfSummary.underReview + pfSummary.submitted} in queue</p>
+                            <p className="text-[11px] font-medium text-surface-500 dark:text-surface-400 mt-1">{pfSummary.approved} approved</p>
                         </div>
                     </motion.div>
                 </div>
@@ -849,14 +849,14 @@ export default function PremiumFinancingPage() {
                             onClick={() => handleTabChange(tab.id)}
                             className={`relative flex items-center gap-2 px-5 py-3 text-sm font-semibold transition-all duration-200 whitespace-nowrap border-b-2 -mb-px cursor-pointer ${
                                 activeTab === tab.id
-                                    ? `${tab.activeColor} text-surface-900`
-                                    : 'border-transparent text-surface-500 hover:text-surface-700 hover:border-surface-300'
+                                    ? `${tab.activeColor} text-surface-900 dark:text-white`
+                                    : 'border-transparent text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200 hover:border-surface-300 dark:hover:border-surface-600'
                             }`}
                         >
-                            <span className={`w-2 h-2 rounded-full ${activeTab === tab.id ? tab.dotColor : 'bg-surface-300'} transition-colors`} />
+                            <span className={`w-2 h-2 rounded-full ${activeTab === tab.id ? tab.dotColor : 'bg-surface-300 dark:bg-surface-600'} transition-colors`} />
                             <span>{tab.label}</span>
                             <span className={`text-[11px] font-black ${
-                                activeTab === tab.id ? 'text-surface-900' : 'text-surface-500'
+                                activeTab === tab.id ? 'text-surface-900 dark:text-white' : 'text-surface-500 dark:text-surface-400'
                             }`}>
                                 {tab.count}
                             </span>

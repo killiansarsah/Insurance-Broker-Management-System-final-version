@@ -204,7 +204,7 @@ export default function RemittancesPage() {
                             'px-3 py-1.5 rounded-full text-xs font-semibold transition-colors',
                             statusFilter === opt.value
                                 ? 'bg-primary-600 text-white'
-                                : 'bg-surface-100 text-surface-600 hover:bg-surface-200'
+                                : 'bg-surface-100 dark:bg-slate-800 text-surface-600 dark:text-slate-300 hover:bg-surface-200 dark:hover:bg-slate-700 hover:text-primary-600 dark:hover:text-primary-400'
                         )}
                     >
                         {opt.label}

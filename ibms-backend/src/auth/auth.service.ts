@@ -469,7 +469,7 @@ export class AuthService {
       );
     await this.prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: hashed },
+      data: { passwordHash: hashed, failedAttempts: 0, lockedUntil: null },
     });
     await this.prisma.passwordReset.update({
       where: { id: matched.id },

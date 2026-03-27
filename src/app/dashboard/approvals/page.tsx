@@ -234,14 +234,14 @@ export default function ApprovalsPage() {
                             placeholder="Search approvals…"
                             value={search}
                             onChange={e => setSearch(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                            className="w-full pl-9 pr-3 py-2 text-sm border border-surface-200 dark:border-slate-700 rounded-lg bg-surface-50 dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                         />
                     </div>
 
                     <select
                         value={statusFilter}
                         onChange={e => setStatusFilter(e.target.value as ApprovalStatus | 'all')}
-                        className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="px-3 py-2 text-sm border border-surface-200 dark:border-slate-700 rounded-lg bg-surface-50 dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option value="all">All Statuses</option>
                         <option value="PENDING">Pending</option>
@@ -252,7 +252,7 @@ export default function ApprovalsPage() {
                     <select
                         value={typeFilter}
                         onChange={e => setTypeFilter(e.target.value as ApprovalType | 'all')}
-                        className="px-3 py-2 text-sm border border-surface-200 rounded-lg bg-surface-50 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="px-3 py-2 text-sm border border-surface-200 dark:border-slate-700 rounded-lg bg-surface-50 dark:bg-slate-900 text-surface-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                         <option value="all">All Types</option>
                         <option value="POLICY">New Policy</option>

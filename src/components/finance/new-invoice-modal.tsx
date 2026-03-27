@@ -60,7 +60,7 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
     const policyOptions = useMemo(() => {
         if (!clientId) return [];
         return policies
-            .filter((p: any) => p.clientId === clientId && (p.status === 'ACTIVE' || p.status === 'ACTIVE' || p.status === 'DRAFT'))
+            .filter((p: any) => p.clientId === clientId && (p.status === 'ACTIVE' || p.status === 'DRAFT'))
             .map((p: any) => ({
                 label: `${p.policyNumber} — ${p.insuranceType}`,
                 value: p.id,
@@ -150,7 +150,7 @@ export function NewInvoiceModal({ isOpen, onClose }: NewInvoiceModalProps) {
             footer={footer}
             className="overflow-visible"
         >
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-6 overflow-visible">
                 {/* Client & Policy Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">

@@ -107,6 +107,7 @@ export class CarriersService {
         take: limit,
         orderBy: { name: 'asc' },
         include: {
+          products: true,
           _count: {
             select: { products: true },
           },

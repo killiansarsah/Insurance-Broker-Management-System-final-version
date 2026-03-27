@@ -74,19 +74,19 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
             />
 
             {/* Logo Container - Pedestal */}
-            <div className="relative w-24 h-24 rounded-2xl flex items-center justify-center bg-white dark:bg-slate-900 shadow-lg border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
+            <div className="relative w-20 h-20 rounded-xl flex items-center justify-center bg-white dark:bg-slate-900 shadow-md border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
                 {fullLogoUrl && !imgError ? (
                     <Image
                         src={fullLogoUrl}
                         alt={`${carrier.name} logo`}
-                        width={80}
-                        height={80}
-                        className="w-20 h-20 object-contain p-1"
+                        width={64}
+                        height={64}
+                        className="w-16 h-16 object-contain p-1"
                         onError={() => setImgError(true)}
                     />
                 ) : (
                     <div
-                        className="w-full h-full rounded-2xl flex items-center justify-center text-white font-black text-2xl"
+                        className="w-full h-full rounded-xl flex items-center justify-center text-white font-black text-xl"
                         style={{ backgroundColor: fallbackColor }}
                     >
                         {renderInitials()}
@@ -127,27 +127,24 @@ export default function CarriersPage() {
 
     return (
         <div className="space-y-8 animate-fade-in pb-10">
-            {/* Minimalist Hero Section */}
-            <div className="relative rounded-[32px] overflow-hidden p-8 md:p-10 mb-8 group">
-                {/* Background Effects */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/90 via-white/50 to-white/90 backdrop-blur-3xl" />
-                <div className="absolute inset-0 bg-grid-slate-200/50 [mask-image:linear-gradient(0deg,white,transparent)]" />
+            {/* Standard Dashboard Header — Refined for Carriers */}
+            <div className="relative rounded-3xl bg-slate-950 overflow-hidden min-h-[220px] shadow-xl group/header">
+                {/* Visual Elements */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-blue-950" />
+                <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-500/10 blur-[100px] rounded-full animate-pulse-slow translate-x-1/2 -translate-y-1/2" />
+                <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-500/10 blur-[80px] rounded-full animate-pulse-slow -translate-x-1/2 translate-y-1/2" />
 
-                {/* Subtle Ambient Glow */}
-                <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-primary-500/5 rounded-full blur-3xl" />
-                <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-3xl" />
-
-                <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <div className="relative px-8 py-8 md:px-10 md:py-10 flex flex-col lg:flex-row items-center justify-between gap-8 h-full">
                     {/* Left Panel: Title & Actions */}
-                    <div className="lg:col-span-7 flex flex-col justify-center">
-                        <h1 className="text-4xl md:text-5xl font-black text-surface-900 tracking-tight mb-6">
-                            Carriers & <span className="text-primary-600">Partners</span>
+                    <div className="lg:col-span-7 flex flex-col justify-center text-center lg:text-left">
+                        <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white tracking-tighter mb-5">
+                            Carriers <span className="text-blue-400">&</span> Partners
                         </h1>
 
-                        <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
                             <Link href="/dashboard/carriers/products">
                                 <Button
-                                    className="h-11 px-6 rounded-xl bg-surface-900 text-white hover:bg-surface-800 shadow-lg shadow-surface-900/10 hover:shadow-xl transition-all"
+                                    className="h-11 px-7 rounded-xl bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-500/20 transition-all font-black border-0"
                                     leftIcon={<Shield size={18} />}
                                 >
                                     Browse Products
@@ -156,7 +153,7 @@ export default function CarriersPage() {
                             <Link href="https://nicgh.org" target="_blank" rel="noopener noreferrer">
                                 <Button
                                     variant="outline"
-                                    className="h-11 px-6 rounded-xl border-surface-200 bg-white/60 hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800 text-surface-700"
+                                    className="h-11 px-7 rounded-xl border-white/20 bg-white/10 hover:bg-white/20 text-white font-bold backdrop-blur-md"
                                     leftIcon={<ExternalLink size={18} />}
                                 >
                                     NIC Portal
@@ -165,26 +162,23 @@ export default function CarriersPage() {
                         </div>
                     </div>
 
-                    {/* Right Panel: KPI Matrix */}
-                    <div className="lg:col-span-5">
-                        <div className="grid grid-cols-2 gap-3">
+                    {/* Right Panel: KPI Matrix (Condensed) */}
+                    <div className="lg:col-span-5 w-full lg:w-auto">
+                        <div className="grid grid-cols-2 gap-3 max-w-sm mx-auto lg:mx-0">
                             {kpis.map((kpi, i) => (
                                 <div
                                     key={i}
-                                    className={cn(
-                                        "group/kpi relative overflow-hidden rounded-xl p-4 transition-all duration-300 hover:shadow-md border border-white/60",
-                                        "bg-white/50 dark:bg-slate-800/50 backdrop-blur-md hover:bg-white/80 dark:hover:bg-slate-800/80"
-                                    )}
+                                    className="group/kpi relative overflow-hidden rounded-xl p-3 transition-all duration-300 border border-white/10 bg-white/5 backdrop-blur-md hover:bg-white/10"
                                 >
-                                    <div className="relative z-10 flex items-center gap-4">
-                                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shadow-sm shrink-0", kpi.bg)}>
-                                            <Building2 size={18} className={kpi.color} />
+                                    <div className="relative z-10 flex items-center gap-3">
+                                        <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shadow-sm shrink-0", kpi.bg.replace('bg-', 'bg-').replace('50/50', '500/20'))}>
+                                            <Building2 size={16} className={kpi.color.replace('text-', 'text-').replace('600', '400')} />
                                         </div>
                                         <div>
-                                            <p className={cn("text-2xl font-black tracking-tight tabular-nums leading-none", kpi.color)}>
+                                            <p className="text-xl font-black text-white tracking-tight tabular-nums leading-none">
                                                 {kpi.value}
                                             </p>
-                                            <p className="text-[10px] font-bold uppercase tracking-wider text-surface-400 mt-1 truncate">
+                                            <p className="text-[9px] font-bold uppercase tracking-wider text-white/40 mt-1 truncate">
                                                 {kpi.label}
                                             </p>
                                         </div>
@@ -197,7 +191,7 @@ export default function CarriersPage() {
             </div>
 
             {/* Controls Bar */}
-            <div className="premium-glass-card p-2 rounded-2xl flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between sticky top-4 z-10 backdrop-blur-xl">
+            <div className="bg-surface-50/95 dark:bg-slate-900/95 p-2 rounded-2xl flex flex-col sm:flex-row gap-2 items-stretch sm:items-center justify-between sticky top-[64px] z-40 backdrop-blur-3xl shadow-md border border-surface-200 dark:border-slate-800">
                 <div className="flex gap-1 bg-surface-100/50 p-1 rounded-xl overflow-x-auto no-scrollbar">
                     {TABS.map(t => (
                         <button

@@ -511,8 +511,8 @@ export function Sidebar() {
                         ))}
                     </nav>
 
-                    {/* Footer / User / Collapse */}
-                    <div className="border-t border-surface-200 p-4">
+                    {/* Footer / User / Collapse / Watermark */}
+                    <div className="border-t border-surface-200 p-3 flex flex-col gap-3">
                         <button
                             onClick={handleToggleSidebar}
                             className="relative flex items-center justify-center w-full py-2.5 rounded-lg cursor-pointer"
@@ -542,6 +542,18 @@ export function Sidebar() {
                                 </span>
                             )}
                         </button>
+
+                        {/* Elira Watermark */}
+                        {!sidebarCollapsed && (
+                            <div className="flex flex-col items-center justify-center opacity-70 hover:opacity-100 transition-all duration-300 select-none text-center pb-1">
+                                <span className="text-[10px] text-surface-500 font-medium tracking-wide">
+                                    Powered by <strong className="font-bold text-surface-900 dark:text-white">Elira Technologies</strong>
+                                </span>
+                                <span className="text-[8px] font-semibold text-surface-400 mt-1 uppercase tracking-widest">
+                                    &copy; {new Date().getFullYear()} All Rights Reserved
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </aside >

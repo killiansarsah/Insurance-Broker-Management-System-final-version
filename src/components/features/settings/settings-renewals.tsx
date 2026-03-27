@@ -11,9 +11,9 @@ interface RenewalTemplate {
     id: string;
     tenantId: string;
     name: string;
-    daysBeforeExpiry: number;
+    triggerDays: number;
     subject: string;
-    body: string;
+    htmlContent: string;
     isActive: boolean;
 }
 
@@ -60,9 +60,9 @@ export function SettingsRenewals() {
             
             await apiClient.put(`/renewals/templates/${active.id}`, {
                 name: active.name,
-                daysBeforeExpiry: active.daysBeforeExpiry,
+                triggerDays: active.triggerDays,
                 subject: active.subject,
-                body: active.body,
+                htmlContent: active.htmlContent,
                 isActive: active.isActive
             });
             toast.success('Template saved successfully!');
@@ -95,7 +95,7 @@ export function SettingsRenewals() {
                         >
                             <div className="flex items-center gap-2 mb-1">
                                 <Mail size={14} className={activeTemplateIndex === idx ? 'text-primary-600' : 'text-surface-400'} />
-                                <span className={`font-semibold text-sm ${activeTemplateIndex === idx ? 'text-primary-900' : 'text-surface-700'}`}>{tpl.daysBeforeExpiry} Days</span>
+                                <span className={`font-semibold text-sm ${activeTemplateIndex === idx ? 'text-primary-900' : 'text-surface-700'}`}>{tpl.triggerDays} Days</span>
                             </div>
                             <p className="text-xs text-surface-500 truncate">{tpl.name}</p>
                         </div>
@@ -123,10 +123,10 @@ export function SettingsRenewals() {
                                         <label className="text-xs font-semibold text-surface-700 uppercase">Trigger (Days Before)</label>
                                         <Input 
                                             type="number"
-                                            value={activeTemplate.daysBeforeExpiry} 
+                                            value={activeTemplate.triggerDays} 
                                             onChange={(e) => {
                                                 const newTpls = [...templates];
-                                                newTpls[activeTemplateIndex].daysBeforeExpiry = Number(e.target.value);
+                                                newTpls[activeTemplateIndex].triggerDays = Number(e.target.value);
                                                 setTemplates(newTpls);
                                             }} 
                                         />
@@ -149,10 +149,10 @@ export function SettingsRenewals() {
                                     </div>
                                     <textarea 
                                         className="w-full h-64 p-3 rounded-lg border border-surface-200 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 resize-none text-sm"
-                                        value={activeTemplate.body}
+                                        value={activeTemplate.htmlContent}
                                         onChange={(e) => {
                                             const newTpls = [...templates];
-                                            newTpls[activeTemplateIndex].body = e.target.value;
+                                            newTpls[activeTemplateIndex].htmlContent = e.target.value;
                                             setTemplates(newTpls);
                                         }}
                                     />

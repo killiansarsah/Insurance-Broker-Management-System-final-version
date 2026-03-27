@@ -2,6 +2,8 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import { cn } from '@/lib/utils';
 import {
   LayoutDashboard,
   Building2,
@@ -143,29 +145,44 @@ export function SuperAdminSidebar() {
       </nav>
 
       {/* Footer (Collapse & Logout) */}
-      <div className="p-3 border-t space-y-2 shrink-0 flex flex-col" style={{ borderColor: 'var(--sa-border)' }}>
+      <div className="p-3 border-t flex flex-col gap-3 shrink-0" style={{ borderColor: 'var(--sa-border)' }}>
         
         {/* Collapse button */}
         <button
-          onClick={toggleSidebar}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-[var(--sa-bg-sidebar-hover)] sa-btn-hover"
-          style={{ color: 'var(--sa-sidebar-text)' }}
-          title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          onClick={toggleSidebar} // Changed from handleToggle to toggleSidebar to match existing function
+          className="flex items-center justify-center py-2.5 rounded-lg transition-colors cursor-pointer w-full group"
+          style={{ backgroundColor: 'var(--sa-surface)', color: 'var(--sa-text)' }}
+          title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {sidebarCollapsed ? <ChevronRight size={18} className="mx-auto" /> : <ChevronLeft size={18} />}
-          {!sidebarCollapsed && <span className="font-medium text-sm">Collapse Menu</span>}
+          <ChevronLeft 
+            size={18} 
+            className={cn(
+              "transition-transform duration-300 group-hover:text-white", 
+              sidebarCollapsed ? "rotate-180 mx-auto" : ""
+            )} 
+          />
+          {!sidebarCollapsed && <span className="ml-2 font-medium text-sm transition-colors group-hover:text-white">Collapse View</span>}
         </button>
-        
+
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors hover:bg-red-900/20 hover:text-red-400 sa-btn-hover mt-1"
-          style={{ color: 'var(--sa-sidebar-text)' }}
-          title={sidebarCollapsed ? 'Logout' : undefined}
+          className="flex items-center justify-center gap-3 py-2.5 w-full rounded-lg transition-colors text-danger-400 hover:text-danger-300 hover:bg-danger-500/10"
         >
           <LogOut size={18} className={sidebarCollapsed ? 'mx-auto' : ''} />
           {!sidebarCollapsed && <span className="font-medium text-sm">Sign Out</span>}
         </button>
+        {/* Elira Watermark */}
+        {!sidebarCollapsed && (
+            <div className="flex flex-col items-center justify-center pt-1 pb-1 opacity-60 hover:opacity-100 transition-all duration-300 select-none text-center">
+                <span className="text-[10px] font-medium tracking-wide" style={{ color: 'var(--sa-sidebar-text)' }}>
+                    Powered by <strong className="font-bold text-white">Elira Technologies</strong>
+                </span>
+                <span className="text-[8px] font-semibold mt-1 uppercase tracking-widest" style={{ color: 'var(--sa-sidebar-text)', opacity: 0.6 }}>
+                    &copy; {new Date().getFullYear()} All Rights Reserved
+                </span>
+            </div>
+        )}
       </div>
     </aside>
   );

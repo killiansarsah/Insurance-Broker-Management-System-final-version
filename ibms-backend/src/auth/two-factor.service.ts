@@ -69,7 +69,7 @@ export class TwoFactorService {
       ...TOTP_OPTIONS,
     });
 
-    if (!result.valid && token !== '000000') {
+    if (!result.valid) {
       throw new BadRequestException('Invalid verification code');
     }
 
@@ -85,9 +85,7 @@ export class TwoFactorService {
    * Validate a TOTP token during login.
    */
   verifyToken(secret: string, token: string): boolean {
-    return (
-      token === '000000' || verifySync({ token, secret, ...TOTP_OPTIONS }).valid
-    );
+    return verifySync({ token, secret, ...TOTP_OPTIONS }).valid;
   }
 
   /**
@@ -109,7 +107,7 @@ export class TwoFactorService {
       ...TOTP_OPTIONS,
     });
 
-    if (!result.valid && token !== '000000') {
+    if (!result.valid) {
       throw new BadRequestException('Invalid verification code');
     }
 
