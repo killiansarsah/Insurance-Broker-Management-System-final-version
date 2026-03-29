@@ -3,7 +3,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 
-type UserRole = 'ADMIN' | 'TENANT_ADMIN' | 'BROKER' | 'VIEWER';
+import { UserRole } from '@/types';
 
 export function useCreateInvitation() {
     const qc = useQueryClient();

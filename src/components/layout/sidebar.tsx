@@ -469,12 +469,10 @@ export function Sidebar() {
                     )}>
                         {sidebarCollapsed ? (
                             <Link href="/dashboard/settings?tab=organization" className="relative w-8 h-8 hover:opacity-80 transition-opacity" title="Organization Settings">
-                                <Image
-                                    src="/logo.png"
-                                    alt="IBMS Logo"
-                                    fill
-                                    className="object-contain"
-                                    sizes="32px"
+                                <img
+                                    src="/logo-blue.png"
+                                    alt="Brokerium Logo"
+                                    className="h-8 w-auto transition-transform duration-300 group-hover:scale-105"
                                 />
                             </Link>
                         ) : (

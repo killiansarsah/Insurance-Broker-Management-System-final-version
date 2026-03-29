@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Brokerium — Insurance Broker Management for Ghana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+
+:root{
+  --bg:#05110d;
+  --bg2:#081a13;
+  --bg3:#0c2219;
+  --t1:#0f6e56;--t2:#1d9e75;--t3:#5dcaa5;--t4:#9fe1cb;--t5:#c9f0e4;
+  --gold:#d4a853;--gold2:#f0c878;
+  --text:#e8f5f0;--text2:#8ab5a2;--text3:#456b5a;
+  --border:rgba(93,202,165,.1);--border2:rgba(93,202,165,.2);
+  --font:'DM Sans',sans-serif;
+  --display:'Cormorant Garamond',serif;
+  --mono:'DM Mono',monospace;
+}
+
+body{font-family:var(--font);background:var(--bg);color:var(--text);overflow-x:hidden;cursor:none}
+
+/* ── CUSTOM CURSOR ── */
+.cursor{position:fixed;width:10px;height:10px;background:var(--t3);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .1s,width .2s,height .2s,background .2s;mix-blend-mode:screen}
+.cursor-ring{position:fixed;width:36px;height:36px;border:1px solid rgba(93,202,165,.4);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .15s ease-out,width .25s,height .25s,border-color .2s}
+body:has(a:hover) .cursor,.cursor.hover{width:16px;height:16px;background:var(--gold)}
+body:has(a:hover) .cursor-ring,.cursor-ring.hover{width:50px;height:50px;border-color:rgba(212,168,83,.5)}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--t1);border-radius:4px}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.5;
+}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:20px 6vw;display:flex;align-items:center;justify-content:space-between;
+  transition:all .4s ease;
+}
+nav.scrolled{
+  background:rgba(5,17,13,.85);backdrop-filter:blur(16px);
+  padding:14px 6vw;border-bottom:1px solid var(--border);
+}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav-hex{
+  width:38px;height:38px;background:linear-gradient(135deg,var(--t1),var(--t2));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 20px rgba(29,158,117,.4);
+  transition:box-shadow .3s;
+}
+.nav-hex:hover{box-shadow:0 0 32px rgba(29,158,117,.7)}
+.nav-hex svg{width:22px;height:22px}
+.nav-brand{font-family:var(--display);font-size:20px;color:var(--t4);letter-spacing:.02em}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{color:var(--text2);text-decoration:none;font-size:14px;transition:color .2s;letter-spacing:.02em}
+.nav-links a:hover{color:var(--t3)}
+.nav-cta{
+  background:linear-gradient(135deg,var(--t1),var(--t2));
+  color:var(--t5)!important;padding:9px 22px;border-radius:8px;
+  font-weight:500!important;font-size:13.5px!important;
+  box-shadow:0 0 20px rgba(29,158,117,.25);
+  transition:box-shadow .3s,transform .2s!important;
+}
+.nav-cta:hover{box-shadow:0 0 32px rgba(29,158,117,.5)!important;transform:translateY(-1px)!important;color:#fff!important}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{width:22px;height:1.5px;background:var(--text2);border-radius:2px;transition:all .3s}
+.mobile-menu{display:none;position:fixed;inset:0;background:rgba(5,17,13,.96);backdrop-filter:blur(20px);z-index:90;flex-direction:column;align-items:center;justify-content:center;gap:32px}
+.mobile-menu.open{display:flex}
+.mobile-menu a{font-size:28px;font-family:var(--display);color:var(--text2);text-decoration:none;transition:color .2s}
+.mobile-menu a:hover{color:var(--t3)}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;padding:120px 6vw 80px;
+}
+
+/* HEX GRID CANVAS */
+#hexCanvas{position:absolute;inset:0;opacity:.35;pointer-events:none}
+
+/* AMBIENT GLOWS */
+.hero::before{
+  content:'';position:absolute;
+  width:800px;height:800px;border-radius:50%;
+  background:radial-gradient(circle,rgba(29,158,117,.12) 0%,transparent 65%);
+  top:-200px;left:-200px;pointer-events:none;
+  animation:float1 8s ease-in-out infinite;
+}
+.hero::after{
+  content:'';position:absolute;
+  width:600px;height:600px;border-radius:50%;
+  background:radial-gradient(circle,rgba(8,80,65,.15) 0%,transparent 65%);
+  bottom:-100px;right:-100px;pointer-events:none;
+  animation:float2 10s ease-in-out infinite;
+}
+@keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+@keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,-40px)}}
+
+.hero-inner{position:relative;z-index:2;text-align:center;max-width:900px;margin:0 auto}
+
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(29,158,117,.1);border:1px solid rgba(29,158,117,.25);
+  border-radius:30px;padding:7px 18px;font-size:12.5px;color:var(--t3);
+  margin-bottom:32px;
+  animation:fadeDown .8s ease both;
+}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);box-shadow:0 0 8px var(--t3);animation:pulse 2s infinite}
+
+.hero-title{
+  font-family:var(--display);
+  font-size:clamp(48px,8vw,92px);
+  line-height:1.0;
+  color:var(--text);
+  margin-bottom:12px;
+  animation:fadeUp .8s .1s ease both;
+}
+.hero-title em{color:var(--t3);font-style:italic}
+.hero-title .gold{color:var(--gold)}
+
+.hero-sub{
+  font-size:clamp(16px,2vw,20px);
+  color:var(--text2);
+  line-height:1.7;
+  max-width:620px;margin:0 auto 44px;
+  font-weight:300;
+  animation:fadeUp .8s .2s ease both;
+}
+
+.hero-actions{
+  display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+  margin-bottom:72px;
+  animation:fadeUp .8s .3s ease both;
+}
+.btn-primary{
+  background:linear-gradient(135deg,var(--t1) 0%,var(--t2) 100%);
+  color:var(--t5);padding:15px 36px;border-radius:10px;
+  font-size:15px;font-weight:500;text-decoration:none;
+  box-shadow:0 0 32px rgba(29,158,117,.3),0 4px 20px rgba(0,0,0,.4);
+  transition:all .3s;display:inline-flex;align-items:center;gap:9px;
+  position:relative;overflow:hidden;
+}
+.btn-primary::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+  pointer-events:none;
+}
+.btn-primary:hover{box-shadow:0 0 48px rgba(29,158,117,.5),0 8px 32px rgba(0,0,0,.5);transform:translateY(-2px)}
+.btn-primary svg{width:16px;height:16px;transition:transform .2s}
+.btn-primary:hover svg{transform:translateX(4px)}
+
+.btn-secondary{
+  border:1px solid var(--border2);color:var(--text2);
+  padding:15px 32px;border-radius:10px;font-size:15px;
+  text-decoration:none;transition:all .3s;
+  display:inline-flex;align-items:center;gap:9px;
+  background:rgba(255,255,255,.03);
+}
+.btn-secondary:hover{border-color:var(--t3);color:var(--t3);background:rgba(29,158,117,.06)}
+
+/* DASHBOARD MOCKUP FLOAT */
+.hero-mockup{
+  position:relative;z-index:2;
+  animation:fadeUp .9s .4s ease both;
+  perspective:1200px;
+}
+.mockup-wrap{
+  transform:rotateX(8deg) rotateY(-4deg);
+  transform-style:preserve-3d;
+  border-radius:18px;
+  box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 0 1px rgba(93,202,165,.15),0 0 80px rgba(29,158,117,.1);
+  overflow:hidden;
+  transition:transform .5s ease;
+}
+.hero-mockup:hover .mockup-wrap{transform:rotateX(4deg) rotateY(-2deg)}
+.mockup-bar{
+  background:#081a13;border-bottom:1px solid var(--border);
+  padding:12px 16px;display:flex;align-items:center;gap:8px;
+}
+.dot-r{width:10px;height:10px;border-radius:50%;background:#ff6058}
+.dot-y{width:10px;height:10px;border-radius:50%;background:#ffbd2e}
+.dot-g{width:10px;height:10px;border-radius:50%;background:#29c940}
+.mockup-url{flex:1;background:rgba(255,255,255,.05);border-radius:5px;padding:4px 12px;font-size:11px;font-family:var(--mono);color:var(--text3);text-align:center;margin:0 16px}
+.mockup-body{background:#081a13;padding:16px;display:grid;grid-template-columns:140px 1fr;gap:14px;min-height:320px}
+.mockup-sidebar{background:rgba(255,255,255,.02);border-radius:10px;border:1px solid var(--border);padding:14px;display:flex;flex-direction:column;gap:8px}
+.ms-logo{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.ms-hex{width:22px;height:22px;background:linear-gradient(135deg,var(--t1),var(--t2));border-radius:5px}
+.ms-name{font-size:10px;color:var(--t4);font-family:var(--display)}
+.ms-item{height:28px;border-radius:6px;display:flex;align-items:center;gap:7px;padding:0 8px}
+.ms-item.active{background:rgba(29,158,117,.15)}
+.ms-dot{width:10px;height:10px;border-radius:3px;background:var(--border2);flex-shrink:0}
+.ms-dot.teal{background:rgba(29,158,117,.5)}
+.ms-lbl{height:7px;border-radius:3px;background:var(--border);flex:1}
+.ms-lbl.active{background:rgba(93,202,165,.3)}
+.mockup-main{display:flex;flex-direction:column;gap:10px}
+.mockup-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.mc{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:8px;padding:10px}
+.mc-label{height:6px;border-radius:3px;background:var(--border);width:60%;margin-bottom:8px}
+.mc-value{height:18px;border-radius:4px;background:rgba(93,202,165,.25);width:70%}
+.mc-change{height:5px;border-radius:3px;background:rgba(52,211,153,.2);width:45%;margin-top:6px}
+.mockup-chart{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;padding:12px;flex:1}
+.chart-bars{display:flex;align-items:flex-end;gap:5px;height:80px;margin-top:10px}
+.chart-bar{flex:1;border-radius:3px 3px 0 0;background:rgba(29,158,117,.4);transition:height .3s}
+.chart-bar:nth-child(even){background:rgba(93,202,165,.25)}
+.mockup-table{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.mt-row{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.mt-row:last-child{border-bottom:none}
+.mt-av{width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--t1),var(--t2));flex-shrink:0}
+.mt-name{flex:1;height:6px;border-radius:3px;background:var(--border2)}
+.mt-badge{width:40px;height:16px;border-radius:20px;background:rgba(52,211,153,.15);border:1px solid rgba(52,211,153,.25)}
+
+/* SECTION BASE */
+section{position:relative;z-index:1}
+
+/* ── LOGOS / TRUST ── */
+.trust{
+  padding:48px 6vw;border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  text-align:center;
+}
+.trust-label{font-size:12px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px}
+.trust-logos{display:flex;align-items:center;justify-content:center;gap:40px;flex-wrap:wrap}
+.trust-item{
+  font-family:var(--display);font-size:18px;color:var(--text3);
+  opacity:.5;transition:opacity .3s;letter-spacing:.05em;
+}
+.trust-item:hover{opacity:.9;color:var(--t4)}
+.nic-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.2);
+  border-radius:8px;padding:8px 16px;font-size:13px;color:var(--t3);
+  font-family:var(--display);font-size:15px;opacity:.7;
+  transition:opacity .3s;
+}
+.nic-badge:hover{opacity:1}
+.nic-badge svg{width:16px;height:16px}
+
+/* ── SECTION HEADER ── */
+.section-label{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:11.5px;color:var(--t3);letter-spacing:.12em;text-transform:uppercase;
+  margin-bottom:18px;
+}
+.section-label::before,.section-label::after{content:'';display:block;width:24px;height:1px;background:var(--t3);opacity:.5}
+.section-title{
+  font-family:var(--display);font-size:clamp(36px,5vw,58px);
+  line-height:1.1;color:var(--text);margin-bottom:18px;
+}
+.section-title em{font-style:italic;color:var(--t3)}
+.section-sub{font-size:17px;color:var(--text2);line-height:1.7;font-weight:300;max-width:560px}
+
+/* ── PROBLEM SECTION ── */
+.problem{padding:100px 6vw;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.problem-visual{position:relative}
+.pain-cards{display:flex;flex-direction:column;gap:14px}
+.pain-card{
+  background:rgba(248,113,113,.05);border:1px solid rgba(248,113,113,.15);
+  border-radius:12px;padding:18px 20px;display:flex;align-items:flex-start;gap:14px;
+  transform:translateX(0);transition:transform .3s;
+}
+.pain-card:hover{transform:translateX(-4px)}
+.pain-icon{
+  width:36px;height:36px;border-radius:8px;background:rgba(248,113,113,.1);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.pain-icon svg{width:18px;height:18px;color:#f87171}
+.pain-title{font-size:14px;font-weight:500;color:#f87171;margin-bottom:4px}
+.pain-text{font-size:13px;color:var(--text3);line-height:1.6}
+.vs-divider{
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--display);font-size:48px;color:var(--border2);
+  margin:8px 0;
+}
+
+/* ── FEATURES ── */
+.features{padding:100px 6vw;text-align:center}
+.features-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  margin-top:64px;text-align:left;
+}
+.feat-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:28px;position:relative;overflow:hidden;
+  transition:border-color .3s,transform .3s,box-shadow .3s;
+}
+.feat-card::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 200px 200px at top right,rgba(29,158,117,.07),transparent);
+  pointer-events:none;
+}
+.feat-card:hover{
+  border-color:rgba(93,202,165,.35);
+  transform:translateY(-4px);
+  box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 30px rgba(29,158,117,.08);
+}
+.feat-icon{
+  width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(15,110,86,.4),rgba(29,158,117,.2));
+  border:1px solid rgba(29,158,117,.25);
+  display:flex;align-items:center;justify-content:center;margin-bottom:20px;
+}
+.feat-icon svg{width:22px;height:22px;color:var(--t3)}
+.feat-title{font-family:var(--display);font-size:22px;color:var(--text);margin-bottom:10px;line-height:1.2}
+.feat-text{font-size:14px;color:var(--text2);line-height:1.7}
+.feat-tag{
+  display:inline-flex;align-items:center;gap:5px;margin-top:16px;
+  font-size:11.5px;color:var(--t3);
+}
+.feat-tag svg{width:12px;height:12px}
+
+/* ── NIC SECTION ── */
+.nic-section{
+  padding:100px 6vw;
+  background:linear-gradient(180deg,var(--bg) 0%,var(--bg3) 50%,var(--bg) 100%);
+  overflow:hidden;position:relative;
+}
+.nic-section::before{
+  content:'';position:absolute;
+  width:1000px;height:600px;border-radius:50%;
+  background:radial-gradient(ellipse,rgba(29,158,117,.06) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  pointer-events:none;
+}
+.nic-inner{
+  display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;
+  position:relative;z-index:1;
+}
+.nic-checks{display:flex;flex-direction:column;gap:16px;margin-top:36px}
+.nic-check{
+  display:flex;align-items:flex-start;gap:14px;padding:18px 20px;
+  background:rgba(29,158,117,.05);border:1px solid rgba(29,158,117,.12);
+  border-radius:12px;transition:border-color .3s,background .3s;
+}
+.nic-check:hover{border-color:rgba(29,158,117,.3);background:rgba(29,158,117,.09)}
+.nic-check-icon{
+  width:32px;height:32px;border-radius:50%;background:rgba(29,158,117,.15);
+  border:1px solid rgba(29,158,117,.3);display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;margin-top:2px;
+}
+.nic-check-icon svg{width:14px;height:14px;color:var(--t3)}
+.nic-check-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:3px}
+.nic-check-text{font-size:13px;color:var(--text3);line-height:1.6}
+.nic-shield{
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
+}
+.shield-wrap{
+  position:relative;width:280px;height:280px;
+  display:flex;align-items:center;justify-content:center;
+}
+.shield-ring{
+  position:absolute;border-radius:50%;border:1px solid rgba(29,158,117,.15);
+  animation:spin-slow linear infinite;
+}
+.ring1{width:280px;height:280px;animation-duration:30s}
+.ring2{width:220px;height:220px;animation-duration:20s;animation-direction:reverse}
+.ring3{width:160px;height:160px;animation-duration:15s}
+@keyframes spin-slow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.ring1::before,.ring2::before,.ring3::before{
+  content:'';position:absolute;width:8px;height:8px;border-radius:50%;
+  background:var(--t3);box-shadow:0 0 10px var(--t3);
+  top:50%;left:0;transform:translateY(-50%);
+}
+.shield-inner{
+  width:120px;height:120px;background:linear-gradient(135deg,var(--t1),var(--t2));
+  border-radius:30px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 60px rgba(29,158,117,.4);z-index:1;
+}
+.shield-inner svg{width:60px;height:60px;color:#fff;opacity:.9}
+.shield-text{
+  position:absolute;bottom:-50px;left:50%;transform:translateX(-50%);
+  white-space:nowrap;font-family:var(--display);font-size:16px;color:var(--t4);
+  letter-spacing:.05em;
+}
+
+/* ── STATS ── */
+.stats-section{
+  padding:80px 6vw;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px}
+.stat-item{
+  padding:40px;text-align:center;
+  border-right:1px solid var(--border);
+  position:relative;overflow:hidden;
+}
+.stat-item:last-child{border-right:none}
+.stat-item::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 150px 100px at 50% 0%,rgba(29,158,117,.06),transparent);
+  pointer-events:none;
+}
+.stat-num{
+  font-family:var(--display);font-size:clamp(42px,5vw,64px);
+  color:var(--t3);line-height:1;margin-bottom:10px;
+  display:block;
+}
+.stat-label{font-size:14px;color:var(--text2)}
+.stat-sub{font-size:12px;color:var(--text3);margin-top:5px}
+
+/* ── HOW IT WORKS ── */
+.how{padding:100px 6vw;text-align:center}
+.steps-wrap{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+  margin-top:64px;position:relative;
+}
+.steps-wrap::before{
+  content:'';position:absolute;top:40px;left:12.5%;right:12.5%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--border2),var(--border2),var(--border2),transparent);
+}
+.step{padding:20px;position:relative;z-index:1}
+.step-num{
+  width:80px;height:80px;border-radius:50%;margin:0 auto 20px;
+  background:var(--bg2);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;position:relative;
+  transition:border-color .3s,box-shadow .3s;
+}
+.step:hover .step-num{border-color:var(--t3);box-shadow:0 0 30px rgba(93,202,165,.2)}
+.step-num span{
+  font-family:var(--display);font-size:28px;color:var(--t3);
+}
+.step-title{font-family:var(--display);font-size:20px;color:var(--text);margin-bottom:10px}
+.step-text{font-size:13.5px;color:var(--text2);line-height:1.6}
+
+/* ── PRICING ── */
+.pricing{padding:100px 6vw;text-align:center}
+.pricing-toggle{
+  display:inline-flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:30px;
+  padding:6px;margin-bottom:52px;
+}
+.ptog{padding:8px 20px;border-radius:24px;font-size:13.5px;color:var(--text2);cursor:pointer;transition:all .2s;border:none;background:none;font-family:var(--font)}
+.ptog.active{background:var(--t1);color:var(--t5);box-shadow:0 0 15px rgba(29,158,117,.25)}
+.save-badge{font-size:11px;background:rgba(212,168,83,.15);color:var(--gold);border:1px solid rgba(212,168,83,.25);border-radius:20px;padding:2px 8px}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:980px;margin:0 auto}
+.plan-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:18px;
+  padding:32px;text-align:left;position:relative;overflow:hidden;
+  transition:transform .3s,box-shadow .3s,border-color .3s;
+}
+.plan-card:hover{transform:translateY(-6px);box-shadow:0 30px 70px rgba(0,0,0,.4)}
+.plan-card.featured{border-color:rgba(29,158,117,.4);background:linear-gradient(160deg,rgba(15,110,86,.15),var(--bg2))}
+.plan-card.featured:hover{box-shadow:0 30px 70px rgba(0,0,0,.4),0 0 40px rgba(29,158,117,.12)}
+.plan-pop{
+  position:absolute;top:20px;right:20px;
+  background:linear-gradient(135deg,var(--t1),var(--t2));
+  color:var(--t5);font-size:11px;font-weight:500;
+  padding:4px 12px;border-radius:20px;
+}
+.plan-name{font-family:var(--display);font-size:20px;color:var(--text2);margin-bottom:20px}
+.plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
+.plan-price .currency{font-size:16px;color:var(--text3);margin-top:8px}
+.plan-price .amount{font-family:var(--display);font-size:52px;color:var(--text);line-height:1}
+.plan-price .period{font-size:14px;color:var(--text3)}
+.plan-desc{font-size:13.5px;color:var(--text3);margin-bottom:28px;line-height:1.6}
+.plan-divider{height:1px;background:var(--border);margin-bottom:24px}
+.plan-features{display:flex;flex-direction:column;gap:12px;margin-bottom:32px}
+.pf{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--text2)}
+.pf svg{width:16px;height:16px;color:var(--t3);flex-shrink:0}
+.pf.disabled{color:var(--text3);text-decoration:line-through}
+.pf.disabled svg{color:var(--text3)}
+.plan-btn{
+  width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:500;
+  cursor:pointer;border:none;font-family:var(--font);transition:all .25s;
+  text-align:center;display:block;text-decoration:none;
+}
+.plan-btn-outline{background:transparent;border:1px solid var(--border2);color:var(--text2)}
+.plan-btn-outline:hover{border-color:var(--t3);color:var(--t3);background:rgba(29,158,117,.06)}
+.plan-btn-solid{background:linear-gradient(135deg,var(--t1),var(--t2));color:var(--t5);box-shadow:0 0 24px rgba(29,158,117,.25)}
+.plan-btn-solid:hover{box-shadow:0 0 40px rgba(29,158,117,.45);transform:translateY(-1px)}
+
+/* ── TESTIMONIAL ── */
+.testimonials{padding:100px 6vw;text-align:center;overflow:hidden}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:56px}
+.testi-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:16px;
+  padding:28px;text-align:left;transition:border-color .3s,transform .3s;
+}
+.testi-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.testi-stars{display:flex;gap:4px;margin-bottom:16px}
+.star{width:14px;height:14px;color:var(--gold)}
+.testi-text{font-family:var(--display);font-size:16px;color:var(--text2);line-height:1.7;font-style:italic;margin-bottom:20px}
+.testi-author{display:flex;align-items:center;gap:12px}
+.testi-av{
+  width:40px;height:40px;border-radius:50%;
+  background:linear-gradient(135deg,var(--t1),var(--t2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:500;color:var(--t5);flex-shrink:0;
+}
+.testi-name{font-size:13.5px;font-weight:500;color:var(--text)}
+.testi-role{font-size:12px;color:var(--text3)}
+
+/* ── CTA ── */
+.cta-section{
+  padding:100px 6vw;text-align:center;position:relative;overflow:hidden;
+}
+.cta-section::before{
+  content:'';position:absolute;
+  width:700px;height:700px;border-radius:50%;
+  background:radial-gradient(circle,rgba(29,158,117,.1) 0%,transparent 65%);
+  top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;
+}
+.cta-box{
+  background:linear-gradient(135deg,rgba(15,110,86,.2),rgba(8,80,65,.3));
+  border:1px solid rgba(29,158,117,.25);border-radius:24px;
+  padding:70px 40px;max-width:760px;margin:0 auto;position:relative;z-index:1;
+  box-shadow:0 0 80px rgba(29,158,117,.08);
+}
+.cta-title{font-family:var(--display);font-size:clamp(36px,5vw,56px);color:var(--text);margin-bottom:18px;line-height:1.1}
+.cta-title em{color:var(--t3);font-style:italic}
+.cta-sub{font-size:17px;color:var(--text2);margin-bottom:40px;font-weight:300;line-height:1.6}
+.cta-form{display:flex;gap:12px;max-width:440px;margin:0 auto;flex-wrap:wrap;justify-content:center}
+.cta-input{
+  flex:1;min-width:200px;background:rgba(255,255,255,.05);
+  border:1px solid var(--border2);border-radius:10px;
+  padding:14px 18px;font-size:14px;color:var(--text);
+  font-family:var(--font);outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.cta-input::placeholder{color:var(--text3)}
+.cta-input:focus{border-color:var(--t3);box-shadow:0 0 0 3px rgba(93,202,165,.12)}
+.cta-note{font-size:12.5px;color:var(--text3);margin-top:18px}
+.cta-note a{color:var(--t4);text-decoration:none}
+
+/* ── FOOTER ── */
+footer{
+  padding:60px 6vw 40px;
+  border-top:1px solid var(--border);
+}
+.footer-top{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:60px;margin-bottom:56px}
+.footer-brand{max-width:260px}
+.footer-logo{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.footer-desc{font-size:13.5px;color:var(--text3);line-height:1.7;margin-bottom:20px}
+.footer-badges{display:flex;gap:8px;flex-wrap:wrap}
+.fbadge{
+  font-size:11px;padding:4px 10px;border-radius:20px;
+  background:rgba(29,158,117,.08);border:1px solid rgba(29,158,117,.15);color:var(--t3);
+}
+.footer-col h4{font-family:var(--display);font-size:16px;color:var(--text2);margin-bottom:18px}
+.footer-col a{display:block;font-size:13.5px;color:var(--text3);text-decoration:none;margin-bottom:12px;transition:color .2s}
+.footer-col a:hover{color:var(--t3)}
+.footer-bottom{
+  padding-top:24px;border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;
+}
+.footer-copy{font-size:12.5px;color:var(--text3)}
+.footer-links{display:flex;gap:20px}
+.footer-links a{font-size:12.5px;color:var(--text3);text-decoration:none;transition:color .2s}
+.footer-links a:hover{color:var(--t3)}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-left{opacity:0;transform:translateX(-30px);transition:opacity .7s ease,transform .7s ease}
+.reveal-left.visible{opacity:1;transform:translateX(0)}
+.reveal-right{opacity:0;transform:translateX(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal-right.visible{opacity:1;transform:translateX(0)}
+.stagger .reveal:nth-child(1){transition-delay:.05s}
+.stagger .reveal:nth-child(2){transition-delay:.12s}
+.stagger .reveal:nth-child(3){transition-delay:.19s}
+.stagger .reveal:nth-child(4){transition-delay:.26s}
+.stagger .reveal:nth-child(5){transition-delay:.33s}
+.stagger .reveal:nth-child(6){transition-delay:.40s}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeDown{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:1024px){
+  .features-grid{grid-template-columns:repeat(2,1fr)}
+  .pricing-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr 1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .steps-wrap{grid-template-columns:repeat(2,1fr)}
+  .steps-wrap::before{display:none}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .stat-item{border-right:none;border-bottom:1px solid var(--border)}
+  .stat-item:last-child,.stat-item:nth-child(3){border-bottom:none}
+  .problem{grid-template-columns:1fr;gap:50px}
+  .nic-inner{grid-template-columns:1fr;gap:50px}
+  .nic-shield{order:-1}
+}
+@media(max-width:768px){
+  .nav-links{display:none}
+  .hamburger{display:flex}
+  .features-grid{grid-template-columns:1fr}
+  .testi-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr}
+  .steps-wrap{grid-template-columns:1fr}
+  .stats-grid{grid-template-columns:1fr 1fr}
+  .hero-title{font-size:42px}
+  .mockup-body{grid-template-columns:1fr}
+  .mockup-sidebar{display:none}
+  .mockup-cards{grid-template-columns:repeat(2,1fr)}
+  .cursor,.cursor-ring{display:none}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:1fr}
+  .hero-actions{flex-direction:column;align-items:stretch}
+  .btn-primary,.btn-secondary{justify-content:center}
+}
+</style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- HEX CANVAS -->
+<canvas id="hexCanvas"></canvas>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#features" onclick="closeMobile()">Features</a>
+  <a href="#compliance" onclick="closeMobile()">NIC Compliance</a>
+  <a href="#pricing" onclick="closeMobile()">Pricing</a>
+  <a href="#contact" onclick="closeMobile()">Contact</a>
+  <a href="#contact" class="btn-primary" onclick="closeMobile()" style="font-size:18px;padding:14px 36px">Request Demo</a>
+</div>
+
+<!-- NAV -->
+<nav id="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-hex">
+      <svg viewBox="0 0 22 22" fill="none">
+        <polygon points="11,1.5 19.5,6 19.5,16 11,20.5 2.5,16 2.5,6" fill="none" stroke="#9fe1cb" stroke-width="1.2"/>
+        <polygon points="11,5.5 16,8.5 16,13.5 11,16.5 6,13.5 6,8.5" fill="#1d9e75" opacity=".6"/>
+      </svg>
+    </div>
+    <span class="nav-brand">Brokerium</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#compliance">NIC Compliance</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#contact">Contact</a>
+    <a href="#contact" class="nav-cta">Request a Demo</a>
+  </div>
+  <div class="hamburger" onclick="toggleMobile()" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Built for Ghana · NIC Act 1061 Compliant
+    </div>
+    <h1 class="hero-title">
+      Insurance Brokerage,<br/>
+      <em>Finally</em> Under Control
+    </h1>
+    <p class="hero-sub">
+      Brokerium is the only broker management platform built specifically for Ghana's insurance industry — handling clients, policies, claims, renewals, and NIC compliance in one place.
+    </p>
+    <div class="hero-actions">
+      <a href="#contact" class="btn-primary">
+        Start Free Trial
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+      <a href="#features" class="btn-secondary">
+        <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><polygon points="6.5,5 11.5,8 6.5,11"/></svg>
+        See how it works
+      </a>
+    </div>
+
+    <!-- DASHBOARD MOCKUP -->
+    <div class="hero-mockup">
+      <div class="mockup-wrap">
+        <div class="mockup-bar">
+          <div class="dot-r"></div><div class="dot-y"></div><div class="dot-g"></div>
+          <div class="mockup-url">app.brokerium.gh/dashboard</div>
+        </div>
+        <div class="mockup-body">
+          <div class="mockup-sidebar">
+            <div class="ms-logo"><div class="ms-hex"></div><div class="ms-name">Brokerium</div></div>
+            <div class="ms-item active"><div class="ms-dot teal"></div><div class="ms-lbl active"></div></div>
+            <div class="ms-item"><div class="ms-dot"></div><div class="ms-lbl"></div></div>
+            <div class="ms-item"><div class="ms-dot"></div><div class="ms-lbl"></div></div>
+            <div class="ms-item"><div class="ms-dot"></div><div class="ms-lbl"></div></div>
+            <div class="ms-item"><div class="ms-dot"></div><div class="ms-lbl"></div></div>
+            <div class="ms-item"><div class="ms-dot"></div><div class="ms-lbl"></div></div>
+          </div>
+          <div class="mockup-main">
+            <div class="mockup-cards">
+              <div class="mc"><div class="mc-label"></div><div class="mc-value"></div><div class="mc-change"></div></div>
+              <div class="mc"><div class="mc-label"></div><div class="mc-value" style="background:rgba(96,165,250,.25)"></div><div class="mc-change" style="background:rgba(96,165,250,.15)"></div></div>
+              <div class="mc"><div class="mc-label"></div><div class="mc-value" style="background:rgba(251,191,36,.2)"></div><div class="mc-change"></div></div>
+              <div class="mc"><div class="mc-label"></div><div class="mc-value" style="background:rgba(52,211,153,.2)"></div><div class="mc-change"></div></div>
+            </div>
+            <div class="mockup-chart">
+              <div class="mc-label" style="width:40%;margin-bottom:0"></div>
+              <div class="chart-bars" id="mockBars"></div>
+            </div>
+            <div class="mockup-table">
+              <div class="mt-row"><div class="mt-av"></div><div class="mt-name"></div><div class="mt-badge"></div></div>
+              <div class="mt-row"><div class="mt-av" style="background:linear-gradient(135deg,#185fa5,#60a5fa)"></div><div class="mt-name"></div><div class="mt-badge" style="background:rgba(251,191,36,.15);border-color:rgba(251,191,36,.25)"></div></div>
+              <div class="mt-row"><div class="mt-av" style="background:linear-gradient(135deg,#633806,#fbbf24)"></div><div class="mt-name"></div><div class="mt-badge"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust">
+  <div class="trust-label">Designed for Ghanaian insurance brokers</div>
+  <div class="trust-logos">
+    <div class="nic-badge">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 4.5V9c0 3.6 2.9 6.8 7 8 4.1-1.2 7-4.4 7-8V4.5L8 1z"/></svg>
+      NIC Compliant
+    </div>
+    <div class="trust-item">Enterprise Insurance</div>
+    <div class="trust-item">Hollard Ghana</div>
+    <div class="trust-item">Allianz Insurance</div>
+    <div class="trust-item">StarLife Assurance</div>
+    <div class="trust-item">SIC Insurance</div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="problem reveal" id="features">
+  <div class="reveal-left">
+    <div class="section-label">The Problem</div>
+    <h2 class="section-title">Running your brokerage on<br/><em>Excel is costing you</em></h2>
+    <p class="section-sub">Ghanaian brokers lose thousands in missed renewals, NIC penalties, and messy commission tracking every month — all because of outdated tools.</p>
+    <div style="margin-top:36px">
+      <a href="#pricing" class="btn-primary" style="font-size:14px;padding:13px 28px;display:inline-flex">
+        Fix it with Brokerium
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="reveal-right">
+    <div class="pain-cards">
+      <div class="pain-card">
+        <div class="pain-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M2 2h12v12H2V2zm3 3v6m3-4v4m3-2v2"/></svg></div>
+        <div><div class="pain-title">Policies scattered in Excel</div><div class="pain-text">Hours wasted searching for client records, duplicate entries, version control chaos. No single source of truth.</div></div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 3v4.5l3 1.5"/></svg></div>
+        <div><div class="pain-title">Renewals missed, clients lost</div><div class="pain-text">No automated reminders means policies lapse, clients go to competitors, and your reputation suffers.</div></div>
+      </div>
+      <div class="pain-card">
+        <div class="pain-icon"><svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 14h14L8 1zm-.75 5h1.5v4h-1.5V6zm0 5h1.5v1.5h-1.5V11z"/></svg></div>
+        <div><div class="pain-title">NIC compliance stress</div><div class="pain-text">Manual remittance tracking, missed levy deadlines, licence expiry panic. One mistake risks your NIC registration.</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <div class="reveal">
+    <div class="section-label">What Brokerium Does</div>
+    <h2 class="section-title">Everything your brokerage<br/><em>needs to thrive</em></h2>
+  </div>
+  <div class="features-grid stagger">
+    <div class="feat-card reveal">
+      <div class="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M4 4h14a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm4 4H6v2h2V8zm0 4H6v2h2v-2zm4-4h-2v2h2V8zm0 4h-2v2h2v-2zm4-4h-2v2h2V8z"/></svg></div>
+      <div class="feat-title">Policy Management</div>
+      <div class="feat-text">Create, manage, and track every policy across all lines — Motor, Fire, Marine, Life, and more. Full policy lifecycle from placement to expiry.</div>
+      <div class="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>All policy classes supported</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M11 2a9 9 0 100 18A9 9 0 0011 2zm0 3v5.5l3.5 2"/></svg></div>
+      <div class="feat-title">Automated Renewals</div>
+      <div class="feat-text">Never miss a renewal again. Brokerium sends automatic reminders to your clients 90, 60, and 30 days before expiry — via email and SMS.</div>
+      <div class="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Zero policies lapse on your watch</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M11 2L2 7v8l9 5 9-5V7l-9-5zm0 3l6 3.3v5.4L11 17l-6-3.3V8.3L11 5z"/></svg></div>
+      <div class="feat-title">Claims Pipeline</div>
+      <div class="feat-text">7-stage claims lifecycle from intimation to closure. Track every claim in real-time, upload documents, and keep clients informed at every step.</div>
+      <div class="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Intimate → Investigate → Settle</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M4 4h6v6H4V4zm8 0h6v6h-6V4zm-8 8h6v6H4v-6zm8 3h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/></svg></div>
+      <div class="feat-title">Client Management</div>
+      <div class="feat-text">Full CRM for your clients — individual and corporate. KYC documents, contact history, policy portfolio, claims history, all in one clean profile.</div>
+      <div class="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>KYC/AML built in</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M3 3h16v2H3V3zm2 4h12v2H5V7zm-2 4h16v2H3v-2zm2 4h12v2H5v-2z"/></svg></div>
+      <div class="feat-title">Commission Tracking</div>
+      <div class="feat-text">Automatic commission calculation with Ghana's NIC levy and withholding tax already baked in. Know exactly what you're owed, every month.</div>
+      <div class="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>VLOOKUP-free forever</div>
+    </div>
+    <div class="feat-card reveal">
+      <div class="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M3 5h16v14H3V5zm3-3h10v2H6V2zM7 9h8v2H7V9zm0 4h5v2H7v-2z"/></svg></div>
+      <div class="feat-title">Reports & Exports</div>
+      <div class="feat-text">One-click NIC compliance reports, premium remittance summaries, and business performance dashboards. Export to PDF or Excel, ready to submit.</div>
+      <div class="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>NIC-ready PDFs included</div>
+    </div>
+  </div>
+</section>
+
+<!-- NIC COMPLIANCE -->
+<section class="nic-section" id="compliance">
+  <div class="nic-inner">
+    <div>
+      <div class="section-label reveal">NIC Act 1061 · 2021</div>
+      <h2 class="section-title reveal">Built around<br/><em>Ghana's regulations</em></h2>
+      <p class="section-sub reveal">We studied the Insurance Act 2021 (Act 1061) so you don't have to stress about it. Brokerium enforces the rules automatically.</p>
+      <div class="nic-checks">
+        <div class="nic-check reveal">
+          <div class="nic-check-icon"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div><div class="nic-check-title">30-Day Premium Remittance Rule</div><div class="nic-check-text">Automatic remittance tracking and reminders ensure you never breach the 30-day window — protecting your NIC registration.</div></div>
+        </div>
+        <div class="nic-check reveal">
+          <div class="nic-check-icon"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div><div class="nic-check-title">Two-Account Premium Segregation</div><div class="nic-check-text">Premium trust account and operating account kept separate at all times. Brokerium enforces this by design, not by reminder.</div></div>
+        </div>
+        <div class="nic-check reveal">
+          <div class="nic-check-icon"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div><div class="nic-check-title">NIC Licence Expiry Monitoring</div><div class="nic-check-text">90, 60, and 30-day alerts before your NIC broker licence expires. Never get caught operating with an expired licence.</div></div>
+        </div>
+        <div class="nic-check reveal">
+          <div class="nic-check-icon"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg></div>
+          <div><div class="nic-check-title">KYC/AML Client Verification</div><div class="nic-check-text">Built-in KYC checklist and AML status tracking for every client. Stay compliant with Ghana's anti-money laundering regulations.</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="nic-shield reveal">
+      <div class="shield-wrap">
+        <div class="shield-ring ring1"></div>
+        <div class="shield-ring ring2"></div>
+        <div class="shield-ring ring3"></div>
+        <div class="shield-inner">
+          <svg viewBox="0 0 60 60" fill="none">
+            <path d="M30 5L8 15v18c0 12 9.6 22.6 22 26 12.4-3.4 22-14 22-26V15L30 5z" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.6)" stroke-width="1.5"/>
+            <polyline points="20,30 27,37 42,22" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="shield-text">NIC Act 1061 Compliant</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-item reveal">
+      <span class="stat-num" data-target="99" data-suffix="%">0%</span>
+      <div class="stat-label">NIC compliance rate</div>
+      <div class="stat-sub">Across all active tenants</div>
+    </div>
+    <div class="stat-item reveal">
+      <span class="stat-num" data-target="3" data-prefix="" data-suffix="min">0</span>
+      <div class="stat-label">Average onboarding time</div>
+      <div class="stat-sub">From signup to first policy</div>
+    </div>
+    <div class="stat-item reveal">
+      <span class="stat-num" data-target="0" data-suffix="" data-special="ghsmrr">0</span>
+      <div class="stat-label">Policies under management</div>
+      <div class="stat-sub">And growing every week</div>
+    </div>
+    <div class="stat-item reveal">
+      <span class="stat-num" data-target="30" data-suffix="days">0</span>
+      <div class="stat-label">Free trial — no card needed</div>
+      <div class="stat-sub">Full access from day one</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="reveal">
+    <div class="section-label">Simple Setup</div>
+    <h2 class="section-title">Up and running in<br/><em>under an hour</em></h2>
+  </div>
+  <div class="steps-wrap stagger">
+    <div class="step reveal">
+      <div class="step-num"><span>1</span></div>
+      <div class="step-title">Request access</div>
+      <div class="step-text">Fill in your company name, NIC licence number and email. We provision your account within one business day.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num"><span>2</span></div>
+      <div class="step-title">Set up your team</div>
+      <div class="step-text">Invite your staff, set roles and permissions. Import your existing clients and policies from Excel in minutes.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num"><span>3</span></div>
+      <div class="step-title">Go live</div>
+      <div class="step-text">Start placing policies, tracking renewals, and managing claims. Your NIC compliance dashboard is live from day one.</div>
+    </div>
+    <div class="step reveal">
+      <div class="step-num"><span>4</span></div>
+      <div class="step-title">Grow confidently</div>
+      <div class="step-text">Scale your team, add more policies, and never worry about compliance again. We grow with you.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing" id="pricing">
+  <div class="reveal">
+    <div class="section-label">Transparent Pricing</div>
+    <h2 class="section-title">Simple plans for every<br/><em>size of brokerage</em></h2>
+  </div>
+  <div class="reveal">
+    <div class="pricing-toggle">
+      <button class="ptog active" onclick="setToggle(this,'monthly')">Monthly</button>
+      <button class="ptog" onclick="setToggle(this,'annual')">Annual <span class="save-badge">Save 20%</span></button>
+    </div>
+  </div>
+  <div class="pricing-grid">
+    <div class="plan-card reveal">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">
+        <span class="currency">GHS</span>
+        <span class="amount" id="price1">500</span>
+        <span class="period">/ month</span>
+      </div>
+      <div class="plan-desc">Perfect for small brokers just getting started with digital management.</div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Up to 5 staff users</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Client & policy management</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Automated renewal reminders</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>NIC compliance dashboard</div>
+        <div class="pf disabled"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Claims module</div>
+        <div class="pf disabled"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Advanced analytics</div>
+      </div>
+      <a href="#contact" class="plan-btn plan-btn-outline">Get started free</a>
+    </div>
+
+    <div class="plan-card featured reveal">
+      <div class="plan-pop">Most Popular</div>
+      <div class="plan-name">Professional</div>
+      <div class="plan-price">
+        <span class="currency">GHS</span>
+        <span class="amount" id="price2">1,000</span>
+        <span class="period">/ month</span>
+      </div>
+      <div class="plan-desc">The complete platform for growing brokerages that need everything working together.</div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Up to 20 staff users</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Everything in Starter</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Full claims pipeline</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>NIC PDF report export</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Bulk data import (Excel)</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Commission tracking</div>
+      </div>
+      <a href="#contact" class="plan-btn plan-btn-solid">Start 30-day free trial</a>
+    </div>
+
+    <div class="plan-card reveal">
+      <div class="plan-name">Enterprise</div>
+      <div class="plan-price">
+        <span class="currency">GHS</span>
+        <span class="amount" id="price3">1,450</span>
+        <span class="period">/ month</span>
+      </div>
+      <div class="plan-desc">For large brokerages that need unlimited scale, custom branding, and priority support.</div>
+      <div class="plan-divider"></div>
+      <div class="plan-features">
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Unlimited users</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Everything in Professional</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Custom branding</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Advanced analytics</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>API access</div>
+        <div class="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" stroke-width="2"/></svg>Dedicated support</div>
+      </div>
+      <a href="#contact" class="plan-btn plan-btn-outline">Contact us</a>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonials">
+  <div class="reveal">
+    <div class="section-label">Early Adopters</div>
+    <h2 class="section-title">Brokers who made<br/><em>the switch</em></h2>
+  </div>
+  <div class="testi-grid stagger">
+    <div class="testi-card reveal">
+      <div class="testi-stars">
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+      </div>
+      <div class="testi-text">"We were running three Excel workbooks and a WhatsApp group to manage our policies. Brokerium replaced all of it in one week. The NIC remittance tracker alone saved us from a compliance penalty."</div>
+      <div class="testi-author">
+        <div class="testi-av">KA</div>
+        <div><div class="testi-name">Kwame Asante</div><div class="testi-role">MD, Asante Risk Brokers · Accra</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal">
+      <div class="testi-stars">
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+      </div>
+      <div class="testi-text">"The renewals module is incredible. It automatically sends reminders to clients and I can see the whole pipeline — which policies are renewing this month, which are at risk. We haven't lost a renewal since."</div>
+      <div class="testi-author">
+        <div class="testi-av" style="background:linear-gradient(135deg,#185fa5,#60a5fa)">AO</div>
+        <div><div class="testi-name">Ama Owusu</div><div class="testi-role">Operations Manager, PrimeSure Brokers</div></div>
+      </div>
+    </div>
+    <div class="testi-card reveal">
+      <div class="testi-stars">
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+        <svg class="star" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1l1.8 3.6L14 5.4l-3 2.9.7 4.1L8 10.4l-3.7 1.9.7-4.1-3-2.9 4.2-.8z"/></svg>
+      </div>
+      <div class="testi-text">"As a large brokerage, our main concern was importing 6 years of policy data. The Excel import tool handled it cleanly. We were fully live in 4 days. The NIC report PDF is exactly what the commission wants to see."</div>
+      <div class="testi-author">
+        <div class="testi-av" style="background:linear-gradient(135deg,#633806,#d4a853)">YB</div>
+        <div><div class="testi-name">Yaw Boateng</div><div class="testi-role">CEO, Apex Insurance Brokers · Kumasi</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-box reveal">
+    <div class="section-label" style="justify-content:center">Start Today</div>
+    <div class="cta-title">Ready to modernise<br/><em>your brokerage?</em></div>
+    <p class="cta-sub">Join the first wave of Ghanaian brokers on Brokerium.<br/>30 days free. No credit card. Cancel anytime.</p>
+    <div class="cta-form">
+      <input class="cta-input" type="email" placeholder="Your work email address" id="ctaEmail"/>
+      <button class="btn-primary" onclick="submitDemo()" style="padding:14px 28px;font-size:14.5px;white-space:nowrap">
+        Request Demo
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+      </button>
+    </div>
+    <p class="cta-note">Or call us directly: <a href="tel:+233000000000">+233 XX XXX XXXX</a> · <a href="mailto:hello@brokerium.gh">hello@brokerium.gh</a></p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <div class="nav-hex" style="width:32px;height:32px;border-radius:8px">
+          <svg viewBox="0 0 22 22" fill="none" width="18" height="18">
+            <polygon points="11,1.5 19.5,6 19.5,16 11,20.5 2.5,16 2.5,6" fill="none" stroke="#9fe1cb" stroke-width="1.2"/>
+            <polygon points="11,5.5 16,8.5 16,13.5 11,16.5 6,13.5 6,8.5" fill="#1d9e75" opacity=".6"/>
+          </svg>
+        </div>
+        <span style="font-family:var(--display);font-size:18px;color:var(--t4)">Brokerium</span>
+      </div>
+      <p class="footer-desc">The Insurance Broker Management System built for Ghana's regulated insurance market. NIC Act 1061 compliant from day one.</p>
+      <div class="footer-badges">
+        <span class="fbadge">NIC Compliant</span>
+        <span class="fbadge">IBMS</span>
+        <span class="fbadge">Made in Ghana</span>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#compliance">NIC Compliance</a>
+      <a href="#contact">Request Demo</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#">About</a>
+      <a href="#">Blog</a>
+      <a href="#">Careers</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Data Processing</a>
+      <a href="#">Cookie Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span class="footer-copy">© 2026 Brokerium. All rights reserved. Built in Ghana 🇬🇭</span>
+    <div class="footer-links">
+      <a href="#">Twitter</a>
+      <a href="#">LinkedIn</a>
+      <a href="#">WhatsApp</a>
+    </div>
+  </div>
+</footer>
+
+<!-- SUCCESS TOAST -->
+<div id="successToast" style="display:none;position:fixed;bottom:24px;right:24px;z-index:999;background:var(--bg2);border:1px solid rgba(29,158,117,.35);border-radius:14px;padding:16px 22px;font-size:13.5px;color:var(--text);box-shadow:0 8px 40px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease;max-width:320px">
+  <div style="width:8px;height:8px;border-radius:50%;background:var(--t3);box-shadow:0 0 8px var(--t3);flex-shrink:0"></div>
+  <span>Demo request received! We'll contact you within 24 hours.</span>
+</div>
+
+<script>
+/* ── CURSOR ── */
+const cursor=document.getElementById('cursor'),ring=document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY;cursor.style.left=mx+'px';cursor.style.top=my+'px'});
+(function animRing(){rx+=(mx-rx)*.12;ry+=(my-ry)*.12;ring.style.left=rx+'px';ring.style.top=ry+'px';requestAnimationFrame(animRing)})();
+document.querySelectorAll('a,button,.feat-card,.plan-card,.nic-check').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cursor.classList.add('hover');ring.classList.add('hover')});
+  el.addEventListener('mouseleave',()=>{cursor.classList.remove('hover');ring.classList.remove('hover')});
+});
+
+/* ── HEX CANVAS ── */
+const canvas=document.getElementById('hexCanvas');
+const ctx=canvas.getContext('2d');
+let W,H,hexes=[];
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;buildHexes()}
+function buildHexes(){
+  hexes=[];const size=36,cols=Math.ceil(W/(size*1.75))+2,rows=Math.ceil(H/(size*2))+2;
+  for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){
+    const x=c*size*1.75+(r%2)*size*.875,y=r*size*1.5;
+    hexes.push({x,y,size,alpha:Math.random()*.4,phase:Math.random()*Math.PI*2,speed:.003+Math.random()*.004});
+  }}
+}
+function drawHex(x,y,s,a){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){const ang=Math.PI/180*60*i-Math.PI/6;ctx.lineTo(x+s*Math.cos(ang),y+s*Math.sin(ang))}
+  ctx.closePath();ctx.strokeStyle=`rgba(29,158,117,${a})`;ctx.lineWidth=.6;ctx.stroke();
+}
+let frame=0;
+(function animate(){
+  ctx.clearRect(0,0,W,H);frame++;
+  hexes.forEach(h=>{h.phase+=h.speed;const a=h.alpha*(0.4+0.6*Math.sin(h.phase));drawHex(h.x,h.y,h.size,a)});
+  requestAnimationFrame(animate);
+})();
+window.addEventListener('resize',resize);resize();
+
+/* ── NAV SCROLL ── */
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled',window.scrollY>50);
+});
+
+/* ── MOBILE MENU ── */
+function toggleMobile(){
+  const m=document.getElementById('mobileMenu'),h=document.getElementById('hamburger');
+  m.classList.toggle('open');
+  document.body.style.overflow=m.classList.contains('open')?'hidden':'';
+  const spans=h.querySelectorAll('span');
+  if(m.classList.contains('open')){
+    spans[0].style.transform='rotate(45deg) translate(4px,4.5px)';
+    spans[1].style.opacity='0';
+    spans[2].style.transform='rotate(-45deg) translate(4px,-4.5px)';
+  }else{spans.forEach(s=>{s.style.transform='';s.style.opacity=''})}
+}
+function closeMobile(){
+  document.getElementById('mobileMenu').classList.remove('open');
+  document.body.style.overflow='';
+  document.getElementById('hamburger').querySelectorAll('span').forEach(s=>{s.style.transform='';s.style.opacity=''});
+}
+
+/* ── MOCK BARS ── */
+const heights=[45,62,38,78,55,90,42,70,58,85,65,95];
+document.getElementById('mockBars').innerHTML=heights.map(h=>`<div class="chart-bar" style="height:${h}%"></div>`).join('');
+
+/* ── SCROLL REVEAL ── */
+const observer=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}});
+},{threshold:.12,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>observer.observe(el));
+
+/* ── COUNTER ANIMATION ── */
+function animateCounter(el){
+  const target=parseInt(el.dataset.target)||0;
+  const suffix=el.dataset.suffix||'';
+  const prefix=el.dataset.prefix||'';
+  const special=el.dataset.special;
+  if(special==='ghsmrr'){el.textContent='10,000+';return}
+  const dur=1600,start=Date.now();
+  function tick(){
+    const p=Math.min((Date.now()-start)/dur,1);
+    const ease=1-Math.pow(1-p,3);
+    const val=Math.round(ease*target);
+    el.textContent=prefix+val.toLocaleString()+suffix;
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+const statObserver=new IntersectionObserver(entries=>{
+  entries.forEach(e=>{if(e.isIntersecting){animateCounter(e.target);statObserver.unobserve(e.target)}});
+},{threshold:.5});
+document.querySelectorAll('.stat-num').forEach(el=>statObserver.observe(el));
+
+/* ── PRICING TOGGLE ── */
+const prices={monthly:[500,1000,1450],annual:[400,800,1160]};
+let currentBilling='monthly';
+function setToggle(el,type){
+  document.querySelectorAll('.ptog').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');currentBilling=type;
+  const p=prices[type];
+  ['price1','price2','price3'].forEach((id,i)=>{
+    const el2=document.getElementById(id);
+    if(el2){el2.style.transform='scale(.8)';el2.style.opacity='0';
+      setTimeout(()=>{el2.textContent=p[i].toLocaleString();el2.style.transition='all .25s';el2.style.transform='scale(1)';el2.style.opacity='1'},150);
+    }
+  });
+}
+
+/* ── DEMO SUBMIT ── */
+function submitDemo(){
+  const email=document.getElementById('ctaEmail').value;
+  if(!email||!email.includes('@')){document.getElementById('ctaEmail').style.borderColor='var(--red)';return}
+  document.getElementById('ctaEmail').style.borderColor='var(--t3)';
+  const toast=document.getElementById('successToast');
+  toast.style.display='flex';
+  setTimeout(()=>toast.style.display='none',5000);
+}
+
+/* ── PARALLAX HERO ── */
+window.addEventListener('scroll',()=>{
+  const y=window.scrollY;
+  const hero=document.querySelector('.hero-inner');
+  if(hero)hero.style.transform=`translateY(${y*.15}px)`;
+});
+</script>
+</body>
+</html>

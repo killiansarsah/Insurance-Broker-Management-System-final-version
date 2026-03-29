@@ -170,7 +170,7 @@ export class TenantManagementController {
     const tempPassword = Math.random().toString(36).slice(-10) + 'A1!';
     const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-    await this.prisma.user.create({
+    const adminUser = await this.prisma.user.create({
       data: {
         tenantId: tenant.id,
         email: body.adminEmail,
@@ -178,10 +178,44 @@ export class TenantManagementController {
         firstName: body.adminFirstName,
         lastName: body.adminLastName,
         phone: body.adminPhone ?? null,
-        role: 'TENANT_ADMIN',
         mustChangePassword: true,
       },
     });
+
+    // Auto-provision: clone system roles to tenant scope for future customization
+    const systemRoles = await this.prisma.role.findMany({
+      where: { tenantId: null, isSystem: true },
+      include: { permissions: { select: { permissionId: true } } },
+    });
+    for (const sysRole of systemRoles) {
+      const tenantRole = await this.prisma.role.create({
+        data: {
+          tenantId: tenant.id,
+          name: sysRole.name,
+          description: sysRole.description,
+          isSystem: false,
+        },
+      });
+      // Copy permission mappings
+      if (sysRole.permissions.length > 0) {
+        await this.prisma.rolePermission.createMany({
+          data: sysRole.permissions.map((rp) => ({
+            roleId: tenantRole.id,
+            permissionId: rp.permissionId,
+          })),
+        });
+      }
+    }
+
+    // Assign ADMINISTRATOR role to the new tenant's admin user
+    const adminRole = await this.prisma.role.findFirst({
+      where: { name: 'ADMINISTRATOR', tenantId: tenant.id },
+    });
+    if (adminRole) {
+      await this.prisma.userRoleMapping.create({
+        data: { userId: adminUser.id, roleId: adminRole.id },
+      });
+    }
 
     // Create subscription
     const now = new Date();

@@ -16,12 +16,11 @@ interface AddStaffModalProps {
 }
 
 const roleOptions = [
-    { label: 'Broker', value: 'broker' },
-    { label: 'Senior Broker', value: 'senior_broker' },
-    { label: 'Branch Manager', value: 'branch_manager' },
-    { label: 'Tenant Admin', value: 'tenant_admin' },
-    { label: 'Secretary', value: 'secretary' },
-    { label: 'Data Entry', value: 'data_entry' },
+    { label: 'Workspace Owner', value: 'WORKSPACE_OWNER' },
+    { label: 'Administrator', value: 'ADMINISTRATOR' },
+    { label: 'Manager', value: 'MANAGER' },
+    { label: 'Supervisor', value: 'SUPERVISOR' },
+    { label: 'Agent', value: 'AGENT' },
 ];
 
 const branchOptions = [
@@ -35,7 +34,7 @@ export function AddStaffModal({ isOpen, onClose, onAdd }: AddStaffModalProps) {
         lastName: '',
         email: '',
         phone: '',
-        role: 'broker' as UserRole,
+        role: 'AGENT' as UserRole,
         branchId: 'BR-ACC-01',
     });
 
@@ -58,7 +57,7 @@ export function AddStaffModal({ isOpen, onClose, onAdd }: AddStaffModalProps) {
             lastName: '',
             email: '',
             phone: '',
-            role: 'BROKER',
+            role: 'AGENT',
             branchId: 'BR-ACC-01',
         });
     };

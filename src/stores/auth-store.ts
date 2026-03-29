@@ -24,6 +24,13 @@ interface AuthState {
 }
 
 const ROLE_HIERARCHY: Record<UserRole, number> = {
+    // New 5-tier system roles
+    WORKSPACE_OWNER: 8,
+    ADMINISTRATOR: 7,
+    MANAGER: 5,
+    SUPERVISOR: 4,
+    AGENT: 2,
+    // Legacy role names (backward compatibility)
     PLATFORM_SUPER_ADMIN: 8,
     SUPER_ADMIN: 7,
     TENANT_ADMIN: 6,
@@ -34,13 +41,35 @@ const ROLE_HIERARCHY: Record<UserRole, number> = {
     SENIOR_BROKER: 4,
     BROKER: 3,
     UNDERWRITER: 3,
-    AGENT: 2,
     SECRETARY: 2,
     DATA_ENTRY: 2,
     VIEWER: 1,
 };
 
 const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
+    WORKSPACE_OWNER: { '*': ['*'] },
+    ADMINISTRATOR: { '*': ['*'] },
+    MANAGER: {
+        clients: ['view', 'create', 'edit'],
+        policies: ['view', 'create', 'edit'],
+        claims: ['view', 'create', 'edit'],
+        complaints: ['view', 'create', 'edit'],
+        leads: ['view', 'create', 'edit'],
+        reports: ['view', 'export'],
+        settings: ['view'],
+        chat: ['view', 'send'],
+        documents: ['view', 'upload'],
+        compliance: ['view'],
+    },
+    SUPERVISOR: {
+        clients: ['view'],
+        policies: ['view'],
+        claims: ['view'],
+        complaints: ['view', 'create', 'edit'],
+        compliance: ['view', 'edit'],
+        reports: ['view', 'export'],
+        documents: ['view', 'upload'],
+    },
     PLATFORM_SUPER_ADMIN: { '*': ['*'] },
     SUPER_ADMIN: { '*': ['*'] },
     TENANT_ADMIN: {
@@ -281,22 +310,30 @@ export const useAuthStore = create<AuthState>()(
             hasRole: (roles: UserRole[]) => {
                 const user = get().user;
                 if (!user) return false;
-                if (user.role === 'SUPER_ADMIN' || user.role === 'PLATFORM_SUPER_ADMIN') return true;
-                return roles.includes(user.role);
+                // Check both new and legacy admin role names
+                const adminRoles: UserRole[] = ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'SUPER_ADMIN', 'PLATFORM_SUPER_ADMIN'];
+                if (adminRoles.includes(user.role)) return true;
+                // Also check the roles array for multi-role support
+                if (user.roles?.some((r) => adminRoles.includes(r as UserRole))) return true;
+                return roles.includes(user.role) || user.roles?.some((r) => roles.includes(r as UserRole)) || false;
             },
 
             hasPermission: (module: string, action: string) => {
                 const user = get().user;
                 if (!user) return false;
 
+                // New system: check JWT-delivered permissions array
+                if (user.permissions && user.permissions.length > 0) {
+                    const required = `${module}:${action}`;
+                    return user.permissions.includes(required) || user.permissions.includes('*:*');
+                }
+
+                // Fallback: legacy static PERMISSIONS map
                 const rolePerms = PERMISSIONS[user.role];
                 if (!rolePerms) return false;
-
                 if (rolePerms['*']?.includes('*')) return true;
-
                 const modulePerms = rolePerms[module];
                 if (!modulePerms) return false;
-
                 return modulePerms.includes(action);
             },
         }),

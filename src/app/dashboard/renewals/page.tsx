@@ -518,7 +518,7 @@ export default function RenewalsPage() {
     const brokerOptions = useMemo(() => {
         const users = Array.isArray(usersData) ? usersData : (usersData as any)?.data ?? [];
         return users
-            .filter((u: any) => u.role === 'BROKER' || u.role === 'ADMIN' || u.role === 'TENANT_ADMIN')
+            .filter((u: any) => ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'MANAGER', 'SUPERVISOR', 'AGENT', 'BROKER', 'ADMIN', 'TENANT_ADMIN'].includes(u.role))
             .map((u: any) => ({ value: u.id, label: `${u.firstName} ${u.lastName}` }));
     }, [usersData]);
 

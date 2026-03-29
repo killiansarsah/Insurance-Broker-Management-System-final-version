@@ -300,6 +300,7 @@ export class InvitationsService {
 
     const passwordHash = await bcrypt.hash(dto.password, PASSWORD_HASH_COST);
 
+    // Create user without legacy role field
     const user = await this.prisma.user.create({
       data: {
         tenantId: invitation.tenantId,
@@ -307,12 +308,25 @@ export class InvitationsService {
         passwordHash,
         firstName: dto.firstName,
         lastName: dto.lastName,
-        role: invitation.role as Parameters<
-          typeof this.prisma.user.create
-        >[0]['data']['role'],
         branchId: invitation.branchId,
       },
     });
+
+    // Assign role via UserRoleMapping
+    const assignedRole = await this.prisma.role.findFirst({
+      where: {
+        name: invitation.role,
+        OR: [
+          { tenantId: invitation.tenantId },
+          { tenantId: null, isSystem: true },
+        ],
+      },
+    });
+    if (assignedRole) {
+      await this.prisma.userRoleMapping.create({
+        data: { userId: user.id, roleId: assignedRole.id },
+      });
+    }
 
     await this.prisma.invitation.update({
       where: { id: invitation.id },
@@ -336,14 +350,26 @@ export class InvitationsService {
         action: 'user.created',
         entity: 'user',
         entityId: user.id,
-        after: { email: user.email, role: user.role },
+        after: { email: user.email, role: invitation.role },
       },
     });
+
+    const roles = assignedRole ? [assignedRole.name] : ['AGENT'];
+
+    // Fetch permissions for the assigned role
+    const rolePerms = assignedRole
+      ? await this.prisma.rolePermission.findMany({
+          where: { roleId: assignedRole.id },
+          select: { permission: { select: { action: true } } },
+        })
+      : [];
+    const permissions = rolePerms.map((rp) => rp.permission.action);
 
     const accessToken = await this.auth.issueAccessToken({
       id: user.id,
       tenantId: invitation.tenantId,
-      role: user.role,
+      roles,
+      permissions,
     });
 
     const refreshCreated = await this.auth.issueRefreshToken(user.id);
@@ -358,7 +384,8 @@ export class InvitationsService {
         firstName: user.firstName,
         lastName: user.lastName,
         phone: user.phone,
-        role: user.role,
+        roles,
+        role: roles[0],
         branchId: user.branchId,
         avatarUrl: user.avatarUrl,
         isActive: user.isActive,

@@ -61,7 +61,7 @@ const makeUser = (overrides = {}) => ({
   firstName: 'John',
   lastName: 'Doe',
   phone: null,
-  role: 'BROKER',
+  jobTitle: null,
   branchId: null,
   avatarUrl: null,
   isActive: true,
@@ -72,6 +72,7 @@ const makeUser = (overrides = {}) => ({
   createdAt: new Date('2024-01-01'),
   twoFactorEnabled: false,
   twoFactorSecret: null,
+  userRoleMappings: [{ role: { name: 'BROKER' } }],
   ...overrides,
 });
 
@@ -114,17 +115,20 @@ describe('AuthService', () => {
   // ── issueAccessToken ────────────────────────────────────────────────────────
 
   describe('issueAccessToken', () => {
-    it('should sign a JWT with sub, tenantId, and role', async () => {
+    it('should sign a JWT with sub, tenantId, and roles', async () => {
       const token = await service.issueAccessToken({
         id: 'user-1',
         tenantId: 'tenant-1',
-        role: 'BROKER',
+        roles: ['BROKER'],
+        permissions: ['policies:create', 'policies:read'],
       });
 
       expect(mockJwt.signAsync).toHaveBeenCalledWith({
         sub: 'user-1',
         tenantId: 'tenant-1',
+        roles: ['BROKER'],
         role: 'BROKER',
+        permissions: ['policies:create', 'policies:read'],
       });
       expect(token).toBe('mock-access-token');
     });

@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -36,7 +36,7 @@ const usersToRestore = [
   { firstName: 'Adwoa', lastName: 'Kumi', email: 'dataentry@enterprise.com', role: 'DATA_ENTRY', tenantSlug: 'enterprise-insurance', isActive: true },
   { firstName: 'Fiifi', lastName: 'Acheampong', email: 'viewer@enterprise.com', role: 'VIEWER', tenantSlug: 'enterprise-insurance', isActive: true },
 
-  // Other (fallback to sic-insurance or enterprise-insurance as default)
+  // Other
   { firstName: 'Test', lastName: 'User', email: 'test@example.com', role: 'BROKER', tenantSlug: 'sic-insurance', isActive: true },
   
   // Inactive Users
@@ -65,7 +65,7 @@ async function main() {
     });
 
     try {
-      await prisma.user.upsert({
+      const user = await prisma.user.upsert({
         where: {
           tenantId_email: {
             tenantId: tenant.id,
@@ -74,12 +74,10 @@ async function main() {
         },
         update: {
           passwordHash,
-          role: userData.role as UserRole,
           isActive: userData.isActive,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          // If a user was made inactive and they are VIEWER now, keep their mustChangePassword false
-          ...(userData.isActive === false ? { mustChangePassword: false } : {})
+          ...(userData.isActive === false ? { mustChangePassword: false } : {}),
         },
         create: {
           tenantId: tenant.id,
@@ -87,15 +85,30 @@ async function main() {
           passwordHash,
           firstName: userData.firstName,
           lastName: userData.lastName,
-          role: userData.role as UserRole,
           phone: '+233000000000',
           isActive: userData.isActive,
           mustChangePassword: false,
-          branchId: branch?.id
+          branchId: branch?.id,
         }
       });
+
+      // Assign role via UserRoleMapping
+      let role = await prisma.role.findFirst({
+        where: { name: userData.role, OR: [{ tenantId: tenant.id }, { tenantId: null, isSystem: true }] },
+      });
+      if (!role) {
+        role = await prisma.role.create({
+          data: { name: userData.role, tenantId: tenant.id },
+        });
+      }
+      await prisma.userRoleMapping.upsert({
+        where: { userId_roleId: { userId: user.id, roleId: role.id } },
+        update: {},
+        create: { userId: user.id, roleId: role.id },
+      });
+
       console.log(`✅ Restored: ${userData.email} (${userData.role}) -> ${userData.isActive ? 'Active' : 'Inactive'}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error(`❌ Failed to restore: ${userData.email}`, err.message);
     }
   }

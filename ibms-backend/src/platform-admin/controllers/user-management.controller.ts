@@ -50,7 +50,7 @@ export class UserManagementController {
         { email: { contains: search, mode: 'insensitive' } },
       ];
     }
-    if (role) where.role = role;
+    if (role) where.userRoleMappings = { some: { role: { name: role } } };
     if (tenantId) where.tenantId = tenantId;
     if (status === 'ACTIVE') where.isActive = true;
     if (status === 'INACTIVE') where.isActive = false;
@@ -68,13 +68,14 @@ export class UserManagementController {
           email: true,
           firstName: true,
           lastName: true,
-          role: true,
+          jobTitle: true,
           isActive: true,
           lastLoginAt: true,
           lockedUntil: true,
           createdAt: true,
           tenantId: true,
           tenant: { select: { name: true } },
+          userRoleMappings: { select: { role: { select: { name: true } } } },
         },
       }),
       this.prisma.user.count({ where }),
@@ -129,10 +130,19 @@ export class UserManagementController {
         passwordHash,
         firstName: body.firstName,
         lastName: body.lastName,
-        role: body.role,
         mustChangePassword: true,
       },
     });
+
+    // Assign role via UserRoleMapping
+    const targetRole = await this.prisma.role.findFirst({
+      where: { name: body.role, OR: [{ tenantId: user.tenantId }, { tenantId: null, isSystem: true }] },
+    });
+    if (targetRole) {
+      await this.prisma.userRoleMapping.create({
+        data: { userId: newUser.id, roleId: targetRole.id },
+      });
+    }
 
     await this.audit.log({
       actorId: user.sub,
@@ -169,9 +179,11 @@ export class UserManagementController {
 
     const updatedUser = await this.prisma.user.update({
       where: { id },
-      data: body,
-      select: { id: true, email: true, role: true, isActive: true },
+      data: { isActive: body.isActive },
+      select: { id: true, email: true, isActive: true,
+        userRoleMappings: { select: { role: { select: { name: true } } } } },
     });
+    const updatedRoles = updatedUser.userRoleMappings.map((m: any) => m.role.name);
 
     await this.audit.log({
       actorId: user.sub,
@@ -183,11 +195,11 @@ export class UserManagementController {
       resourceType: 'User',
       resourceId: id,
       description: `User profile updated: ${updatedUser.email}`,
-      beforeState: { role: before.role, isActive: before.isActive },
-      afterState: { role: updatedUser.role, isActive: updatedUser.isActive },
+      beforeState: { isActive: before.isActive },
+      afterState: { isActive: updatedUser.isActive },
     });
 
-    return { data: updatedUser };
+    return { data: { ...updatedUser, roles: updatedRoles, role: updatedRoles[0] ?? 'AGENT' } };
   }
 
   @Delete(':id')
@@ -332,10 +344,11 @@ export class UserManagementController {
         firstName: true,
         lastName: true,
         email: true,
-        role: true,
+        jobTitle: true,
         tenantId: true,
         lastLoginAt: true,
         tenant: { select: { name: true } },
+        userRoleMappings: { select: { role: { select: { name: true } } } },
       },
     });
 

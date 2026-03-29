@@ -1,12 +1,11 @@
-import { IsOptional, IsEnum, IsUUID, IsBoolean } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { IsOptional, IsString, IsUUID, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { PaginationDto } from '../../common/dto/pagination.dto.js';
 
 export class UserQueryDto extends PaginationDto {
-  @IsEnum(UserRole)
+  @IsString()
   @IsOptional()
-  role?: UserRole;
+  role?: string;
 
   @IsBoolean()
   @IsOptional()

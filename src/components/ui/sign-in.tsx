@@ -169,7 +169,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             <div className="mb-12 text-center">
                                 <div className="w-24 h-24 relative mx-auto mb-8 p-2 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 shadow-lg">
                                     <Image
-                                        src="/logo.png"
+                                        src="/logo-icon.png"
                                         alt="IBMS Logo"
                                         fill
                                         className="object-contain p-2"

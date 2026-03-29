@@ -32,6 +32,20 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
+        include: {
+          userRoleMappings: {
+            select: {
+              role: {
+                select: {
+                  name: true,
+                  permissions: {
+                    select: { permission: { select: { action: true } } },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
 
       if (!user) return null;
@@ -39,10 +53,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       if (!user.isActive) return null;
       if (user.lockedUntil && user.lockedUntil > new Date()) return null;
 
+      const roles = user.userRoleMappings.map((m) => m.role.name);
+
+      // Deduplicate permissions from all role mappings
+      const permSet = new Set<string>();
+      for (const mapping of user.userRoleMappings) {
+        for (const rp of (mapping.role as any).permissions ?? []) {
+          permSet.add(rp.permission.action);
+        }
+      }
+
       return {
         sub: user.id,
         tenantId: payload.tenantId,
-        role: user.role,
+        roles,
+        role: roles[0] ?? 'AGENT',
+        permissions: [...permSet],
         email: user.email,
       };
     } catch (err: unknown) {

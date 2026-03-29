@@ -14,7 +14,8 @@ const PASSWORD_HASH_COST = 12;
 interface AuthUser {
   id: string;
   tenantId: string;
-  role: string;
+  roles: string[];
+  permissions: string[];
 }
 
 interface UserRecord {
@@ -25,7 +26,7 @@ interface UserRecord {
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: string;
+  jobTitle: string | null;
   branchId: string | null;
   avatarUrl: string | null;
   isActive: boolean;
@@ -36,6 +37,7 @@ interface UserRecord {
   createdAt: Date;
   twoFactorEnabled: boolean;
   twoFactorSecret: string | null;
+  userRoleMappings?: { role: { name: string; permissions?: { permission: { action: string } }[] } }[];
 }
 
 interface RefreshTokenRecord {
@@ -73,7 +75,49 @@ export class AuthService {
   ) {}
   private readonly logger = new Logger(AuthService.name);
 
+  // Reusable Prisma include for the full RBAC join chain (single query, no N+1)
+  private readonly RBAC_INCLUDE = {
+    userRoleMappings: {
+      select: {
+        role: {
+          select: {
+            name: true,
+            permissions: {
+              select: { permission: { select: { action: true } } },
+            },
+          },
+        },
+      },
+    },
+  } as const;
+
+  /** Build AuthUser payload from a UserRecord with full RBAC join */
+  private buildAuthUser(user: UserRecord, tenantId?: string): AuthUser {
+    return {
+      id: user.id,
+      tenantId: tenantId ?? user.tenantId,
+      roles: this.getRoles(user),
+      permissions: this.getPermissions(user),
+    };
+  }
+
+  private getRoles(user: UserRecord): string[] {
+    return user.userRoleMappings?.map((m) => m.role.name) ?? [];
+  }
+
+  private getPermissions(user: UserRecord): string[] {
+    const perms = new Set<string>();
+    for (const mapping of user.userRoleMappings ?? []) {
+      for (const rp of mapping.role.permissions ?? []) {
+        perms.add(rp.permission.action);
+      }
+    }
+    return [...perms];
+  }
+
   private userToDto(user: UserRecord) {
+    const roles = this.getRoles(user);
+    const permissions = this.getPermissions(user);
     return {
       id: user.id,
       tenantId: user.tenantId,
@@ -81,7 +125,10 @@ export class AuthService {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
-      role: user.role,
+      roles,
+      role: roles[0] ?? 'AGENT',
+      permissions,
+      jobTitle: user.jobTitle,
       branchId: user.branchId,
       avatarUrl: user.avatarUrl,
       isActive: user.isActive,
@@ -91,7 +138,14 @@ export class AuthService {
   }
 
   async issueAccessToken(user: AuthUser) {
-    const payload = { sub: user.id, tenantId: user.tenantId, role: user.role };
+    const primaryRole = user.roles[0] ?? 'AGENT';
+    const payload = {
+      sub: user.id,
+      tenantId: user.tenantId,
+      roles: user.roles,
+      role: primaryRole,
+      permissions: user.permissions,
+    };
     return this.jwt.signAsync(payload);
   }
 
@@ -158,12 +212,14 @@ export class AuthService {
       tenantId = tenant.id;
       user = (await this.prisma.user.findFirst({
         where: { tenantId: tenant.id, email },
+        include: this.RBAC_INCLUDE,
       })) as UserRecord | null;
     } else {
       // No tenant slug — auto-resolve by looking up email across all tenants
       const candidates = (await this.prisma.user.findMany({
         where: { email, deletedAt: null, isActive: true },
         include: {
+          ...this.RBAC_INCLUDE,
           tenant: {
             select: { id: true, name: true, slug: true, isActive: true },
           },
@@ -257,11 +313,9 @@ export class AuthService {
       };
     }
 
-    const accessToken = await this.issueAccessToken({
-      id: user.id,
-      tenantId,
-      role: user.role,
-    });
+    const accessToken = await this.issueAccessToken(
+      this.buildAuthUser(user, tenantId),
+    );
     const created = await this.issueRefreshToken(user.id, ipAddress, userAgent);
 
     return { accessToken, user: this.userToDto(user), refreshRaw: created.raw };
@@ -276,16 +330,17 @@ export class AuthService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: this.RBAC_INCLUDE,
+    });
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
     }
 
-    const accessToken = await this.issueAccessToken({
-      id: user.id,
-      tenantId,
-      role: user.role,
-    });
+    const accessToken = await this.issueAccessToken(
+      this.buildAuthUser(user as UserRecord, tenantId),
+    );
     const created = await this.issueRefreshToken(user.id, ipAddress, userAgent);
 
     return { accessToken, user: this.userToDto(user), refreshRaw: created.raw };
@@ -356,15 +411,14 @@ export class AuthService {
 
     const user = (await this.prisma.user.findUnique({
       where: { id: matched.userId },
+      include: this.RBAC_INCLUDE,
     })) as UserRecord | null;
     if (!user)
       throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
 
-    const accessToken = await this.issueAccessToken({
-      id: user.id,
-      tenantId: user.tenantId,
-      role: user.role,
-    });
+    const accessToken = await this.issueAccessToken(
+      this.buildAuthUser(user),
+    );
 
     return {
       accessToken,

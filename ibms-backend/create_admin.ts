@@ -1,4 +1,4 @@
-import { PrismaClient, UserRole } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -17,16 +17,7 @@ async function main() {
     });
   }
 
-  // Determine the correct role string from the enum
-  let role: UserRole = 'SUPER_ADMIN' as UserRole;
-  if ('PLATFORM_SUPER_ADMIN' in UserRole) {
-    role = 'PLATFORM_SUPER_ADMIN' as UserRole;
-  } else if ('SUPER_ADMIN' in UserRole) {
-    role = 'SUPER_ADMIN' as UserRole;
-  } else {
-    // Fallback if schema doesn't have it explicitly mapped in typescript
-    console.log('Roles available:', Object.keys(UserRole));
-  }
+  const roleName = 'PLATFORM_SUPER_ADMIN';
 
   const user = await prisma.user.upsert({
     where: {
@@ -37,7 +28,6 @@ async function main() {
     },
     update: {
       passwordHash,
-      role: role,
     },
     create: {
       tenantId: tenant.id,
@@ -45,16 +35,35 @@ async function main() {
       passwordHash,
       firstName: 'Killian',
       lastName: 'Sarsah',
-      role: role,
       phone: '+233000000000',
       isActive: true,
       mustChangePassword: false,
     }
   });
 
+  // Ensure the role exists, then assign via UserRoleMapping
+  let role = await prisma.role.findFirst({
+    where: { name: roleName, OR: [{ tenantId: tenant.id }, { tenantId: null, isSystem: true }] },
+  });
+  if (!role) {
+    role = await prisma.role.create({
+      data: { name: roleName, tenantId: tenant.id, isSystem: true },
+    });
+  }
+  await prisma.userRoleMapping.upsert({
+    where: { userId_roleId: { userId: user.id, roleId: role.id } },
+    update: {},
+    create: { userId: user.id, roleId: role.id },
+  });
+
+  const assignedRoles = await prisma.userRoleMapping.findMany({
+    where: { userId: user.id },
+    select: { role: { select: { name: true } } },
+  });
+
   console.log('✅ Super Admin account created/updated successfully!');
   console.log(`Email: ${user.email}`);
-  console.log(`Role: ${user.role}`);
+  console.log(`Roles: ${assignedRoles.map(m => m.role.name).join(', ')}`);
   console.log(`Tenant: ${tenant.name}`);
 }
 

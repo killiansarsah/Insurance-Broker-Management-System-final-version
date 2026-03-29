@@ -28,12 +28,12 @@ export const metadata: Metadata = {
         'NIC-compliant insurance brokerage management platform for Ghana. Manage clients, policies, claims, leads, and compliance.',
     icons: {
         icon: [
-            { url: '/logo.png' },
-            { url: '/logo.png', sizes: '32x32', type: 'image/png' },
+            { url: '/logo-icon.png' },
+            { url: '/logo-icon.png', sizes: '32x32', type: 'image/png' },
         ],
-        shortcut: '/logo.png',
+        shortcut: '/logo-icon.png',
         apple: [
-            { url: '/logo.png' },
+            { url: '/logo-icon.png' },
         ],
     },
 };

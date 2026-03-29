@@ -5,6 +5,13 @@
 // --- Enums ---
 
 export type UserRole =
+    // New 5-tier system roles
+    | 'WORKSPACE_OWNER'
+    | 'ADMINISTRATOR'
+    | 'MANAGER'
+    | 'SUPERVISOR'
+    | 'AGENT'
+    // Legacy role names (backward compatibility)
     | 'PLATFORM_SUPER_ADMIN'
     | 'SUPER_ADMIN'
     | 'TENANT_ADMIN'
@@ -15,7 +22,6 @@ export type UserRole =
     | 'SENIOR_BROKER'
     | 'BROKER'
     | 'UNDERWRITER'
-    | 'AGENT'
     | 'SECRETARY'
     | 'DATA_ENTRY'
     | 'VIEWER';
@@ -212,18 +218,21 @@ export interface PolicyTimelineEvent {
 
 export interface User {
     id: string;
-    tenantId?: string; // Multi-tenancy support
+    tenantId?: string;
     email: string;
     firstName: string;
     lastName: string;
-    role: UserRole;
+    role: UserRole; // primary role (backward compat)
+    roles?: string[]; // all assigned role names
+    permissions?: string[]; // granular permission actions (e.g. 'policies:create')
+    jobTitle?: string;
     phone: string;
     branchId: string;
     avatarUrl?: string;
     isActive: boolean;
     lastLogin?: string;
-    delegatedTo?: string; // User ID of the person handling backup
-    isActingAsBackupFor?: string[]; // Array of User IDs this person is covering for
+    delegatedTo?: string;
+    isActingAsBackupFor?: string[];
     createdAt: string;
 }
 

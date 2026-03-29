@@ -12,12 +12,11 @@ interface TeamFiltersProps {
 
 const roleOptions = [
     { label: 'All Roles', value: '' },
-    { label: 'Platform Admins', value: 'platform_super_admin' },
-    { label: 'Tenant Admins', value: 'tenant_admin' },
-    { label: 'Brokers', value: 'broker' },
-    { label: 'Secretaries', value: 'secretary' },
-    { label: 'Managers', value: 'branch_manager' },
-    { label: 'Staff', value: 'data_entry' },
+    { label: 'Workspace Owner', value: 'WORKSPACE_OWNER' },
+    { label: 'Administrator', value: 'ADMINISTRATOR' },
+    { label: 'Manager', value: 'MANAGER' },
+    { label: 'Supervisor', value: 'SUPERVISOR' },
+    { label: 'Agent', value: 'AGENT' },
 ];
 
 const branchOptions = [

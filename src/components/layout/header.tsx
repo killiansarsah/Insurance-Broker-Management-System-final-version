@@ -59,8 +59,8 @@ export function Header() {
                 {/* Company logo — mobile only (sidebar is hidden on mobile) */}
                 <div className="lg:hidden relative w-7 h-7 shrink-0">
                     <Image
-                        src="/logo.png"
-                        alt="Company Logo"
+                        src="/logo-blue.png"
+                        alt="Brokerium Logo"
                         fill
                         className="object-contain"
                         sizes="28px"

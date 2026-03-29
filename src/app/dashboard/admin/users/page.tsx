@@ -31,6 +31,13 @@ const InviteUserModal = dynamic(
 import { CustomSelect } from '@/components/ui/select-custom';
 
 const ROLE_COLORS: Record<UserRole, 'primary' | 'success' | 'warning' | 'danger' | 'default' | 'outline'> = {
+    // New 5-tier roles
+    WORKSPACE_OWNER: 'danger',
+    ADMINISTRATOR: 'danger',
+    MANAGER: 'warning',
+    SUPERVISOR: 'primary',
+    AGENT: 'default',
+    // Legacy role names (backward compat)
     PLATFORM_SUPER_ADMIN: 'danger',
     SUPER_ADMIN: 'danger',
     TENANT_ADMIN: 'danger',
@@ -41,13 +48,19 @@ const ROLE_COLORS: Record<UserRole, 'primary' | 'success' | 'warning' | 'danger'
     SENIOR_BROKER: 'primary',
     BROKER: 'primary',
     UNDERWRITER: 'primary',
-    AGENT: 'default',
     SECRETARY: 'default',
     DATA_ENTRY: 'default',
     VIEWER: 'outline',
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
+    // New 5-tier roles
+    WORKSPACE_OWNER: 'Workspace Owner',
+    ADMINISTRATOR: 'Administrator',
+    MANAGER: 'Manager',
+    SUPERVISOR: 'Supervisor',
+    AGENT: 'Agent',
+    // Legacy role names (backward compat)
     PLATFORM_SUPER_ADMIN: 'Platform Admin',
     SUPER_ADMIN: 'Super Admin',
     TENANT_ADMIN: 'Tenant Admin',
@@ -58,7 +71,6 @@ const ROLE_LABELS: Record<UserRole, string> = {
     SENIOR_BROKER: 'Senior Broker',
     BROKER: 'Broker',
     UNDERWRITER: 'Underwriter',
-    AGENT: 'Agent',
     SECRETARY: 'Secretary',
     DATA_ENTRY: 'Data Entry',
     VIEWER: 'Viewer',
@@ -195,7 +207,11 @@ export default function UsersPage() {
                             label="Role"
                             options={[
                                 { label: 'All Roles', value: 'all' },
-                                ...Object.entries(ROLE_LABELS).map(([key, label]) => ({ label, value: key }))
+                                { label: 'Workspace Owner', value: 'WORKSPACE_OWNER' },
+                                { label: 'Administrator', value: 'ADMINISTRATOR' },
+                                { label: 'Manager', value: 'MANAGER' },
+                                { label: 'Supervisor', value: 'SUPERVISOR' },
+                                { label: 'Agent', value: 'AGENT' },
                             ]}
                             value={roleFilter}
                             onChange={(v) => setRoleFilter(v as string)}

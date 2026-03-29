@@ -32,40 +32,36 @@ interface Role {
 
 type ModalType = 'edit' | 'terminate' | 'invite' | 'new-role' | null;
 
-// Map backend roles to display-friendly labels
+// Map backend roles to display-friendly labels (5-tier + legacy backward compat)
 const ROLE_DISPLAY: Record<string, string> = {
-    PLATFORM_SUPER_ADMIN: 'Platform Admin',
-    SUPER_ADMIN: 'Super Admin',
-    TENANT_ADMIN: 'Tenant Admin',
-    ADMIN: 'Admin',
-    BRANCH_MANAGER: 'Branch Manager',
-    COMPLIANCE_OFFICER: 'Compliance Officer',
-    FINANCE_MANAGER: 'Finance Manager',
-    SENIOR_BROKER: 'Senior Broker',
-    BROKER: 'Broker',
-    UNDERWRITER: 'Underwriter',
+    WORKSPACE_OWNER: 'Workspace Owner',
+    ADMINISTRATOR: 'Administrator',
+    MANAGER: 'Manager',
+    SUPERVISOR: 'Supervisor',
     AGENT: 'Agent',
-    SECRETARY: 'Secretary',
-    DATA_ENTRY: 'Data Entry',
-    VIEWER: 'Viewer',
+    // Legacy backward compat
+    PLATFORM_SUPER_ADMIN: 'Workspace Owner',
+    SUPER_ADMIN: 'Administrator',
+    TENANT_ADMIN: 'Administrator',
+    ADMIN: 'Administrator',
+    BRANCH_MANAGER: 'Manager',
+    COMPLIANCE_OFFICER: 'Supervisor',
+    FINANCE_MANAGER: 'Manager',
+    SENIOR_BROKER: 'Manager',
+    BROKER: 'Agent',
+    UNDERWRITER: 'Agent',
+    SECRETARY: 'Agent',
+    DATA_ENTRY: 'Agent',
+    VIEWER: 'Agent',
 };
 
-// Map display roles to backend roles for updates
+// Map display roles to backend roles for invitations/updates
 const ROLE_TO_BACKEND: Record<string, string> = {
-    'Platform Admin': 'PLATFORM_SUPER_ADMIN',
-    'Super Admin': 'SUPER_ADMIN',
-    'Tenant Admin': 'TENANT_ADMIN',
-    'Admin': 'ADMIN',
-    'Branch Manager': 'BRANCH_MANAGER',
-    'Compliance Officer': 'COMPLIANCE_OFFICER',
-    'Finance Manager': 'FINANCE_MANAGER',
-    'Senior Broker': 'SENIOR_BROKER',
-    'Broker': 'BROKER',
-    'Underwriter': 'UNDERWRITER',
+    'Workspace Owner': 'WORKSPACE_OWNER',
+    'Administrator': 'ADMINISTRATOR',
+    'Manager': 'MANAGER',
+    'Supervisor': 'SUPERVISOR',
     'Agent': 'AGENT',
-    'Secretary': 'SECRETARY',
-    'Data Entry': 'DATA_ENTRY',
-    'Viewer': 'VIEWER',
 };
 
 interface DisplayUser {
@@ -259,20 +255,11 @@ export function SettingsAccessControl() {
     };
 
     const [roles, setRoles] = useState<Role[]>([
-        { id: '1', name: 'Platform Admin', userCount: 1, permissions: DEFAULT_ROLE_PERMISSIONS['1'], color: 'violet', icon: Crown },
-        { id: '2', name: 'Super Admin', userCount: 1, permissions: DEFAULT_ROLE_PERMISSIONS['1'], color: 'violet', icon: Crown },
-        { id: '3', name: 'Tenant Admin', userCount: 1, permissions: DEFAULT_ROLE_PERMISSIONS['1'], color: 'violet', icon: Crown },
-        { id: '4', name: 'Admin', userCount: 2, permissions: DEFAULT_ROLE_PERMISSIONS['2'], color: 'blue', icon: ShieldCheck },
-        { id: '5', name: 'Branch Manager', userCount: 3, permissions: DEFAULT_ROLE_PERMISSIONS['3'], color: 'emerald', icon: Briefcase },
-        { id: '6', name: 'Compliance Officer', userCount: 2, permissions: DEFAULT_ROLE_PERMISSIONS['3'], color: 'emerald', icon: ShieldCheck },
-        { id: '7', name: 'Finance Manager', userCount: 2, permissions: DEFAULT_ROLE_PERMISSIONS['3'], color: 'emerald', icon: DollarSign },
-        { id: '8', name: 'Senior Broker', userCount: 4, permissions: DEFAULT_ROLE_PERMISSIONS['3'], color: 'amber', icon: UserCheck },
-        { id: '9', name: 'Broker', userCount: 10, permissions: DEFAULT_ROLE_PERMISSIONS['4'], color: 'blue', icon: UserCheck },
-        { id: '10', name: 'Underwriter', userCount: 5, permissions: DEFAULT_ROLE_PERMISSIONS['4'], color: 'blue', icon: UserCheck },
-        { id: '11', name: 'Agent', userCount: 15, permissions: DEFAULT_ROLE_PERMISSIONS['4'], color: 'amber', icon: UserCheck },
-        { id: '12', name: 'Secretary', userCount: 2, permissions: DEFAULT_ROLE_PERMISSIONS['4'], color: 'amber', icon: UserCheck },
-        { id: '13', name: 'Data Entry', userCount: 3, permissions: DEFAULT_ROLE_PERMISSIONS['4'], color: 'amber', icon: UserCheck },
-        { id: '14', name: 'Viewer', userCount: 5, permissions: [], color: 'amber', icon: Users },
+        { id: '1', name: 'Workspace Owner', userCount: 1, permissions: DEFAULT_ROLE_PERMISSIONS['1'], color: 'violet', icon: Crown },
+        { id: '2', name: 'Administrator', userCount: 2, permissions: DEFAULT_ROLE_PERMISSIONS['1'], color: 'blue', icon: ShieldCheck },
+        { id: '3', name: 'Manager', userCount: 5, permissions: DEFAULT_ROLE_PERMISSIONS['2'], color: 'emerald', icon: Briefcase },
+        { id: '4', name: 'Supervisor', userCount: 4, permissions: DEFAULT_ROLE_PERMISSIONS['3'], color: 'amber', icon: UserCheck },
+        { id: '5', name: 'Agent', userCount: 15, permissions: DEFAULT_ROLE_PERMISSIONS['4'], color: 'blue', icon: Users },
     ]);
 
     // Dynamically derive role options from the local state so new roles appear
@@ -325,20 +312,11 @@ export function SettingsAccessControl() {
     );
 
     const userRoleColor: Record<string, string> = {
-        'Platform Admin':       'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-        'Super Admin':          'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-        'Tenant Admin':         'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-        'Admin':                'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-        'Branch Manager':       'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-        'Compliance Officer':   'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-        'Finance Manager':      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
-        'Senior Broker':        'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-        'Broker':               'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300',
-        'Underwriter':          'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-        'Agent':                'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
-        'Secretary':            'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300',
-        'Data Entry':           'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300',
-        'Viewer':               'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300',
+        'Workspace Owner':  'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+        'Administrator':    'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+        'Manager':          'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+        'Supervisor':       'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+        'Agent':            'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300',
     };
 
     return (

@@ -1,7 +1,6 @@
 import {
   PrismaClient,
   TenantPlan,
-  UserRole,
   CarrierType,
   InsuranceType,
   PolicyType,
@@ -46,6 +45,7 @@ import {
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { NIC_LEVY_RATE } from '../src/common/constants/nic.constants';
+import { seedRbac, migrateExistingUsersToRbac, LEGACY_ROLE_MAP } from './seed-rbac';
 
 const prisma = new PrismaClient();
 
@@ -121,6 +121,11 @@ async function main(): Promise<void> {
   console.log('🌱 Seeding database with comprehensive mock data...\n');
 
   const passwordHash = await bcrypt.hash('Admin@123', 12);
+
+  // ════════════════════════════════════════════════════
+  // ─── RBAC: SYSTEM ROLES & PERMISSIONS ──────────────
+  // ════════════════════════════════════════════════════
+  const { roleMap } = await seedRbac(prisma);
 
   // ════════════════════════════════════════════════════
   // ─── TENANTS ───────────────────────────────────────
@@ -217,22 +222,22 @@ async function main(): Promise<void> {
   // ════════════════════════════════════════════════════
   // ─── USERS ─────────────────────────────────────────
   // ════════════════════════════════════════════════════
-  const staffRoles: Array<{ role: UserRole; prefix: string }> = [
-    { role: UserRole.TENANT_ADMIN, prefix: 'admin' },
-    { role: UserRole.BRANCH_MANAGER, prefix: 'manager' },
-    { role: UserRole.COMPLIANCE_OFFICER, prefix: 'compliance' },
-    { role: UserRole.FINANCE_MANAGER, prefix: 'finance' },
-    { role: UserRole.SENIOR_BROKER, prefix: 'srbroker' },
-    { role: UserRole.BROKER, prefix: 'broker1' },
-    { role: UserRole.BROKER, prefix: 'broker2' },
-    { role: UserRole.BROKER, prefix: 'broker3' },
-    { role: UserRole.BROKER, prefix: 'broker4' },
-    { role: UserRole.BROKER, prefix: 'broker5' },
-    { role: UserRole.UNDERWRITER, prefix: 'underwriter' },
-    { role: UserRole.AGENT, prefix: 'agent1' },
-    { role: UserRole.AGENT, prefix: 'agent2' },
-    { role: UserRole.DATA_ENTRY, prefix: 'dataentry' },
-    { role: UserRole.VIEWER, prefix: 'viewer' },
+  const staffRoles: Array<{ legacyRole: string; prefix: string; jobTitle: string }> = [
+    { legacyRole: 'TENANT_ADMIN', prefix: 'admin', jobTitle: 'Tenant Administrator' },
+    { legacyRole: 'BRANCH_MANAGER', prefix: 'manager', jobTitle: 'Branch Manager' },
+    { legacyRole: 'COMPLIANCE_OFFICER', prefix: 'compliance', jobTitle: 'Compliance Officer' },
+    { legacyRole: 'FINANCE_MANAGER', prefix: 'finance', jobTitle: 'Finance Manager' },
+    { legacyRole: 'SENIOR_BROKER', prefix: 'srbroker', jobTitle: 'Senior Broker' },
+    { legacyRole: 'BROKER', prefix: 'broker1', jobTitle: 'Insurance Broker' },
+    { legacyRole: 'BROKER', prefix: 'broker2', jobTitle: 'Insurance Broker' },
+    { legacyRole: 'BROKER', prefix: 'broker3', jobTitle: 'Insurance Broker' },
+    { legacyRole: 'BROKER', prefix: 'broker4', jobTitle: 'Insurance Broker' },
+    { legacyRole: 'BROKER', prefix: 'broker5', jobTitle: 'Insurance Broker' },
+    { legacyRole: 'UNDERWRITER', prefix: 'underwriter', jobTitle: 'Underwriter' },
+    { legacyRole: 'AGENT', prefix: 'agent1', jobTitle: 'Insurance Agent' },
+    { legacyRole: 'AGENT', prefix: 'agent2', jobTitle: 'Insurance Agent' },
+    { legacyRole: 'DATA_ENTRY', prefix: 'dataentry', jobTitle: 'Data Entry Clerk' },
+    { legacyRole: 'VIEWER', prefix: 'viewer', jobTitle: 'Viewer' },
   ];
 
   const userMap: Record<string, string[]> = {};
@@ -249,6 +254,10 @@ async function main(): Promise<void> {
       const ln = ghanaLastNames[i % ghanaLastNames.length];
       const email = s.prefix === 'admin' ? `admin@${domain}` : `${s.prefix}@${domain}`;
 
+      // Map legacy role to new 5-tier system role
+      const newRoleName = LEGACY_ROLE_MAP[s.legacyRole] || 'AGENT';
+      const systemRoleId = roleMap[newRoleName];
+
       const u = await prisma.user.upsert({
         where: { tenantId_email: { tenantId: tenant.id, email } },
         update: {},
@@ -259,20 +268,30 @@ async function main(): Promise<void> {
           firstName: fn,
           lastName: ln,
           phone: `+2332440${String(rand(10000, 99999))}`,
-          role: s.role,
+          jobTitle: s.jobTitle,
           branchId: branchMap[tenant.id][i % branchMap[tenant.id].length],
           departmentId: deptMap[tenant.id][i % deptMap[tenant.id].length],
           isActive: true,
           mustChangePassword: s.prefix === 'admin',
         },
       });
+
+      // Assign new system role via UserRoleMapping
+      if (systemRoleId) {
+        await prisma.userRoleMapping.upsert({
+          where: { userId_roleId: { userId: u.id, roleId: systemRoleId } },
+          update: {},
+          create: { userId: u.id, roleId: systemRoleId },
+        });
+      }
+
       userMap[tenant.id].push(u.id);
-      if (([UserRole.BROKER, UserRole.SENIOR_BROKER, UserRole.AGENT] as UserRole[]).includes(s.role)) {
+      if (['BROKER', 'SENIOR_BROKER', 'AGENT'].includes(s.legacyRole)) {
         brokerMap[tenant.id].push(u.id);
       }
     }
   }
-  console.log('✅ Users: 15 per tenant (admins, brokers, agents, etc.)');
+  console.log('✅ Users: 15 per tenant (mapped to new 5-tier roles)');
 
   // ════════════════════════════════════════════════════
   // ─── CARRIERS & PRODUCTS ───────────────────────────
@@ -1103,13 +1122,26 @@ async function main(): Promise<void> {
       firstName: 'Platform',
       lastName: 'SuperAdmin',
       phone: '+233244000001',
-      role: 'PLATFORM_SUPER_ADMIN' as UserRole,
+      jobTitle: 'Platform Super Administrator',
       branchId: branchMap[sicTenant.id][0],
       isActive: true,
       mustChangePassword: false,
     },
   });
+
+  // Assign WORKSPACE_OWNER role (the new top-tier system role)
+  const wsOwnerRoleId = roleMap['WORKSPACE_OWNER'];
+  if (wsOwnerRoleId) {
+    await prisma.userRoleMapping.upsert({
+      where: { userId_roleId: { userId: superAdmin.id, roleId: wsOwnerRoleId } },
+      update: {},
+      create: { userId: superAdmin.id, roleId: wsOwnerRoleId },
+    });
+  }
   console.log('✅ Platform Super Admin: superadmin@brokerium.com / Admin@123');
+
+  // Migrate any existing users without role mappings
+  await migrateExistingUsersToRbac(prisma, roleMap);
 
   // ════════════════════════════════════════════════════
   // ─── SUBSCRIPTIONS ─────────────────────────────────

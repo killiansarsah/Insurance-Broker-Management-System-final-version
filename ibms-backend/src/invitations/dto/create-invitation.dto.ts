@@ -1,12 +1,11 @@
-import { IsEmail, IsEnum, IsOptional, IsUUID } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { IsEmail, IsString, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateInvitationDto {
   @IsEmail()
   email!: string;
 
-  @IsEnum(UserRole)
-  role!: UserRole;
+  @IsString()
+  role!: string;
 
   @IsUUID()
   @IsOptional()

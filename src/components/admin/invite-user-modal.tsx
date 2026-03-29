@@ -150,20 +150,10 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
                         </label>
                         <CustomSelect
                             options={[
-                                { label: 'Platform Admin', value: 'PLATFORM_SUPER_ADMIN' },
-                                { label: 'Super Admin', value: 'SUPER_ADMIN' },
-                                { label: 'Tenant Admin', value: 'TENANT_ADMIN' },
-                                { label: 'Admin', value: 'ADMIN' },
-                                { label: 'Branch Manager', value: 'BRANCH_MANAGER' },
-                                { label: 'Compliance Officer', value: 'COMPLIANCE_OFFICER' },
-                                { label: 'Finance Manager', value: 'FINANCE_MANAGER' },
-                                { label: 'Senior Broker', value: 'SENIOR_BROKER' },
-                                { label: 'Broker', value: 'BROKER' },
-                                { label: 'Underwriter', value: 'UNDERWRITER' },
+                                { label: 'Administrator', value: 'ADMINISTRATOR' },
+                                { label: 'Manager', value: 'MANAGER' },
+                                { label: 'Supervisor', value: 'SUPERVISOR' },
                                 { label: 'Agent', value: 'AGENT' },
-                                { label: 'Secretary', value: 'SECRETARY' },
-                                { label: 'Data Entry', value: 'DATA_ENTRY' },
-                                { label: 'Viewer', value: 'VIEWER' },
                             ]}
                             value={role}
                             onChange={(v) => setRole(v as string)}

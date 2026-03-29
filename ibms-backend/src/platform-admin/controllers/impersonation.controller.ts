@@ -65,15 +65,17 @@ export class ImpersonationController {
       targetUser = await this.prisma.user.findFirst({
         where: {
           tenantId,
-          role: 'TENANT_ADMIN',
+          userRoleMappings: { some: { role: { name: 'TENANT_ADMIN' } } },
           isActive: true,
           deletedAt: null,
         },
+        include: { userRoleMappings: { select: { role: { select: { name: true, permissions: { select: { permission: { select: { action: true } } } } } } } } },
       });
       if (!targetUser) {
         // Fallback: any active user in the tenant
         targetUser = await this.prisma.user.findFirst({
           where: { tenantId, isActive: true, deletedAt: null },
+          include: { userRoleMappings: { select: { role: { select: { name: true, permissions: { select: { permission: { select: { action: true } } } } } } } } },
         });
       }
       if (!targetUser)
@@ -87,10 +89,18 @@ export class ImpersonationController {
     // Since issueAccessToken might not take custom claims directly, we'll embed the impersonator ID in the token manually if we can,
     // or just rely on the frontend storing its own original token.
     // Actually, generating standard tokens for the target user is fine if the frontend manages the context swap.
+    const targetRoles = (targetUser as any).userRoleMappings?.map((m: any) => m.role.name) ?? [];
+    const targetPerms = new Set<string>();
+    for (const m of (targetUser as any).userRoleMappings ?? []) {
+      for (const rp of m.role.permissions ?? []) {
+        targetPerms.add(rp.permission.action);
+      }
+    }
     const accessToken = await this.auth.issueAccessToken({
       id: targetUser.id,
       tenantId: targetUser.tenantId,
-      role: targetUser.role,
+      roles: targetRoles,
+      permissions: [...targetPerms],
     });
 
     const refreshToken = await this.auth.issueRefreshToken(
@@ -113,7 +123,7 @@ export class ImpersonationController {
       resourceType: 'User',
       resourceId: targetUser.id,
       description: `Super admin started impersonating user: ${targetUser.email}`,
-      metadata: { targetUserId: targetUser.id, targetRole: targetUser.role },
+      metadata: { targetUserId: targetUser.id, targetRoles },
     });
 
     return {
@@ -124,7 +134,8 @@ export class ImpersonationController {
           email: targetUser.email,
           firstName: targetUser.firstName,
           lastName: targetUser.lastName,
-          role: targetUser.role,
+          roles: targetRoles,
+          role: targetRoles[0] ?? 'AGENT',
           tenantId: targetUser.tenantId,
         },
         impersonation: true,

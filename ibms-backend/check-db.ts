@@ -25,12 +25,14 @@ async function checkDatabase() {
       console.log('\n✅ Database is seeded!');
       
       const users = await prisma.user.findMany({
-        select: { email: true, firstName: true, lastName: true, role: true }
+        select: { email: true, firstName: true, lastName: true,
+          userRoleMappings: { select: { role: { select: { name: true } } } } }
       });
       
       console.log('\n👥 Admin Users:');
       users.forEach(u => {
-        console.log(`   - ${u.email} (${u.firstName} ${u.lastName}) - ${u.role}`);
+        const roles = u.userRoleMappings.map((m: any) => m.role.name).join(', ') || 'No role';
+        console.log(`   - ${u.email} (${u.firstName} ${u.lastName}) - ${roles}`);
       });
       console.log('\n🔑 Default Password: Admin@123');
     }

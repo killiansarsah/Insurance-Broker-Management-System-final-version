@@ -4,20 +4,20 @@ import { Check, X, Shield, Lock, Eye, Edit, Building2 } from 'lucide-react';
 
 
 const roles = [
-    { id: 'admin', label: 'Admin', icon: Shield },
-    { id: 'tenant_admin', label: 'Tenant Admin', icon: Building2 }, // Imported Building2
-    { id: 'broker', label: 'Broker', icon: Edit },
-    { id: 'secretary', label: 'Secretary', icon: Eye },
-    { id: 'data_entry', label: 'Support', icon: Lock },
+    { id: 'workspace_owner', label: 'Owner', icon: Building2 },
+    { id: 'administrator', label: 'Admin', icon: Shield },
+    { id: 'manager', label: 'Manager', icon: Edit },
+    { id: 'supervisor', label: 'Supervisor', icon: Eye },
+    { id: 'agent', label: 'Agent', icon: Lock },
 ];
 
 const permissions = [
-    { label: 'Register New Clients', admin: true, tenant_admin: true, broker: true, secretary: true, data_entry: true },
-    { label: 'Edit Policy Details', admin: true, tenant_admin: true, broker: true, secretary: true, data_entry: false },
-    { label: 'Approve Settlements', admin: true, tenant_admin: true, broker: false, secretary: false, data_entry: false },
-    { label: 'View Premium Reports', admin: true, tenant_admin: true, broker: true, secretary: true, data_entry: false },
-    { label: 'Delete Records', admin: true, tenant_admin: true, broker: false, secretary: false, data_entry: false },
-    { label: 'Manage Team Roles', admin: true, tenant_admin: true, broker: false, secretary: false, data_entry: false },
+    { label: 'Register New Clients', workspace_owner: true, administrator: true, manager: true, supervisor: true, agent: true },
+    { label: 'Edit Policy Details', workspace_owner: true, administrator: true, manager: true, supervisor: true, agent: false },
+    { label: 'Approve Settlements', workspace_owner: true, administrator: true, manager: false, supervisor: false, agent: false },
+    { label: 'View Premium Reports', workspace_owner: true, administrator: true, manager: true, supervisor: true, agent: false },
+    { label: 'Delete Records', workspace_owner: true, administrator: true, manager: false, supervisor: false, agent: false },
+    { label: 'Manage Team Roles', workspace_owner: true, administrator: true, manager: false, supervisor: false, agent: false },
 ];
 
 export function PermissionsMatrix() {
@@ -58,11 +58,11 @@ export function PermissionsMatrix() {
                                         {perm.label}
                                     </span>
                                 </td>
-                                <PermissionCell active={perm.admin} />
-                                <PermissionCell active={perm.tenant_admin} />
-                                <PermissionCell active={perm.broker} />
-                                <PermissionCell active={perm.secretary} />
-                                <PermissionCell active={perm.data_entry} />
+                                <PermissionCell active={perm.workspace_owner} />
+                                <PermissionCell active={perm.administrator} />
+                                <PermissionCell active={perm.manager} />
+                                <PermissionCell active={perm.supervisor} />
+                                <PermissionCell active={perm.agent} />
                             </tr>
                         ))}
                     </tbody>

@@ -15,13 +15,14 @@ interface UserRecord {
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: string;
+  jobTitle: string | null;
   branchId: string | null;
   avatarUrl: string | null;
   isActive: boolean;
   lastLoginAt: Date | null;
   createdAt: Date;
   deletedAt: Date | null;
+  userRoleMappings: { role: { name: string } }[];
 }
 
 @Injectable()
@@ -31,6 +32,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   private toResponseDto(user: UserRecord) {
+    const roles = user.userRoleMappings.map((m) => m.role.name);
     return {
       id: user.id,
       tenantId: user.tenantId,
@@ -38,7 +40,9 @@ export class UsersService {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
-      role: user.role,
+      roles,
+      role: roles[0] ?? 'AGENT',
+      jobTitle: user.jobTitle,
       branchId: user.branchId,
       avatarUrl: user.avatarUrl,
       isActive: user.isActive,
@@ -82,13 +86,14 @@ export class UsersService {
           firstName: true,
           lastName: true,
           phone: true,
-          role: true,
+          jobTitle: true,
           branchId: true,
           avatarUrl: true,
           isActive: true,
           lastLoginAt: true,
           createdAt: true,
           deletedAt: true,
+          userRoleMappings: { select: { role: { select: { name: true } } } },
         },
       }),
       this.prisma.user.count({ where }),
@@ -115,13 +120,14 @@ export class UsersService {
         firstName: true,
         lastName: true,
         phone: true,
-        role: true,
+        jobTitle: true,
         branchId: true,
         avatarUrl: true,
         isActive: true,
         lastLoginAt: true,
         createdAt: true,
         deletedAt: true,
+        userRoleMappings: { select: { role: { select: { name: true } } } },
       },
     })) as UserRecord | null;
 
@@ -141,6 +147,7 @@ export class UsersService {
   ) {
     const user = (await this.prisma.user.findFirst({
       where: { id, tenantId, deletedAt: null },
+      include: { userRoleMappings: { select: { role: { select: { name: true } } } } },
     })) as UserRecord | null;
 
     if (!user) {
@@ -160,16 +167,10 @@ export class UsersService {
     if (dto.phone !== undefined) updateData['phone'] = dto.phone;
     if (dto.avatarUrl !== undefined) updateData['avatarUrl'] = dto.avatarUrl;
 
-    // Admin+ can also update: role, branchId, isActive
+    // Admin+ can also update: jobTitle, branchId, isActive
     if (isAdmin) {
-      if (dto.role !== undefined) {
-        if (!canAssignRole(currentUserRole, dto.role)) {
-          throw new HttpException(
-            'Cannot assign role higher than your own',
-            HttpStatus.FORBIDDEN,
-          );
-        }
-        updateData['role'] = dto.role;
+      if (dto.jobTitle !== undefined) {
+        updateData['jobTitle'] = dto.jobTitle;
       }
       if (dto.branchId !== undefined) updateData['branchId'] = dto.branchId;
       if (dto.isActive !== undefined) {
@@ -182,7 +183,6 @@ export class UsersService {
         updateData['isActive'] = dto.isActive;
       }
     } else if (
-      dto.role !== undefined ||
       dto.branchId !== undefined ||
       dto.isActive !== undefined
     ) {
@@ -200,7 +200,7 @@ export class UsersService {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
-      role: user.role,
+      jobTitle: user.jobTitle,
       branchId: user.branchId,
       isActive: user.isActive,
     };
@@ -215,13 +215,14 @@ export class UsersService {
         firstName: true,
         lastName: true,
         phone: true,
-        role: true,
+        jobTitle: true,
         branchId: true,
         avatarUrl: true,
         isActive: true,
         lastLoginAt: true,
         createdAt: true,
         deletedAt: true,
+        userRoleMappings: { select: { role: { select: { name: true } } } },
       },
     })) as UserRecord;
 
