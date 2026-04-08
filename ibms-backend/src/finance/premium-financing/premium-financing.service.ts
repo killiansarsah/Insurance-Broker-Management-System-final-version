@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -11,10 +12,58 @@ import {
 } from './dto/premium-financing.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { ROLE_LEVEL } from '../../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class PremiumFinancingService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async buildPfScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.PremiumFinancingWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [
+        { policy: { brokerId: userId } },
+        { client: { assignedBrokerId: userId } },
+      ],
+    };
+  }
+
+  private async assertAgentCanCreatePf(
+    tenantId: string,
+    userId: string,
+    policyId: string,
+    clientId: string,
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    if (actorLevel >= supervisorLevel) return;
+
+    const allowed = await this.prisma.policy.findFirst({
+      where: {
+        id: policyId,
+        tenantId,
+        clientId,
+        OR: [{ brokerId: userId }, { client: { assignedBrokerId: userId } }],
+      },
+      select: { id: true },
+    });
+
+    if (!allowed) {
+      throw new NotFoundException(
+        'Policy or client not found for your access scope',
+      );
+    }
+  }
 
   private async generatePfNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -50,6 +99,13 @@ export class PremiumFinancingService {
     userId: string,
     dto: CreatePremiumFinancingDto,
   ) {
+    await this.assertAgentCanCreatePf(
+      tenantId,
+      userId,
+      dto.policyId,
+      dto.clientId,
+    );
+
     const policy = await this.prisma.policy.findUnique({
       where: { id: dto.policyId, tenantId },
     });
@@ -124,12 +180,14 @@ export class PremiumFinancingService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: PfQueryDto) {
+  async findAll(tenantId: string, userId: string, query: PfQueryDto) {
     const { page = 1, limit = 20, status, clientId } = query;
     const skip = (page - 1) * limit;
 
+    const scopeWhere = await this.buildPfScopeWhere(tenantId, userId);
+
     const where: Prisma.PremiumFinancingWhereInput = {
-      tenantId,
+      ...scopeWhere,
       ...(status && { status }),
       ...(clientId && { clientId }),
     };
@@ -162,9 +220,11 @@ export class PremiumFinancingService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
-    const pf = await this.prisma.premiumFinancing.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId: string) {
+    const scopeWhere = await this.buildPfScopeWhere(tenantId, userId);
+
+    const pf = await this.prisma.premiumFinancing.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         client: true,
         policy: {
@@ -185,7 +245,7 @@ export class PremiumFinancingService {
     userId: string,
     dto: PayPfInstallmentDto,
   ) {
-    const pf = await this.findOne(pfId, tenantId);
+    const pf = await this.findOne(pfId, tenantId, userId);
     const installment = await this.prisma.pFInstallment.findUnique({
       where: { id: installmentId },
     });

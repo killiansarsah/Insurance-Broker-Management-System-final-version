@@ -16,10 +16,12 @@ export class AdminController {
   constructor(private prisma: PrismaService) {}
 
   @Get('check-super-admin')
-  @Roles('PLATFORM_SUPER_ADMIN')
+  @Roles('WORKSPACE_OWNER')
   async checkSuperAdmin() {
     const count = await this.prisma.user.count({
-      where: { userRoleMappings: { some: { role: { name: { in: ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN'] } } } } },
+      where: {
+        role: 'WORKSPACE_OWNER',
+      },
     });
 
     if (count === 0) {

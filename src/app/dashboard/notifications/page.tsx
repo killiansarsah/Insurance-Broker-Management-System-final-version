@@ -69,8 +69,9 @@ export default function NotificationsPage() {
     const markAllAsReadMutation = useMarkAllNotificationsRead();
     const deleteNotificationMutation = useDeleteNotification();
     
-    // Extract items array from the paginated response object, with a fallback
-    const notifications = notificationsData?.items || (Array.isArray(notificationsData) ? notificationsData : []);
+    const notifications = Array.isArray(notificationsData)
+        ? notificationsData
+        : [];
 
     const [tab, setTab] = useState<TabKey>('all');
     const [typeFilter, setTypeFilter] = useState<NotificationType | 'all'>('all');

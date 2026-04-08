@@ -12,7 +12,7 @@ export function useSuperAdminAuth() {
   const isSuperAdmin =
     isAuthenticated &&
     !!user &&
-    (user.role === 'PLATFORM_SUPER_ADMIN' || user.role === 'SUPER_ADMIN');
+    (user.role === 'PLATFORM_SUPER_ADMIN' || user.role === 'WORKSPACE_OWNER');
 
   return {
     user,

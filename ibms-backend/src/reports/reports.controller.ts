@@ -7,7 +7,7 @@ import type { RequestWithUser } from '../common/types/request.types.js';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+@Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
@@ -91,7 +91,7 @@ export class ReportsController {
   }
 
   @Get('nic-premium-register')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER', 'FINANCE_MANAGER')
+  @Roles('ADMINISTRATOR', 'SUPERVISOR', 'MANAGER')
   nicPremiumRegister(
     @Request() req: RequestWithUser,
     @Query('from') from: string,
@@ -101,7 +101,7 @@ export class ReportsController {
   }
 
   @Get('nic-claims-register')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER', 'FINANCE_MANAGER')
+  @Roles('ADMINISTRATOR', 'SUPERVISOR', 'MANAGER')
   nicClaimsRegister(
     @Request() req: RequestWithUser,
     @Query('from') from: string,
@@ -111,7 +111,7 @@ export class ReportsController {
   }
 
   @Get('fic-str')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'SUPERVISOR')
   ficSuspiciousTransactions(
     @Request() req: RequestWithUser,
     @Query('from') from?: string,

@@ -23,13 +23,13 @@ export class CommissionsController {
   constructor(private readonly commissionsService: CommissionsService) {}
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: CommissionQueryDto) {
-    return this.commissionsService.findAll(req.user.tenantId, query);
+    return this.commissionsService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Post(':id/receive')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   receive(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

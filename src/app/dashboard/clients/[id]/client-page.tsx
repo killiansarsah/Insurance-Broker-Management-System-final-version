@@ -42,6 +42,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { AppLoader } from '@/components/ui/AppLoader';
+import { ROLE_HIERARCHY, useAuthStore } from '@/stores/auth-store';
 
 type TabId = 'overview' | 'personal' | 'policies' | 'claims' | 'documents' | 'communication' | 'beneficiaries';
 
@@ -57,6 +58,7 @@ const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
 
 export default function ClientProfilePage({ id }: { id: string }) {
     const router = useRouter();
+    const user = useAuthStore((s) => s.user);
     const [activeTab, setActiveTab] = useState<TabId>('overview');
     const [showStatusMenu, setShowStatusMenu] = useState(false);
     const [showKycMenu, setShowKycMenu] = useState(false);
@@ -73,6 +75,16 @@ export default function ClientProfilePage({ id }: { id: string }) {
     const { data: invoicesData } = useInvoices({ clientId: id });
     const { data: commissionsData } = useCommissions({ clientId: id });
     const { data: documentsData } = useDocuments({ clientId: id });
+
+    const assignedRoles = [user?.role, ...(user?.roles ?? [])].filter(
+        (role): role is string => !!role,
+    );
+    const highestRoleLevel = assignedRoles.reduce(
+        (max, role) => Math.max(max, ROLE_HIERARCHY[role as keyof typeof ROLE_HIERARCHY] ?? 0),
+        0,
+    );
+    const canUpdateKyc = highestRoleLevel >= (ROLE_HIERARCHY.SUPERVISOR ?? 0);
+    const canUpdateClientStatus = highestRoleLevel >= (ROLE_HIERARCHY.AGENT ?? 0);
 
     // Close dropdowns on outside click
     useEffect(() => {
@@ -208,11 +220,22 @@ export default function ClientProfilePage({ id }: { id: string }) {
                             {/* KYC Status Dropdown */}
                             <div ref={kycMenuRef} className="relative">
                                 <button
-                                    onClick={() => { setShowKycMenu(!showKycMenu); setShowStatusMenu(false); }}
-                                    className="flex items-center gap-1 cursor-pointer"
+                                    onClick={() => {
+                                        if (!canUpdateKyc) {
+                                            toast.error('You do not have permission to update KYC status.');
+                                            return;
+                                        }
+                                        setShowKycMenu(!showKycMenu);
+                                        setShowStatusMenu(false);
+                                    }}
+                                    className={cn(
+                                        'flex items-center gap-1',
+                                        canUpdateKyc ? 'cursor-pointer' : 'cursor-not-allowed opacity-70',
+                                    )}
+                                    title={canUpdateKyc ? 'Change KYC status' : 'Insufficient permission'}
                                 >
                                     <StatusPill label="KYC" value={kycStatusLocal || client.kycStatus} status={(kycStatusLocal || client.kycStatus) === 'VERIFIED' ? 'success' : (kycStatusLocal || client.kycStatus) === 'PENDING' ? 'warning' : 'danger'} />
-                                    <ChevronDown size={12} className="text-surface-400" />
+                                    {canUpdateKyc && <ChevronDown size={12} className="text-surface-400" />}
                                 </button>
                                 {showKycMenu && (
                                     <div className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-700 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-[100] py-1 animate-fade-in">
@@ -253,11 +276,20 @@ export default function ClientProfilePage({ id }: { id: string }) {
                         {/* Client Status Dropdown */}
                         <div ref={statusMenuRef} className="relative">
                             <button
-                                onClick={() => { setShowStatusMenu(!showStatusMenu); setShowKycMenu(false); }}
+                                onClick={() => {
+                                    if (!canUpdateClientStatus) {
+                                        toast.error('You do not have permission to update client status.');
+                                        return;
+                                    }
+                                    setShowStatusMenu(!showStatusMenu);
+                                    setShowKycMenu(false);
+                                }}
                                 className={cn(
-                                    'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-xs font-semibold capitalize transition-all cursor-pointer hover:shadow-sm',
+                                    'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl border text-xs font-semibold capitalize transition-all hover:shadow-sm',
+                                    canUpdateClientStatus ? 'cursor-pointer' : 'cursor-not-allowed opacity-80',
                                     statusColors[clientStatusLocal || client.status] || statusColors.ACTIVE
                                 )}
+                                title={canUpdateClientStatus ? 'Change client status' : 'Insufficient permission'}
                             >
                                 <div className="flex items-center gap-1.5">
                                     <div className={cn(
@@ -266,7 +298,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                                     )} />
                                     {clientStatusLocal || client.status}
                                 </div>
-                                <ChevronDown size={12} />
+                                {canUpdateClientStatus && <ChevronDown size={12} />}
                             </button>
                             {showStatusMenu && (
                                 <div className="absolute right-0 top-full mt-1 w-52 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-700 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-[100] py-1 animate-fade-in">

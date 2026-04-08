@@ -34,7 +34,7 @@ export class ClientsController {
   constructor(private readonly clientsService: ClientsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(
     @Request() req: RequestWithUser,
     @Body() createClientDto: CreateClientDto,
@@ -47,13 +47,13 @@ export class ClientsController {
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   findAll(@Request() req: RequestWithUser, @Query() query: ClientQueryDto) {
-    return this.clientsService.findAll(req.user.tenantId, query);
+    return this.clientsService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Post('export')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   async export(
     @Request() req: RequestWithUser,
     @Body() dto: ExportClientsDto,
@@ -90,13 +90,13 @@ export class ClientsController {
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.clientsService.findOne(req.user.tenantId, id);
+    return this.clientsService.findOne(req.user.tenantId, req.user.sub, id);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -111,13 +111,13 @@ export class ClientsController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.clientsService.remove(req.user.tenantId, req.user.sub, id);
   }
 
   @Patch(':id/kyc')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'SUPERVISOR')
   updateKyc(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -132,7 +132,7 @@ export class ClientsController {
   }
 
   @Patch(':id/aml')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'SUPERVISOR')
   updateAml(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -149,7 +149,7 @@ export class ClientsController {
   // --- BENEFICIARIES ---
 
   @Post(':clientId/beneficiaries')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   createBeneficiary(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
@@ -157,22 +157,27 @@ export class ClientsController {
   ) {
     return this.clientsService.createBeneficiary(
       req.user.tenantId,
+      req.user.sub,
       clientId,
       dto,
     );
   }
 
   @Get(':clientId/beneficiaries')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   getBeneficiaries(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
   ) {
-    return this.clientsService.getBeneficiaries(req.user.tenantId, clientId);
+    return this.clientsService.getBeneficiaries(
+      req.user.tenantId,
+      req.user.sub,
+      clientId,
+    );
   }
 
   @Patch(':clientId/beneficiaries/:id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   updateBeneficiary(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
@@ -181,6 +186,7 @@ export class ClientsController {
   ) {
     return this.clientsService.updateBeneficiary(
       req.user.tenantId,
+      req.user.sub,
       clientId,
       id,
       dto,
@@ -188,7 +194,7 @@ export class ClientsController {
   }
 
   @Delete(':clientId/beneficiaries/:id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   removeBeneficiary(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
@@ -196,6 +202,7 @@ export class ClientsController {
   ) {
     return this.clientsService.removeBeneficiary(
       req.user.tenantId,
+      req.user.sub,
       clientId,
       id,
     );
@@ -204,7 +211,7 @@ export class ClientsController {
   // --- NEXT OF KIN ---
 
   @Post(':clientId/next-of-kin')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   createNextOfKin(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
@@ -212,24 +219,29 @@ export class ClientsController {
   ) {
     return this.clientsService.createNextOfKin(
       req.user.tenantId,
+      req.user.sub,
       clientId,
       dto,
     );
   }
 
   @Get(':clientId/next-of-kin')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'COMPLIANCE_OFFICER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   getNextOfKin(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
   ) {
-    return this.clientsService.getNextOfKin(req.user.tenantId, clientId);
+    return this.clientsService.getNextOfKin(
+      req.user.tenantId,
+      req.user.sub,
+      clientId,
+    );
   }
 
   // --- BANK DETAILS ---
 
   @Post(':clientId/bank-details')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   createBankDetail(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
@@ -237,23 +249,22 @@ export class ClientsController {
   ) {
     return this.clientsService.createBankDetail(
       req.user.tenantId,
+      req.user.sub,
       clientId,
       dto,
     );
   }
 
   @Get(':clientId/bank-details')
-  @Roles(
-    'ADMIN',
-    'TENANT_ADMIN',
-    'BROKER',
-    'COMPLIANCE_OFFICER',
-    'FINANCE_MANAGER',
-  )
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR', 'MANAGER')
   getBankDetails(
     @Request() req: RequestWithUser,
     @Param('clientId') clientId: string,
   ) {
-    return this.clientsService.getBankDetails(req.user.tenantId, clientId);
+    return this.clientsService.getBankDetails(
+      req.user.tenantId,
+      req.user.sub,
+      clientId,
+    );
   }
 }

@@ -306,7 +306,7 @@ describe('PoliciesService', () => {
         _sum: { premiumAmount: new Prisma.Decimal(1000) },
       });
 
-      const result = await service.findAll('tenant-1', { page: 1, limit: 10 });
+      const result = await service.findAll('tenant-1', 'user-1', { page: 1, limit: 10 });
 
       expect(result.items).toHaveLength(1);
       expect(result.meta.total).toBe(1);
@@ -321,7 +321,11 @@ describe('PoliciesService', () => {
         _sum: { premiumAmount: null },
       });
 
-      await service.findAll('tenant-1', { page: 1, limit: 10, search: 'POL-123' });
+      await service.findAll('tenant-1', 'user-1', {
+        page: 1,
+        limit: 10,
+        search: 'POL-123',
+      });
 
       expect(mockPrisma.policy.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -343,7 +347,11 @@ describe('PoliciesService', () => {
         _sum: { premiumAmount: null },
       });
 
-      await service.findAll('tenant-1', { page: 1, limit: 10, status: 'ACTIVE' });
+      await service.findAll('tenant-1', 'user-1', {
+        page: 1,
+        limit: 10,
+        status: 'ACTIVE',
+      });
 
       expect(mockPrisma.policy.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -355,7 +363,7 @@ describe('PoliciesService', () => {
     it('should calculate daysToExpiry correctly', async () => {
       const futureDate = new Date();
       futureDate.setDate(futureDate.getDate() + 30);
-      
+
       const mockPolicy = makePolicy({ expiryDate: futureDate });
       mockPrisma.policy.count.mockResolvedValue(1);
       mockPrisma.policy.findMany.mockResolvedValue([mockPolicy]);
@@ -363,7 +371,7 @@ describe('PoliciesService', () => {
         _sum: { premiumAmount: new Prisma.Decimal(1000) },
       });
 
-      const result = await service.findAll('tenant-1', { page: 1, limit: 10 });
+      const result = await service.findAll('tenant-1', 'user-1', { page: 1, limit: 10 });
 
       expect(result.items[0].daysToExpiry).toBe(30);
     });
@@ -415,8 +423,11 @@ describe('PoliciesService', () => {
   describe('update', () => {
     it('should update a policy successfully', async () => {
       const existingPolicy = makePolicy();
-      const updatedPolicy = { ...existingPolicy, premiumAmount: new Prisma.Decimal(2000) };
-      
+      const updatedPolicy = {
+        ...existingPolicy,
+        premiumAmount: new Prisma.Decimal(2000),
+      };
+
       mockPrisma.policy.findUnique.mockResolvedValue(existingPolicy);
       mockPrisma.$transaction.mockImplementation(async (callback) => {
         const tx = {
@@ -569,7 +580,10 @@ describe('PoliciesService', () => {
       mockPrisma.policy.findUnique.mockResolvedValue(cancelledPolicy);
 
       await expect(
-        service.cancel('policy-1', 'tenant-1', 'user-1', { reason: 'Test', effectiveDate: '2024-06-01' }),
+        service.cancel('policy-1', 'tenant-1', 'user-1', {
+          reason: 'Test',
+          effectiveDate: '2024-06-01',
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -661,12 +675,17 @@ describe('PoliciesService', () => {
       mockPrisma.policy.findUnique.mockResolvedValue(activePolicy);
       mockPrisma.policyEndorsement.create.mockResolvedValue(endorsement);
 
-      const result = await service.createEndorsement('policy-1', 'tenant-1', 'user-1', {
-        type: EndorsementType.COVERAGE_CHANGE,
-        description: 'Add flood coverage',
-        premiumAdjustment: 500,
-        effectiveDate: '2024-06-01',
-      });
+      const result = await service.createEndorsement(
+        'policy-1',
+        'tenant-1',
+        'user-1',
+        {
+          type: EndorsementType.COVERAGE_CHANGE,
+          description: 'Add flood coverage',
+          premiumAdjustment: 500,
+          effectiveDate: '2024-06-01',
+        },
+      );
 
       expect(result).toBeDefined();
       expect(result.type).toBe(EndorsementType.COVERAGE_CHANGE);
@@ -712,17 +731,29 @@ describe('PoliciesService', () => {
       };
       const approvedEndorsement = { ...pendingEndorsement, status: 'APPROVED' };
 
-      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(pendingEndorsement);
+      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(
+        pendingEndorsement,
+      );
       mockPrisma.$transaction.mockImplementation(async (callback) => {
         const tx = {
-          policyEndorsement: { update: jest.fn().mockResolvedValue(approvedEndorsement) },
-          policy: { findUnique: jest.fn().mockResolvedValue(makePolicy()), update: jest.fn() },
+          policyEndorsement: {
+            update: jest.fn().mockResolvedValue(approvedEndorsement),
+          },
+          policy: {
+            findUnique: jest.fn().mockResolvedValue(makePolicy()),
+            update: jest.fn(),
+          },
           auditLog: { create: jest.fn() },
         };
         return callback(tx);
       });
 
-      const result = await service.approveEndorsement('policy-1', 'endorsement-1', 'tenant-1', 'user-1');
+      const result = await service.approveEndorsement(
+        'policy-1',
+        'endorsement-1',
+        'tenant-1',
+        'user-1',
+      );
 
       expect(result.status).toBe('APPROVED');
     });
@@ -733,10 +764,17 @@ describe('PoliciesService', () => {
         policyId: 'policy-1',
         status: 'APPROVED',
       };
-      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(approvedEndorsement);
+      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(
+        approvedEndorsement,
+      );
 
       await expect(
-        service.approveEndorsement('policy-1', 'endorsement-1', 'tenant-1', 'user-1'),
+        service.approveEndorsement(
+          'policy-1',
+          'endorsement-1',
+          'tenant-1',
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -752,10 +790,20 @@ describe('PoliciesService', () => {
       };
       const rejectedEndorsement = { ...pendingEndorsement, status: 'REJECTED' };
 
-      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(pendingEndorsement);
-      mockPrisma.policyEndorsement.update.mockResolvedValue(rejectedEndorsement);
+      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(
+        pendingEndorsement,
+      );
+      mockPrisma.policyEndorsement.update.mockResolvedValue(
+        rejectedEndorsement,
+      );
 
-      const result = await service.rejectEndorsement('policy-1', 'endorsement-1', 'tenant-1', 'user-1', 'Not approved');
+      const result = await service.rejectEndorsement(
+        'policy-1',
+        'endorsement-1',
+        'tenant-1',
+        'user-1',
+        'Not approved',
+      );
 
       expect(result.status).toBe('REJECTED');
     });
@@ -766,10 +814,18 @@ describe('PoliciesService', () => {
         policyId: 'policy-1',
         status: 'APPROVED',
       };
-      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(approvedEndorsement);
+      mockPrisma.policyEndorsement.findFirst.mockResolvedValue(
+        approvedEndorsement,
+      );
 
       await expect(
-        service.rejectEndorsement('policy-1', 'endorsement-1', 'tenant-1', 'user-1', 'Test'),
+        service.rejectEndorsement(
+          'policy-1',
+          'endorsement-1',
+          'tenant-1',
+          'user-1',
+          'Test',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -795,9 +851,9 @@ describe('PoliciesService', () => {
     it('should throw NotFoundException when policy not found', async () => {
       mockPrisma.policy.findUnique.mockResolvedValue(null);
 
-      await expect(service.listInstallments('policy-1', 'tenant-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.listInstallments('policy-1', 'tenant-1'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -816,11 +872,17 @@ describe('PoliciesService', () => {
       mockPrisma.premiumInstallment.findFirst.mockResolvedValue(installment);
       mockPrisma.premiumInstallment.update.mockResolvedValue(paidInstallment);
 
-      const result = await service.payInstallment('policy-1', 'installment-1', 'tenant-1', 'user-1', {
-        paidAmount: 1000,
-        paidDate: '2024-01-15',
-        paymentMethod: PaymentMethod.BANK_TRANSFER,
-      });
+      const result = await service.payInstallment(
+        'policy-1',
+        'installment-1',
+        'tenant-1',
+        'user-1',
+        {
+          paidAmount: 1000,
+          paidDate: '2024-01-15',
+          paymentMethod: PaymentMethod.BANK_TRANSFER,
+        },
+      );
 
       expect(result.status).toBe('PAID');
     });
@@ -829,11 +891,17 @@ describe('PoliciesService', () => {
       mockPrisma.premiumInstallment.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.payInstallment('policy-1', 'installment-1', 'tenant-1', 'user-1', {
-          paidAmount: 1000,
-          paidDate: '2024-01-15',
-          paymentMethod: PaymentMethod.BANK_TRANSFER,
-        }),
+        service.payInstallment(
+          'policy-1',
+          'installment-1',
+          'tenant-1',
+          'user-1',
+          {
+            paidAmount: 1000,
+            paidDate: '2024-01-15',
+            paymentMethod: PaymentMethod.BANK_TRANSFER,
+          },
+        ),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -843,14 +911,22 @@ describe('PoliciesService', () => {
         policyId: 'policy-1',
         status: 'PAID',
       };
-      mockPrisma.premiumInstallment.findFirst.mockResolvedValue(paidInstallment);
+      mockPrisma.premiumInstallment.findFirst.mockResolvedValue(
+        paidInstallment,
+      );
 
       await expect(
-        service.payInstallment('policy-1', 'installment-1', 'tenant-1', 'user-1', {
-          paidAmount: 1000,
-          paidDate: '2024-01-15',
-          paymentMethod: PaymentMethod.BANK_TRANSFER,
-        }),
+        service.payInstallment(
+          'policy-1',
+          'installment-1',
+          'tenant-1',
+          'user-1',
+          {
+            paidAmount: 1000,
+            paidDate: '2024-01-15',
+            paymentMethod: PaymentMethod.BANK_TRANSFER,
+          },
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -871,7 +947,11 @@ describe('PoliciesService', () => {
         return callback(tx);
       });
 
-      const result = await service.issueCoverNote('policy-1', 'tenant-1', 'user-1');
+      const result = await service.issueCoverNote(
+        'policy-1',
+        'tenant-1',
+        'user-1',
+      );
 
       expect(result.status).toBe('COVER_NOTE');
     });

@@ -24,7 +24,7 @@ export class CarrierProductsController {
   constructor(private readonly productsService: CarrierProductsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   create(
     @Request() req: RequestWithUser,
     @Param('carrierId') carrierId: string,
@@ -39,15 +39,7 @@ export class CarrierProductsController {
   }
 
   @Get()
-  @Roles(
-    'ADMIN',
-    'TENANT_ADMIN',
-    'BROKER',
-    'COMPLIANCE_OFFICER',
-    'FINANCE_MANAGER',
-    'AGENT',
-    'UNDERWRITER',
-  )
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR', 'MANAGER')
   findAll(
     @Request() req: RequestWithUser,
     @Param('carrierId') carrierId: string,
@@ -57,7 +49,7 @@ export class CarrierProductsController {
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   update(
     @Request() req: RequestWithUser,
     @Param('carrierId') carrierId: string,

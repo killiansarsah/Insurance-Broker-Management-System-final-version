@@ -11,19 +11,19 @@ export class GoogleCalendarController {
   constructor(private readonly calendarService: GoogleCalendarService) {}
 
   @Post('push')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   push(@Request() req: RequestWithUser) {
     return this.calendarService.pushToGoogle(req.user.tenantId);
   }
 
   @Post('pull')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   pull(@Request() req: RequestWithUser) {
     return this.calendarService.pullFromGoogle(req.user.tenantId, req.user.sub);
   }
 
   @Post('sync')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   sync(@Request() req: RequestWithUser) {
     return this.calendarService.syncAll(req.user.tenantId, req.user.sub);
   }

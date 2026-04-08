@@ -62,6 +62,9 @@ const ACTION_ICONS: Record<string, React.ReactNode> = {
     PASSWORD_CHANGE: <Unlock size={14} />,
     PAYMENT_PROCESSED: <DollarSign size={14} />,
     REPORT_GENERATED: <FileText size={14} />,
+    'login.success': <LogIn size={14} />,
+    'login.failed': <AlertTriangle size={14} />,
+    'password.reset': <Unlock size={14} />,
 };
 
 const ACTION_STYLES: Record<string, string> = {
@@ -79,6 +82,9 @@ const ACTION_STYLES: Record<string, string> = {
     PAYMENT_PROCESSED: 'bg-teal-50 text-teal-700',
     REPORT_GENERATED: 'bg-indigo-50 text-indigo-700',
     VIEW: 'bg-surface-100 text-surface-500',
+    'login.success': 'bg-success-50 text-success-700',
+    'login.failed': 'bg-danger-50 text-danger-700',
+    'password.reset': 'bg-warning-50 text-warning-700',
 };
 
 const MODULE_LABELS: Record<string, string> = {
@@ -250,9 +256,9 @@ export default function AuditPage() {
                                         </div>
                                     </td>
                                     <td className="px-4 py-3">
-                                        <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold', ACTION_STYLES[entry.action] ?? 'bg-surface-100 text-surface-600')}>
+                                        <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold capitalize', ACTION_STYLES[entry.action] ?? 'bg-surface-100 text-surface-600')}>
                                             {ACTION_ICONS[entry.action]}
-                                            {entry.action.replace(/_/g, ' ')}
+                                            {entry.action.replace(/[_.]/g, ' ')}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3 text-xs text-surface-600">{MODULE_LABELS[entry.entity] ?? entry.entity}</td>

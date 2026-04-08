@@ -10,10 +10,29 @@ import {
   UpdateCalendarEventDto,
 } from './dto/calendar.dto';
 import { Prisma } from '@prisma/client';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class CalendarService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async buildEventScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.CalendarEventWhereInput> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: { role: true } });
+    const actorLevel = user ? (ROLE_LEVEL[user.role] ?? 0) : 0;
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [{ createdById: userId }, { attendees: { some: { userId } } }],
+    };
+  }
 
   private async logAudit(
     tenantId: string,
@@ -71,7 +90,7 @@ export class CalendarService {
     }
 
     await this.logAudit(tenantId, userId, 'event.created', event.id);
-    return this.findOne(event.id, tenantId);
+    return this.findOne(event.id, tenantId, userId);
   }
 
   async findAll(tenantId: string, userId: string, from: string, to: string) {
@@ -91,9 +110,11 @@ export class CalendarService {
         throw new BadRequestException('Maximum date range is 90 days');
       }
 
+      const scopeWhere = await this.buildEventScopeWhere(tenantId, userId);
+
       return await this.prisma.calendarEvent.findMany({
         where: {
-          tenantId,
+          ...scopeWhere,
           status: { not: 'CANCELLED' },
           OR: [
             {
@@ -115,15 +136,6 @@ export class CalendarService {
               AND: [
                 { startDate: { lte: fromDate } },
                 { endDate: { gte: toDate } },
-              ],
-            },
-          ],
-          AND: [
-            {
-              OR: [
-                { createdById: userId },
-                { attendees: { some: { userId } } },
-                { googleEventId: { not: null } },
               ],
             },
           ],
@@ -151,9 +163,11 @@ export class CalendarService {
     }
   }
 
-  async findOne(id: string, tenantId: string) {
-    const event = await this.prisma.calendarEvent.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId: string) {
+    const scopeWhere = await this.buildEventScopeWhere(tenantId, userId);
+
+    const event = await this.prisma.calendarEvent.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         attendees: {
           include: {
@@ -182,7 +196,7 @@ export class CalendarService {
     userId: string,
     dto: UpdateCalendarEventDto,
   ) {
-    const event = await this.findOne(id, tenantId);
+    const event = await this.findOne(id, tenantId, userId);
     if (event.createdById !== userId) {
       throw new ForbiddenException('Only the creator can edit this event');
     }
@@ -200,7 +214,7 @@ export class CalendarService {
   }
 
   async remove(id: string, tenantId: string, userId: string) {
-    const event = await this.findOne(id, tenantId);
+    const event = await this.findOne(id, tenantId, userId);
     if (event.createdById !== userId) {
       throw new ForbiddenException('Only the creator can delete this event');
     }

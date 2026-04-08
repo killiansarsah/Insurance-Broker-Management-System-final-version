@@ -6,6 +6,7 @@ import { TenantsService } from '../tenants/tenants.service.js';
 import { EmailService } from '../email/email.service.js';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
+import type { StartTrialDto } from './dto/start-trial.dto.js';
 
 const REFRESH_TOKEN_BYTES = 64;
 const REFRESH_TOKEN_HASH_COST = 10;
@@ -37,7 +38,8 @@ interface UserRecord {
   createdAt: Date;
   twoFactorEnabled: boolean;
   twoFactorSecret: string | null;
-  userRoleMappings?: { role: { name: string; permissions?: { permission: { action: string } }[] } }[];
+  role: string;
+  permissions: string[];
 }
 
 interface RefreshTokenRecord {
@@ -75,23 +77,7 @@ export class AuthService {
   ) {}
   private readonly logger = new Logger(AuthService.name);
 
-  // Reusable Prisma include for the full RBAC join chain (single query, no N+1)
-  private readonly RBAC_INCLUDE = {
-    userRoleMappings: {
-      select: {
-        role: {
-          select: {
-            name: true,
-            permissions: {
-              select: { permission: { select: { action: true } } },
-            },
-          },
-        },
-      },
-    },
-  } as const;
-
-  /** Build AuthUser payload from a UserRecord with full RBAC join */
+  /** Build AuthUser payload from a UserRecord */
   private buildAuthUser(user: UserRecord, tenantId?: string): AuthUser {
     return {
       id: user.id,
@@ -102,17 +88,11 @@ export class AuthService {
   }
 
   private getRoles(user: UserRecord): string[] {
-    return user.userRoleMappings?.map((m) => m.role.name) ?? [];
+    return [user.role];
   }
 
   private getPermissions(user: UserRecord): string[] {
-    const perms = new Set<string>();
-    for (const mapping of user.userRoleMappings ?? []) {
-      for (const rp of mapping.role.permissions ?? []) {
-        perms.add(rp.permission.action);
-      }
-    }
-    return [...perms];
+    return user.permissions ?? [];
   }
 
   private userToDto(user: UserRecord) {
@@ -212,14 +192,12 @@ export class AuthService {
       tenantId = tenant.id;
       user = (await this.prisma.user.findFirst({
         where: { tenantId: tenant.id, email },
-        include: this.RBAC_INCLUDE,
       })) as UserRecord | null;
     } else {
       // No tenant slug — auto-resolve by looking up email across all tenants
       const candidates = (await this.prisma.user.findMany({
         where: { email, deletedAt: null, isActive: true },
         include: {
-          ...this.RBAC_INCLUDE,
           tenant: {
             select: { id: true, name: true, slug: true, isActive: true },
           },
@@ -332,7 +310,6 @@ export class AuthService {
   ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      include: this.RBAC_INCLUDE,
     });
     if (!user) {
       throw new HttpException('Invalid credentials', HttpStatus.UNAUTHORIZED);
@@ -411,14 +388,11 @@ export class AuthService {
 
     const user = (await this.prisma.user.findUnique({
       where: { id: matched.userId },
-      include: this.RBAC_INCLUDE,
     })) as UserRecord | null;
     if (!user)
       throw new HttpException('Invalid refresh token', HttpStatus.UNAUTHORIZED);
 
-    const accessToken = await this.issueAccessToken(
-      this.buildAuthUser(user),
-    );
+    const accessToken = await this.issueAccessToken(this.buildAuthUser(user));
 
     return {
       accessToken,
@@ -565,6 +539,111 @@ export class AuthService {
     }
 
     return { success: true };
+  }
+
+  async startTrial(dto: StartTrialDto) {
+    const email = dto.email.trim().toLowerCase();
+    const firstName = dto.firstName.trim();
+    const lastName = dto.lastName.trim();
+    const companyName = dto.companyName.trim();
+
+    const existingUser = await this.prisma.user.findFirst({
+      where: { email, deletedAt: null },
+      select: { id: true },
+    });
+    if (existingUser) {
+      throw new HttpException(
+        'An account with this email already exists. Please sign in instead.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const baseSlug = companyName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+      .slice(0, 48);
+
+    let slug = baseSlug || `tenant-${crypto.randomBytes(3).toString('hex')}`;
+    let suffix = 1;
+    while (await this.prisma.tenant.findUnique({ where: { slug } })) {
+      slug = `${baseSlug}-${suffix}`;
+      suffix += 1;
+    }
+
+    const passwordHash = await bcrypt.hash(dto.password, PASSWORD_HASH_COST);
+    const now = new Date();
+    const trialEndsAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    const { tenant } = await this.prisma.$transaction(async (tx) => {
+      const tenant = await tx.tenant.create({
+        data: {
+          name: companyName,
+          slug,
+          subdomain: slug,
+          plan: 'PROFESSIONAL',
+          billingCycle: 'MONTHLY',
+          tenantStatus: 'TRIAL',
+          trialEndsAt,
+          email,
+          adminEmail: email,
+          phone: dto.phone ?? null,
+          isActive: true,
+        },
+      });
+
+      const user = await tx.user.create({
+        data: {
+          tenantId: tenant.id,
+          email,
+          passwordHash,
+          firstName,
+          lastName,
+          phone: dto.phone ?? null,
+          jobTitle: 'Workspace Owner',
+          mustChangePassword: false,
+          role: 'WORKSPACE_OWNER',
+          permissions: [],
+        },
+      });
+
+      await tx.subscription.create({
+        data: {
+          tenantId: tenant.id,
+          plan: 'PROFESSIONAL',
+          billingCycle: 'MONTHLY',
+          amountGhs: 0,
+          status: 'TRIAL',
+          currentPeriodStart: now,
+          currentPeriodEnd: trialEndsAt,
+        },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId: tenant.id,
+          userId: user.id,
+          action: 'trial.started',
+          entity: 'tenant',
+          entityId: tenant.id,
+          after: {
+            slug: tenant.slug,
+            plan: tenant.plan,
+            trialEndsAt,
+          },
+        },
+      });
+
+      return { tenant };
+    });
+
+    return {
+      success: true,
+      tenantSlug: tenant.slug,
+      email,
+      trialEndsAt,
+      message: 'Trial workspace created successfully.',
+    };
   }
 
   async getProfile(userId: string) {

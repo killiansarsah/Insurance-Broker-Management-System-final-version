@@ -30,7 +30,7 @@ import {
 
 @Controller('admin/email')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'SUPER_ADMIN', 'TENANT_ADMIN')
+@Roles('ADMINISTRATOR')
 export class EmailAdminController {
   constructor(
     private readonly emailService: EnhancedEmailService,

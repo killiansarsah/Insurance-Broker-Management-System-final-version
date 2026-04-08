@@ -181,7 +181,7 @@ export default function ProvisionTenantPage() {
               <div className="space-y-6 sa-reveal">
                 <div>
                   <h3 className="text-sm font-bold font-serif text-[#0c6a55] mb-1">Primary Administrator</h3>
-                  <p className="text-xs text-[#7a9a8c]">This user will hold TENANT_ADMIN privileges.</p>
+                  <p className="text-xs text-[#7a9a8c]">This user will hold Workspace Owner privileges.</p>
                 </div>
                 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

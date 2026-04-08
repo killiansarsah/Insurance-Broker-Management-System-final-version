@@ -26,7 +26,7 @@ export class GoogleOAuthController {
   /** GET /integrations/google/auth-url — returns the Google consent URL */
   @Get('auth-url')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   getAuthUrl(@Request() req: RequestWithUser) {
     const url = this.googleOAuth.getConsentUrl(req.user.tenantId);
     return { url };

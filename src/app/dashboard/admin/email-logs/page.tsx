@@ -114,58 +114,58 @@ export default function EmailLogsPage() {
 
   const columns = [
     {
-      accessorKey: 'recipientEmail',
-      header: 'Recipient',
-      cell: ({ row }: any) => (
+      key: 'recipientEmail',
+      label: 'Recipient',
+      render: (row: any) => (
         <div>
-          <div className="font-medium">{row.original.recipientEmail}</div>
-          {row.original.user && (
+          <div className="font-medium">{row.recipientEmail}</div>
+          {row.user && (
             <div className="text-sm text-muted-foreground">
-              {row.original.user.firstName} {row.original.user.lastName}
+              {row.user.firstName} {row.user.lastName}
             </div>
           )}
         </div>
       ),
     },
     {
-      accessorKey: 'subject',
-      header: 'Subject',
-      cell: ({ row }: any) => (
-        <div className="max-w-[300px] truncate" title={row.original.subject}>
-          {row.original.subject}
+      key: 'subject',
+      label: 'Subject',
+      render: (row: any) => (
+        <div className="max-w-[300px] truncate" title={row.subject}>
+          {row.subject}
         </div>
       ),
     },
     {
-      accessorKey: 'templateName',
-      header: 'Template',
-      cell: ({ row }: any) => (
-        <Badge variant="outline">{row.original.templateName}</Badge>
+      key: 'templateName',
+      label: 'Template',
+      render: (row: any) => (
+        <Badge variant="outline">{row.templateName}</Badge>
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }: any) => getStatusBadge(row.original.status),
+      key: 'status',
+      label: 'Status',
+      render: (row: any) => getStatusBadge(row.status),
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Created',
-      cell: ({ row }: any) => (
+      key: 'createdAt',
+      label: 'Created',
+      render: (row: any) => (
         <div className="text-sm">
-          {new Date(row.original.createdAt).toLocaleString()}
+          {new Date(row.createdAt).toLocaleString()}
         </div>
       ),
     },
     {
-      accessorKey: 'sentAt',
-      header: 'Sent',
-      cell: ({ row }: any) => (
+      key: 'sentAt',
+      label: 'Sent',
+      render: (row: any) => (
         <div className="text-sm">
-          {row.original.sentAt 
-            ? new Date(row.original.sentAt).toLocaleString()
-            : row.original.failedAt
-            ? new Date(row.original.failedAt).toLocaleString()
+          {row.sentAt 
+            ? new Date(row.sentAt).toLocaleString()
+            : row.failedAt
+            ? new Date(row.failedAt).toLocaleString()
             : '-'
           }
         </div>
@@ -342,12 +342,6 @@ export default function EmailLogsPage() {
           <DataTable
             columns={columns}
             data={logs}
-            loading={loading}
-            pagination={{
-              page: pagination.page,
-              totalPages: pagination.totalPages,
-              onPageChange: (page) => setPagination(prev => ({ ...prev, page })),
-            }}
           />
         </CardContent>
       </Card>

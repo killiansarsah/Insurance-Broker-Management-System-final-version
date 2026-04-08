@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import {
@@ -8,6 +13,9 @@ import {
   UpdateTaskStatusDto,
 } from './dto/task.dto';
 import { Prisma } from '@prisma/client';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class TasksService {
@@ -35,7 +43,53 @@ export class TasksService {
     });
   }
 
+  private async assertTaskWritableByActor(
+    tenantId: string,
+    userId: string,
+    task: { createdById: string; assignedToId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    // Supervisory roles can manage tasks tenant-wide.
+    if (actorLevel >= supervisorLevel) return;
+
+    // Agent-level users can only manage tasks they created or are assigned.
+    if (task.createdById !== userId && task.assignedToId !== userId) {
+      throw new BadRequestException(
+        'You can only manage tasks you created or are assigned to',
+      );
+    }
+  }
+
+  private async buildTaskScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.TaskWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [{ createdById: userId }, { assignedToId: userId }],
+    };
+  }
+
   async create(tenantId: string, userId: string, dto: CreateTaskDto) {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    const requestedAssigneeId = dto.assignedToId ?? userId;
+
+    if (actorLevel < supervisorLevel && requestedAssigneeId !== userId) {
+      throw new BadRequestException(
+        'You can only assign tasks to yourself',
+      );
+    }
+
     const task = await this.prisma.task.create({
       data: {
         tenantId,
@@ -44,7 +98,7 @@ export class TasksService {
         priority: dto.priority,
         status: 'PENDING',
         dueDate: dto.dueDate ? new Date(dto.dueDate) : undefined,
-        assignedToId: dto.assignedToId ?? userId,
+        assignedToId: requestedAssigneeId,
         createdById: userId,
         type: dto.type,
         link: dto.link,
@@ -73,7 +127,7 @@ export class TasksService {
     return task;
   }
 
-  async findAll(tenantId: string, query: TaskQueryDto) {
+  async findAll(tenantId: string, userId: string, query: TaskQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -90,8 +144,10 @@ export class TasksService {
 
     const skip = (page - 1) * limit;
 
+    const scopeWhere = await this.buildTaskScopeWhere(tenantId, userId);
+
     const where: Prisma.TaskWhereInput = {
-      tenantId,
+      ...scopeWhere,
       ...(status && { status }),
       ...(priority && { priority }),
       ...(assignedToId && { assignedToId }),
@@ -157,9 +213,13 @@ export class TasksService {
     });
   }
 
-  async findOne(id: string, tenantId: string) {
-    const task = await this.prisma.task.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId?: string) {
+    const scopeWhere = userId
+      ? await this.buildTaskScopeWhere(tenantId, userId)
+      : ({ tenantId } as Prisma.TaskWhereInput);
+
+    const task = await this.prisma.task.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         assignedTo: {
           select: { id: true, firstName: true, lastName: true, email: true },
@@ -179,7 +239,20 @@ export class TasksService {
     userId: string,
     dto: UpdateTaskDto,
   ) {
-    const task = await this.findOne(id, tenantId);
+    const task = await this.findOne(id, tenantId, userId);
+    await this.assertTaskWritableByActor(tenantId, userId, task);
+
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    if (
+      actorLevel < supervisorLevel &&
+      dto.assignedToId !== undefined &&
+      dto.assignedToId !== userId
+    ) {
+      throw new BadRequestException(
+        'You can only assign tasks to yourself',
+      );
+    }
 
     const updated = await this.prisma.task.update({
       where: { id },
@@ -236,7 +309,9 @@ export class TasksService {
     userId: string,
     dto: UpdateTaskStatusDto,
   ) {
-    const task = await this.findOne(id, tenantId);
+    const task = await this.findOne(id, tenantId, userId);
+    await this.assertTaskWritableByActor(tenantId, userId, task);
+
     const oldStatus = task.status;
 
     const isCompleted = dto.status === 'REGISTERED'; // closest to DONE in schema

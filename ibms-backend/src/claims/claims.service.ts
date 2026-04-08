@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -20,6 +21,9 @@ import {
 import { CreateClaimFollowUpDto } from './dto/claim-follow-up.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class ClaimsService {
@@ -71,6 +75,28 @@ export class ClaimsService {
         after: after ? (after as Prisma.InputJsonObject) : undefined,
       },
     });
+  }
+
+  private async buildClaimScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.ClaimWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId, deletedAt: null };
+    }
+
+    return {
+      tenantId,
+      deletedAt: null,
+      OR: [
+        { assessorId: userId },
+        { policy: { brokerId: userId } },
+        { client: { assignedBrokerId: userId } },
+      ],
+    };
   }
 
   private getValidTransitions(currentStatus: string): string[] {
@@ -168,7 +194,7 @@ export class ClaimsService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: ClaimQueryDto) {
+  async findAll(tenantId: string, userId: string, query: ClaimQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -189,9 +215,10 @@ export class ClaimsService {
     const skip = (page - 1) * limit;
     const now = new Date();
 
+    const scopeWhere = await this.buildClaimScopeWhere(tenantId, userId);
+
     const where: Prisma.ClaimWhereInput = {
-      tenantId,
-      deletedAt: null,
+      ...scopeWhere,
       ...(status && { status }),
       ...(policyId && { policyId }),
       ...(clientId && { clientId }),
@@ -280,8 +307,7 @@ export class ClaimsService {
         }),
         this.prisma.claim.count({
           where: {
-            tenantId,
-            deletedAt: null,
+            ...scopeWhere,
             OR: [
               { acknowledgmentDeadline: { lt: now }, status: 'INTIMATED' },
               {
@@ -308,9 +334,13 @@ export class ClaimsService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
-    const claim = await this.prisma.claim.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId?: string) {
+    const scopeWhere = userId
+      ? await this.buildClaimScopeWhere(tenantId, userId)
+      : ({ tenantId, deletedAt: null } as Prisma.ClaimWhereInput);
+
+    const claim = await this.prisma.claim.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         client: true,
         policy: {
@@ -339,7 +369,7 @@ export class ClaimsService {
     userId: string,
     dto: UpdateClaimDto,
   ) {
-    const claim = await this.findOne(id, tenantId);
+    const claim = await this.findOne(id, tenantId, userId);
 
     const updateData: Record<string, unknown> = {};
     if (dto.claimAmount !== undefined) updateData.claimAmount = dto.claimAmount;
@@ -363,6 +393,14 @@ export class ClaimsService {
 
     const updated = await this.prisma.$transaction(async (tx) => {
       if (dto.assessedAmount !== undefined) {
+        const actorLevel = await getUserRoleLevel(this.prisma, userId);
+        const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+        if (actorLevel < supervisorLevel) {
+          throw new BadRequestException(
+            'Only supervisory roles can set assessed amounts',
+          );
+        }
+
         await this.enforceTransitionAndLog(
           tx,
           claim,
@@ -393,7 +431,7 @@ export class ClaimsService {
     userId: string,
     dto: AcknowledgeClaimDto,
   ) {
-    const claim = await this.findOne(id, tenantId);
+    const claim = await this.findOne(id, tenantId, userId);
     if (claim.status !== 'INTIMATED') {
       throw new BadRequestException(
         'Only INTIMATED claims can be acknowledged',
@@ -437,7 +475,7 @@ export class ClaimsService {
     userId: string,
     dto: InvestigateClaimDto,
   ) {
-    const claim = await this.findOne(id, tenantId);
+    const claim = await this.findOne(id, tenantId, userId);
     if (claim.status !== 'REGISTERED') {
       throw new BadRequestException(
         'Only REGISTERED claims can move to investigation',
@@ -597,7 +635,7 @@ export class ClaimsService {
     userId: string,
     dto: SettleClaimDto,
   ) {
-    const claim = await this.findOne(id, tenantId);
+    const claim = await this.findOne(id, tenantId, userId);
     if (claim.status !== 'APPROVED') {
       throw new BadRequestException('Only APPROVED claims can be settled');
     }
@@ -655,7 +693,7 @@ export class ClaimsService {
     userId: string,
     dto: ReopenClaimDto,
   ) {
-    const claim = await this.findOne(id, tenantId);
+    const claim = await this.findOne(id, tenantId, userId);
     if (claim.status !== 'REJECTED') {
       throw new BadRequestException('Only REJECTED claims can be reopened');
     }
@@ -694,7 +732,7 @@ export class ClaimsService {
     userId: string,
     dto: CreateClaimDocumentDto,
   ) {
-    await this.findOne(claimId, tenantId);
+    await this.findOne(claimId, tenantId, userId);
     const doc = await this.prisma.claimDocument.create({
       data: {
         tenantId,
@@ -710,8 +748,8 @@ export class ClaimsService {
     return doc;
   }
 
-  async listDocuments(claimId: string, tenantId: string) {
-    await this.findOne(claimId, tenantId);
+  async listDocuments(claimId: string, tenantId: string, userId: string) {
+    await this.findOne(claimId, tenantId, userId);
     return this.prisma.claimDocument.findMany({
       where: { claimId, tenantId },
       orderBy: { uploadedAt: 'desc' },
@@ -742,7 +780,7 @@ export class ClaimsService {
     userId: string,
     dto: CreateClaimFollowUpDto,
   ) {
-    await this.findOne(claimId, tenantId);
+    await this.findOne(claimId, tenantId, userId);
 
     const followUp = await this.prisma.claimFollowUp.create({
       data: {
@@ -770,8 +808,8 @@ export class ClaimsService {
     return followUp;
   }
 
-  async listFollowUps(claimId: string, tenantId: string) {
-    await this.findOne(claimId, tenantId);
+  async listFollowUps(claimId: string, tenantId: string, userId: string) {
+    await this.findOne(claimId, tenantId, userId);
 
     return this.prisma.claimFollowUp.findMany({
       where: { claimId, tenantId },

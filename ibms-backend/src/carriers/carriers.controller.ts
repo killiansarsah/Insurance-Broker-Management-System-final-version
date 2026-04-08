@@ -24,7 +24,7 @@ export class CarriersController {
   constructor(private readonly carriersService: CarriersService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   create(
     @Request() req: RequestWithUser,
     @Body() createCarrierDto: CreateCarrierDto,
@@ -38,35 +38,19 @@ export class CarriersController {
 
   @Get()
   // Any role with dashboard access
-  @Roles(
-    'ADMIN',
-    'TENANT_ADMIN',
-    'BROKER',
-    'COMPLIANCE_OFFICER',
-    'FINANCE_MANAGER',
-    'AGENT',
-    'UNDERWRITER',
-  )
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR', 'MANAGER')
   findAll(@Request() req: RequestWithUser, @Query() query: CarrierQueryDto) {
     return this.carriersService.findAll(req.user.tenantId, query);
   }
 
   @Get(':id')
-  @Roles(
-    'ADMIN',
-    'TENANT_ADMIN',
-    'BROKER',
-    'COMPLIANCE_OFFICER',
-    'FINANCE_MANAGER',
-    'AGENT',
-    'UNDERWRITER',
-  )
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR', 'MANAGER')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.carriersService.findOne(req.user.tenantId, id);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

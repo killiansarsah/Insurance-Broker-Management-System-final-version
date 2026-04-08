@@ -19,10 +19,11 @@ import type { AuthenticatedUser } from '../../common/decorators/current-user.dec
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { PlatformAuditService } from '../services/platform-audit.service.js';
 import * as bcrypt from 'bcrypt';
+import { SystemRole } from '@prisma/client';
 
 @Controller('platform-admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class UserManagementController {
   constructor(
     private readonly prisma: PrismaService,
@@ -50,7 +51,7 @@ export class UserManagementController {
         { email: { contains: search, mode: 'insensitive' } },
       ];
     }
-    if (role) where.userRoleMappings = { some: { role: { name: role } } };
+    if (role) where.role = role;
     if (tenantId) where.tenantId = tenantId;
     if (status === 'ACTIVE') where.isActive = true;
     if (status === 'INACTIVE') where.isActive = false;
@@ -75,7 +76,7 @@ export class UserManagementController {
           createdAt: true,
           tenantId: true,
           tenant: { select: { name: true } },
-          userRoleMappings: { select: { role: { select: { name: true } } } },
+          role: true,
         },
       }),
       this.prisma.user.count({ where }),
@@ -99,13 +100,13 @@ export class UserManagementController {
       firstName: string;
       lastName: string;
       email: string;
-      role: 'PLATFORM_SUPER_ADMIN' | 'SUPER_ADMIN';
+      role: 'WORKSPACE_OWNER' | 'ADMINISTRATOR';
       sendWelcomeEmail?: boolean;
     },
     @CurrentUser() user: AuthenticatedUser,
   ) {
     // Only a PLATFORM_SUPER_ADMIN can create another super admin
-    if (user.role !== 'PLATFORM_SUPER_ADMIN') {
+    if (user.role !== 'WORKSPACE_OWNER') {
       throw new HttpException(
         'Only Platform Super Admins can create new super admin accounts',
         HttpStatus.FORBIDDEN,
@@ -131,18 +132,10 @@ export class UserManagementController {
         firstName: body.firstName,
         lastName: body.lastName,
         mustChangePassword: true,
+        role: body.role as SystemRole,
+        permissions: [],
       },
     });
-
-    // Assign role via UserRoleMapping
-    const targetRole = await this.prisma.role.findFirst({
-      where: { name: body.role, OR: [{ tenantId: user.tenantId }, { tenantId: null, isSystem: true }] },
-    });
-    if (targetRole) {
-      await this.prisma.userRoleMapping.create({
-        data: { userId: newUser.id, roleId: targetRole.id },
-      });
-    }
 
     await this.audit.log({
       actorId: user.sub,
@@ -180,10 +173,14 @@ export class UserManagementController {
     const updatedUser = await this.prisma.user.update({
       where: { id },
       data: { isActive: body.isActive },
-      select: { id: true, email: true, isActive: true,
-        userRoleMappings: { select: { role: { select: { name: true } } } } },
+      select: {
+        id: true,
+        email: true,
+        isActive: true,
+        role: true,
+      },
     });
-    const updatedRoles = updatedUser.userRoleMappings.map((m: any) => m.role.name);
+    const updatedRoles = [updatedUser.role];
 
     await this.audit.log({
       actorId: user.sub,
@@ -199,7 +196,13 @@ export class UserManagementController {
       afterState: { isActive: updatedUser.isActive },
     });
 
-    return { data: { ...updatedUser, roles: updatedRoles, role: updatedRoles[0] ?? 'AGENT' } };
+    return {
+      data: {
+        ...updatedUser,
+        roles: updatedRoles,
+        role: updatedRoles[0] ?? 'AGENT',
+      },
+    };
   }
 
   @Delete(':id')
@@ -348,7 +351,7 @@ export class UserManagementController {
         tenantId: true,
         lastLoginAt: true,
         tenant: { select: { name: true } },
-        userRoleMappings: { select: { role: { select: { name: true } } } },
+        role: true,
       },
     });
 

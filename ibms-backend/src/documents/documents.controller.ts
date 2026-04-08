@@ -24,25 +24,29 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateDocumentDto) {
     return this.documentsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: DocumentQueryDto) {
-    return this.documentsService.findAll(req.user.tenantId, query);
+    return this.documentsService.findAll(
+      req.user.tenantId,
+      req.user.sub,
+      query,
+    );
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.documentsService.findOne(id, req.user.tenantId);
+    return this.documentsService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -57,7 +61,7 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.documentsService.remove(id, req.user.tenantId, req.user.sub);
   }

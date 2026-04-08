@@ -88,6 +88,37 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
         }, {} as Record<string, CarrierProduct[]>);
     }, [products]);
 
+    const motorProducts = useMemo(
+        () => Object.entries(groupedProducts)
+            .filter(([category]) => category.toUpperCase().includes('MOTOR'))
+            .flatMap(([, items]) => items),
+        [groupedProducts],
+    );
+
+    const otherProducts = useMemo(
+        () => Object.entries(groupedProducts)
+            .filter(([category]) => !category.toUpperCase().includes('MOTOR'))
+            .flatMap(([, items]) => items),
+        [groupedProducts],
+    );
+
+    if (isLoading) {
+        return <AppLoader message="Loading carrier profile..." fullScreen={false} />;
+    }
+
+    if (!carrier) {
+        return (
+            <div className="w-full max-w-7xl mx-auto py-10">
+                <Card className="p-6">
+                    <p className="text-surface-700">Carrier not found.</p>
+                    <div className="mt-4">
+                        <Button onClick={() => router.push('/dashboard/carriers')}>Back to Carriers</Button>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
 
     return (
         <div className="w-full space-y-8 pb-20 animate-fade-in relative max-w-7xl mx-auto">

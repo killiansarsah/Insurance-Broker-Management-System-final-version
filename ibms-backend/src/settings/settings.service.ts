@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -13,6 +14,7 @@ import {
 } from './dto/settings.dto';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class SettingsService {
@@ -38,7 +40,9 @@ export class SettingsService {
   }
 
   // ─── TENANT SETTINGS ─────────────────────────────
-  async getTenantSettings(tenantId: string) {
+  async getTenantSettings(tenantId: string, userId: string) {
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
       select: {
@@ -57,6 +61,13 @@ export class SettingsService {
       },
     });
     if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    if (actorLevel < supervisorLevel) {
+      const { nicLicense, plan, isActive, createdAt, ...redacted } = tenant;
+      return redacted;
+    }
+
     return tenant;
   }
 
@@ -94,7 +105,7 @@ export class SettingsService {
         phone: true,
         avatarUrl: true,
         jobTitle: true,
-        userRoleMappings: { select: { role: { select: { name: true } } } },
+        role: true,
         twoFactorEnabled: true,
         lastLoginAt: true,
         createdAt: true,

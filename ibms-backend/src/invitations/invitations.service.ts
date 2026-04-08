@@ -3,7 +3,8 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth/auth.service.js';
 import { EmailService } from '../email/email.service.js';
-import { canAssignRole } from '../common/constants/role-hierarchy.js';
+import { SystemRole } from '@prisma/client';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 import type { CreateInvitationDto } from './dto/create-invitation.dto.js';
 import type { AcceptInvitationDto } from './dto/accept-invitation.dto.js';
 import type { InvitationQueryDto } from './dto/invitation-query.dto.js';
@@ -45,7 +46,20 @@ export class InvitationsService {
     inviterRole: string,
     dto: CreateInvitationDto,
   ) {
-    if (!canAssignRole(inviterRole, dto.role)) {
+    const targetRole = dto.role;
+    const inviterEffectiveRole = inviterRole;
+
+    const targetLevel = ROLE_LEVEL[targetRole];
+    const inviterLevel = ROLE_LEVEL[inviterEffectiveRole] || 0;
+
+    if (targetLevel === undefined) {
+      throw new HttpException(
+        'Only canonical roles are allowed: WORKSPACE_OWNER, ADMINISTRATOR, MANAGER, SUPERVISOR, AGENT',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (inviterLevel < targetLevel) {
       throw new HttpException(
         'Cannot invite user with role higher than your own',
         HttpStatus.FORBIDDEN,
@@ -85,7 +99,7 @@ export class InvitationsService {
       data: {
         tenantId,
         email: dto.email,
-        role: dto.role,
+        role: targetRole,
         branchId: dto.branchId ?? null,
         token: tokenHash,
         tokenFamily,
@@ -112,7 +126,7 @@ export class InvitationsService {
         action: 'invitation.sent',
         entity: 'invitation',
         entityId: invitation.id,
-        after: { email: dto.email, role: dto.role },
+        after: { email: dto.email, role: targetRole },
       },
     });
 
@@ -300,7 +314,7 @@ export class InvitationsService {
 
     const passwordHash = await bcrypt.hash(dto.password, PASSWORD_HASH_COST);
 
-    // Create user without legacy role field
+    // Create user with flat role field
     const user = await this.prisma.user.create({
       data: {
         tenantId: invitation.tenantId,
@@ -309,24 +323,10 @@ export class InvitationsService {
         firstName: dto.firstName,
         lastName: dto.lastName,
         branchId: invitation.branchId,
+        role: invitation.role as SystemRole,
+        permissions: [],
       },
     });
-
-    // Assign role via UserRoleMapping
-    const assignedRole = await this.prisma.role.findFirst({
-      where: {
-        name: invitation.role,
-        OR: [
-          { tenantId: invitation.tenantId },
-          { tenantId: null, isSystem: true },
-        ],
-      },
-    });
-    if (assignedRole) {
-      await this.prisma.userRoleMapping.create({
-        data: { userId: user.id, roleId: assignedRole.id },
-      });
-    }
 
     await this.prisma.invitation.update({
       where: { id: invitation.id },
@@ -354,16 +354,8 @@ export class InvitationsService {
       },
     });
 
-    const roles = assignedRole ? [assignedRole.name] : ['AGENT'];
-
-    // Fetch permissions for the assigned role
-    const rolePerms = assignedRole
-      ? await this.prisma.rolePermission.findMany({
-          where: { roleId: assignedRole.id },
-          select: { permission: { select: { action: true } } },
-        })
-      : [];
-    const permissions = rolePerms.map((rp) => rp.permission.action);
+    const roles = [invitation.role];
+    const permissions: string[] = [];
 
     const accessToken = await this.auth.issueAccessToken({
       id: user.id,

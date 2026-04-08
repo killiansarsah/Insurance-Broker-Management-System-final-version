@@ -156,9 +156,9 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                     </div>
 
                     {/* ─── Right — Sign-in Form ─────────────────────────────── */}
-                    <div className="w-full md:w-2/5 flex flex-col justify-center p-8 md:p-12 bg-white dark:bg-slate-900 text-surface-900 min-h-screen">
+                    <div className="w-full md:w-2/5 flex flex-col p-6 md:p-8 bg-white dark:bg-slate-900 text-surface-900 h-screen overflow-y-auto">
                         <div
-                            className="max-w-lg mx-auto w-full"
+                            className="max-w-lg mx-auto w-full my-auto py-4"
                             style={{
                                 transform: formVisible ? 'translateX(0)' : 'translateX(20px)',
                                 opacity: formVisible ? 1 : 0,
@@ -166,8 +166,8 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             }}
                         >
                             {/* Logo + Header */}
-                            <div className="mb-12 text-center">
-                                <div className="w-24 h-24 relative mx-auto mb-8 p-2 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 shadow-lg">
+                            <div className="mb-8 text-center">
+                                <div className="w-20 h-20 relative mx-auto mb-6 p-2 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 shadow-lg">
                                     <Image
                                         src="/logo-icon.png"
                                         alt="IBMS Logo"
@@ -176,10 +176,10 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         priority
                                     />
                                 </div>
-                                <h1 className="text-3xl font-bold text-surface-900 mb-3 bg-gradient-to-r from-surface-900 to-primary-600 bg-clip-text text-transparent">
+                                <h1 className="text-2xl font-bold text-surface-900 mb-2 bg-gradient-to-r from-surface-900 to-primary-600 bg-clip-text text-transparent">
                                     Sign in to <span className="text-primary-500">IBMS</span>
                                 </h1>
-                                <p className="text-base text-surface-500 leading-relaxed">
+                                <p className="text-sm text-surface-500 leading-relaxed">
                                     Welcome back — enter your credentials to access the portal.
                                 </p>
                             </div>
@@ -239,11 +239,11 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                 </form>
                             ) : (
                                 /* ─── Main Login Form ────────────────────── */
-                                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-surface-100 dark:border-slate-700">
-                                    <form onSubmit={handleSignIn} className="space-y-7">
+                                <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 md:p-8 shadow-xl border border-surface-100 dark:border-slate-700">
+                                    <form onSubmit={handleSignIn} className="space-y-5">
                                         {/* Email Field */}
-                                        <div className="space-y-3">
-                                            <label htmlFor="signin-email" className="block text-base font-semibold text-surface-700 flex items-center gap-2">
+                                        <div className="space-y-2">
+                                            <label htmlFor="signin-email" className="block text-sm font-semibold text-surface-700 flex items-center gap-2">
                                                 <Mail size={16} className="text-primary-500" />
                                                 Work Email
                                             </label>
@@ -253,7 +253,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                                     id="signin-email"
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
-                                                    className="block w-full rounded-xl border-2 border-surface-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 py-5 px-5 text-base text-surface-900 dark:text-slate-200 placeholder:text-surface-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white dark:focus:bg-slate-800 group-hover:border-surface-300 dark:group-hover:border-slate-600"
+                                                    className="block w-full rounded-xl border-2 border-surface-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 py-3.5 px-4 text-sm text-surface-900 dark:text-slate-200 placeholder:text-surface-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white dark:focus:bg-slate-800 group-hover:border-surface-300 dark:group-hover:border-slate-600"
                                                     placeholder="name@insurance-firm.com"
                                                     required
                                                     autoComplete="email"
@@ -263,8 +263,8 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         </div>
 
                                         {/* Password Field */}
-                                        <div className="space-y-3">
-                                            <label htmlFor="signin-password" className="block text-base font-semibold text-surface-700 flex items-center gap-2">
+                                        <div className="space-y-2">
+                                            <label htmlFor="signin-password" className="block text-sm font-semibold text-surface-700 flex items-center gap-2">
                                                 <Lock size={16} className="text-primary-500" />
                                                 Password
                                             </label>
@@ -274,7 +274,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                                     id="signin-password"
                                                     value={password}
                                                     onChange={(e) => setPassword(e.target.value)}
-                                                    className="block w-full rounded-xl border-2 border-surface-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 py-5 px-5 pr-14 text-base text-surface-900 dark:text-slate-200 placeholder:text-surface-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white dark:focus:bg-slate-800 group-hover:border-surface-300 dark:group-hover:border-slate-600"
+                                                    className="block w-full rounded-xl border-2 border-surface-200 dark:border-slate-700 bg-white/90 dark:bg-slate-900/90 py-3.5 px-4 pr-12 text-sm text-surface-900 dark:text-slate-200 placeholder:text-surface-400 dark:placeholder:text-slate-500 outline-none transition-all duration-300 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white dark:focus:bg-slate-800 group-hover:border-surface-300 dark:group-hover:border-slate-600"
                                                     placeholder="••••••••"
                                                     required
                                                     autoComplete="current-password"
@@ -297,16 +297,16 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                                 <div className="relative">
                                                     <input
                                                         type="checkbox"
-                                                        className="w-5 h-5 rounded-md border-2 border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer accent-primary-600 transition-all duration-200"
+                                                        className="w-4 h-4 rounded border-2 border-surface-300 text-primary-600 focus:ring-primary-500 cursor-pointer accent-primary-600 transition-all duration-200"
                                                     />
                                                 </div>
-                                                <span className="text-base text-surface-600 group-hover:text-surface-900 transition-colors duration-200">
+                                                <span className="text-sm text-surface-600 group-hover:text-surface-900 transition-colors duration-200">
                                                     Keep me signed in
                                                 </span>
                                             </label>
                                             <Link
                                                 href="/forgot-password"
-                                                className="text-base font-semibold text-primary-600 hover:text-primary-700 transition-all duration-200 hover:underline underline-offset-4"
+                                                className="text-sm font-semibold text-primary-600 hover:text-primary-700 transition-all duration-200 hover:underline underline-offset-4"
                                             >
                                                 Forgot password?
                                             </Link>
@@ -325,7 +325,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                             <button
                                                 type="submit"
                                                 disabled={isLoading}
-                                                className={`group relative flex w-full justify-center items-center gap-3 rounded-xl py-6 px-6 text-base font-bold text-white shadow-xl transition-all duration-300 overflow-hidden ${isLoading
+                                                className={`group relative flex w-full justify-center items-center gap-3 rounded-xl py-4 px-4 text-sm font-bold text-white shadow-xl transition-all duration-300 overflow-hidden ${isLoading
                                                     ? 'bg-primary-400 cursor-not-allowed'
                                                     : 'bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 active:scale-[0.98] cursor-pointer hover:shadow-2xl hover:shadow-primary-500/25'
                                                     }`}
@@ -351,7 +351,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             )}
 
                             {/* Footer */}
-                            <div className="mt-16 text-center">
+                            <div className="mt-8 text-center">
                                 <p className="text-xs text-surface-400 font-medium tracking-wide">
                                     &copy; {new Date().getFullYear()} IBMS Ghana &middot; Platform v1.0
                                 </p>

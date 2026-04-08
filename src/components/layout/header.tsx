@@ -158,7 +158,7 @@ export function Header() {
                                     My Profile
                                 </button>
 
-                                {(user?.role === 'SUPER_ADMIN' || user?.role === 'PLATFORM_SUPER_ADMIN') && (
+                                {(user?.role === 'WORKSPACE_OWNER' || user?.role === 'PLATFORM_SUPER_ADMIN') && (
                                     <button
                                         onClick={() => {
                                             router.push('/super-admin/overview');

@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { APP_GUARD, APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
 import { CsrfMiddleware } from './common/middleware/csrf.middleware';
 import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
@@ -155,6 +156,10 @@ import { PlatformAdminModule } from './platform-admin/platform-admin.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: PermissionsGuard,
     },
     {
       provide: APP_FILTER,

@@ -19,7 +19,7 @@ import type { EmailDeliveryStatus } from '@prisma/client';
 
 @Controller('platform-admin/email-logs')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class EmailLogsController {
   constructor(
     private readonly prisma: PrismaService,

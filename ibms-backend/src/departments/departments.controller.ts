@@ -22,19 +22,19 @@ export class DepartmentsController {
   constructor(private readonly departmentsService: DepartmentsService) {}
 
   @Post()
-  @Roles('TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   create(@Request() req: RequestWithUser, @Body() dto: CreateDepartmentDto) {
     return this.departmentsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   findAll(@Request() req: RequestWithUser) {
     return this.departmentsService.findAll(req.user.tenantId);
   }
 
   @Patch(':id')
-  @Roles('TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -49,7 +49,7 @@ export class DepartmentsController {
   }
 
   @Delete(':id')
-  @Roles('TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.departmentsService.remove(id, req.user.tenantId, req.user.sub);
   }

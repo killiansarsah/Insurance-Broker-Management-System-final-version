@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -15,6 +16,9 @@ import {
 } from './dto/complaint-actions.dto';
 import { Prisma, ComplaintPriority } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 const SLA_DAYS: Record<string, number> = {
   LOW: 10,
@@ -33,6 +37,42 @@ const PRIORITY_ORDER: ComplaintPriority[] = [
 @Injectable()
 export class ComplaintsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async assertComplaintWritableByActor(
+    tenantId: string,
+    userId: string,
+    complaint: { assignedToId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    // Supervisory roles can act tenant-wide.
+    if (actorLevel >= supervisorLevel) return;
+
+    // Agent-level users can only act on complaints assigned to them.
+    if (!complaint.assignedToId || complaint.assignedToId !== userId) {
+      throw new BadRequestException(
+        'You can only modify complaints assigned to you',
+      );
+    }
+  }
+
+  private async buildComplaintScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.ComplaintWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [{ assignedToId: userId }],
+    };
+  }
 
   private async generateComplaintNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -108,7 +148,7 @@ export class ComplaintsService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: ComplaintQueryDto) {
+  async findAll(tenantId: string, userId: string, query: ComplaintQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -125,8 +165,10 @@ export class ComplaintsService {
     const skip = (page - 1) * limit;
     const now = new Date();
 
+    const scopeWhere = await this.buildComplaintScopeWhere(tenantId, userId);
+
     const where: Prisma.ComplaintWhereInput = {
-      tenantId,
+      ...scopeWhere,
       ...(status && { status }),
       ...(category && { category }),
       ...(priority && { priority }),
@@ -181,7 +223,7 @@ export class ComplaintsService {
       }),
       this.prisma.complaint.count({
         where: {
-          tenantId,
+          ...scopeWhere,
           slaDeadline: { lt: now },
           status: { notIn: ['RESOLVED', 'CLOSED'] },
         },
@@ -201,9 +243,13 @@ export class ComplaintsService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
-    const complaint = await this.prisma.complaint.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId?: string) {
+    const scopeWhere = userId
+      ? await this.buildComplaintScopeWhere(tenantId, userId)
+      : ({ tenantId } as Prisma.ComplaintWhereInput);
+
+    const complaint = await this.prisma.complaint.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         assignedTo: {
           select: { id: true, firstName: true, lastName: true },
@@ -223,7 +269,9 @@ export class ComplaintsService {
     userId: string,
     dto: UpdateComplaintDto,
   ) {
-    await this.findOne(id, tenantId);
+    const complaint = await this.findOne(id, tenantId, userId);
+    await this.assertComplaintWritableByActor(tenantId, userId, complaint);
+
     const updated = await this.prisma.complaint.update({
       where: { id },
       data: {
@@ -307,7 +355,9 @@ export class ComplaintsService {
     userId: string,
     dto: ResolveComplaintDto,
   ) {
-    const complaint = await this.findOne(id, tenantId);
+    const complaint = await this.findOne(id, tenantId, userId);
+    await this.assertComplaintWritableByActor(tenantId, userId, complaint);
+
     if (
       complaint.status !== 'UNDER_INVESTIGATION' &&
       complaint.status !== 'ESCALATED'

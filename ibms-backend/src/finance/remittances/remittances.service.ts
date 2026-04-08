@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -11,10 +12,32 @@ import {
 } from './dto/remittance.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { ROLE_LEVEL } from '../../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class RemittancesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async buildRemittanceScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.RemittanceWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [
+        { processedById: userId },
+        { policy: { brokerId: userId } },
+        { policy: { client: { assignedBrokerId: userId } } },
+      ],
+    };
+  }
 
   private async generateRemittanceNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -123,12 +146,13 @@ export class RemittancesService {
     return remittance;
   }
 
-  async findAll(tenantId: string, query: RemittanceQueryDto) {
+  async findAll(tenantId: string, userId: string, query: RemittanceQueryDto) {
     const page = query.page || 1;
     const limit = query.limit || 20;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.RemittanceWhereInput = { tenantId };
+    const scopeWhere = await this.buildRemittanceScopeWhere(tenantId, userId);
+    const where: Prisma.RemittanceWhereInput = { ...scopeWhere };
 
     if (query.status) where.status = query.status;
     if (query.carrierId) where.carrierId = query.carrierId;
@@ -180,7 +204,7 @@ export class RemittancesService {
 
     // Aggregates
     const aggregates = await this.prisma.remittance.aggregate({
-      where: { tenantId },
+      where,
       _sum: {
         amountRemitted: true,
         premiumAmount: true,
@@ -188,7 +212,7 @@ export class RemittancesService {
     });
 
     const pendingCount = await this.prisma.remittance.count({
-      where: { tenantId, status: 'PENDING' },
+      where: { ...where, status: 'PENDING' },
     });
 
     return {
@@ -207,9 +231,11 @@ export class RemittancesService {
     };
   }
 
-  async findOne(id: string, tenantId: string) {
+  async findOne(id: string, tenantId: string, userId: string) {
+    const scopeWhere = await this.buildRemittanceScopeWhere(tenantId, userId);
+
     const remittance = await this.prisma.remittance.findFirst({
-      where: { id, tenantId },
+      where: { id, ...scopeWhere },
       include: {
         carrier: true,
         policy: {

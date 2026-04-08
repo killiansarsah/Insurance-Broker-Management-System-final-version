@@ -32,25 +32,29 @@ export class ComplaintsController {
   // ─── COMPLAINTS CRUD ───────────────────────────────
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateComplaintDto) {
     return this.complaintsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: ComplaintQueryDto) {
-    return this.complaintsService.findAll(req.user.tenantId, query);
+    return this.complaintsService.findAll(
+      req.user.tenantId,
+      req.user.sub,
+      query,
+    );
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.complaintsService.findOne(id, req.user.tenantId);
+    return this.complaintsService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -67,7 +71,7 @@ export class ComplaintsController {
   // ─── STATUS TRANSITIONS ────────────────────────────
 
   @Post(':id/assign')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR')
   assign(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -82,7 +86,7 @@ export class ComplaintsController {
   }
 
   @Post(':id/escalate')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR')
   escalate(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -97,7 +101,7 @@ export class ComplaintsController {
   }
 
   @Post(':id/resolve')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   resolve(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -112,7 +116,7 @@ export class ComplaintsController {
   }
 
   @Post(':id/reopen')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR')
   reopen(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -127,7 +131,7 @@ export class ComplaintsController {
   }
 
   @Post('complaints/:id/close')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   close(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.complaintsService.close(id, req.user.tenantId, req.user.sub);
   }
@@ -135,7 +139,7 @@ export class ComplaintsController {
   // ─── ESCALATIONS DASHBOARD ─────────────────────────
 
   @Get('escalations')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   getEscalations(@Request() req: RequestWithUser) {
     return this.complaintsService.getEscalations(req.user.tenantId);
   }

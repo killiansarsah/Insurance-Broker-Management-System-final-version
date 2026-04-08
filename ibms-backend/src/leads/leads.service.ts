@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -9,10 +10,28 @@ import { LeadQueryDto, UpdateLeadStageDto } from './dto/lead-query.dto';
 import { UpdateLeadDto } from './dto/update-lead.dto';
 import { Prisma, LeadStatus } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class LeadsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async assertLeadWritableByActor(
+    tenantId: string,
+    userId: string,
+    lead: { assignedBrokerId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) return;
+
+    if (lead.assignedBrokerId !== userId) {
+      throw new BadRequestException('You can only manage leads assigned to you');
+    }
+  }
 
   private async generateLeadNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -42,6 +61,14 @@ export class LeadsService {
 
   // ─── CREATE ─────────────────────────────────────────
   async create(tenantId: string, userId: string, dto: CreateLeadDto) {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    const assignee = dto.assignedBrokerId ?? userId;
+
+    if (actorLevel < supervisorLevel && assignee !== userId) {
+      throw new BadRequestException('You can only assign leads to yourself');
+    }
+
     const leadNumber = await this.generateLeadNumber(tenantId);
 
     const lead = await this.prisma.lead.create({
@@ -56,7 +83,7 @@ export class LeadsService {
         productInterest: dto.productInterest ?? [],
         estimatedPremium: dto.estimatedPremium,
         priority: dto.priority ?? 'WARM',
-        assignedBrokerId: dto.assignedBrokerId ?? userId,
+        assignedBrokerId: assignee,
         notes: dto.notes,
         status: 'NEW',
       },
@@ -67,7 +94,7 @@ export class LeadsService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: LeadQueryDto) {
+  async findAll(tenantId: string, userId: string, query: LeadQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -83,10 +110,13 @@ export class LeadsService {
     } = query;
 
     const skip = (page - 1) * limit;
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
 
     const where: Prisma.LeadWhereInput = {
       tenantId,
       deletedAt: null,
+      ...(actorLevel < supervisorLevel && { assignedBrokerId: userId }),
       ...(status && { status }),
       ...(source && { source }),
       ...(priority && { priority }),
@@ -157,9 +187,16 @@ export class LeadsService {
   }
 
   // ─── KANBAN ─────────────────────────────────────────
-  async kanban(tenantId: string) {
+  async kanban(tenantId: string, userId: string) {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
     const leads = await this.prisma.lead.findMany({
-      where: { tenantId, deletedAt: null },
+      where: {
+        tenantId,
+        deletedAt: null,
+        ...(actorLevel < supervisorLevel && { assignedBrokerId: userId }),
+      },
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -200,7 +237,7 @@ export class LeadsService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
+  async findOne(id: string, tenantId: string, userId?: string) {
     const lead = await this.prisma.lead.findUnique({
       where: { id, tenantId },
       include: {
@@ -215,6 +252,11 @@ export class LeadsService {
     if (!lead || lead.deletedAt) {
       throw new NotFoundException(`Lead ${id} not found`);
     }
+
+    if (userId) {
+      await this.assertLeadWritableByActor(tenantId, userId, lead);
+    }
+
     return lead;
   }
 
@@ -225,7 +267,17 @@ export class LeadsService {
     userId: string,
     dto: UpdateLeadDto,
   ) {
-    await this.findOne(id, tenantId);
+    const lead = await this.findOne(id, tenantId, userId);
+
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    if (
+      actorLevel < supervisorLevel &&
+      dto.assignedBrokerId !== undefined &&
+      dto.assignedBrokerId !== userId
+    ) {
+      throw new BadRequestException('You can only assign leads to yourself');
+    }
 
     const updated = await this.prisma.lead.update({
       where: { id },
@@ -237,7 +289,10 @@ export class LeadsService {
         productInterest: dto.productInterest,
         estimatedPremium: dto.estimatedPremium,
         priority: dto.priority,
-        assignedBrokerId: dto.assignedBrokerId,
+        assignedBrokerId:
+          dto.assignedBrokerId !== undefined
+            ? dto.assignedBrokerId
+            : lead.assignedBrokerId,
         nextFollowUpDate: dto.nextFollowUpDate
           ? new Date(dto.nextFollowUpDate)
           : undefined,
@@ -256,7 +311,7 @@ export class LeadsService {
     userId: string,
     dto: UpdateLeadStageDto,
   ) {
-    const lead = await this.findOne(id, tenantId);
+    const lead = await this.findOne(id, tenantId, userId);
     const oldStatus = lead.status;
 
     if (oldStatus === dto.status) {
@@ -288,7 +343,7 @@ export class LeadsService {
 
   // ─── CONVERT TO CLIENT ──────────────────────────────
   async convert(id: string, tenantId: string, userId: string) {
-    const lead = await this.findOne(id, tenantId);
+    const lead = await this.findOne(id, tenantId, userId);
 
     if (lead.convertedClientId) {
       throw new BadRequestException('Lead already converted');
@@ -317,6 +372,7 @@ export class LeadsService {
           companyName: lead.companyName,
           status: 'ACTIVE',
           type: lead.companyName ? 'CORPORATE' : 'INDIVIDUAL',
+          assignedBrokerId: lead.assignedBrokerId ?? userId,
         },
       });
 

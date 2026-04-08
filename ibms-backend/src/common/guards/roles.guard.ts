@@ -16,22 +16,11 @@ export class RolesGuard implements CanActivate {
 
     const req = context
       .switchToHttp()
-      .getRequest<{ user?: { role?: string; roles?: string[] } }>();
+      .getRequest<{ user?: { role?: string } }>();
     const user = req.user;
-    if (!user) return false;
+    if (!user?.role) return false;
 
-    // Gather all assigned roles (prefer roles array, fall back to role string)
-    const assignedRoles = user.roles?.length ? user.roles : user.role ? [user.role] : [];
-    if (assignedRoles.length === 0) return false;
-
-    // Get the user's highest privilege level across all assigned roles
-    const userLevel = Math.max(...assignedRoles.map((r) => ROLE_LEVEL[r] ?? 0));
-
-    for (const role of requiredRoles) {
-      const requiredLevel = ROLE_LEVEL[role] ?? 0;
-      if (userLevel >= requiredLevel) return true;
-    }
-
-    return false;
+    const userLevel = ROLE_LEVEL[user.role] ?? 0;
+    return requiredRoles.some((r) => userLevel >= (ROLE_LEVEL[r] ?? 0));
   }
 }

@@ -19,7 +19,7 @@ import { PlatformAuditService } from '../services/platform-audit.service.js';
 
 @Controller('platform-admin/nic-monitoring')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class NicComplianceController {
   constructor(
     private readonly prisma: PrismaService,

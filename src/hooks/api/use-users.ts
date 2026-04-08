@@ -57,3 +57,21 @@ export function useAssignDepartment() {
         },
     });
 }
+
+export function useUpdateUserPermissions() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, permissions }: { userId: string; permissions: string[] }) =>
+            apiClient.patch(`/users/${userId}/permissions`, { permissions }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+    });
+}
+
+export function useChangeUserRole() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ userId, role, resetPermissions }: { userId: string; role: string; resetPermissions?: boolean }) =>
+            apiClient.patch(`/users/${userId}/role`, { role, resetPermissions }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: ['users'] }),
+    });
+}

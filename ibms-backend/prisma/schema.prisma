@@ -7,6 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum SystemRole {
+  PLATFORM_SUPER_ADMIN
+  WORKSPACE_OWNER
+  ADMINISTRATOR
+  MANAGER
+  SUPERVISOR
+  AGENT
+}
+
 model Tenant {
   id                     String                  @id @default(uuid()) @db.Uuid
   name                   String
@@ -58,7 +67,6 @@ model Tenant {
   tasks                  Task[]
   transactions           Transaction[]
   users                  User[]
-  roles                  Role[]
   importJobs             ImportJob[]
   columnMappingTemplates ColumnMappingTemplate[]
   ClaimDocument          ClaimDocument[]
@@ -101,7 +109,8 @@ model User {
   lastName                String
   phone                   String?
   jobTitle                String?
-  userRoleMappings        UserRoleMapping[]
+  role                    SystemRole              @default(AGENT)
+  permissions             String[]                @default([])
   branchId                String?                 @db.Uuid
   departmentId            String?                 @db.Uuid
   avatarUrl               String?
@@ -1249,62 +1258,6 @@ enum TenantPlan {
 // RBAC: Dynamic Permission-Tier Architecture
 // ============================================================
 
-model Role {
-  id          String            @id @default(uuid()) @db.Uuid
-  tenantId    String?           @db.Uuid
-  name        String
-  description String?
-  isSystem    Boolean           @default(false)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-
-  tenant      Tenant?           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  users       UserRoleMapping[]
-  permissions RolePermission[]
-
-  @@unique([tenantId, name])
-  @@index([tenantId])
-  @@map("roles")
-}
-
-model Permission {
-  id          String           @id @default(uuid()) @db.Uuid
-  action      String           @unique
-  description String?
-  createdAt   DateTime         @default(now())
-
-  roles       RolePermission[]
-
-  @@map("permissions")
-}
-
-model RolePermission {
-  id           String     @id @default(uuid()) @db.Uuid
-  roleId       String     @db.Uuid
-  permissionId String     @db.Uuid
-  createdAt    DateTime   @default(now())
-
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-
-  @@unique([roleId, permissionId])
-  @@index([roleId])
-  @@map("role_permissions")
-}
-
-model UserRoleMapping {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
-  roleId    String   @db.Uuid
-  createdAt DateTime @default(now())
-
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, roleId])
-  @@index([userId])
-  @@map("user_role_mappings")
-}
 
 enum InvitationStatus {
   PENDING

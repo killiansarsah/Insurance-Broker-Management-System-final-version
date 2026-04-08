@@ -1,9 +1,6 @@
 import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
-import {
-  ROLE_LEVEL,
-  canAssignRole,
-} from '../common/constants/role-hierarchy.js';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 import { Prisma } from '@prisma/client';
 import type { UpdateUserDto } from './dto/update-user.dto.js';
 import type { UserQueryDto } from './dto/user-query.dto.js';
@@ -22,7 +19,8 @@ interface UserRecord {
   lastLoginAt: Date | null;
   createdAt: Date;
   deletedAt: Date | null;
-  userRoleMappings: { role: { name: string } }[];
+  role: string;
+  permissions: string[];
 }
 
 @Injectable()
@@ -32,7 +30,6 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   private toResponseDto(user: UserRecord) {
-    const roles = user.userRoleMappings.map((m) => m.role.name);
     return {
       id: user.id,
       tenantId: user.tenantId,
@@ -40,8 +37,9 @@ export class UsersService {
       firstName: user.firstName,
       lastName: user.lastName,
       phone: user.phone,
-      roles,
-      role: roles[0] ?? 'AGENT',
+      roles: [user.role],
+      role: user.role,
+      permissions: user.permissions ?? [],
       jobTitle: user.jobTitle,
       branchId: user.branchId,
       avatarUrl: user.avatarUrl,
@@ -93,7 +91,8 @@ export class UsersService {
           lastLoginAt: true,
           createdAt: true,
           deletedAt: true,
-          userRoleMappings: { select: { role: { select: { name: true } } } },
+          role: true,
+          permissions: true,
         },
       }),
       this.prisma.user.count({ where }),
@@ -127,7 +126,8 @@ export class UsersService {
         lastLoginAt: true,
         createdAt: true,
         deletedAt: true,
-        userRoleMappings: { select: { role: { select: { name: true } } } },
+        role: true,
+        permissions: true,
       },
     })) as UserRecord | null;
 
@@ -147,7 +147,6 @@ export class UsersService {
   ) {
     const user = (await this.prisma.user.findFirst({
       where: { id, tenantId, deletedAt: null },
-      include: { userRoleMappings: { select: { role: { select: { name: true } } } } },
     })) as UserRecord | null;
 
     if (!user) {
@@ -156,18 +155,15 @@ export class UsersService {
 
     const isSelf = id === currentUserId;
     const isAdmin =
-      (ROLE_LEVEL[currentUserRole] ?? 0) >= (ROLE_LEVEL['ADMIN'] ?? 0);
+      (ROLE_LEVEL[currentUserRole] ?? 0) >= (ROLE_LEVEL['ADMINISTRATOR'] ?? 0);
 
-    // Build update data based on permissions
     const updateData: Record<string, unknown> = {};
 
-    // Self can update: firstName, lastName, phone, avatarUrl
     if (dto.firstName !== undefined) updateData['firstName'] = dto.firstName;
     if (dto.lastName !== undefined) updateData['lastName'] = dto.lastName;
     if (dto.phone !== undefined) updateData['phone'] = dto.phone;
     if (dto.avatarUrl !== undefined) updateData['avatarUrl'] = dto.avatarUrl;
 
-    // Admin+ can also update: jobTitle, branchId, isActive
     if (isAdmin) {
       if (dto.jobTitle !== undefined) {
         updateData['jobTitle'] = dto.jobTitle;
@@ -182,18 +178,13 @@ export class UsersService {
         }
         updateData['isActive'] = dto.isActive;
       }
-    } else if (
-      dto.branchId !== undefined ||
-      dto.isActive !== undefined
-    ) {
-      // Non-admin trying to update admin-only fields
+    } else if (dto.branchId !== undefined || dto.isActive !== undefined) {
       if (!isSelf) {
         throw new HttpException(
           'Insufficient permissions',
           HttpStatus.FORBIDDEN,
         );
       }
-      // Ignore admin-only fields silently for self
     }
 
     const before = {
@@ -222,7 +213,8 @@ export class UsersService {
         lastLoginAt: true,
         createdAt: true,
         deletedAt: true,
-        userRoleMappings: { select: { role: { select: { name: true } } } },
+        role: true,
+        permissions: true,
       },
     })) as UserRecord;
 
@@ -354,7 +346,6 @@ export class UsersService {
     });
     if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-    // If assigning, verify department exists in tenant
     if (departmentId) {
       const dept = await this.prisma.department.findFirst({
         where: { id: departmentId, tenantId },
@@ -382,5 +373,128 @@ export class UsersService {
     });
 
     return { success: true, departmentId };
+  }
+  async updatePermissions(
+    id: string,
+    tenantId: string,
+    currentUserId: string,
+    currentUserRole: string,
+    permissions: string[],
+  ) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    // Cannot modify your own permissions
+    if (id === currentUserId) {
+      throw new HttpException('Cannot modify your own permissions', HttpStatus.BAD_REQUEST);
+    }
+
+    // Cannot modify a user with an equal or higher role tier
+    const actorLevel = ROLE_LEVEL[currentUserRole] ?? 0;
+    const targetLevel = ROLE_LEVEL[user.role] ?? 0;
+    if (targetLevel >= actorLevel) {
+      throw new HttpException('Cannot modify permissions of a user at your level or above', HttpStatus.FORBIDDEN);
+    }
+
+    const before = { permissions: user.permissions };
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: { permissions },
+      select: {
+        id: true, tenantId: true, email: true, firstName: true, lastName: true,
+        phone: true, jobTitle: true, branchId: true, avatarUrl: true,
+        isActive: true, lastLoginAt: true, createdAt: true, deletedAt: true,
+        role: true, permissions: true,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        tenantId,
+        userId: currentUserId,
+        action: 'user.permissions.updated',
+        entity: 'user',
+        entityId: id,
+        before: before as unknown as Prisma.InputJsonValue,
+        after: { permissions } as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    return this.toResponseDto(updated as UserRecord);
+  }
+
+  async changeRole(
+    id: string,
+    tenantId: string,
+    currentUserId: string,
+    currentUserRole: string,
+    newRole: string,
+    resetPermissions?: boolean,
+  ) {
+    const user = await this.prisma.user.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+    if (!user) throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+
+    if (id === currentUserId) {
+      throw new HttpException('Cannot change your own role', HttpStatus.BAD_REQUEST);
+    }
+
+    const actorLevel = ROLE_LEVEL[currentUserRole] ?? 0;
+    const targetLevel = ROLE_LEVEL[user.role] ?? 0;
+    const newLevel = ROLE_LEVEL[newRole] ?? 0;
+
+    // Cannot modify a user at or above your level
+    if (targetLevel >= actorLevel) {
+      throw new HttpException('Cannot modify a user at your level or above', HttpStatus.FORBIDDEN);
+    }
+
+    // Cannot assign a role at or above your own level
+    if (newLevel >= actorLevel) {
+      throw new HttpException('Cannot assign a role at or above your own level', HttpStatus.FORBIDDEN);
+    }
+
+    // PLATFORM_SUPER_ADMIN can never be assigned via API
+    if (newRole === 'PLATFORM_SUPER_ADMIN') {
+      throw new HttpException('Cannot assign PLATFORM_SUPER_ADMIN role', HttpStatus.FORBIDDEN);
+    }
+
+    const updateData: Record<string, unknown> = { role: newRole };
+
+    if (resetPermissions) {
+      // Lazy-import to avoid circular deps
+      const { DEFAULT_ROLE_PERMISSIONS } = await import('../common/constants/default-permissions.js');
+      updateData['permissions'] = DEFAULT_ROLE_PERMISSIONS[newRole] ?? [];
+    }
+
+    const before = { role: user.role, permissions: user.permissions };
+
+    const updated = await this.prisma.user.update({
+      where: { id },
+      data: updateData,
+      select: {
+        id: true, tenantId: true, email: true, firstName: true, lastName: true,
+        phone: true, jobTitle: true, branchId: true, avatarUrl: true,
+        isActive: true, lastLoginAt: true, createdAt: true, deletedAt: true,
+        role: true, permissions: true,
+      },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        tenantId,
+        userId: currentUserId,
+        action: 'user.role.changed',
+        entity: 'user',
+        entityId: id,
+        before: before as unknown as Prisma.InputJsonValue,
+        after: updateData as unknown as Prisma.InputJsonValue,
+      },
+    });
+
+    return this.toResponseDto(updated as UserRecord);
   }
 }

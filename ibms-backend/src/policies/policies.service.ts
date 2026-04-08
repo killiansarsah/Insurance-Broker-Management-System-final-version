@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -14,10 +15,67 @@ import { PayInstallmentDto } from './dto/installments/pay-installment.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class PoliciesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async assertClientWritableByActor(
+    tenantId: string,
+    userId: string,
+    client: { assignedBrokerId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) return;
+
+    if (client.assignedBrokerId !== userId) {
+      throw new BadRequestException(
+        'You can only manage policies for your assigned clients',
+      );
+    }
+  }
+
+  private async assertPolicyWritableByActor(
+    tenantId: string,
+    userId: string,
+    policy: { brokerId: string; client: { assignedBrokerId: string | null } },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) return;
+
+    if (
+      policy.brokerId !== userId &&
+      policy.client.assignedBrokerId !== userId
+    ) {
+      throw new BadRequestException(
+        'You can only manage policies you own or assigned-client policies',
+      );
+    }
+  }
+
+    private async buildPolicyScopeWhere(
+      tenantId: string,
+      userId: string,
+    ): Promise<Prisma.PolicyWhereInput> {
+      const actorLevel = await getUserRoleLevel(this.prisma, userId);
+      const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+      if (actorLevel >= supervisorLevel) {
+        return { tenantId };
+      }
+
+      return {
+        tenantId,
+        OR: [{ brokerId: userId }, { client: { assignedBrokerId: userId } }],
+      };
+    }
 
   private async generatePolicyNumber(
     tenantId: string,
@@ -85,6 +143,8 @@ export class PoliciesService {
       where: { id: dto.clientId, tenantId },
     });
     if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientWritableByActor(tenantId, userId, client);
 
     const carrier = await this.prisma.carrier.findUnique({
       where: { id: dto.carrierId, tenantId },
@@ -188,7 +248,7 @@ export class PoliciesService {
   }
 
   // ─── FIND ALL (with search, totalPremium) ───────────
-  async findAll(tenantId: string, query: PolicyQueryDto) {
+  async findAll(tenantId: string, userId: string, query: PolicyQueryDto) {
     const {
       page = 1,
       limit = 10,
@@ -208,8 +268,7 @@ export class PoliciesService {
 
     const skip = (page - 1) * limit;
 
-    const where: Prisma.PolicyWhereInput = {
-      tenantId,
+    const baseWhere: Prisma.PolicyWhereInput = {
       ...(status && { status }),
       ...(insuranceType && { insuranceType }),
       ...(carrierId && { carrierId }),
@@ -244,9 +303,15 @@ export class PoliciesService {
       }),
     };
 
+    const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
+    const where: Prisma.PolicyWhereInput = {
+      AND: [scopeWhere, baseWhere],
+    };
+
     const allowedSortFields = [
       'policyNumber',
       'premiumAmount',
+      'status',
       'inceptionDate',
       'expiryDate',
       'createdAt',
@@ -288,11 +353,11 @@ export class PoliciesService {
       const diffTime = expiry.getTime() - now.getTime();
       const daysToExpiry = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { client, carrier, broker, ...rest } = policy as any;
       const clientName = client?.companyName
         ? client.companyName
-        : `${client?.firstName || ''} ${client?.lastName || ''}`.trim() || 'Unknown Client';
+        : `${client?.firstName || ''} ${client?.lastName || ''}`.trim() ||
+          'Unknown Client';
       const brokerName = broker
         ? `${broker.firstName} ${broker.lastName}`
         : 'Unassigned';
@@ -319,9 +384,15 @@ export class PoliciesService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
-    const policy = await this.prisma.policy.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId?: string) {
+    const where: Prisma.PolicyWhereInput = userId
+      ? {
+          AND: [await this.buildPolicyScopeWhere(tenantId, userId), { id }],
+        }
+      : { id, tenantId };
+
+    const policy = await this.prisma.policy.findFirst({
+      where,
       include: {
         client: {
           select: {
@@ -363,7 +434,8 @@ export class PoliciesService {
     const { client, carrier, broker, ...rest } = policy as any;
     const clientName = client?.companyName
       ? client.companyName
-      : `${client?.firstName || ''} ${client?.lastName || ''}`.trim() || 'Unknown Client';
+      : `${client?.firstName || ''} ${client?.lastName || ''}`.trim() ||
+        'Unknown Client';
     const brokerName = broker
       ? `${broker.firstName} ${broker.lastName}`
       : 'Unassigned';
@@ -411,7 +483,17 @@ export class PoliciesService {
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException('No fields to update');
     }
-    const policy = await this.findOne(id, tenantId);
+    const policy = await this.findOne(id, tenantId, userId);
+    const writablePolicy = await this.prisma.policy.findUnique({
+      where: { id, tenantId },
+      select: {
+        brokerId: true,
+        client: { select: { assignedBrokerId: true } },
+      },
+    });
+    if (!writablePolicy)
+      throw new NotFoundException(`Policy with ID ${id} not found`);
+    await this.assertPolicyWritableByActor(tenantId, userId, writablePolicy);
 
     return await this.prisma.$transaction(async (tx) => {
       const updated = await tx.policy.update({
@@ -442,9 +524,12 @@ export class PoliciesService {
       include: {
         carrier: { select: { name: true } },
         product: { select: { name: true } },
+        client: { select: { assignedBrokerId: true } },
       },
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
     if (policy.status !== 'DRAFT' && policy.status !== 'COVER_NOTE')
       throw new BadRequestException(
         'Only DRAFT or COVER_NOTE policies can be bound',
@@ -577,8 +662,13 @@ export class PoliciesService {
   async issueCoverNote(id: string, tenantId: string, userId: string) {
     const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
+      include: {
+        client: { select: { assignedBrokerId: true } },
+      },
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
     if (policy.status !== 'DRAFT')
       throw new BadRequestException(
         'Only DRAFT policies can be issued as cover notes',
@@ -613,8 +703,13 @@ export class PoliciesService {
   ) {
     const policy = await this.prisma.policy.findUnique({
       where: { id, tenantId },
+      include: {
+        client: { select: { assignedBrokerId: true } },
+      },
     });
     if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
     if (policy.status !== 'ACTIVE')
       throw new BadRequestException('Only ACTIVE policies can be cancelled');
 
@@ -654,9 +749,14 @@ export class PoliciesService {
     return await this.prisma.$transaction(async (tx) => {
       const policy = await tx.policy.findUnique({
         where: { id, tenantId },
+        include: {
+          client: { select: { assignedBrokerId: true } },
+        },
       });
       if (!policy)
         throw new NotFoundException(`Policy with ID ${id} not found`);
+      await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
       if (policy.status !== 'ACTIVE')
         throw new BadRequestException('Only ACTIVE policies can be lapsed');
 
@@ -691,9 +791,14 @@ export class PoliciesService {
     return await this.prisma.$transaction(async (tx) => {
       const policy = await tx.policy.findUnique({
         where: { id, tenantId },
+        include: {
+          client: { select: { assignedBrokerId: true } },
+        },
       });
       if (!policy)
         throw new NotFoundException(`Policy with ID ${id} not found`);
+      await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
       if (policy.status !== 'LAPSED')
         throw new BadRequestException('Only LAPSED policies can be reinstated');
 
@@ -732,8 +837,12 @@ export class PoliciesService {
   ) {
     const policy = await this.prisma.policy.findUnique({
       where: { id: policyId, tenantId },
+      include: {
+        client: { select: { assignedBrokerId: true } },
+      },
     });
     if (!policy) throw new NotFoundException('Policy not found');
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
 
     const effectiveDate = new Date(dto.effectiveDate);
     const today = new Date();
@@ -868,6 +977,16 @@ export class PoliciesService {
     userId: string,
     dto: PayInstallmentDto,
   ) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id: policyId, tenantId },
+      select: {
+        brokerId: true,
+        client: { select: { assignedBrokerId: true } },
+      },
+    });
+    if (!policy) throw new NotFoundException('Policy not found');
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
     const installment = await this.prisma.premiumInstallment.findFirst({
       where: { id: installmentId, policyId, tenantId },
     });

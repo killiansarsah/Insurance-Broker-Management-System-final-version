@@ -52,7 +52,7 @@ export function SettingsUsers() {
     };
 
     const handleAddStaff = (newStaff: User) => {
-        createInvitationMutation.mutate({ email: newStaff.email, role: (newStaff as any).role || 'BROKER' });
+        createInvitationMutation.mutate({ email: newStaff.email, role: (newStaff as any).role || 'AGENT' });
     };
 
     return (
@@ -162,8 +162,8 @@ export function SettingsUsers() {
                                             <Badge variant="surface" className={cn(
                                                 "px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest",
                                                 member.role === 'PLATFORM_SUPER_ADMIN' ? "bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-800/30" :
-                                                    member.role === 'TENANT_ADMIN' ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30" :
-                                                        member.role.includes('BROKER') ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30" :
+                                                    member.role === 'WORKSPACE_OWNER' ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30" :
+                                                        member.role === 'ADMINISTRATOR' ? "bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-100 dark:border-primary-800/30" :
                                                             "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700"
                                             )}>
                                                 {member.role.replace(/_/g, ' ')}

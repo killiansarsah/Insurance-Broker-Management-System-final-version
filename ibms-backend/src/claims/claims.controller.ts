@@ -35,25 +35,25 @@ export class ClaimsController {
   constructor(private readonly claimsService: ClaimsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateClaimDto) {
     return this.claimsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: ClaimQueryDto) {
-    return this.claimsService.findAll(req.user.tenantId, query);
+    return this.claimsService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.claimsService.findOne(id, req.user.tenantId);
+    return this.claimsService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -65,7 +65,7 @@ export class ClaimsController {
   // ─── STATUS TRANSITIONS ────────────────────────────
 
   @Post(':id/acknowledge')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   acknowledge(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -80,7 +80,7 @@ export class ClaimsController {
   }
 
   @Post(':id/investigate')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('SUPERVISOR')
   investigate(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -95,7 +95,7 @@ export class ClaimsController {
   }
 
   @Post(':id/approve')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   approve(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -105,7 +105,7 @@ export class ClaimsController {
   }
 
   @Post(':id/reject')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   reject(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -115,7 +115,7 @@ export class ClaimsController {
   }
 
   @Post(':id/settle')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   settle(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -125,7 +125,7 @@ export class ClaimsController {
   }
 
   @Post(':id/reopen')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   reopen(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -137,7 +137,7 @@ export class ClaimsController {
   // ─── DOCUMENTS ─────────────────────────────────────
 
   @Post(':claimId/documents')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   addDocument(
     @Request() req: RequestWithUser,
     @Param('claimId') claimId: string,
@@ -152,16 +152,20 @@ export class ClaimsController {
   }
 
   @Get(':claimId/documents')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   listDocuments(
     @Request() req: RequestWithUser,
     @Param('claimId') claimId: string,
   ) {
-    return this.claimsService.listDocuments(claimId, req.user.tenantId);
+    return this.claimsService.listDocuments(
+      claimId,
+      req.user.tenantId,
+      req.user.sub,
+    );
   }
 
   @Delete(':claimId/documents/:id')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   removeDocument(
     @Request() req: RequestWithUser,
     @Param('claimId') claimId: string,
@@ -176,7 +180,7 @@ export class ClaimsController {
   }
 
   @Post(':claimId/follow-ups')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'CLAIMS_HANDLER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   addFollowUp(
     @Request() req: RequestWithUser,
     @Param('claimId') claimId: string,
@@ -191,11 +195,15 @@ export class ClaimsController {
   }
 
   @Get(':claimId/follow-ups')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'CLAIMS_HANDLER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   listFollowUps(
     @Request() req: RequestWithUser,
     @Param('claimId') claimId: string,
   ) {
-    return this.claimsService.listFollowUps(claimId, req.user.tenantId);
+    return this.claimsService.listFollowUps(
+      claimId,
+      req.user.tenantId,
+      req.user.sub,
+    );
   }
 }

@@ -9,6 +9,7 @@ import {
   Query,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
@@ -17,13 +18,16 @@ import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
 
 @Controller('users')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
   constructor(private users: UsersService) {}
 
   @Get()
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async findAll(
     @Query() query: UserQueryDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -37,7 +41,7 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     // Admin+ can view anyone, non-admin can only view self
-    const isAdmin = (ROLE_LEVEL[user.role] ?? 0) >= (ROLE_LEVEL['ADMIN'] ?? 0);
+    const isAdmin = (ROLE_LEVEL[user.role] ?? 0) >= (ROLE_LEVEL['ADMINISTRATOR'] ?? 0);
     if (!isAdmin && id !== user.sub) {
       throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
     }
@@ -51,7 +55,7 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ) {
     // Determine target: self or other user
-    const isAdmin = (ROLE_LEVEL[user.role] ?? 0) >= (ROLE_LEVEL['ADMIN'] ?? 0);
+    const isAdmin = (ROLE_LEVEL[user.role] ?? 0) >= (ROLE_LEVEL['ADMINISTRATOR'] ?? 0);
     const isSelf = id === user.sub;
 
     // Non-admin can only update themselves
@@ -63,7 +67,7 @@ export class UsersController {
   }
 
   @Post(':id/deactivate')
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async deactivate(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -72,7 +76,7 @@ export class UsersController {
   }
 
   @Post(':id/reactivate')
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async reactivate(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -81,7 +85,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async remove(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,
@@ -90,7 +94,7 @@ export class UsersController {
   }
 
   @Patch(':id/department')
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async assignDepartment(
     @Param('id') id: string,
     @Body() body: { departmentId: string | null },

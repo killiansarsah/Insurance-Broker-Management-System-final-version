@@ -37,7 +37,7 @@ function LoginContent() {
             
             let destination = '/dashboard';
             
-            if (user?.role === 'PLATFORM_SUPER_ADMIN' || user?.role === 'SUPER_ADMIN') {
+            if (user?.role === 'PLATFORM_SUPER_ADMIN' || user?.role === 'WORKSPACE_OWNER') {
                 destination = '/super-admin/overview';
                 // Respect deep links meant specifically for super-admins
                 if (returnUrl?.startsWith('/super-admin')) {

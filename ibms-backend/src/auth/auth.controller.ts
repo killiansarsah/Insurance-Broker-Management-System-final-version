@@ -11,6 +11,7 @@ import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
+import { StartTrialDto } from './dto/start-trial.dto.js';
 import { TwoFactorService } from './two-factor.service.js';
 import { Public } from '../common/decorators/public.decorator.js';
 import { Throttle } from '@nestjs/throttler';
@@ -116,6 +117,13 @@ export class AuthController {
 
     res.cookie('refreshToken', result.refreshRaw, REFRESH_COOKIE_OPTIONS);
     return { accessToken: result.accessToken, user: result.user };
+  }
+
+  @Public()
+  @Throttle({ default: { ttl: 3600000, limit: 10 } })
+  @Post('start-trial')
+  async startTrial(@Body() body: StartTrialDto) {
+    return this.auth.startTrial(body);
   }
 
   @Public()

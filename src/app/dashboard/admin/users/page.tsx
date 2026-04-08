@@ -31,49 +31,23 @@ const InviteUserModal = dynamic(
 import { CustomSelect } from '@/components/ui/select-custom';
 
 const ROLE_COLORS: Record<UserRole, 'primary' | 'success' | 'warning' | 'danger' | 'default' | 'outline'> = {
-    // New 5-tier roles
+    // New 5-tier roles + platform admin
+    PLATFORM_SUPER_ADMIN: 'danger',
     WORKSPACE_OWNER: 'danger',
     ADMINISTRATOR: 'danger',
     MANAGER: 'warning',
     SUPERVISOR: 'primary',
     AGENT: 'default',
-    // Legacy role names (backward compat)
-    PLATFORM_SUPER_ADMIN: 'danger',
-    SUPER_ADMIN: 'danger',
-    TENANT_ADMIN: 'danger',
-    ADMIN: 'danger',
-    BRANCH_MANAGER: 'warning',
-    COMPLIANCE_OFFICER: 'warning',
-    FINANCE_MANAGER: 'warning',
-    SENIOR_BROKER: 'primary',
-    BROKER: 'primary',
-    UNDERWRITER: 'primary',
-    SECRETARY: 'default',
-    DATA_ENTRY: 'default',
-    VIEWER: 'outline',
 };
 
 const ROLE_LABELS: Record<UserRole, string> = {
-    // New 5-tier roles
+    // New 5-tier roles + platform admin
+    PLATFORM_SUPER_ADMIN: 'Platform Admin',
     WORKSPACE_OWNER: 'Workspace Owner',
     ADMINISTRATOR: 'Administrator',
     MANAGER: 'Manager',
     SUPERVISOR: 'Supervisor',
     AGENT: 'Agent',
-    // Legacy role names (backward compat)
-    PLATFORM_SUPER_ADMIN: 'Platform Admin',
-    SUPER_ADMIN: 'Super Admin',
-    TENANT_ADMIN: 'Tenant Admin',
-    ADMIN: 'Admin',
-    BRANCH_MANAGER: 'Branch Manager',
-    COMPLIANCE_OFFICER: 'Compliance Officer',
-    FINANCE_MANAGER: 'Finance Manager',
-    SENIOR_BROKER: 'Senior Broker',
-    BROKER: 'Broker',
-    UNDERWRITER: 'Underwriter',
-    SECRETARY: 'Secretary',
-    DATA_ENTRY: 'Data Entry',
-    VIEWER: 'Viewer',
 };
 
 export default function UsersPage() {

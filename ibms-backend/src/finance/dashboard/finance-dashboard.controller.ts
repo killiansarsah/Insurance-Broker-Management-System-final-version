@@ -12,7 +12,7 @@ export class FinanceDashboardController {
   constructor(private readonly dashboardService: FinanceDashboardService) {}
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   getDashboard(
     @Request() req: RequestWithUser,
     @Query('from') from?: string,

@@ -25,25 +25,25 @@ export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateInvoiceDto) {
     return this.invoicesService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: InvoiceQueryDto) {
-    return this.invoicesService.findAll(req.user.tenantId, query);
+    return this.invoicesService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.invoicesService.findOne(id, req.user.tenantId);
+    return this.invoicesService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -58,13 +58,13 @@ export class InvoicesController {
   }
 
   @Post(':id/send')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   send(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.invoicesService.send(id, req.user.tenantId, req.user.sub);
   }
 
   @Post(':id/cancel')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   cancel(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

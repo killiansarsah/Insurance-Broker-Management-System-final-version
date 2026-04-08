@@ -11,6 +11,10 @@ import {
 } from '@nestjs/common';
 import { RenewalsService } from './renewals.service';
 import { RenewPolicyDto } from './dto/renew-policy.dto';
+import { BulkRemindDto } from './dto/bulk-remind.dto';
+import { BulkAssignDto } from './dto/bulk-assign.dto';
+import { UpdateRenewalTemplateDto } from './dto/update-renewal-template.dto';
+import { CreateRenewalTemplateDto } from './dto/create-renewal-template.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -22,7 +26,7 @@ export class RenewalsController {
   constructor(private readonly renewalsService: RenewalsService) {}
 
   @Get('renewals')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   getUpcoming(
     @Request() req: RequestWithUser,
     @Query('daysAhead') daysAhead?: string,
@@ -31,103 +35,67 @@ export class RenewalsController {
   ) {
     return this.renewalsService.getUpcomingRenewals(
       req.user.tenantId,
+      req.user.sub,
       daysAhead ? parseInt(daysAhead, 10) : 90,
       { insuranceType, carrierId },
     );
   }
 
   @Get('renewals/upcoming')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   getUpcomingAlias(
     @Request() req: RequestWithUser,
     @Query('daysAhead') daysAhead?: string,
+    @Query('insuranceType') insuranceType?: string,
+    @Query('carrierId') carrierId?: string,
   ) {
     return this.renewalsService.getUpcomingRenewals(
       req.user.tenantId,
+      req.user.sub,
       daysAhead ? parseInt(daysAhead, 10) : 90,
+      { insuranceType, carrierId },
     );
   }
 
   @Get('renewals/lapsed')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   getLapsedPolicies(@Request() req: RequestWithUser) {
-    return this.renewalsService.getLapsedPolicies(req.user.tenantId);
+    return this.renewalsService.getLapsedPolicies(
+      req.user.tenantId,
+      req.user.sub,
+    );
   }
 
   @Post('policies/:id/renew')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
-  renew(
+  @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
+  async renew(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
     @Body() dto: RenewPolicyDto,
   ) {
-    return this.renewalsService.renewPolicy(
+    const data = await this.renewalsService.renewPolicy(
       id,
       req.user.tenantId,
       req.user.sub,
       dto,
     );
+    return { success: true, data };
   }
 
   @Post('renewals/test-reminders')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'PLATFORM_SUPER_ADMIN')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER')
   async testTriggerReminders(
     @Request() req: RequestWithUser,
     @Query('overrideEmail') overrideEmail?: string,
   ) {
-    const tenantId = req.user.tenantId;
-
-    // Find the most urgent policy — prefer near-expiry or overdue ACTIVE policies first
-    const policy = await this.renewalsService['prisma'].policy.findFirst({
-      where: {
-        tenantId,
-        status: { in: ['ACTIVE', 'LAPSED', 'EXPIRED'] },
-      },
-      orderBy: { expiryDate: 'asc' }, // most overdue first
-      include: { client: true },
-    });
-
-    if (!policy) {
-      return { success: false, message: 'No policies found for your tenant.' };
-    }
-
-    const destinationEmail = overrideEmail || policy.client.email;
-
-    if (!destinationEmail) {
-      return {
-        success: false,
-        message:
-          'No destination email — client has no email address and no override was provided.',
-      };
-    }
-
-    const clientName =
-      policy.client.companyName ||
-      `${policy.client.firstName} ${policy.client.lastName}`;
-    const now = new Date();
-    const daysUntilExpiry = Math.ceil(
-      (new Date(policy.expiryDate).getTime() - now.getTime()) /
-        (1000 * 60 * 60 * 24),
+    return this.renewalsService.sendTestReminder(
+      req.user.tenantId,
+      overrideEmail,
     );
-
-    await this.renewalsService['emailService'].sendPolicyRenewalReminder(
-      destinationEmail,
-      clientName,
-      policy.policyNumber,
-      policy.expiryDate,
-      daysUntilExpiry,
-      Number(policy.premiumAmount),
-      policy.insuranceType,
-    );
-
-    return {
-      success: true,
-      message: `Test reminder sent to ${destinationEmail} for policy ${policy.policyNumber} (${daysUntilExpiry < 0 ? Math.abs(daysUntilExpiry) + ' days overdue' : daysUntilExpiry + ' days remaining'})`,
-    };
   }
 
   @Post('renewals/notify-all')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER')
   async notifyAll(@Request() req: RequestWithUser) {
     const result = await this.renewalsService.notifyAllForTenant(
       req.user.tenantId,
@@ -140,12 +108,16 @@ export class RenewalsController {
   }
 
   @Post('renewals/bulk-remind')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   async bulkRemind(
     @Request() req: RequestWithUser,
-    @Body() dto: { policyIds: string[] }
+    @Body() dto: BulkRemindDto,
   ) {
-    const result = await this.renewalsService.bulkSendReminders(req.user.tenantId, dto.policyIds, req.user.sub);
+    const result = await this.renewalsService.bulkSendReminders(
+      req.user.tenantId,
+      dto.policyIds,
+      req.user.sub,
+    );
     return {
       success: true,
       message: `Bulk action complete: ${result.sent} sent, ${result.skipped} skipped, ${result.failed} failed.`,
@@ -153,13 +125,37 @@ export class RenewalsController {
     };
   }
 
+  @Post('renewals/bulk-update-status')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
+  async bulkUpdateStatus(
+    @Request() req: RequestWithUser,
+    @Body() dto: { policyIds: string[]; status: string },
+  ) {
+    const result = await this.renewalsService.bulkUpdateStatus(
+      req.user.tenantId,
+      dto.policyIds,
+      dto.status,
+      req.user.sub,
+    );
+    return {
+      success: true,
+      message: `Updated status for ${result.count} policies.`,
+      ...result,
+    };
+  }
+
   @Post('renewals/bulk-assign')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   async bulkAssign(
     @Request() req: RequestWithUser,
-    @Body() dto: { policyIds: string[], brokerId: string }
+    @Body() dto: BulkAssignDto,
   ) {
-    const result = await this.renewalsService.bulkAssignBroker(req.user.tenantId, dto.policyIds, dto.brokerId, req.user.sub);
+    const result = await this.renewalsService.bulkAssignBroker(
+      req.user.tenantId,
+      dto.policyIds,
+      dto.brokerId,
+      req.user.sub,
+    );
     return {
       success: true,
       message: `Assigned ${result.count} policies successfully.`,
@@ -167,29 +163,41 @@ export class RenewalsController {
     };
   }
 
-
   @Get('renewals/templates')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER')
   async getTemplates(@Request() req: RequestWithUser) {
     return this.renewalsService.getTemplates(req.user.tenantId);
   }
 
   @Put('renewals/templates/:id')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER')
   async updateTemplate(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
-    @Body() dto: any
+    @Body() dto: UpdateRenewalTemplateDto,
   ) {
     return this.renewalsService.updateTemplate(req.user.tenantId, id, dto);
   }
 
   @Get('renewals/report')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   async getReport(
     @Request() req: RequestWithUser,
-    @Query('days') days?: string
+    @Query('days') days?: string,
   ) {
-    return this.renewalsService.getRenewalReport(req.user.tenantId, days ? parseInt(days, 10) : 90);
+    return this.renewalsService.getRenewalReportForActor(
+      req.user.tenantId,
+      req.user.sub,
+      days ? parseInt(days, 10) : 90,
+    );
+  }
+
+  @Post('renewals/templates')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER')
+  async createTemplate(
+    @Request() req: RequestWithUser,
+    @Body() dto: CreateRenewalTemplateDto,
+  ) {
+    return this.renewalsService.createTemplate(req.user.tenantId, dto);
   }
 }

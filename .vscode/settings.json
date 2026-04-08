@@ -18,7 +18,8 @@
         "/^cd C:\\\\Users\\\\Owner\\\\Desktop\\\\ibms\\\\ibms-backend; npx tsc --noEmit 2>&1 \\| Select-Object -Last 50$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "Group-Object": true
     },
     "workbench.browser.openLocalhostLinks": true,
     "workbench.browser.enableChatTools": true,

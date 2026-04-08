@@ -84,7 +84,11 @@ export class AnonymisationService {
       /^059\d{7}$/.test(valStr.replace(/\s+/g, ''))
     ) {
       // Is Momo?
-      if (lcHeader.includes('momo') || lcHeader.includes('mobile money') || lcHeader.includes('wallet')) {
+      if (
+        lcHeader.includes('momo') ||
+        lcHeader.includes('mobile money') ||
+        lcHeader.includes('wallet')
+      ) {
         return '0550000000';
       }
       return '0244000000';

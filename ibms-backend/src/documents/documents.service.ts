@@ -1,13 +1,32 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDocumentDto, UpdateDocumentDto } from './dto/document.dto';
 import { DocumentQueryDto } from './dto/document-query.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class DocumentsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async buildDocumentScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.DocumentWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      uploadedById: userId,
+    };
+  }
 
   private async logAudit(
     tenantId: string,
@@ -57,7 +76,7 @@ export class DocumentsService {
     return doc;
   }
 
-  async findAll(tenantId: string, query: DocumentQueryDto) {
+  async findAll(tenantId: string, userId: string, query: DocumentQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -74,8 +93,10 @@ export class DocumentsService {
 
     const skip = (page - 1) * limit;
 
+    const scopeWhere = await this.buildDocumentScopeWhere(tenantId, userId);
+
     const where: Prisma.DocumentWhereInput = {
-      tenantId,
+      ...scopeWhere,
       isExpired: false,
       ...(category && { category }),
       ...(clientId && { linkedEntityType: 'CLIENT', linkedEntityId: clientId }),
@@ -112,7 +133,7 @@ export class DocumentsService {
       }),
       this.prisma.document.groupBy({
         by: ['category'],
-        where: { tenantId },
+        where: { ...scopeWhere },
         _count: { id: true },
       }),
     ]);
@@ -135,9 +156,11 @@ export class DocumentsService {
     };
   }
 
-  async findOne(id: string, tenantId: string) {
-    const doc = await this.prisma.document.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId: string) {
+    const scopeWhere = await this.buildDocumentScopeWhere(tenantId, userId);
+
+    const doc = await this.prisma.document.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         uploadedBy: {
           select: { id: true, firstName: true, lastName: true },
@@ -154,7 +177,7 @@ export class DocumentsService {
     userId: string,
     dto: UpdateDocumentDto,
   ) {
-    await this.findOne(id, tenantId);
+    await this.findOne(id, tenantId, userId);
     const updated = await this.prisma.document.update({
       where: { id },
       data: {
@@ -167,7 +190,7 @@ export class DocumentsService {
   }
 
   async remove(id: string, tenantId: string, userId: string) {
-    const doc = await this.findOne(id, tenantId);
+    const doc = await this.findOne(id, tenantId, userId);
 
     // NIC 7-year retention: block deletion of documents less than 7 years old
     const sevenYearsMs = 7 * 365.25 * 24 * 60 * 60 * 1000;

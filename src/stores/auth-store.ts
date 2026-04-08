@@ -20,164 +20,16 @@ interface AuthState {
     logout: () => Promise<void>;
     checkAuth: () => Promise<void>;
     hasRole: (roles: UserRole[]) => boolean;
-    hasPermission: (module: string, action: string) => boolean;
+    hasPermission: (permission: string) => boolean;
 }
 
 const ROLE_HIERARCHY: Record<UserRole, number> = {
-    // New 5-tier system roles
+    PLATFORM_SUPER_ADMIN: 10,
     WORKSPACE_OWNER: 8,
     ADMINISTRATOR: 7,
     MANAGER: 5,
     SUPERVISOR: 4,
     AGENT: 2,
-    // Legacy role names (backward compatibility)
-    PLATFORM_SUPER_ADMIN: 8,
-    SUPER_ADMIN: 7,
-    TENANT_ADMIN: 6,
-    ADMIN: 6,
-    BRANCH_MANAGER: 5,
-    COMPLIANCE_OFFICER: 4,
-    FINANCE_MANAGER: 4,
-    SENIOR_BROKER: 4,
-    BROKER: 3,
-    UNDERWRITER: 3,
-    SECRETARY: 2,
-    DATA_ENTRY: 2,
-    VIEWER: 1,
-};
-
-const PERMISSIONS: Record<UserRole, Record<string, string[]>> = {
-    WORKSPACE_OWNER: { '*': ['*'] },
-    ADMINISTRATOR: { '*': ['*'] },
-    MANAGER: {
-        clients: ['view', 'create', 'edit'],
-        policies: ['view', 'create', 'edit'],
-        claims: ['view', 'create', 'edit'],
-        complaints: ['view', 'create', 'edit'],
-        leads: ['view', 'create', 'edit'],
-        reports: ['view', 'export'],
-        settings: ['view'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload'],
-        compliance: ['view'],
-    },
-    SUPERVISOR: {
-        clients: ['view'],
-        policies: ['view'],
-        claims: ['view'],
-        complaints: ['view', 'create', 'edit'],
-        compliance: ['view', 'edit'],
-        reports: ['view', 'export'],
-        documents: ['view', 'upload'],
-    },
-    PLATFORM_SUPER_ADMIN: { '*': ['*'] },
-    SUPER_ADMIN: { '*': ['*'] },
-    TENANT_ADMIN: {
-        clients: ['view', 'create', 'edit', 'delete'],
-        policies: ['view', 'create', 'edit', 'delete'],
-        claims: ['view', 'create', 'edit', 'approve'],
-        complaints: ['view', 'create', 'edit', 'resolve'],
-        leads: ['view', 'create', 'edit', 'delete'],
-        reports: ['view', 'export'],
-        settings: ['view', 'edit'],
-        users: ['view', 'create', 'edit', 'delete'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload', 'delete'],
-        compliance: ['view', 'edit'],
-    },
-    ADMIN: {
-        clients: ['view', 'create', 'edit', 'delete'],
-        policies: ['view', 'create', 'edit', 'delete'],
-        claims: ['view', 'create', 'edit', 'approve'],
-        complaints: ['view', 'create', 'edit', 'resolve'],
-        leads: ['view', 'create', 'edit', 'delete'],
-        reports: ['view', 'export'],
-        settings: ['view', 'edit'],
-        users: ['view', 'create', 'edit', 'delete'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload', 'delete'],
-        compliance: ['view', 'edit'],
-    },
-    BRANCH_MANAGER: {
-        clients: ['view', 'create', 'edit'],
-        policies: ['view', 'create', 'edit'],
-        claims: ['view', 'create', 'edit'],
-        complaints: ['view', 'create', 'edit'],
-        leads: ['view', 'create', 'edit'],
-        reports: ['view', 'export'],
-        settings: ['view'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload'],
-        compliance: ['view'],
-    },
-    COMPLIANCE_OFFICER: {
-        clients: ['view'],
-        policies: ['view'],
-        claims: ['view'],
-        complaints: ['view', 'create', 'edit'],
-        compliance: ['view', 'edit'],
-        reports: ['view', 'export'],
-        documents: ['view', 'upload'],
-    },
-    FINANCE_MANAGER: {
-        clients: ['view'],
-        policies: ['view'],
-        claims: ['view', 'create', 'edit'],
-        reports: ['view', 'export'],
-        documents: ['view', 'upload'],
-    },
-    SENIOR_BROKER: {
-        clients: ['view', 'create', 'edit'],
-        policies: ['view', 'create', 'edit'],
-        claims: ['view', 'create'],
-        complaints: ['view', 'create'],
-        leads: ['view', 'create', 'edit'],
-        reports: ['view'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload'],
-    },
-    BROKER: {
-        clients: ['view', 'create', 'edit'],
-        policies: ['view', 'create'],
-        claims: ['view', 'create'],
-        complaints: ['view', 'create'],
-        leads: ['view', 'create', 'edit'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload'],
-    },
-    UNDERWRITER: {
-        policies: ['view', 'create', 'edit'],
-        claims: ['view'],
-        reports: ['view'],
-        documents: ['view', 'upload'],
-    },
-    AGENT: {
-        clients: ['view', 'create'],
-        policies: ['view'],
-        leads: ['view', 'create'],
-        chat: ['view', 'send'],
-        documents: ['view'],
-    },
-    SECRETARY: {
-        clients: ['view', 'create', 'edit'],
-        policies: ['view', 'create'],
-        leads: ['view', 'create'],
-        chat: ['view', 'send'],
-        documents: ['view', 'upload'],
-    },
-    DATA_ENTRY: {
-        clients: ['view', 'create', 'edit'],
-        policies: ['view', 'create'],
-        leads: ['view', 'create'],
-        documents: ['view', 'upload'],
-    },
-    VIEWER: {
-        clients: ['view'],
-        policies: ['view'],
-        claims: ['view'],
-        reports: ['view'],
-        documents: ['view'],
-    },
 };
 
 function isNetworkError(err: unknown): boolean {
@@ -310,31 +162,14 @@ export const useAuthStore = create<AuthState>()(
             hasRole: (roles: UserRole[]) => {
                 const user = get().user;
                 if (!user) return false;
-                // Check both new and legacy admin role names
-                const adminRoles: UserRole[] = ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'SUPER_ADMIN', 'PLATFORM_SUPER_ADMIN'];
-                if (adminRoles.includes(user.role)) return true;
-                // Also check the roles array for multi-role support
-                if (user.roles?.some((r) => adminRoles.includes(r as UserRole))) return true;
-                return roles.includes(user.role) || user.roles?.some((r) => roles.includes(r as UserRole)) || false;
+                const userLevel = ROLE_HIERARCHY[user.role] ?? 0;
+                return roles.some(r => userLevel >= (ROLE_HIERARCHY[r] ?? 0));
             },
 
-            hasPermission: (module: string, action: string) => {
+            hasPermission: (permission: string) => {
                 const user = get().user;
                 if (!user) return false;
-
-                // New system: check JWT-delivered permissions array
-                if (user.permissions && user.permissions.length > 0) {
-                    const required = `${module}:${action}`;
-                    return user.permissions.includes(required) || user.permissions.includes('*:*');
-                }
-
-                // Fallback: legacy static PERMISSIONS map
-                const rolePerms = PERMISSIONS[user.role];
-                if (!rolePerms) return false;
-                if (rolePerms['*']?.includes('*')) return true;
-                const modulePerms = rolePerms[module];
-                if (!modulePerms) return false;
-                return modulePerms.includes(action);
+                return user.permissions?.includes(permission) || user.permissions?.includes('*:*') || false;
             },
         }),
         {

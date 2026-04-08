@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -11,6 +12,9 @@ import { UpdateInvoiceDto, CancelInvoiceDto } from './dto/invoice-actions.dto';
 import { Prisma } from '@prisma/client';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class InvoicesService {
@@ -23,6 +27,52 @@ export class InvoicesService {
     const count = await this.prisma.invoice.count({ where: { tenantId } });
     const hex = randomBytes(3).toString('hex').toUpperCase();
     return `INV-${dateStr}-${String(count + 1).padStart(5, '0')}-${hex}`;
+  }
+
+  private async assertClientWritableByActor(
+    tenantId: string,
+    userId: string,
+    client: { assignedBrokerId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    // Supervisory roles can manage invoices tenant-wide.
+    if (actorLevel >= supervisorLevel) return;
+
+    // Agent-level users can only manage invoices for assigned clients.
+    if (client.assignedBrokerId !== userId) {
+      throw new BadRequestException(
+        'You can only manage invoices for your assigned clients',
+      );
+    }
+  }
+
+  private async buildInvoiceScopeWhere(
+    tenantId: string,
+    userId: string,
+    baseWhere: Prisma.InvoiceWhereInput = {},
+  ): Promise<Prisma.InvoiceWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return {
+        AND: [{ tenantId }, baseWhere],
+      };
+    }
+
+    return {
+      AND: [
+        { tenantId },
+        baseWhere,
+        {
+          client: {
+            assignedBrokerId: userId,
+          },
+        },
+      ],
+    };
   }
 
   private async logAudit(
@@ -50,6 +100,8 @@ export class InvoicesService {
       where: { id: dto.clientId, tenantId },
     });
     if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientWritableByActor(tenantId, userId, client);
 
     if (dto.policyId) {
       const policy = await this.prisma.policy.findUnique({
@@ -86,7 +138,7 @@ export class InvoicesService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: InvoiceQueryDto) {
+  async findAll(tenantId: string, actorUserId: string, query: InvoiceQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -101,8 +153,7 @@ export class InvoicesService {
 
     const skip = (page - 1) * limit;
 
-    const where: Prisma.InvoiceWhereInput = {
-      tenantId,
+    const baseWhere: Prisma.InvoiceWhereInput = {
       ...(status && { status }),
       ...(clientId && { clientId }),
       ...((dateFrom || dateTo) && {
@@ -127,6 +178,12 @@ export class InvoicesService {
         ],
       }),
     };
+
+    const where = await this.buildInvoiceScopeWhere(
+      tenantId,
+      actorUserId,
+      baseWhere,
+    );
 
     const allowedSortFields = [
       'invoiceNumber',
@@ -160,15 +217,21 @@ export class InvoicesService {
           },
         }),
         this.prisma.invoice.aggregate({
-          where: { tenantId, status: 'OUTSTANDING' },
+          where: await this.buildInvoiceScopeWhere(tenantId, actorUserId, {
+            status: 'OUTSTANDING',
+          }),
           _sum: { amount: true },
         }),
         this.prisma.invoice.aggregate({
-          where: { tenantId, status: 'OVERDUE' },
+          where: await this.buildInvoiceScopeWhere(tenantId, actorUserId, {
+            status: 'OVERDUE',
+          }),
           _sum: { amount: true },
         }),
         this.prisma.invoice.aggregate({
-          where: { tenantId, status: 'PAID' },
+          where: await this.buildInvoiceScopeWhere(tenantId, actorUserId, {
+            status: 'PAID',
+          }),
           _sum: { amountPaid: true },
         }),
       ]);
@@ -188,9 +251,13 @@ export class InvoicesService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
-    const invoice = await this.prisma.invoice.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, actorUserId: string) {
+    const where = await this.buildInvoiceScopeWhere(tenantId, actorUserId, {
+      id,
+    });
+
+    const invoice = await this.prisma.invoice.findFirst({
+      where,
       include: {
         client: true,
         policy: {
@@ -210,7 +277,9 @@ export class InvoicesService {
     userId: string,
     dto: UpdateInvoiceDto,
   ) {
-    const invoice = await this.findOne(id, tenantId);
+    const invoice = await this.findOne(id, tenantId, userId);
+    await this.assertClientWritableByActor(tenantId, userId, invoice.client);
+
     if (invoice.status !== 'OUTSTANDING') {
       throw new BadRequestException('Only OUTSTANDING invoices can be edited');
     }
@@ -229,7 +298,9 @@ export class InvoicesService {
 
   // ─── SEND (OUTSTANDING → stays OUTSTANDING, sets sentAt via audit) ─
   async send(id: string, tenantId: string, userId: string) {
-    const invoice = await this.findOne(id, tenantId);
+    const invoice = await this.findOne(id, tenantId, userId);
+    await this.assertClientWritableByActor(tenantId, userId, invoice.client);
+
     if (invoice.status !== 'OUTSTANDING') {
       throw new BadRequestException('Only OUTSTANDING invoices can be sent');
     }
@@ -247,7 +318,7 @@ export class InvoicesService {
     userId: string,
     dto: CancelInvoiceDto,
   ) {
-    const invoice = await this.findOne(id, tenantId);
+    const invoice = await this.findOne(id, tenantId, userId);
     if (invoice.status !== 'OUTSTANDING') {
       throw new BadRequestException(
         'Only OUTSTANDING invoices can be cancelled',

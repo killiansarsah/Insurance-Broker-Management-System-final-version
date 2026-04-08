@@ -204,48 +204,48 @@ export default function EmailTemplatesPage() {
 
   const columns = [
     {
-      accessorKey: 'displayName',
-      header: 'Template Name',
-      cell: ({ row }: any) => (
+      key: 'displayName',
+      label: 'Template Name',
+      render: (row: any) => (
         <div>
-          <div className="font-medium">{row.original.displayName}</div>
-          <div className="text-sm text-muted-foreground">{row.original.name}</div>
+          <div className="font-medium">{row.displayName}</div>
+          <div className="text-sm text-muted-foreground">{row.name}</div>
         </div>
       ),
     },
     {
-      accessorKey: 'subject',
-      header: 'Subject',
-      cell: ({ row }: any) => (
-        <div className="max-w-[300px] truncate" title={row.original.subject}>
-          {row.original.subject}
+      key: 'subject',
+      label: 'Subject',
+      render: (row: any) => (
+        <div className="max-w-[300px] truncate" title={row.subject}>
+          {row.subject}
         </div>
       ),
     },
     {
-      accessorKey: 'variables',
-      header: 'Variables',
-      cell: ({ row }: any) => (
+      key: 'variables',
+      label: 'Variables',
+      render: (row: any) => (
         <div className="flex flex-wrap gap-1">
-          {row.original.variables.slice(0, 3).map((variable: string) => (
+          {row.variables.slice(0, 3).map((variable: string) => (
             <Badge key={variable} variant="secondary" className="text-xs">
               {variable}
             </Badge>
           ))}
-          {row.original.variables.length > 3 && (
+          {row.variables.length > 3 && (
             <Badge variant="secondary" className="text-xs">
-              +{row.original.variables.length - 3}
+              +{row.variables.length - 3}
             </Badge>
           )}
         </div>
       ),
     },
     {
-      accessorKey: 'isActive',
-      header: 'Status',
-      cell: ({ row }: any) => (
+      key: 'isActive',
+      label: 'Status',
+      render: (row: any) => (
         <div className="flex items-center gap-2">
-          {row.original.isActive ? (
+          {row.isActive ? (
             <Badge variant="success" className="flex items-center gap-1">
               <CheckCircle className="h-3 w-3" />
               Active
@@ -256,46 +256,46 @@ export default function EmailTemplatesPage() {
               Inactive
             </Badge>
           )}
-          {row.original.isSystem && (
+          {row.isSystem && (
             <Badge variant="outline">System</Badge>
           )}
         </div>
       ),
     },
     {
-      accessorKey: 'updatedAt',
-      header: 'Last Updated',
-      cell: ({ row }: any) => (
+      key: 'updatedAt',
+      label: 'Last Updated',
+      render: (row: any) => (
         <div className="text-sm">
-          {new Date(row.original.updatedAt).toLocaleDateString()}
+          {new Date(row.updatedAt).toLocaleDateString()}
         </div>
       ),
     },
     {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }: any) => (
+      key: 'actions',
+      label: 'Actions',
+      render: (row: any) => (
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => previewTemplate(row.original)}
+            onClick={() => previewTemplate(row)}
           >
             <Eye className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => editTemplate(row.original)}
-            disabled={row.original.isSystem}
+            onClick={() => editTemplate(row)}
+            disabled={row.isSystem}
           >
             <Edit className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => handleDelete(row.original)}
-            disabled={row.original.isSystem}
+            onClick={() => handleDelete(row)}
+            disabled={row.isSystem}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -323,7 +323,6 @@ export default function EmailTemplatesPage() {
           <DataTable
             columns={columns}
             data={templates}
-            loading={loading}
           />
         </CardContent>
       </Card>

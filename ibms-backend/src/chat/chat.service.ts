@@ -12,8 +12,35 @@ import { ChatMessageType } from '@prisma/client';
 export class ChatService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private async assertUsersBelongToTenant(
+    tenantId: string,
+    userIds: string[],
+  ): Promise<void> {
+    if (userIds.length === 0) return;
+
+    const count = await this.prisma.user.count({
+      where: {
+        tenantId,
+        id: { in: userIds },
+        deletedAt: null,
+      },
+    });
+
+    if (count !== userIds.length) {
+      throw new BadRequestException(
+        'One or more participants are invalid for this tenant',
+      );
+    }
+  }
+
   // ─── CREATE ROOM ──────────────────────────────────
   async createRoom(tenantId: string, userId: string, dto: CreateChatRoomDto) {
+    const uniqueIds = [
+      ...new Set(dto.participantIds.filter((id) => id !== userId)),
+    ];
+
+    await this.assertUsersBelongToTenant(tenantId, [userId, ...uniqueIds]);
+
     // For DIRECT rooms: exactly 2 participants, no duplicates
     if (dto.type === 'DIRECT') {
       if (dto.participantIds.length !== 1) {
@@ -57,9 +84,6 @@ export class ChatService {
     });
 
     // Add other participants
-    const uniqueIds = [
-      ...new Set(dto.participantIds.filter((id) => id !== userId)),
-    ];
     if (uniqueIds.length) {
       await this.prisma.chatParticipant.createMany({
         data: uniqueIds.map((id) => ({ roomId: room.id, userId: id })),
@@ -239,6 +263,8 @@ export class ChatService {
     if (room.type === 'DIRECT') {
       throw new BadRequestException('Cannot add participants to DIRECT rooms');
     }
+
+    await this.assertUsersBelongToTenant(tenantId, [userId]);
 
     return this.prisma.chatParticipant.create({
       data: { roomId, userId },

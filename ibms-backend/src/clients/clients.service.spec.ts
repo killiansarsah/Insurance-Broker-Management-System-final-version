@@ -125,7 +125,9 @@ describe('ClientsService', () => {
 
     it('should create an INDIVIDUAL client successfully', async () => {
       const client = makeClient();
-      mockPrisma.client.findFirst.mockResolvedValue({ clientNumber: 'CLI-10000' });
+      mockPrisma.client.findFirst.mockResolvedValue({
+        clientNumber: 'CLI-10000',
+      });
       mockPrisma.client.create.mockResolvedValue(client);
       mockPrisma.user.findUnique.mockResolvedValue({
         firstName: 'Agent',
@@ -218,7 +220,10 @@ describe('ClientsService', () => {
       const clients = [makeClient()];
       mockPrisma.$transaction.mockResolvedValue([clients, 1]);
 
-      const result = await service.findAll('tenant-1', { page: 1, limit: 20 } as any);
+      const result = await service.findAll('tenant-1', 'user-1', {
+        page: 1,
+        limit: 20,
+      } as any);
 
       expect(result).toHaveProperty('data');
       expect(result).toHaveProperty('meta');
@@ -228,7 +233,11 @@ describe('ClientsService', () => {
     it('should apply search filter', async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0]);
 
-      await service.findAll('tenant-1', { search: 'Jane', page: 1, limit: 20 } as any);
+      await service.findAll('tenant-1', 'user-1', {
+        search: 'Jane',
+        page: 1,
+        limit: 20,
+      } as any);
 
       expect(mockPrisma.$transaction).toHaveBeenCalled();
     });
@@ -236,7 +245,11 @@ describe('ClientsService', () => {
     it('should apply type filter', async () => {
       mockPrisma.$transaction.mockResolvedValue([[], 0]);
 
-      await service.findAll('tenant-1', { type: 'INDIVIDUAL', page: 1, limit: 20 } as any);
+      await service.findAll('tenant-1', 'user-1', {
+        type: 'INDIVIDUAL',
+        page: 1,
+        limit: 20,
+      } as any);
 
       expect(mockPrisma.$transaction).toHaveBeenCalled();
     });
@@ -253,7 +266,10 @@ describe('ClientsService', () => {
       };
       mockPrisma.$transaction.mockResolvedValue([[clientWithPolicies], 1]);
 
-      const result = await service.findAll('tenant-1', { page: 1, limit: 20 } as any);
+      const result = await service.findAll('tenant-1', 'user-1', {
+        page: 1,
+        limit: 20,
+      } as any);
 
       expect(result.data[0].activePolicies).toBe(2);
       expect(result.data[0].totalPremium).toBe(1500);
@@ -267,7 +283,7 @@ describe('ClientsService', () => {
       const client = makeClient();
       mockPrisma.client.findFirst.mockResolvedValue(client);
 
-      const result = await service.findOne('tenant-1', 'client-1');
+      const result = await service.findOne('tenant-1', 'user-1', 'client-1');
 
       expect(result).toHaveProperty('id', 'client-1');
     });
@@ -275,7 +291,7 @@ describe('ClientsService', () => {
     it('should throw NotFoundException when client does not exist', async () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
-      await expect(service.findOne('tenant-1', 'nonexistent')).rejects.toThrow(
+      await expect(service.findOne('tenant-1', 'user-1', 'nonexistent')).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -314,7 +330,10 @@ describe('ClientsService', () => {
     it('should soft-delete a client with no active policies', async () => {
       const client = { ...makeClient(), policies: [] };
       mockPrisma.client.findFirst.mockResolvedValue(client);
-      mockPrisma.client.update.mockResolvedValue({ ...client, deletedAt: new Date() });
+      mockPrisma.client.update.mockResolvedValue({
+        ...client,
+        deletedAt: new Date(),
+      });
       mockPrisma.auditLog.create.mockResolvedValue({});
 
       const result = await service.remove('tenant-1', 'user-1', 'client-1');
@@ -364,7 +383,9 @@ describe('ClientsService', () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.updateKyc('tenant-1', 'user-1', 'bad-id', { kycStatus: 'VERIFIED' } as any),
+        service.updateKyc('tenant-1', 'user-1', 'bad-id', {
+          kycStatus: 'VERIFIED',
+        } as any),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -402,7 +423,7 @@ describe('ClientsService', () => {
         percentage: 60,
       });
 
-      const result = await service.createBeneficiary('tenant-1', 'client-1', {
+      const result = await service.createBeneficiary('tenant-1', 'user-1', 'client-1', {
         fullName: 'Child One',
         relationship: 'Child',
         percentage: 60,
@@ -419,7 +440,7 @@ describe('ClientsService', () => {
       ]);
 
       await expect(
-        service.createBeneficiary('tenant-1', 'client-1', {
+        service.createBeneficiary('tenant-1', 'user-1', 'client-1', {
           fullName: 'Child Two',
           relationship: 'Child',
           percentage: 30,
@@ -431,7 +452,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.createBeneficiary('tenant-1', 'bad-client', {
+        service.createBeneficiary('tenant-1', 'user-1', 'bad-client', {
           fullName: 'X',
           relationship: 'Child',
           percentage: 50,
@@ -447,7 +468,12 @@ describe('ClientsService', () => {
       mockPrisma.beneficiary.findFirst.mockResolvedValue({ id: 'ben-1' });
       mockPrisma.beneficiary.delete.mockResolvedValue({});
 
-      const result = await service.removeBeneficiary('tenant-1', 'client-1', 'ben-1');
+      const result = await service.removeBeneficiary(
+        'tenant-1',
+        'user-1',
+        'client-1',
+        'ben-1',
+      );
 
       expect(result).toEqual({ success: true });
     });
@@ -456,7 +482,7 @@ describe('ClientsService', () => {
       mockPrisma.beneficiary.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.removeBeneficiary('tenant-1', 'client-1', 'bad-ben'),
+        service.removeBeneficiary('tenant-1', 'user-1', 'client-1', 'bad-ben'),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -468,7 +494,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findFirst.mockResolvedValue(makeClient());
       mockPrisma.nextOfKin.create.mockResolvedValue({ id: 'nok-1' });
 
-      const result = await service.createNextOfKin('tenant-1', 'client-1', {
+      const result = await service.createNextOfKin('tenant-1', 'user-1', 'client-1', {
         fullName: 'John Smith',
         relationship: 'Spouse',
         phone: '0244111111',
@@ -481,7 +507,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.createNextOfKin('tenant-1', 'bad-client', {} as any),
+        service.createNextOfKin('tenant-1', 'user-1', 'bad-client', {} as any),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -493,7 +519,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findFirst.mockResolvedValue(makeClient());
       mockPrisma.bankDetail.create.mockResolvedValue({ id: 'bd-1' });
 
-      const result = await service.createBankDetail('tenant-1', 'client-1', {
+      const result = await service.createBankDetail('tenant-1', 'user-1', 'client-1', {
         bankName: 'GCB Bank',
         accountName: 'Jane Smith',
         accountNumber: '1234567890',
@@ -507,7 +533,7 @@ describe('ClientsService', () => {
       mockPrisma.client.findFirst.mockResolvedValue(null);
 
       await expect(
-        service.createBankDetail('tenant-1', 'bad-client', {} as any),
+        service.createBankDetail('tenant-1', 'user-1', 'bad-client', {} as any),
       ).rejects.toThrow(NotFoundException);
     });
   });

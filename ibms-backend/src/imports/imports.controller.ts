@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Controller,
   Get,
@@ -19,6 +20,9 @@ import type { RequestWithUser } from '../common/types/request.types.js';
 import { ImportsService } from './imports.service';
 import { MappingOrchestratorService } from './services/mapping-orchestrator.service';
 import { PrismaService } from '../prisma/prisma.service';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 import type { ImportDataType } from './dto/import.dto';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
@@ -33,7 +37,7 @@ export class ImportsController {
   ) {}
 
   @Get('template/:dataType')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'AGENT')
+  @Roles('ADMINISTRATOR', 'AGENT')
   async getTemplate(
     @Param('dataType') dataType: ImportDataType,
     @Res() res: any,
@@ -52,7 +56,7 @@ export class ImportsController {
   }
 
   @Post('upload')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: MAX_FILE_SIZE },
@@ -96,16 +100,24 @@ export class ImportsController {
   }
 
   @Post(':jobId/detect-mapping')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   async detectMapping(
     @Request() req: RequestWithUser,
     @Param('jobId') jobId: string,
   ) {
     const tenantId = req.user.tenantId;
+    const userId = req.user.sub;
 
-    // Load the import job and verify ownership
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    // Agent-level users can only detect mappings for their own jobs.
     const job = await this.prisma.importJob.findFirst({
-      where: { id: jobId, tenantId },
+      where: {
+        id: jobId,
+        tenantId,
+        ...(actorLevel < supervisorLevel && { createdById: userId }),
+      },
     });
     if (!job) {
       throw new BadRequestException('Import job not found');
@@ -167,9 +179,13 @@ export class ImportsController {
       mappings: result.mappings,
       stats: {
         total: result.mappings.length,
-        highConfidence: result.mappings.filter((m) => m.confidence === 'high').length,
-        mediumConfidence: result.mappings.filter((m) => m.confidence === 'medium').length,
-        lowConfidence: result.mappings.filter((m) => m.confidence === 'low').length,
+        highConfidence: result.mappings.filter((m) => m.confidence === 'high')
+          .length,
+        mediumConfidence: result.mappings.filter(
+          (m) => m.confidence === 'medium',
+        ).length,
+        lowConfidence: result.mappings.filter((m) => m.confidence === 'low')
+          .length,
         unmapped: result.unmappedColumns.length,
         aiAssisted: result.aiUsed,
       },
@@ -180,7 +196,7 @@ export class ImportsController {
   }
 
   @Post(':jobId/validate')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   async validateMapping(
     @Request() req: RequestWithUser,
     @Param('jobId') jobId: string,
@@ -188,13 +204,14 @@ export class ImportsController {
   ) {
     return this.importsService.validateMapping(
       req.user.tenantId,
+      req.user.sub,
       jobId,
       mapping,
     );
   }
 
   @Post(':jobId/execute')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR')
   async executeImport(
     @Request() req: RequestWithUser,
     @Param('jobId') jobId: string,
@@ -208,7 +225,7 @@ export class ImportsController {
 
   // Legacy direct import endpoint, keeping if needed elsewhere
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR')
   @UseInterceptors(
     FileInterceptor('file', {
       limits: { fileSize: 10 * 1024 * 1024 },

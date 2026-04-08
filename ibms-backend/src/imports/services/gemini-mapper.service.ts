@@ -48,7 +48,10 @@ export class GeminiMapperService {
       const result = await Promise.race([
         model.generateContent(prompt),
         new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Gemini timeout after 15s')), 15000),
+          setTimeout(
+            () => reject(new Error('Gemini timeout after 15s')),
+            15000,
+          ),
         ),
       ]);
 
@@ -195,9 +198,7 @@ RULES:
         );
 
       // Ensure every header is represented
-      const mappedHeaders = new Set(
-        mappings.map((m) => m.theirColumn),
-      );
+      const mappedHeaders = new Set(mappings.map((m) => m.theirColumn));
       for (const header of headers) {
         if (!mappedHeaders.has(header)) {
           mappings.push({

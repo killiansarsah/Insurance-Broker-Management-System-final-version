@@ -30,25 +30,25 @@ export class PoliciesController {
   // ─── CRUD ──────────────────────────────────────────
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreatePolicyDto) {
     return this.policiesService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: PolicyQueryDto) {
-    return this.policiesService.findAll(req.user.tenantId, query);
+    return this.policiesService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.policiesService.findOne(id, req.user.tenantId);
+    return this.policiesService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -65,13 +65,13 @@ export class PoliciesController {
   // ─── STATUS TRANSITIONS ────────────────────────────
 
   @Post(':id/bind')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   bind(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.policiesService.bind(id, req.user.tenantId, req.user.sub);
   }
 
   @Post(':id/cover-note')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   issueCoverNote(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.policiesService.issueCoverNote(
       id,
@@ -81,7 +81,7 @@ export class PoliciesController {
   }
 
   @Post(':id/cancel')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR')
   cancel(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -96,13 +96,13 @@ export class PoliciesController {
   }
 
   @Post(':id/lapse')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   lapse(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.policiesService.lapse(id, req.user.tenantId, req.user.sub);
   }
 
   @Post(':id/reinstate')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   reinstate(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -119,7 +119,7 @@ export class PoliciesController {
   // ─── ENDORSEMENTS ─────────────────────────────────
 
   @Post(':policyId/endorsements')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   createEndorsement(
     @Request() req: RequestWithUser,
     @Param('policyId') policyId: string,
@@ -134,7 +134,7 @@ export class PoliciesController {
   }
 
   @Patch(':policyId/endorsements/:id/approve')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   approveEndorsement(
     @Request() req: RequestWithUser,
     @Param('policyId') policyId: string,
@@ -149,7 +149,7 @@ export class PoliciesController {
   }
 
   @Patch(':policyId/endorsements/:id/reject')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   rejectEndorsement(
     @Request() req: RequestWithUser,
     @Param('policyId') policyId: string,
@@ -168,7 +168,7 @@ export class PoliciesController {
   // ─── INSTALLMENTS ─────────────────────────────────
 
   @Get(':policyId/installments')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   listInstallments(
     @Request() req: RequestWithUser,
     @Param('policyId') policyId: string,
@@ -177,7 +177,7 @@ export class PoliciesController {
   }
 
   @Patch(':policyId/installments/:id/pay')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   payInstallment(
     @Request() req: RequestWithUser,
     @Param('policyId') policyId: string,

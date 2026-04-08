@@ -46,13 +46,21 @@ export function CardContent({ children, className }: CardContentProps) {
 }
 
 interface CardHeaderProps {
-    title: string;
+    title?: string;
     subtitle?: string;
     action?: React.ReactNode;
     className?: string;
+    children?: React.ReactNode;
 }
 
-export function CardHeader({ title, subtitle, action, className }: CardHeaderProps) {
+export function CardHeader({ title, subtitle, action, className, children }: CardHeaderProps) {
+    if (children) {
+        return (
+            <div className={cn('flex items-start justify-between p-6', className)}>
+                {children}
+            </div>
+        );
+    }
     return (
         <div className={cn('flex items-start justify-between p-6', className)}>
             <div>
@@ -63,5 +71,18 @@ export function CardHeader({ title, subtitle, action, className }: CardHeaderPro
             </div>
             {action && <div>{action}</div>}
         </div>
+    );
+}
+
+interface CardTitleProps {
+    children: React.ReactNode;
+    className?: string;
+}
+
+export function CardTitle({ children, className }: CardTitleProps) {
+    return (
+        <h3 className={cn('text-base font-semibold text-surface-900 dark:text-white', className)}>
+            {children}
+        </h3>
     );
 }

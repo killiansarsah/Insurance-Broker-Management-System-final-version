@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -7,11 +8,50 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateQuoteDto } from './dto/create-quote.dto';
 import { UpdateQuoteDto } from './dto/update-quote.dto';
 import { QuoteQueryDto } from './dto/quote-query.dto';
+import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class QuotesService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async assertQuoteWritableByActor(
+    tenantId: string,
+    userId: string,
+    quote: { preparedById: string },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    // Supervisory roles can manage quotes tenant-wide.
+    if (actorLevel >= supervisorLevel) return;
+
+    // Agent-level users can only manage quotes they prepared.
+    if (quote.preparedById !== userId) {
+      throw new BadRequestException('You can only manage quotes you prepared');
+    }
+  }
+
+  private async buildQuoteScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.QuoteWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId, deletedAt: null };
+    }
+
+    return {
+      tenantId,
+      deletedAt: null,
+      OR: [{ preparedById: userId }, { client: { assignedBrokerId: userId } }],
+    };
+  }
 
   private async generateQuoteNumber(tenantId: string): Promise<string> {
     const today = new Date();
@@ -68,12 +108,13 @@ export class QuotesService {
     });
   }
 
-  async findAll(tenantId: string, query: QuoteQueryDto) {
+  async findAll(tenantId: string, userId: string, query: QuoteQueryDto) {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId, deletedAt: null };
+    const scopeWhere = await this.buildQuoteScopeWhere(tenantId, userId);
+    const where: any = { ...scopeWhere };
     if (query.status) where.status = query.status;
     if (query.insuranceType) where.insuranceType = query.insuranceType;
     if (query.clientId) where.clientId = query.clientId;
@@ -109,9 +150,13 @@ export class QuotesService {
     return { data, total, page, limit };
   }
 
-  async findOne(id: string, tenantId: string) {
-    const quote = await this.prisma.quote.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId?: string) {
+    const scopeWhere = userId
+      ? await this.buildQuoteScopeWhere(tenantId, userId)
+      : ({ tenantId, deletedAt: null } as Prisma.QuoteWhereInput);
+
+    const quote = await this.prisma.quote.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         client: {
           select: {
@@ -131,8 +176,10 @@ export class QuotesService {
     return quote;
   }
 
-  async update(id: string, tenantId: string, dto: UpdateQuoteDto) {
-    const quote = await this.findOne(id, tenantId);
+  async update(id: string, tenantId: string, userId: string, dto: UpdateQuoteDto) {
+    const quote = await this.findOne(id, tenantId, userId);
+    await this.assertQuoteWritableByActor(tenantId, userId, quote);
+
     if (quote.status !== 'DRAFT')
       throw new BadRequestException('Only DRAFT quotes can be edited');
 
@@ -179,8 +226,10 @@ export class QuotesService {
     });
   }
 
-  async send(id: string, tenantId: string) {
-    const quote = await this.findOne(id, tenantId);
+  async send(id: string, tenantId: string, userId: string) {
+    const quote = await this.findOne(id, tenantId, userId);
+    await this.assertQuoteWritableByActor(tenantId, userId, quote);
+
     if (quote.status !== 'DRAFT')
       throw new BadRequestException('Only DRAFT quotes can be sent');
 
@@ -190,8 +239,10 @@ export class QuotesService {
     });
   }
 
-  async accept(id: string, tenantId: string) {
-    const quote = await this.findOne(id, tenantId);
+  async accept(id: string, tenantId: string, userId: string) {
+    const quote = await this.findOne(id, tenantId, userId);
+    await this.assertQuoteWritableByActor(tenantId, userId, quote);
+
     if (quote.status !== 'SENT')
       throw new BadRequestException('Only SENT quotes can be accepted');
 
@@ -201,8 +252,10 @@ export class QuotesService {
     });
   }
 
-  async decline(id: string, tenantId: string) {
-    const quote = await this.findOne(id, tenantId);
+  async decline(id: string, tenantId: string, userId: string) {
+    const quote = await this.findOne(id, tenantId, userId);
+    await this.assertQuoteWritableByActor(tenantId, userId, quote);
+
     if (quote.status !== 'SENT')
       throw new BadRequestException('Only SENT quotes can be declined');
 

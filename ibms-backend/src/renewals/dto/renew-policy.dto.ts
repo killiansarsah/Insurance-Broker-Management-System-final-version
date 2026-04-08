@@ -4,7 +4,7 @@ import { Type } from 'class-transformer';
 export class RenewPolicyDto {
   @Type(() => Number)
   @IsNumber()
-  @Min(0)
+  @Min(1)
   premiumAmount!: number;
 
   @Type(() => Number)

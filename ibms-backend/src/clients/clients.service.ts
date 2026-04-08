@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -21,6 +22,9 @@ import {
   ExportFormat,
   ExportType,
 } from './dto/export-clients.dto';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class ClientsService {
@@ -28,6 +32,21 @@ export class ClientsService {
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
   ) {}
+
+  private async assertClientReadableByActor(
+    tenantId: string,
+    userId: string,
+    client: { assignedBrokerId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) return;
+
+    if (client.assignedBrokerId !== userId) {
+      throw new NotFoundException('Client not found');
+    }
+  }
 
   private async generateClientNumber(tenantId: string): Promise<string> {
     const last = await this.prisma.client.findFirst({
@@ -115,6 +134,7 @@ export class ClientsService {
         contactPersonPhone: dto.contactPersonPhone,
         isPep: dto.isPep,
         eddRequired: dto.eddRequired,
+        assignedBrokerId: userId,
       },
       include: {
         policies: {
@@ -182,7 +202,7 @@ export class ClientsService {
     return client;
   }
 
-  async findAll(tenantId: string, query: ClientQueryDto) {
+  async findAll(tenantId: string, userId: string, query: ClientQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -196,10 +216,13 @@ export class ClientsService {
       sortOrder = 'desc',
     } = query;
     const skip = (page - 1) * limit;
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
 
     const where: Prisma.ClientWhereInput = {
       tenantId,
       deletedAt: null,
+      ...(actorLevel < supervisorLevel && { assignedBrokerId: userId }),
     };
 
     if (search) {
@@ -256,18 +279,21 @@ export class ClientsService {
     ]);
 
     const data = rawData.map((client) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { policies, assignedBroker, ...rest } = client as any;
-      
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const activePolicies = policies?.filter((p: any) => p.status === 'ACTIVE').length || 0;
+
+      const activePolicies =
+        policies?.filter((p: any) => p.status === 'ACTIVE').length || 0;
       const totalPolicies = policies?.length || 0;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const totalPremium = policies
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ?.filter((p: any) => p.status === 'ACTIVE' || p.status === 'PENDING')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .reduce((sum: number, p: any) => sum + Number(p.premiumAmount || 0), 0) || 0;
+
+      const totalPremium =
+        policies
+
+          ?.filter((p: any) => p.status === 'ACTIVE' || p.status === 'PENDING')
+
+          .reduce(
+            (sum: number, p: any) => sum + Number(p.premiumAmount || 0),
+            0,
+          ) || 0;
 
       const assignedBrokerName = assignedBroker
         ? `${assignedBroker.firstName} ${assignedBroker.lastName}`
@@ -299,9 +325,13 @@ export class ClientsService {
     userName: string,
     dto: ExportClientsDto,
   ): Promise<Buffer> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
     const where: Prisma.ClientWhereInput = {
       tenantId,
       deletedAt: null,
+      ...(actorLevel < supervisorLevel && { assignedBrokerId: userId }),
     };
 
     if (dto.exportType === ExportType.FILTERED && dto.filters) {
@@ -626,7 +656,7 @@ export class ClientsService {
     }
   }
 
-  async findOne(tenantId: string, id: string) {
+  async findOne(tenantId: string, userId: string, id: string) {
     const client = await this.prisma.client.findFirst({
       where: { id, tenantId, deletedAt: null },
       include: {
@@ -651,6 +681,8 @@ export class ClientsService {
       throw new NotFoundException('Client not found');
     }
 
+    await this.assertClientReadableByActor(tenantId, userId, client);
+
     return client;
   }
 
@@ -664,6 +696,8 @@ export class ClientsService {
       where: { id, tenantId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
 
     const updated = await this.prisma.client.update({
       where: { id },
@@ -830,6 +864,7 @@ export class ClientsService {
 
   async createBeneficiary(
     tenantId: string,
+    userId: string,
     clientId: string,
     dto: CreateBeneficiaryDto,
   ) {
@@ -837,6 +872,8 @@ export class ClientsService {
       where: { id: clientId, tenantId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
 
     await this.validateBeneficiaryPercentage(
       tenantId,
@@ -859,16 +896,33 @@ export class ClientsService {
     });
   }
 
-  async getBeneficiaries(tenantId: string, clientId: string) {
+  async getBeneficiaries(tenantId: string, userId: string, clientId: string) {
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, tenantId, deletedAt: null },
+      select: { assignedBrokerId: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
+
     return this.prisma.beneficiary.findMany({ where: { tenantId, clientId } });
   }
 
   async updateBeneficiary(
     tenantId: string,
+    userId: string,
     clientId: string,
     id: string,
     dto: UpdateBeneficiaryDto,
   ) {
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, tenantId, deletedAt: null },
+      select: { assignedBrokerId: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
+
     const ben = await this.prisma.beneficiary.findFirst({
       where: { id, tenantId, clientId },
     });
@@ -897,7 +951,20 @@ export class ClientsService {
     });
   }
 
-  async removeBeneficiary(tenantId: string, clientId: string, id: string) {
+  async removeBeneficiary(
+    tenantId: string,
+    userId: string,
+    clientId: string,
+    id: string,
+  ) {
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, tenantId, deletedAt: null },
+      select: { assignedBrokerId: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
+
     const ben = await this.prisma.beneficiary.findFirst({
       where: { id, tenantId, clientId },
     });
@@ -911,6 +978,7 @@ export class ClientsService {
 
   async createNextOfKin(
     tenantId: string,
+    userId: string,
     clientId: string,
     dto: CreateNextOfKinDto,
   ) {
@@ -918,6 +986,8 @@ export class ClientsService {
       where: { id: clientId, tenantId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
 
     return this.prisma.nextOfKin.create({
       data: {
@@ -931,7 +1001,15 @@ export class ClientsService {
     });
   }
 
-  async getNextOfKin(tenantId: string, clientId: string) {
+  async getNextOfKin(tenantId: string, userId: string, clientId: string) {
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, tenantId, deletedAt: null },
+      select: { assignedBrokerId: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
+
     return this.prisma.nextOfKin.findMany({ where: { tenantId, clientId } });
   }
 
@@ -939,6 +1017,7 @@ export class ClientsService {
 
   async createBankDetail(
     tenantId: string,
+    userId: string,
     clientId: string,
     dto: CreateBankDetailDto,
   ) {
@@ -946,6 +1025,8 @@ export class ClientsService {
       where: { id: clientId, tenantId, deletedAt: null },
     });
     if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
 
     return this.prisma.bankDetail.create({
       data: {
@@ -959,7 +1040,15 @@ export class ClientsService {
     });
   }
 
-  async getBankDetails(tenantId: string, clientId: string) {
+  async getBankDetails(tenantId: string, userId: string, clientId: string) {
+    const client = await this.prisma.client.findFirst({
+      where: { id: clientId, tenantId, deletedAt: null },
+      select: { assignedBrokerId: true },
+    });
+    if (!client) throw new NotFoundException('Client not found');
+
+    await this.assertClientReadableByActor(tenantId, userId, client);
+
     return this.prisma.bankDetail.findMany({ where: { tenantId, clientId } });
   }
 }

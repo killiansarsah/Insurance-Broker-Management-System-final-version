@@ -31,14 +31,14 @@ import { DataTable } from '@/components/data-display/data-table';
 import { Card } from '@/components/ui/card';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { useRenewals, useLapsedRenewals } from '@/hooks/api/use-renewals';
+import { useRenewals, useLapsedRenewals, useRenewalReport } from '@/hooks/api/use-renewals';
 import { useAuthStore } from '@/stores/auth-store';
 import { useUsers } from '@/hooks/api/useUsers';
 import Link from 'next/link';
 
 // ─── Local Types & Config ───
 type UrgencyLevel = 'CRITICAL' | 'URGENT' | 'IMPORTANT' | 'UPCOMING' | 'LAPSED';
-type RenewalWorkflowStatus = 'NOT_STARTED' | 'PENDING' | 'CONTACTED' | 'QUOTED' | 'RENEWED' | 'LOST';
+type RenewalWorkflowStatus = 'NOT_STARTED' | 'CONTACTED' | 'QUOTE_SENT' | 'NEGOTIATING' | 'CONFIRMED' | 'RENEWED' | 'DECLINED';
 
 interface Renewal {
     id: string;
@@ -77,11 +77,12 @@ const URGENCY_CONFIG: Record<UrgencyLevel, { label: string; bg: string; color: s
 
 const WORKFLOW_STATUS_CONFIG: Record<RenewalWorkflowStatus, { label: string; bg: string; color: string }> = {
     NOT_STARTED: { label: 'Not Started', bg: 'bg-surface-50', color: 'text-surface-500' },
-    PENDING: { label: 'Pending', bg: 'bg-surface-100', color: 'text-surface-700' },
     CONTACTED: { label: 'Contacted', bg: 'bg-blue-50', color: 'text-blue-700' },
-    QUOTED: { label: 'Quoted', bg: 'bg-amber-50', color: 'text-amber-700' },
+    QUOTE_SENT: { label: 'Quote Sent', bg: 'bg-amber-50', color: 'text-amber-700' },
+    NEGOTIATING: { label: 'Negotiating', bg: 'bg-surface-100', color: 'text-surface-700' },
+    CONFIRMED: { label: 'Confirmed', bg: 'bg-primary-50', color: 'text-primary-700' },
     RENEWED: { label: 'Renewed', bg: 'bg-success-50', color: 'text-success-700' },
-    LOST: { label: 'Lost', bg: 'bg-danger-50', color: 'text-danger-700' },
+    DECLINED: { label: 'Declined', bg: 'bg-danger-50', color: 'text-danger-700' },
 };
 
 const FALLBACK_STATUS_CONFIG = { label: 'Unknown', bg: 'bg-surface-50', color: 'text-surface-400' };
@@ -164,11 +165,12 @@ function WorkflowBadge({ status }: { status: RenewalWorkflowStatus }) {
 // ─── Renewal Detail Modal ───
 function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: () => void }) {
     const [isProcessing, setIsProcessing] = useState(false);
-    const [proposedPremium, setProposedPremium] = useState(renewal.proposedPremium);
-    const premiumChange = proposedPremium - renewal.currentPremium;
-    const premiumChangePct = ((premiumChange / renewal.currentPremium) * 100).toFixed(1);
+    const expectedCommission = renewal.proposedPremium * (renewal.commissionRate / 100);
+    const premiumChange = renewal.proposedPremium - renewal.currentPremium;
+    const premiumChangePct = renewal.currentPremium > 0
+        ? ((premiumChange / renewal.currentPremium) * 100).toFixed(1)
+        : '0.0';
     const isIncrease = premiumChange > 0;
-    const expectedCommission = proposedPremium * (renewal.commissionRate / 100);
 
     // ESC key to close + body scroll lock
     useEffect(() => {
@@ -251,17 +253,8 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                 <p className="text-lg font-bold text-surface-900">{formatCurrency(renewal.currentPremium)}</p>
                             </div>
                             <div className="text-center p-3 bg-surface-50 rounded-lg">
-                                <p className="text-[10px] uppercase font-semibold text-surface-500 mb-1">Proposed Premium</p>
-                                <div className="flex items-center justify-center gap-1">
-                                    <span className="text-primary-600 font-bold">GHS</span>
-                                    <input
-                                        type="number"
-                                        value={proposedPremium}
-                                        onChange={(e) => setProposedPremium(Number(e.target.value))}
-                                        className="w-24 bg-transparent text-center text-lg font-bold text-primary-600 focus:outline-none border-b border-primary-200 focus:border-primary-500 transition-colors"
-                                        title="Edit Proposed Premium"
-                                    />
-                                </div>
+                                <p className="text-[10px] uppercase font-semibold text-surface-500">Proposed Premium</p>
+                                <p className="text-lg font-bold text-primary-600">{formatCurrency(renewal.proposedPremium)}</p>
                             </div>
                             <div className="text-center p-3 bg-surface-50 rounded-lg">
                                 <p className="text-[10px] uppercase font-semibold text-surface-500">Change</p>
@@ -319,7 +312,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                     </Card>
 
                     {/* Lost Reason (if applicable) */}
-                    {renewal.renewalStatus === 'LOST' && renewal.lostReason && (
+                    {renewal.renewalStatus === 'DECLINED' && renewal.lostReason && (
                         <Card padding="none" className="p-4 border-danger-200 bg-danger-50/50">
                             <h3 className="text-sm font-semibold text-danger-700 mb-2 flex items-center gap-2">
                                 <XCircle size={16} />
@@ -398,7 +391,7 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                     )}
 
                     {/* Action Buttons */}
-                    {renewal.renewalStatus !== 'RENEWED' && renewal.renewalStatus !== 'LOST' && (
+                    {renewal.renewalStatus !== 'RENEWED' && renewal.renewalStatus !== 'DECLINED' && (
                         <div className="flex flex-wrap gap-2 pt-2 border-t border-surface-200">
                             {renewal.urgencyLevel === 'LAPSED' ? (
                                 <>
@@ -457,13 +450,16 @@ function RenewalDetailModal({ renewal, onClose }: { renewal: Renewal; onClose: (
                                             setIsProcessing(true);
                                             try {
                                                 const { apiClient } = await import('@/lib/api-client');
-                                                const res = await apiClient.post<{success: boolean; data: any}>(`/renewals/renew/${renewal.id}`, {
-                                                    premiumAmount: proposedPremium,
+                                                const res = await apiClient.post<{
+                                                    success?: boolean;
+                                                    data?: { id?: string; policyNumber?: string };
+                                                }>(`/policies/${renewal.id}/renew`, {
+                                                    premiumAmount: renewal.proposedPremium,
                                                     sumInsured: renewal.sumInsured,
                                                     notes: 'Renewal Processed from Pipeline'
                                                 });
-                                                if (res.success) {
-                                                    toast.success('Renewal Processed', { description: `New Draft Policy ${res.data.policyNumber} created.` });
+                                                if (res.success || res.data?.id || res.data?.policyNumber) {
+                                                    toast.success('Renewal Processed', { description: `Draft Policy generated.` });
                                                     onClose();
                                                     window.location.reload();
                                                 } else {
@@ -510,15 +506,18 @@ export default function RenewalsPage() {
     
     // Setup queries
     const { data: renewalsApiData, refetch } = useRenewals({ daysAhead: 90 });
-    const { data: lapsedApiData } = useLapsedRenewals(); // Must be imported at bottom of this diff via auto-imports or explicit
+    const { data: lapsedApiData } = useLapsedRenewals(); 
+    const { data: reportApiData } = useRenewalReport(90);
     const currentUserEmail = useAuthStore((s) => s.user?.email);
+    const currentUserRole = useAuthStore((s) => s.user?.role) || '';
+    const canNotifyAll = ['WORKSPACE_OWNER', 'ADMINISTRATOR'].includes(currentUserRole);
 
     // Dynamic broker list for bulk assign
     const { data: usersData } = useUsers();
     const brokerOptions = useMemo(() => {
         const users = Array.isArray(usersData) ? usersData : (usersData as any)?.data ?? [];
         return users
-            .filter((u: any) => ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'MANAGER', 'SUPERVISOR', 'AGENT', 'BROKER', 'ADMIN', 'TENANT_ADMIN'].includes(u.role))
+            .filter((u: any) => ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'MANAGER', 'SUPERVISOR', 'AGENT'].includes(u.role))
             .map((u: any) => ({ value: u.id, label: `${u.firstName} ${u.lastName}` }));
     }, [usersData]);
 
@@ -547,6 +546,9 @@ export default function RenewalsPage() {
     }, [allRenewals]);
 
     const renewalSummary = useMemo(() => {
+        const rawReport = Array.isArray(reportApiData) ? reportApiData[0] : (reportApiData as any)?.data ?? reportApiData;
+        const report = rawReport || {};
+        
         const overdue = allRenewals.filter(r => r.daysToExpiry < 0);
         const next30 = allRenewals.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30);
         const next60 = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 30 && r.daysToExpiry <= 60);
@@ -555,6 +557,9 @@ export default function RenewalsPage() {
         const activeRenewals = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED');
         
         const totalPremium = activeRenewals.reduce((s, r) => s + r.currentPremium, 0);
+        const renewedPremium = allRenewals.filter(r => r.renewalStatus === 'RENEWED').reduce((s, r) => s + r.currentPremium, 0);
+        const lostPremium = allRenewals.filter(r => r.renewalStatus === 'DECLINED').reduce((s, r) => s + r.currentPremium, 0);
+        
         return {
             total: allRenewals.length, active: activeRenewals.length,
             overdue: overdue.length, overdueAmount: overdue.reduce((s, r) => s + r.currentPremium, 0),
@@ -562,14 +567,18 @@ export default function RenewalsPage() {
             next60: next60.length, next60Amount: next60.reduce((s, r) => s + r.currentPremium, 0),
             next90: next90.length, next90Amount: next90.reduce((s, r) => s + r.currentPremium, 0),
             lapsedCount: lapsed.length, lapsedAmount: lapsed.reduce((s, r) => s + r.currentPremium, 0),
-            totalPremiumAtRisk: totalPremium, renewedCount: 0, renewedPremium: 0,
-            lostCount: 0, lostPremium: 0, renewalRate: 0,
+            totalPremiumAtRisk: report.atRiskRevenue ?? totalPremium, 
+            renewedCount: report.totalRenewed ?? allRenewals.filter(r => r.renewalStatus === 'RENEWED').length, 
+            renewedPremium: renewedPremium, 
+            lostCount: report.lapsedCount ?? allRenewals.filter(r => r.renewalStatus === 'DECLINED').length, 
+            lostPremium: lostPremium, 
+            renewalRate: report.renewalRate ?? 0,
             critical: allRenewals.filter(r => r.urgencyLevel === 'CRITICAL').length,
             urgent: allRenewals.filter(r => r.urgencyLevel === 'URGENT').length,
             important: allRenewals.filter(r => r.urgencyLevel === 'IMPORTANT').length,
             upcoming: allRenewals.filter(r => r.urgencyLevel === 'UPCOMING').length,
         };
-    }, [allRenewals]);
+    }, [allRenewals, reportApiData]);
 
     // Pipeline tabs configuration
     const pipelineTabs: { id: PipelineTab; label: string; count: number; color: string; amount?: number }[] = useMemo(() => [
@@ -643,29 +652,31 @@ export default function RenewalsPage() {
                             Reports
                         </Button>
                     </Link>
-                    <Button
-                        variant="primary"
-                        leftIcon={<Send size={16} />}
-                        disabled={notifyingAll}
-                        onClick={async () => {
-                            setNotifyingAll(true);
-                            try {
-                                const { apiClient } = await import('@/lib/api-client');
-                                const res = await apiClient.post<{ success: boolean; message: string; sent: number; skipped: number; failed: number }>('/renewals/notify-all');
-                                if (res.success) {
-                                    toast.success('Reminders Dispatched', { description: res.message });
-                                } else {
-                                    toast.error('Notify Failed', { description: res.message });
+                    {canNotifyAll && (
+                        <Button
+                            variant="primary"
+                            leftIcon={<Send size={16} />}
+                            disabled={notifyingAll}
+                            onClick={async () => {
+                                setNotifyingAll(true);
+                                try {
+                                    const { apiClient } = await import('@/lib/api-client');
+                                    const res = await apiClient.post<{ success: boolean; message: string; sent: number; skipped: number; failed: number }>('/renewals/notify-all');
+                                    if (res.success) {
+                                        toast.success('Reminders Dispatched', { description: res.message });
+                                    } else {
+                                        toast.error('Notify Failed', { description: res.message });
+                                    }
+                                } catch {
+                                    toast.error('Error', { description: 'Failed to dispatch bulk reminders.' });
+                                } finally {
+                                    setNotifyingAll(false);
                                 }
-                            } catch {
-                                toast.error('Error', { description: 'Failed to dispatch bulk reminders.' });
-                            } finally {
-                                setNotifyingAll(false);
-                            }
-                        }}
-                    >
-                        {notifyingAll ? 'Sending...' : 'Notify All'}
-                    </Button>
+                            }}
+                        >
+                            {notifyingAll ? 'Sending...' : 'Notify All'}
+                        </Button>
+                    )}
                 </div>
             </div>
 
@@ -859,7 +870,7 @@ export default function RenewalsPage() {
                 data={filteredRenewals}
                 selectable={true}
                 selectedRows={selectedRenewals}
-                onSelectionChange={setSelectedRenewals as any}
+                onSelectionChange={(rows) => setSelectedRenewals(rows as Renewal[])}
                 columns={[
                     {
                         key: 'policyNumber',
@@ -978,11 +989,12 @@ export default function RenewalsPage() {
                             options={[
                                 { label: 'All Statuses', value: 'all' },
                                 { label: 'Not Started', value: 'NOT_STARTED' },
-                                { label: 'Pending', value: 'PENDING' },
                                 { label: 'Contacted', value: 'CONTACTED' },
-                                { label: 'Quoted', value: 'QUOTED' },
+                                { label: 'Quote Sent', value: 'QUOTE_SENT' },
+                                { label: 'Negotiating', value: 'NEGOTIATING' },
+                                { label: 'Confirmed', value: 'CONFIRMED' },
                                 { label: 'Renewed', value: 'RENEWED' },
-                                { label: 'Lost', value: 'LOST' },
+                                { label: 'Declined', value: 'DECLINED' },
                             ]}
                             value={workflowFilter}
                             onChange={(v) => setWorkflowFilter(v as RenewalWorkflowStatus | 'all')}

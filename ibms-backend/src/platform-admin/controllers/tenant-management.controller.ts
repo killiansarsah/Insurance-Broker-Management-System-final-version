@@ -21,7 +21,7 @@ import { PlatformAuditService } from '../services/platform-audit.service.js';
 
 @Controller('platform-admin/tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class TenantManagementController {
   constructor(
     private readonly prisma: PrismaService,
@@ -179,6 +179,8 @@ export class TenantManagementController {
         lastName: body.adminLastName,
         phone: body.adminPhone ?? null,
         mustChangePassword: true,
+        role: 'ADMINISTRATOR',
+        permissions: [],
       },
     });
 
@@ -205,16 +207,6 @@ export class TenantManagementController {
           })),
         });
       }
-    }
-
-    // Assign ADMINISTRATOR role to the new tenant's admin user
-    const adminRole = await this.prisma.role.findFirst({
-      where: { name: 'ADMINISTRATOR', tenantId: tenant.id },
-    });
-    if (adminRole) {
-      await this.prisma.userRoleMapping.create({
-        data: { userId: adminUser.id, roleId: adminRole.id },
-      });
     }
 
     // Create subscription

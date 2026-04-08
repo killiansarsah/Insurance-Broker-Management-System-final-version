@@ -25,25 +25,25 @@ export class RemittancesController {
   constructor(private readonly remittancesService: RemittancesService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER')
+  @Roles('ADMINISTRATOR', 'MANAGER')
   create(@Request() req: RequestWithUser, @Body() dto: CreateRemittanceDto) {
     return this.remittancesService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: RemittanceQueryDto) {
-    return this.remittancesService.findAll(req.user.tenantId, query);
+    return this.remittancesService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.remittancesService.findOne(id, req.user.tenantId);
+    return this.remittancesService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Post(':id/confirm')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER')
+  @Roles('ADMINISTRATOR', 'MANAGER')
   confirm(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

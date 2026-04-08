@@ -1,5 +1,7 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 export interface SearchResult {
   id: string;
@@ -16,6 +18,7 @@ export class SearchService {
 
   async globalSearch(
     tenantId: string,
+    userId: string,
     query: string,
     limit = 20,
   ): Promise<SearchResult[]> {
@@ -25,11 +28,15 @@ export class SearchService {
 
     const searchTerm = query.trim().toLowerCase();
     const results: SearchResult[] = [];
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    const isSupervisory = actorLevel >= supervisorLevel;
 
     // Search Clients
     const clients = await this.prisma.client.findMany({
       where: {
         tenantId,
+        ...(isSupervisory ? {} : { assignedBrokerId: userId }),
         OR: [
           { firstName: { contains: searchTerm, mode: 'insensitive' } },
           { lastName: { contains: searchTerm, mode: 'insensitive' } },
@@ -64,16 +71,30 @@ export class SearchService {
     const policies = await this.prisma.policy.findMany({
       where: {
         tenantId,
-        OR: [
-          { policyNumber: { contains: searchTerm, mode: 'insensitive' } },
+        ...(isSupervisory
+          ? {}
+          : {
+              OR: [{ brokerId: userId }, { client: { assignedBrokerId: userId } }],
+            }),
+        AND: [
           {
-            client: {
-              OR: [
-                { firstName: { contains: searchTerm, mode: 'insensitive' } },
-                { lastName: { contains: searchTerm, mode: 'insensitive' } },
-                { companyName: { contains: searchTerm, mode: 'insensitive' } },
-              ],
-            },
+            OR: [
+              { policyNumber: { contains: searchTerm, mode: 'insensitive' } },
+              {
+                client: {
+                  OR: [
+                    { firstName: { contains: searchTerm, mode: 'insensitive' } },
+                    { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                    {
+                      companyName: {
+                        contains: searchTerm,
+                        mode: 'insensitive',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
           },
         ],
       },
@@ -107,16 +128,34 @@ export class SearchService {
     const claims = await this.prisma.claim.findMany({
       where: {
         tenantId,
-        OR: [
-          { claimNumber: { contains: searchTerm, mode: 'insensitive' } },
-          {
-            client: {
+        ...(isSupervisory
+          ? {}
+          : {
               OR: [
-                { firstName: { contains: searchTerm, mode: 'insensitive' } },
-                { lastName: { contains: searchTerm, mode: 'insensitive' } },
-                { companyName: { contains: searchTerm, mode: 'insensitive' } },
+                { assessorId: userId },
+                { policy: { brokerId: userId } },
+                { client: { assignedBrokerId: userId } },
               ],
-            },
+            }),
+        AND: [
+          {
+            OR: [
+              { claimNumber: { contains: searchTerm, mode: 'insensitive' } },
+              {
+                client: {
+                  OR: [
+                    { firstName: { contains: searchTerm, mode: 'insensitive' } },
+                    { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                    {
+                      companyName: {
+                        contains: searchTerm,
+                        mode: 'insensitive',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
           },
         ],
       },
@@ -146,12 +185,17 @@ export class SearchService {
     const leads = await this.prisma.lead.findMany({
       where: {
         tenantId,
-        OR: [
-          { contactName: { contains: searchTerm, mode: 'insensitive' } },
-          { email: { contains: searchTerm, mode: 'insensitive' } },
-          { phone: { contains: searchTerm, mode: 'insensitive' } },
-          { companyName: { contains: searchTerm, mode: 'insensitive' } },
-          { leadNumber: { contains: searchTerm, mode: 'insensitive' } },
+        ...(isSupervisory ? {} : { assignedBrokerId: userId }),
+        AND: [
+          {
+            OR: [
+              { contactName: { contains: searchTerm, mode: 'insensitive' } },
+              { email: { contains: searchTerm, mode: 'insensitive' } },
+              { phone: { contains: searchTerm, mode: 'insensitive' } },
+              { companyName: { contains: searchTerm, mode: 'insensitive' } },
+              { leadNumber: { contains: searchTerm, mode: 'insensitive' } },
+            ],
+          },
         ],
       },
       take: 5,
@@ -177,16 +221,33 @@ export class SearchService {
     const quotes = await this.prisma.quote.findMany({
       where: {
         tenantId,
-        OR: [
-          { quoteNumber: { contains: searchTerm, mode: 'insensitive' } },
-          {
-            client: {
+        ...(isSupervisory
+          ? {}
+          : {
               OR: [
-                { firstName: { contains: searchTerm, mode: 'insensitive' } },
-                { lastName: { contains: searchTerm, mode: 'insensitive' } },
-                { companyName: { contains: searchTerm, mode: 'insensitive' } },
+                { preparedById: userId },
+                { client: { assignedBrokerId: userId } },
               ],
-            },
+            }),
+        AND: [
+          {
+            OR: [
+              { quoteNumber: { contains: searchTerm, mode: 'insensitive' } },
+              {
+                client: {
+                  OR: [
+                    { firstName: { contains: searchTerm, mode: 'insensitive' } },
+                    { lastName: { contains: searchTerm, mode: 'insensitive' } },
+                    {
+                      companyName: {
+                        contains: searchTerm,
+                        mode: 'insensitive',
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
           },
         ],
       },
@@ -248,8 +309,8 @@ export class SearchService {
 
       try {
         if (audit.entity === 'Client') {
-          const client = await this.prisma.client.findUnique({
-            where: { id: audit.entityId },
+          const client = await this.prisma.client.findFirst({
+            where: { id: audit.entityId, tenantId },
             select: {
               id: true,
               firstName: true,
@@ -268,8 +329,8 @@ export class SearchService {
             });
           }
         } else if (audit.entity === 'Policy') {
-          const policy = await this.prisma.policy.findUnique({
-            where: { id: audit.entityId },
+          const policy = await this.prisma.policy.findFirst({
+            where: { id: audit.entityId, tenantId },
             select: {
               id: true,
               policyNumber: true,
@@ -287,8 +348,8 @@ export class SearchService {
             });
           }
         } else if (audit.entity === 'Claim') {
-          const claim = await this.prisma.claim.findUnique({
-            where: { id: audit.entityId },
+          const claim = await this.prisma.claim.findFirst({
+            where: { id: audit.entityId, tenantId },
             select: {
               id: true,
               claimNumber: true,
@@ -305,8 +366,8 @@ export class SearchService {
             });
           }
         } else if (audit.entity === 'Lead') {
-          const lead = await this.prisma.lead.findUnique({
-            where: { id: audit.entityId },
+          const lead = await this.prisma.lead.findFirst({
+            where: { id: audit.entityId, tenantId },
             select: {
               id: true,
               contactName: true,

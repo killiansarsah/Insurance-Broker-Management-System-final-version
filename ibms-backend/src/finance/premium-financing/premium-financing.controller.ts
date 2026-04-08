@@ -26,7 +26,7 @@ export class PremiumFinancingController {
   constructor(private readonly pfService: PremiumFinancingService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(
     @Request() req: RequestWithUser,
     @Body() dto: CreatePremiumFinancingDto,
@@ -35,19 +35,19 @@ export class PremiumFinancingController {
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: PfQueryDto) {
-    return this.pfService.findAll(req.user.tenantId, query);
+    return this.pfService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.pfService.findOne(id, req.user.tenantId);
+    return this.pfService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Post(':id/installments/:installmentId/pay')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   payInstallment(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

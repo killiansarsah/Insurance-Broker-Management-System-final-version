@@ -63,13 +63,16 @@ export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   getTenantSettings(@Request() req: RequestWithUser) {
-    return this.settingsService.getTenantSettings(req.user.tenantId);
+    return this.settingsService.getTenantSettings(
+      req.user.tenantId,
+      req.user.sub,
+    );
   }
 
   @Patch()
-  @Roles('TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   updateTenantSettings(
     @Request() req: RequestWithUser,
     @Body() dto: UpdateTenantSettingsDto,
@@ -82,13 +85,13 @@ export class SettingsController {
   }
 
   @Get('profile')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   getProfile(@Request() req: RequestWithUser) {
     return this.settingsService.getProfile(req.user.sub);
   }
 
   @Patch('profile')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   updateProfile(
     @Request() req: RequestWithUser,
     @Body() dto: UpdateProfileDto,
@@ -97,7 +100,7 @@ export class SettingsController {
   }
 
   @Post('change-password')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   changePassword(
     @Request() req: RequestWithUser,
     @Body() dto: ChangePasswordDto,
@@ -110,7 +113,7 @@ export class SettingsController {
   }
 
   @Post('upload-avatar')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: imageStorage,
@@ -127,7 +130,7 @@ export class SettingsController {
   }
 
   @Post('upload-logo')
-  @Roles('TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: imageStorage,

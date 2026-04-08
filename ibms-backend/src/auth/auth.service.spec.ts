@@ -72,7 +72,8 @@ const makeUser = (overrides = {}) => ({
   createdAt: new Date('2024-01-01'),
   twoFactorEnabled: false,
   twoFactorSecret: null,
-  userRoleMappings: [{ role: { name: 'BROKER' } }],
+  role: 'AGENT',
+  permissions: [],
   ...overrides,
 });
 
@@ -139,7 +140,10 @@ describe('AuthService', () => {
   describe('login', () => {
     it('should return accessToken and user on successful login', async () => {
       const user = makeUser();
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
       mockPrisma.user.findFirst.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockPrisma.user.update.mockResolvedValue(user);
@@ -167,7 +171,10 @@ describe('AuthService', () => {
     });
 
     it('should throw UNAUTHORIZED when tenant is inactive', async () => {
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: false });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: false,
+      });
 
       await expect(
         service.login('test@example.com', 'password', 'inactive-tenant'),
@@ -175,7 +182,10 @@ describe('AuthService', () => {
     });
 
     it('should throw UNAUTHORIZED when user is not found', async () => {
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
       mockPrisma.user.findFirst.mockResolvedValue(null);
 
       await expect(
@@ -184,8 +194,13 @@ describe('AuthService', () => {
     });
 
     it('should throw UNAUTHORIZED when user is soft-deleted', async () => {
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
-      mockPrisma.user.findFirst.mockResolvedValue(makeUser({ deletedAt: new Date() }));
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
+      mockPrisma.user.findFirst.mockResolvedValue(
+        makeUser({ deletedAt: new Date() }),
+      );
 
       await expect(
         service.login('test@example.com', 'password', 'my-tenant'),
@@ -193,7 +208,10 @@ describe('AuthService', () => {
     });
 
     it('should throw 423 when account is locked', async () => {
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
       mockPrisma.user.findFirst.mockResolvedValue(
         makeUser({ lockedUntil: new Date(Date.now() + 60_000) }),
       );
@@ -205,7 +223,10 @@ describe('AuthService', () => {
 
     it('should increment failedAttempts on wrong password', async () => {
       const user = makeUser({ failedAttempts: 2 });
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
       mockPrisma.user.findFirst.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       mockPrisma.user.update.mockResolvedValue({});
@@ -224,7 +245,10 @@ describe('AuthService', () => {
 
     it('should lock account after 5 failed attempts', async () => {
       const user = makeUser({ failedAttempts: 4 });
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
       mockPrisma.user.findFirst.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       mockPrisma.user.update.mockResolvedValue({});
@@ -246,13 +270,20 @@ describe('AuthService', () => {
 
     it('should return requiresTwoFactor when 2FA is enabled', async () => {
       const user = makeUser({ twoFactorEnabled: true });
-      mockTenants.findBySlug.mockResolvedValue({ id: 'tenant-1', isActive: true });
+      mockTenants.findBySlug.mockResolvedValue({
+        id: 'tenant-1',
+        isActive: true,
+      });
       mockPrisma.user.findFirst.mockResolvedValue(user);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockPrisma.user.update.mockResolvedValue(user);
       mockPrisma.auditLog.create.mockResolvedValue({});
 
-      const result = await service.login('test@example.com', 'password', 'my-tenant');
+      const result = await service.login(
+        'test@example.com',
+        'password',
+        'my-tenant',
+      );
 
       expect(result).toHaveProperty('requiresTwoFactor', true);
       expect(result).toHaveProperty('userId', 'user-1');
@@ -261,15 +292,32 @@ describe('AuthService', () => {
     it('should return requiresTenantSelection when user exists in multiple tenants', async () => {
       const userWithTenant = {
         ...makeUser(),
-        tenant: { id: 'tenant-1', name: 'Tenant A', slug: 'tenant-a', isActive: true },
+        tenant: {
+          id: 'tenant-1',
+          name: 'Tenant A',
+          slug: 'tenant-a',
+          isActive: true,
+        },
       };
       const userWithTenant2 = {
         ...makeUser({ id: 'user-2', tenantId: 'tenant-2' }),
-        tenant: { id: 'tenant-2', name: 'Tenant B', slug: 'tenant-b', isActive: true },
+        tenant: {
+          id: 'tenant-2',
+          name: 'Tenant B',
+          slug: 'tenant-b',
+          isActive: true,
+        },
       };
-      mockPrisma.user.findMany.mockResolvedValue([userWithTenant, userWithTenant2]);
+      mockPrisma.user.findMany.mockResolvedValue([
+        userWithTenant,
+        userWithTenant2,
+      ]);
 
-      const result = await service.login('test@example.com', 'password', undefined);
+      const result = await service.login(
+        'test@example.com',
+        'password',
+        undefined,
+      );
 
       expect(result).toHaveProperty('requiresTenantSelection', true);
       expect((result as any).tenants).toHaveLength(2);
@@ -299,9 +347,9 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockPrisma.refreshToken.updateMany.mockResolvedValue({});
 
-      await expect(service.refreshTokens('abcdef1234567890sometoken')).rejects.toThrow(
-        HttpException,
-      );
+      await expect(
+        service.refreshTokens('abcdef1234567890sometoken'),
+      ).rejects.toThrow(HttpException);
 
       expect(mockPrisma.refreshToken.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -319,9 +367,9 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       mockPrisma.refreshToken.update.mockResolvedValue({});
 
-      await expect(service.refreshTokens('abcdef1234567890sometoken')).rejects.toThrow(
-        HttpException,
-      );
+      await expect(
+        service.refreshTokens('abcdef1234567890sometoken'),
+      ).rejects.toThrow(HttpException);
     });
 
     it('should rotate tokens on valid refresh', async () => {

@@ -31,12 +31,12 @@ import { AppLoader } from '@/components/ui/AppLoader';
 
 // --- Lead Pipeline Stages ---
 const LEAD_STAGES = [
-    { key: 'new', label: 'New', color: 'bg-blue-100 text-blue-700' },
+    { key: 'NEW', label: 'New', color: 'bg-blue-100 text-blue-700' },
     { key: 'CONTACTED', label: 'Contacted', color: 'bg-indigo-100 text-indigo-700' },
     { key: 'QUALIFIED', label: 'Qualified', color: 'bg-violet-100 text-violet-700' },
-    { key: 'proposal', label: 'Proposal', color: 'bg-amber-100 text-amber-700' },
+    { key: 'PROPOSAL', label: 'Proposal', color: 'bg-amber-100 text-amber-700' },
     { key: 'NEGOTIATION', label: 'Negotiation', color: 'bg-orange-100 text-orange-700' },
-    { key: 'won', label: 'Won', color: 'bg-success-100 text-success-700' },
+    { key: 'WON', label: 'Won', color: 'bg-success-100 text-success-700' },
     { key: 'LOST', label: 'Lost', color: 'bg-danger-100 text-danger-700' },
 ];
 

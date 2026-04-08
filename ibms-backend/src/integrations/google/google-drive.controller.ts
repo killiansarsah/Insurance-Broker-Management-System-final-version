@@ -18,13 +18,13 @@ export class GoogleDriveController {
   constructor(private readonly driveService: GoogleDriveService) {}
 
   @Post('mirror')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   mirror(@Request() req: RequestWithUser) {
     return this.driveService.mirrorDocuments(req.user.tenantId);
   }
 
   @Get('files')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   listFiles(
     @Request() req: RequestWithUser,
     @Query('category') category?: string,

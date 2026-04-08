@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { Resend } from 'resend';
+import { getBrokeriumTemplate } from './brokerium-email.template';
 
 interface EmailPreferences {
   policyRenewal: boolean;
@@ -100,13 +101,36 @@ export class EnhancedEmailService {
   ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
     const subject = 'You have been invited to IBMS';
-    const html = `
-      <h2>Welcome to IBMS</h2>
-      <p>You have been invited to join the Insurance Broker Management System.</p>
-      <p><a href="${inviteUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Accept Invitation</a></p>
-      <p>This link expires in 48 hours.</p>
-      <p style="color:#6b7280;font-size:12px;">If you did not expect this invitation, please ignore this email.</p>
+
+    const content = `
+      <div class="greeting">Hello,</div>
+      <div class="body-text">
+        You have been invited to join the Insurance Broker Management System (IBMS).
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr blue">Invitation Details</div>
+        <div class="info-row">
+          <div class="info-lbl">System URL</div>
+          <div class="info-val link">${frontendUrl}</div>
+        </div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="${inviteUrl}" class="cta-btn blue">Accept Invitation</a>
+        <div class="expire-note">This link expires in 48 hours.</div>
+      </div>
+      
+      <div class="body-text" style="font-size: 13px; color: #6b7280; text-align: center;">
+        If you did not expect this invitation, please ignore this email.
+      </div>
     `;
+    const html = getBrokeriumTemplate(
+      content,
+      'blue',
+      'System Invitation',
+      'Join our secure platform',
+    );
 
     await this.queueEmail(tenantId, email, subject, html, {
       templateName: 'invitation',
@@ -124,18 +148,55 @@ export class EnhancedEmailService {
   ): Promise<void> {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
     const subject = 'IBMS Password Reset';
-    const html = `
-      <h2>Password Reset</h2>
-      <p>A password reset was requested for your account.</p>
-      <p><a href="${resetUrl}" style="display:inline-block;padding:12px 24px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Reset Password</a></p>
-      <p>This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>
+
+    const content = `
+      <div class="body-text" style="font-size: 14.5px; line-height: 1.8; color: #374151; margin-bottom: 22px; text-align: center;">
+        A password reset was requested for your Brokerium account.<br><br>
+        <span style="color: #6b7280;">If this was you, click below to choose a new password.</span>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="${resetUrl}" class="cta-btn amber">Reset My Password</a>
+        <div class="expire-note">This link expires in <strong>1 hour</strong> for your security.</div>
+      </div>
+
+      <hr class="divider" style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;">
+
+      <div class="warn-box amber">
+        <span class="warn-icon">⚠️</span>
+        <div>
+          <strong>Didn't request this?</strong> Your account is safe — ignore this email. No changes have been made. If concerned, <a href="mailto:support@brokerium.com" style="color: #d97706; text-decoration: underline;">contact support</a>.
+        </div>
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr amber" style="background:#FFFBEB;color:#92400E;">REQUEST DETAILS</div>
+        <div class="info-row">
+          <div class="info-lbl">IP Address</div>
+          <div class="info-val">196.168.xx.xx</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Device</div>
+          <div class="info-val">Chrome on Windows</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Location</div>
+          <div class="info-val">Accra, Ghana</div>
+        </div>
+      </div>
     `;
+    const requestDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' }).format(new Date());
+    const html = getBrokeriumTemplate(
+      content,
+      'amber',
+      'Password Reset',
+      `Requested · ${requestDate}`,
+    );
 
     await this.queueEmail(tenantId, email, subject, html, {
       templateName: 'password_reset',
       templateData: { resetUrl, frontendUrl },
       userId,
-      priority: 1,
     });
   }
 
@@ -151,51 +212,44 @@ export class EnhancedEmailService {
     userId?: string,
   ): Promise<void> {
     const subject = `Policy Renewal Reminder: ${policyNumber} - ${daysUntilExpiry} Days Remaining`;
-    const urgency = daysUntilExpiry <= 30 ? 'URGENT' : 'UPCOMING';
-    const urgencyColor = daysUntilExpiry <= 30 ? '#dc2626' : '#f59e0b';
+    const isUrgent = daysUntilExpiry <= 30;
+    const theme = isUrgent ? 'red' : 'amber';
+    const headerTitle = isUrgent
+      ? 'Urgent: Policy Expiration'
+      : 'Policy Renewal Reminder';
+    const headerSub = `Action required within ${daysUntilExpiry} days`;
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${urgencyColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0;">${urgency}: Policy Renewal Required</h2>
+    const content = `
+      <div class="greeting">Dear <strong>${clientName}</strong>,</div>
+      <div class="body-text">
+        Your <strong>${insuranceType}</strong> insurance policy is approaching its expiration date in <strong>${daysUntilExpiry} days</strong>.
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr ${theme}">Policy Details</div>
+        <div class="info-row">
+          <div class="info-lbl">Policy Number</div>
+          <div class="info-val">${policyNumber}</div>
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">Dear ${clientName},</p>
-          <p style="color: #374151;">Your ${insuranceType} insurance policy is due for renewal.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${urgencyColor};">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Policy Number:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">${policyNumber}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Expiry Date:</td>
-                <td style="padding: 8px 0; color: #111827;">${expiryDate.toLocaleDateString()}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Days Remaining:</td>
-                <td style="padding: 8px 0; color: ${urgencyColor}; font-weight: bold; font-size: 18px;">${daysUntilExpiry} days</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Premium Amount:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">GHS ${premiumAmount.toLocaleString()}</td>
-              </tr>
-            </table>
-          </div>
-
-          <p style="color: #374151; margin: 20px 0;">To ensure continuous coverage, please contact your broker to renew your policy before the expiry date.</p>
-          
-          <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 12px; border-radius: 6px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e; font-size: 14px;">
-              <strong>⚠️ Important:</strong> Your coverage will cease on the expiry date if not renewed. Ensure timely renewal to avoid any gaps in protection.
-            </p>
-          </div>
-
-          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">Best regards,<br/>Your Insurance Broker Team</p>
+        <div class="info-row">
+          <div class="info-lbl">Expiration Date</div>
+          <div class="info-val ${isUrgent ? 'danger' : 'warn'}">${expiryDate.toLocaleDateString()}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Premium Amount</div>
+          <div class="info-val">GHS ${premiumAmount.toLocaleString()}</div>
         </div>
       </div>
+
+      <div class="warn-box amber">
+        <div><strong>Important:</strong> Your coverage will cease on the expiry date if not renewed.</div>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="#" class="cta-btn ${theme}">Contact Broker</a>
+      </div>
     `;
+    const html = getBrokeriumTemplate(content, theme, headerTitle, headerSub);
 
     await this.queueEmail(tenantId, email, subject, html, {
       templateName: 'policy_renewal',
@@ -222,57 +276,62 @@ export class EnhancedEmailService {
     notes?: string,
   ): Promise<void> {
     const subject = `Claim Update: ${claimNumber} - Status Changed to ${newStatus}`;
-    const statusColor =
-      newStatus === 'APPROVED'
-        ? '#10b981'
-        : newStatus === 'REJECTED'
-          ? '#ef4444'
-          : '#3b82f6';
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${statusColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0;">Claim Status Update</h2>
+    let theme: 'teal' | 'blue' | 'red' | 'amber' = 'blue';
+    let statusClass = 'link';
+    if (
+      newStatus.toUpperCase().includes('APPROVED') ||
+      newStatus.toUpperCase().includes('SETTLED')
+    ) {
+      theme = 'teal';
+      statusClass = 'val';
+    } else if (
+      newStatus.toUpperCase().includes('REJECTED') ||
+      newStatus.toUpperCase().includes('DENIED')
+    ) {
+      theme = 'red';
+      statusClass = 'danger';
+    } else if (newStatus.toUpperCase().includes('PENDING')) {
+      theme = 'amber';
+      statusClass = 'warn';
+    }
+
+    const content = `
+      <div class="greeting">Dear <strong>${clientName}</strong>,</div>
+      <div class="body-text">
+        Your insurance claim status has been updated from <strong>${oldStatus}</strong> to <strong class="${statusClass}">${newStatus}</strong>.
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr ${theme}">Claim Status Update</div>
+        <div class="info-row">
+          <div class="info-lbl">Claim Number</div>
+          <div class="info-val">${claimNumber}</div>
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">Dear ${clientName},</p>
-          <p style="color: #374151;">Your insurance claim status has been updated.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusColor};">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Claim Number:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">${claimNumber}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Previous Status:</td>
-                <td style="padding: 8px 0; color: #6b7280;">${oldStatus}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">New Status:</td>
-                <td style="padding: 8px 0; color: ${statusColor}; font-weight: bold; font-size: 18px;">${newStatus}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Claim Amount:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">GHS ${claimAmount.toLocaleString()}</td>
-              </tr>
-            </table>
-          </div>
-
-          ${
-            notes
-              ? `<div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin: 20px 0;">
-            <p style="margin: 0; color: #1e40af; font-size: 14px;"><strong>Notes:</strong> ${notes}</p>
-          </div>`
-              : ''
-          }
-
-          <p style="color: #374151; margin: 20px 0;">If you have any questions about your claim, please contact your broker or claims department.</p>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">Best regards,<br/>Claims Department</p>
+        <div class="info-row">
+          <div class="info-lbl">Claim Amount</div>
+          <div class="info-val">GHS ${claimAmount.toLocaleString()}</div>
         </div>
       </div>
+
+      ${
+        notes
+          ? `<div class="warn-box amber">
+               <div><strong>Notes:</strong> ${notes}</div>
+             </div>`
+          : ''
+      }
+
+      <div class="cta-wrap">
+        <a href="#" class="cta-btn ${theme}">View Claim Details</a>
+      </div>
     `;
+    const html = getBrokeriumTemplate(
+      content,
+      theme,
+      'Claim Update',
+      `Status changed to ${newStatus}`,
+    );
 
     await this.queueEmail('tenant-id', email, subject, html, {
       templateName: 'claim_update',

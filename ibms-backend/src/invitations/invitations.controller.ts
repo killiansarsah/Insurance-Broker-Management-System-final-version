@@ -7,6 +7,7 @@ import {
   Param,
   Query,
   Res,
+  UseGuards,
 } from '@nestjs/common';
 import { InvitationsService } from './invitations.service.js';
 import { CreateInvitationDto } from './dto/create-invitation.dto.js';
@@ -16,6 +17,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator.js';
 import type { AuthenticatedUser } from '../common/decorators/current-user.decorator.js';
 import { Roles } from '../common/decorators/roles.decorator.js';
 import { Public } from '../common/decorators/public.decorator.js';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../common/guards/roles.guard.js';
 import type { Response } from 'express';
 
 const REFRESH_COOKIE_OPTIONS = {
@@ -30,11 +33,12 @@ const REFRESH_COOKIE_OPTIONS = {
 };
 
 @Controller('invitations')
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class InvitationsController {
   constructor(private invitations: InvitationsService) {}
 
   @Post()
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async create(
     @Body() dto: CreateInvitationDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -43,7 +47,7 @@ export class InvitationsController {
   }
 
   @Get()
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async findAll(
     @Query() query: InvitationQueryDto,
     @CurrentUser() user: AuthenticatedUser,
@@ -52,7 +56,7 @@ export class InvitationsController {
   }
 
   @Delete(':id')
-  @Roles('TENANT_ADMIN', 'ADMIN')
+  @Roles('ADMINISTRATOR')
   async revoke(
     @Param('id') id: string,
     @CurrentUser() user: AuthenticatedUser,

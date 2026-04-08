@@ -25,19 +25,23 @@ export class ApprovalsController {
   constructor(private readonly approvalsService: ApprovalsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateApprovalDto) {
     return this.approvalsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: ApprovalQueryDto) {
-    return this.approvalsService.findAll(req.user.tenantId, query);
+    return this.approvalsService.findAll(
+      req.user.tenantId,
+      req.user.sub,
+      query,
+    );
   }
 
   @Get('my-requests')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   myRequests(@Request() req: RequestWithUser) {
     return this.approvalsService.findMyRequests(
       req.user.tenantId,
@@ -46,7 +50,7 @@ export class ApprovalsController {
   }
 
   @Post(':id/approve')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   approve(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -61,7 +65,7 @@ export class ApprovalsController {
   }
 
   @Post(':id/reject')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   reject(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

@@ -12,6 +12,8 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
+    "health:check": "node -e \"fetch('http://localhost:3001/api/v1/health').then(async (r) => { const body = await r.text(); console.log('status=' + r.status); console.log(body); process.exit(r.ok ? 0 : 1); }).catch((e) => { console.error(e?.message || e); process.exit(1); })\"",
+    "migrate:roles": "ts-node scripts/migrate-legacy-roles.ts",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
     "test:watch": "jest --watch",

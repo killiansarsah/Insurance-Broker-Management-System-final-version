@@ -22,7 +22,7 @@ export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(
     @Request() req: RequestWithUser,
     @Query() query: NotificationQueryDto,
@@ -35,7 +35,7 @@ export class NotificationsController {
   }
 
   @Get('unread-count')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   unreadCount(@Request() req: RequestWithUser) {
     return this.notificationsService.unreadCount(
       req.user.tenantId,
@@ -44,7 +44,7 @@ export class NotificationsController {
   }
 
   @Patch(':id/read')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   markRead(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.notificationsService.markRead(
       id,
@@ -54,7 +54,7 @@ export class NotificationsController {
   }
 
   @Post('mark-all-read')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   markAllRead(@Request() req: RequestWithUser) {
     return this.notificationsService.markAllRead(
       req.user.tenantId,
@@ -63,7 +63,7 @@ export class NotificationsController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.notificationsService.remove(
       id,

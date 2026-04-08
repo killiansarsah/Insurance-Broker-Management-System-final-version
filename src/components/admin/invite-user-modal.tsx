@@ -18,7 +18,7 @@ export function InviteUserModal({ isOpen, onClose }: InviteUserModalProps) {
     const [email, setEmail] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [role, setRole] = useState('BROKER');
+    const [role, setRole] = useState('AGENT');
     const [branch, setBranch] = useState('BR-ACC-01');
 
     const createInvitation = useCreateInvitation();

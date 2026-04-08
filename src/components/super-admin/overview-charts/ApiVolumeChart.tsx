@@ -17,10 +17,10 @@ export function ApiVolumeChart() {
   const [data, setData] = useState<any[]>([]);
 
   useEffect(() => {
-    apiClient.get('/platform-admin/overview/charts')
-      .then(res => {
-        if (res.data?.apiVolume) {
-          setData(res.data.apiVolume);
+    apiClient.get<{ apiVolume?: any[] }>('/platform-admin/overview/charts')
+      .then((res) => {
+        if (res.apiVolume) {
+          setData(res.apiVolume);
         }
       })
       .catch(console.error);

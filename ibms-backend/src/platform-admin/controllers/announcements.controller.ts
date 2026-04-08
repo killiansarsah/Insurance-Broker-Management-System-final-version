@@ -22,7 +22,7 @@ import { NotificationType, NotificationPriority } from '@prisma/client';
 
 @Controller('platform-admin/announcements')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class AnnouncementsController {
   constructor(
     private readonly prisma: PrismaService,

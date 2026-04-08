@@ -9,7 +9,7 @@ import { PlatformAuditService } from '../services/platform-audit.service.js';
 
 @Controller('platform-admin/overview')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class OverviewController {
   constructor(
     private readonly prisma: PrismaService,

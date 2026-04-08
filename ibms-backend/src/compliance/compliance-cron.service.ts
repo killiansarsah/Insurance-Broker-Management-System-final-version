@@ -48,7 +48,7 @@ export class ComplianceCronService {
       const admins = await this.prisma.user.findMany({
         where: {
           tenantId: complaint.tenantId,
-          userRoleMappings: { some: { role: { name: { in: ['ADMIN', 'TENANT_ADMIN'] } } } },
+          role: { in: ['ADMINISTRATOR', 'WORKSPACE_OWNER'] },
           isActive: true,
         },
         select: { id: true },
@@ -123,7 +123,7 @@ export class ComplianceCronService {
       const admins = await this.prisma.user.findMany({
         where: {
           tenantId: claim.tenantId,
-          userRoleMappings: { some: { role: { name: { in: ['ADMIN', 'TENANT_ADMIN', 'SENIOR_BROKER'] } } } },
+          role: { in: ['ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER'] },
           isActive: true,
         },
         select: { id: true },
@@ -191,7 +191,7 @@ export class ComplianceCronService {
       const admins = await this.prisma.user.findMany({
         where: {
           tenantId: policy.tenantId,
-          userRoleMappings: { some: { role: { name: { in: ['ADMIN', 'TENANT_ADMIN'] } } } },
+          role: { in: ['ADMINISTRATOR', 'WORKSPACE_OWNER'] },
           isActive: true,
         },
         select: { id: true },
@@ -249,7 +249,7 @@ export class ComplianceCronService {
       const admins = await this.prisma.user.findMany({
         where: {
           tenantId: tenant.id,
-          userRoleMappings: { some: { role: { name: { in: ['ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER'] } } } },
+          role: { in: ['ADMINISTRATOR', 'WORKSPACE_OWNER'] },
           isActive: true,
         },
         select: { id: true },
@@ -305,7 +305,7 @@ export class ComplianceCronService {
       const admins = await this.prisma.user.findMany({
         where: {
           tenantId: client.tenantId,
-          userRoleMappings: { some: { role: { name: { in: ['ADMIN', 'TENANT_ADMIN', 'COMPLIANCE_OFFICER'] } } } },
+          role: { in: ['ADMINISTRATOR', 'WORKSPACE_OWNER'] },
           isActive: true,
         },
         select: { id: true },

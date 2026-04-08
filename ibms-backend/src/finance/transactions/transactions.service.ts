@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -10,6 +11,9 @@ import { VoidTransactionDto } from './dto/void-transaction.dto';
 import { InvoicesService } from '../invoices/invoices.service';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class TransactionsService {
@@ -52,6 +56,45 @@ export class TransactionsService {
     });
   }
 
+  private async assertClientWritableByActor(
+    tenantId: string,
+    userId: string,
+    client: { assignedBrokerId: string | null },
+  ): Promise<void> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) return;
+
+    if (client.assignedBrokerId !== userId) {
+      throw new BadRequestException(
+        'You can only create transactions for your assigned clients',
+      );
+    }
+  }
+
+  private async buildTransactionScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.TransactionWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [
+        { processedById: userId },
+        { client: { assignedBrokerId: userId } },
+        { policy: { client: { assignedBrokerId: userId } } },
+        { invoice: { client: { assignedBrokerId: userId } } },
+      ],
+    };
+  }
+
   // ─── CREATE ─────────────────────────────────────────
   async create(tenantId: string, userId: string, dto: CreateTransactionDto) {
     // Validate MoMo phone when using mobile money
@@ -59,6 +102,48 @@ export class TransactionsService {
       throw new BadRequestException(
         'momoPhone is required for Mobile Money payments',
       );
+    }
+
+    let relatedClient: { assignedBrokerId: string | null } | null = null;
+
+    if (dto.clientId) {
+      relatedClient = await this.prisma.client.findUnique({
+        where: { id: dto.clientId, tenantId },
+        select: { assignedBrokerId: true },
+      });
+    } else if (dto.invoiceId) {
+      const invoice = await this.prisma.invoice.findUnique({
+        where: { id: dto.invoiceId, tenantId },
+        select: {
+          client: {
+            select: { assignedBrokerId: true },
+          },
+        },
+      });
+      relatedClient = invoice?.client ?? null;
+    } else if (dto.policyId) {
+      const policy = await this.prisma.policy.findUnique({
+        where: { id: dto.policyId, tenantId },
+        select: {
+          client: {
+            select: { assignedBrokerId: true },
+          },
+        },
+      });
+      relatedClient = policy?.client ?? null;
+    }
+
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel < supervisorLevel && !relatedClient) {
+      throw new BadRequestException(
+        'Agent-level transaction creation requires a linked assigned client',
+      );
+    }
+
+    if (relatedClient) {
+      await this.assertClientWritableByActor(tenantId, userId, relatedClient);
     }
 
     return await this.prisma.$transaction(async (tx) => {
@@ -125,7 +210,7 @@ export class TransactionsService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: TransactionQueryDto) {
+  async findAll(tenantId: string, userId: string, query: TransactionQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -143,8 +228,10 @@ export class TransactionsService {
 
     const skip = (page - 1) * limit;
 
+    const scopeWhere = await this.buildTransactionScopeWhere(tenantId, userId);
+
     const where: Prisma.TransactionWhereInput = {
-      tenantId,
+      ...scopeWhere,
       ...(type && { type }),
       ...(paymentMethod && { paymentMethod }),
       ...(status && { paymentStatus: status }),
@@ -196,7 +283,7 @@ export class TransactionsService {
       }),
       this.prisma.transaction.aggregate({
         where: {
-          tenantId,
+          ...scopeWhere,
           type: { in: ['PREMIUM', 'COMMISSION'] },
           paymentStatus: 'PAID',
         },
@@ -204,7 +291,7 @@ export class TransactionsService {
       }),
       this.prisma.transaction.aggregate({
         where: {
-          tenantId,
+          ...scopeWhere,
           type: { in: ['REFUND', 'EXPENSE'] },
           paymentStatus: 'PAID',
         },
@@ -226,11 +313,13 @@ export class TransactionsService {
   }
 
   // ─── LEDGER SUMMARY ─────────────────────────────────
-  async ledgerSummary(tenantId: string) {
+  async ledgerSummary(tenantId: string, userId: string) {
+    const scopeWhere = await this.buildTransactionScopeWhere(tenantId, userId);
+
     const [clientAcc, agencyAcc] = await Promise.all([
       this.prisma.transaction.aggregate({
         where: {
-          tenantId,
+          ...scopeWhere,
           accountType: 'CLIENT_ACCOUNT',
           paymentStatus: 'PAID',
         },
@@ -239,7 +328,7 @@ export class TransactionsService {
       }),
       this.prisma.transaction.aggregate({
         where: {
-          tenantId,
+          ...scopeWhere,
           accountType: 'AGENCY_ACCOUNT',
           paymentStatus: 'PAID',
         },
@@ -260,9 +349,11 @@ export class TransactionsService {
   }
 
   // ─── FIND ONE ───────────────────────────────────────
-  async findOne(id: string, tenantId: string) {
-    const transaction = await this.prisma.transaction.findUnique({
-      where: { id, tenantId },
+  async findOne(id: string, tenantId: string, userId: string) {
+    const scopeWhere = await this.buildTransactionScopeWhere(tenantId, userId);
+
+    const transaction = await this.prisma.transaction.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         client: true,
         policy: {
@@ -289,7 +380,7 @@ export class TransactionsService {
     userId: string,
     dto: VoidTransactionDto,
   ) {
-    const transaction = await this.findOne(id, tenantId);
+    const transaction = await this.findOne(id, tenantId, userId);
     if (transaction.paymentStatus !== 'PAID') {
       throw new BadRequestException('Only PAID transactions can be voided');
     }

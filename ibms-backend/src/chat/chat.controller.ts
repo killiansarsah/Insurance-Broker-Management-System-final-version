@@ -18,7 +18,7 @@ import type { RequestWithUser } from '../common/types/request.types.js';
 
 @Controller('chat')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+@Roles('ADMINISTRATOR', 'AGENT')
 export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
@@ -49,6 +49,7 @@ export class ChatController {
   }
 
   @Post('rooms/:id/participants')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   addParticipant(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -58,6 +59,7 @@ export class ChatController {
   }
 
   @Delete('rooms/:id/participants/:userId')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   removeParticipant(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

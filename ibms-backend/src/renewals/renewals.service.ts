@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   Logger,
@@ -9,7 +10,10 @@ import { EmailService } from '../email/email.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Prisma } from '@prisma/client';
 import { RenewPolicyDto } from './dto/renew-policy.dto';
+import { UpdateRenewalTemplateDto } from './dto/update-renewal-template.dto';
+import { CreateRenewalTemplateDto } from './dto/create-renewal-template.dto';
 import { randomBytes } from 'crypto';
+import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class RenewalsService {
@@ -20,8 +24,26 @@ export class RenewalsService {
     private readonly emailService: EmailService,
   ) {}
 
+  private async buildPolicyScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.PolicyWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [{ brokerId: userId }, { client: { assignedBrokerId: userId } }],
+    };
+  }
+
   async getUpcomingRenewals(
     tenantId: string,
+    userId: string,
     daysAhead = 90,
     filters?: {
       insuranceType?: string;
@@ -32,8 +54,9 @@ export class RenewalsService {
     futureDate.setDate(futureDate.getDate() + daysAhead);
     const now = new Date();
 
+    const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
     const where: Prisma.PolicyWhereInput = {
-      tenantId,
+      ...scopeWhere,
       status: 'ACTIVE',
       expiryDate: { lte: futureDate, gte: now },
       ...(filters?.insuranceType && {
@@ -51,11 +74,14 @@ export class RenewalsService {
             companyName: true,
             firstName: true,
             lastName: true,
+            phone: true,
+            email: true,
           },
         },
         product: { select: { id: true, name: true } },
         carrier: { select: { id: true, name: true } },
         renewalLogs: { orderBy: { createdAt: 'desc' } },
+        broker: { select: { id: true, firstName: true, lastName: true } },
       },
       orderBy: { expiryDate: 'asc' },
     });
@@ -77,10 +103,12 @@ export class RenewalsService {
     });
   }
 
-  async getLapsedPolicies(tenantId: string) {
+  async getLapsedPolicies(tenantId: string, userId: string) {
+    const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
+
     const policies = await this.prisma.policy.findMany({
       where: {
-        tenantId,
+        ...scopeWhere,
         status: { in: ['EXPIRED', 'LAPSED'] },
       },
       include: {
@@ -97,6 +125,7 @@ export class RenewalsService {
         product: { select: { id: true, name: true } },
         carrier: { select: { id: true, name: true } },
         renewalLogs: { orderBy: { createdAt: 'desc' } },
+        broker: { select: { id: true, firstName: true, lastName: true } },
       },
       orderBy: { expiryDate: 'desc' },
     });
@@ -119,8 +148,10 @@ export class RenewalsService {
     userId: string,
     dto: RenewPolicyDto,
   ) {
-    const oldPolicy = await this.prisma.policy.findUnique({
-      where: { id, tenantId },
+    const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
+
+    const oldPolicy = await this.prisma.policy.findFirst({
+      where: { id, ...scopeWhere },
       include: {
         vehicleDetails: true,
         propertyDetails: true,
@@ -272,20 +303,23 @@ export class RenewalsService {
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
   async sendRenewalReminders() {
     this.logger.log('Sending policy renewal reminder emails...');
-    const now = new Date();
 
     // Send reminders for policies expiring in 90, 60, and 30 days
     for (const daysAhead of [90, 60, 30]) {
       const targetDate = new Date();
       targetDate.setDate(targetDate.getDate() + daysAhead);
 
-      // Find policies expiring on this specific day
+      // Find policies expiring on this specific day (clone to avoid mutation)
+      const dayStart = new Date(targetDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(targetDate);
+      dayEnd.setHours(23, 59, 59, 999);
       const policies = await this.prisma.policy.findMany({
         where: {
           status: 'ACTIVE',
           expiryDate: {
-            gte: new Date(targetDate.setHours(0, 0, 0, 0)),
-            lt: new Date(targetDate.setHours(23, 59, 59, 999)),
+            gte: dayStart,
+            lt: dayEnd,
           },
         },
         include: {
@@ -342,73 +376,27 @@ export class RenewalsService {
       skipped = 0,
       failed = 0;
 
-    for (const daysAhead of [90, 60, 30]) {
-      const targetDate = new Date();
-      targetDate.setDate(targetDate.getDate() + daysAhead);
+    const limitDate = new Date();
+    limitDate.setDate(limitDate.getDate() + 90);
 
-      const policies = await this.prisma.policy.findMany({
-        where: {
-          tenantId,
-          status: 'ACTIVE',
-          expiryDate: {
-            gte: new Date(new Date(targetDate).setHours(0, 0, 0, 0)),
-            lt: new Date(new Date(targetDate).setHours(23, 59, 59, 999)),
-          },
-        },
-        include: {
-          client: {
-            select: {
-              email: true,
-              firstName: true,
-              lastName: true,
-              companyName: true,
-            },
-          },
-        },
-      });
-
-      for (const policy of policies) {
-        if (!policy.client.email) {
-          skipped++;
-          continue;
-        }
-
-        const clientName =
-          policy.client.companyName ||
-          `${policy.client.firstName} ${policy.client.lastName}`;
-
-        try {
-          await this.emailService.sendPolicyRenewalReminder(
-            policy.client.email,
-            clientName,
-            policy.policyNumber,
-            policy.expiryDate,
-            daysAhead,
-            Number(policy.premiumAmount),
-            policy.insuranceType,
-          );
-          sent++;
-        } catch (error) {
-          this.logger.error(
-            `Failed to send reminder for ${policy.policyNumber}`,
-            error,
-          );
-          failed++;
-        }
-      }
-    }
-
-    this.logger.log(
-      `Bulk notify complete for tenant ${tenantId}: ${sent} sent, ${skipped} skipped, ${failed} failed`,
-    );
-    return { sent, skipped, failed };
-  }
-
-  async bulkSendReminders(tenantId, policyIds, userId) {
     const policies = await this.prisma.policy.findMany({
-      where: { tenantId, id: { in: policyIds } },
+      where: {
+        tenantId,
+        status: 'ACTIVE',
+        expiryDate: {
+          gte: now,
+          lte: limitDate,
+        },
+      },
       include: {
-        client: { select: { email: true, firstName: true, lastName: true, companyName: true } },
+        client: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+          },
+        },
         carrier: { select: { name: true } },
       },
     });
@@ -423,24 +411,37 @@ export class RenewalsService {
       select: { name: true, nicLicense: true, phone: true, email: true },
     });
 
-    let sent = 0, skipped = 0, failed = 0;
-    const now = new Date();
-
     for (const policy of policies) {
-      if (!policy.client?.email) { skipped++; continue; }
+      if (!policy.client.email) {
+        skipped++;
+        continue;
+      }
 
-      const daysUntilExpiry = Math.ceil((policy.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      const tpl = templates.find((t) => t.triggerDays >= daysUntilExpiry) ?? templates[templates.length - 1];
+      const daysUntilExpiry = Math.ceil(
+        (policy.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      const tpl =
+        templates.find((t) => t.triggerDays >= daysUntilExpiry) ??
+        templates[templates.length - 1];
 
       try {
         if (tpl) {
           const vars = {
-            client_first_name: policy.client.firstName || policy.client.companyName || 'Valued Client',
+            client_first_name:
+              policy.client.firstName ||
+              policy.client.companyName ||
+              'Valued Client',
             policy_number: policy.policyNumber,
             insurance_type: policy.insuranceType,
-            expiry_date: policy.expiryDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+            expiry_date: policy.expiryDate.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            }),
             days_remaining: String(Math.max(0, daysUntilExpiry)),
-            current_premium: 'GHS ' + Number(policy.premiumAmount).toLocaleString(),
+            current_premium:
+              'GHS ' + Number(policy.premiumAmount).toLocaleString(),
             carrier_name: policy.carrier ? policy.carrier.name : '',
             vehicle_reg: '',
             property_address: '',
@@ -451,9 +452,179 @@ export class RenewalsService {
             agency_phone: tenant ? tenant.phone : '',
             agency_email: tenant ? tenant.email : '',
           };
-          await this.emailService.sendFromRenewalTemplate(policy.client.email, tpl.subject, tpl.htmlContent, vars);
+          await this.emailService.sendFromRenewalTemplate(
+            policy.client.email,
+            tpl.subject,
+            tpl.htmlContent,
+            vars,
+          );
         } else {
-          const clientName = policy.client.companyName || policy.client.firstName + ' ' + policy.client.lastName;
+          const clientName =
+            policy.client.companyName ||
+            `${policy.client.firstName} ${policy.client.lastName}`;
+          await this.emailService.sendPolicyRenewalReminder(
+            policy.client.email,
+            clientName,
+            policy.policyNumber,
+            policy.expiryDate,
+            daysUntilExpiry,
+            Number(policy.premiumAmount),
+            policy.insuranceType,
+          );
+        }
+        sent++;
+      } catch (error) {
+        this.logger.error(
+          `Failed to send reminder for ${policy.policyNumber}`,
+          error,
+        );
+        failed++;
+      }
+    }
+
+    this.logger.log(
+      `Bulk notify complete for tenant ${tenantId}: ${sent} sent, ${skipped} skipped, ${failed} failed`,
+    );
+    return { sent, skipped, failed };
+  }
+
+  async sendTestReminder(
+    tenantId: string,
+    overrideEmail?: string,
+  ): Promise<{ success: boolean; message: string }> {
+    const policy = await this.prisma.policy.findFirst({
+      where: {
+        tenantId,
+        status: { in: ['ACTIVE', 'LAPSED', 'EXPIRED'] },
+      },
+      orderBy: { expiryDate: 'asc' },
+      include: { client: true },
+    });
+
+    if (!policy) {
+      return { success: false, message: 'No policies found for your tenant.' };
+    }
+
+    const destinationEmail = overrideEmail || policy.client.email;
+
+    if (!destinationEmail) {
+      return {
+        success: false,
+        message:
+          'No destination email — client has no email address and no override was provided.',
+      };
+    }
+
+    const clientName =
+      policy.client.companyName ||
+      `${policy.client.firstName} ${policy.client.lastName}`;
+    const now = new Date();
+    const daysUntilExpiry = Math.ceil(
+      (new Date(policy.expiryDate).getTime() - now.getTime()) /
+        (1000 * 60 * 60 * 24),
+    );
+
+    await this.emailService.sendPolicyRenewalReminder(
+      destinationEmail,
+      clientName,
+      policy.policyNumber,
+      policy.expiryDate,
+      daysUntilExpiry,
+      Number(policy.premiumAmount),
+      policy.insuranceType,
+    );
+
+    return {
+      success: true,
+      message: `Test reminder sent to ${destinationEmail} for policy ${policy.policyNumber} (${daysUntilExpiry < 0 ? Math.abs(daysUntilExpiry) + ' days overdue' : daysUntilExpiry + ' days remaining'})`,
+    };
+  }
+
+  async bulkSendReminders(
+    tenantId: string,
+    policyIds: string[],
+    userId: string,
+  ) {
+    const policies = await this.prisma.policy.findMany({
+      where: { tenantId, id: { in: policyIds } },
+      include: {
+        client: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+          },
+        },
+        carrier: { select: { name: true } },
+      },
+    });
+
+    const templates = await this.prisma.renewalTemplate.findMany({
+      where: { tenantId, isActive: true },
+      orderBy: { triggerDays: 'desc' },
+    });
+
+    const tenant = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { name: true, nicLicense: true, phone: true, email: true },
+    });
+
+    let sent = 0,
+      skipped = 0,
+      failed = 0;
+    const now = new Date();
+
+    for (const policy of policies) {
+      if (!policy.client?.email) {
+        skipped++;
+        continue;
+      }
+
+      const daysUntilExpiry = Math.ceil(
+        (policy.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+      );
+      const tpl =
+        templates.find((t) => t.triggerDays >= daysUntilExpiry) ??
+        templates[templates.length - 1];
+
+      try {
+        if (tpl) {
+          const vars = {
+            client_first_name:
+              policy.client.firstName ||
+              policy.client.companyName ||
+              'Valued Client',
+            policy_number: policy.policyNumber,
+            insurance_type: policy.insuranceType,
+            expiry_date: policy.expiryDate.toLocaleDateString('en-GB', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+            }),
+            days_remaining: String(Math.max(0, daysUntilExpiry)),
+            current_premium:
+              'GHS ' + Number(policy.premiumAmount).toLocaleString(),
+            carrier_name: policy.carrier ? policy.carrier.name : '',
+            vehicle_reg: '',
+            property_address: '',
+            officer_name: '',
+            officer_phone: '',
+            agency_name: tenant ? tenant.name : '',
+            agency_nic_number: tenant ? tenant.nicLicense : '',
+            agency_phone: tenant ? tenant.phone : '',
+            agency_email: tenant ? tenant.email : '',
+          };
+          await this.emailService.sendFromRenewalTemplate(
+            policy.client.email,
+            tpl.subject,
+            tpl.htmlContent,
+            vars,
+          );
+        } else {
+          const clientName =
+            policy.client.companyName ||
+            policy.client.firstName + ' ' + policy.client.lastName;
           await this.emailService.sendPolicyRenewalReminder(
             policy.client.email,
             clientName,
@@ -472,11 +643,15 @@ export class RenewalsService {
             createdBy: userId,
             logType: 'EMAIL_SENT',
             title: 'Bulk Reminder Sent',
-            details: 'Manual bulk reminder dispatched to ' + policy.client.email,
+            details:
+              'Manual bulk reminder dispatched to ' + policy.client.email,
           },
         });
       } catch (error) {
-        this.logger.error('Failed bulk reminder for ' + policy.policyNumber, error);
+        this.logger.error(
+          'Failed bulk reminder for ' + policy.policyNumber,
+          error,
+        );
         failed++;
       }
     }
@@ -484,88 +659,161 @@ export class RenewalsService {
     return { sent, skipped, failed };
   }
 
-  async bulkAssignBroker(tenantId, policyIds, brokerId, userId) {
+  async bulkAssignBroker(
+    tenantId: string,
+    policyIds: string[],
+    brokerId: string,
+    userId: string,
+  ) {
     await this.prisma.policy.updateMany({
       where: { tenantId, id: { in: policyIds } },
       data: { brokerId },
     });
     const logs = policyIds.map((id) => ({
-      tenantId, policyId: id, createdBy: userId,
+      tenantId,
+      policyId: id,
+      createdBy: userId,
       logType: 'STATUS_CHANGE',
       title: 'Broker Reassigned',
       details: 'Assigned via bulk action',
     }));
-    if (logs.length > 0) await this.prisma.renewalLog.createMany({ data: logs });
+    if (logs.length > 0)
+      await this.prisma.renewalLog.createMany({ data: logs });
     return { success: true, count: policyIds.length };
   }
 
-  async bulkUpdateStatus(tenantId, policyIds, status, userId) {
+  async bulkUpdateStatus(
+    tenantId: string,
+    policyIds: string[],
+    status: string,
+    userId: string,
+  ) {
     await this.prisma.policy.updateMany({
       where: { tenantId, id: { in: policyIds } },
-      data: { renewalStatus: status },
+      data: {
+        renewalStatus:
+          status as Prisma.EnumRenewalStatusFieldUpdateOperationsInput['set'],
+      },
     });
     const logs = policyIds.map((id) => ({
-      tenantId, policyId: id, createdBy: userId,
+      tenantId,
+      policyId: id,
+      createdBy: userId,
       logType: 'STATUS_CHANGE',
       title: 'Status Updated',
       details: 'Bulk status update to ' + status,
     }));
-    if (logs.length > 0) await this.prisma.renewalLog.createMany({ data: logs });
+    if (logs.length > 0)
+      await this.prisma.renewalLog.createMany({ data: logs });
     return { success: true, count: policyIds.length };
   }
 
-  async getTemplates(tenantId) {
+  async getTemplates(tenantId: string) {
     return this.prisma.renewalTemplate.findMany({
       where: { tenantId },
       orderBy: { triggerDays: 'desc' },
     });
   }
 
-  async updateTemplate(tenantId, id, data) {
+  async updateTemplate(
+    tenantId: string,
+    id: string,
+    data: UpdateRenewalTemplateDto,
+  ) {
     return this.prisma.renewalTemplate.update({
       where: { id, tenantId },
       data,
     });
   }
 
-  async getRenewalReport(tenantId, days = 90) {
+  async createTemplate(tenantId: string, data: CreateRenewalTemplateDto) {
+    return this.prisma.renewalTemplate.create({
+      data: {
+        ...data,
+        tenantId,
+      },
+    });
+  }
+
+  async getRenewalReport(tenantId: string, days = 90) {
+    return this.getRenewalReportForActor(tenantId, undefined, days);
+  }
+
+  async getRenewalReportForActor(
+    tenantId: string,
+    userId: string | undefined,
+    days = 90,
+  ) {
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + days);
     const now = new Date();
 
+    const scopeWhere = userId
+      ? await this.buildPolicyScopeWhere(tenantId, userId)
+      : ({ tenantId } as Prisma.PolicyWhereInput);
+
     const upcoming = await this.prisma.policy.findMany({
-      where: { tenantId, status: 'ACTIVE', expiryDate: { gte: now, lte: futureDate } },
+      where: {
+        ...scopeWhere,
+        status: 'ACTIVE',
+        expiryDate: { gte: now, lte: futureDate },
+      },
       select: { insuranceType: true, premiumAmount: true },
     });
 
     const pastDue = await this.prisma.policy.findMany({
-      where: { tenantId, expiryDate: { gte: cutoff, lt: now } },
-      select: { insuranceType: true, premiumAmount: true, status: true, renewalStatus: true },
+      where: { ...scopeWhere, expiryDate: { gte: cutoff, lt: now } },
+      select: {
+        insuranceType: true,
+        premiumAmount: true,
+        status: true,
+        renewalStatus: true,
+      },
     });
 
-    const lapsed = await this.prisma.policy.count({ where: { tenantId, status: 'LAPSED' } });
+    const lapsed = await this.prisma.policy.count({
+      where: { ...scopeWhere, status: 'LAPSED' },
+    });
     const totalDue = pastDue.length;
-    const totalRenewed = pastDue.filter(p => p.renewalStatus === 'RENEWED').length;
+    const totalRenewed = pastDue.filter(
+      (p) => p.renewalStatus === 'RENEWED',
+    ).length;
     const renewalRate = totalDue > 0 ? (totalRenewed / totalDue) * 100 : 0;
-    const upcomingRevenue = upcoming.reduce((s, p) => s + Number(p.premiumAmount), 0);
+    const upcomingRevenue = upcoming.reduce(
+      (s, p) => s + Number(p.premiumAmount),
+      0,
+    );
     const atRiskRevenue = upcomingRevenue * ((100 - renewalRate) / 100);
 
-    const typeMap = new Map();
+    type RenewalTypeSummary = { due: number; renewed: number };
+    const typeMap = new Map<string, RenewalTypeSummary>();
     for (const p of pastDue) {
-      if (!typeMap.has(p.insuranceType)) typeMap.set(p.insuranceType, { due: 0, renewed: 0 });
+      if (!typeMap.has(p.insuranceType))
+        typeMap.set(p.insuranceType, { due: 0, renewed: 0 });
       const entry = typeMap.get(p.insuranceType);
+      if (!entry) continue;
       entry.due++;
       if (p.renewalStatus === 'RENEWED') entry.renewed++;
     }
-    const byType = [...typeMap.entries()].map(([insuranceType, { due, renewed }]) => ({
-      insuranceType,
-      due,
-      renewed,
-      rate: due > 0 ? (renewed / due) * 100 : 0,
-    }));
+    const byType = [...typeMap.entries()].map(
+      ([insuranceType, { due, renewed }]) => ({
+        insuranceType,
+        due,
+        renewed,
+        rate: due > 0 ? (renewed / due) * 100 : 0,
+      }),
+    );
 
-    return { totalDue, totalRenewed, renewalRate, atRiskRevenue, upcomingRevenue, lapsedCount: lapsed, byType };
+    return {
+      totalDue,
+      totalRenewed,
+      renewalRate,
+      atRiskRevenue,
+      upcomingRevenue,
+      lapsedCount: lapsed,
+      byType,
+    };
   }
 }

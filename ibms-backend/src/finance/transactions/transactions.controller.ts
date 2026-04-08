@@ -24,7 +24,7 @@ export class TransactionsController {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateTransactionDto) {
     return this.transactionsService.create(
       req.user.tenantId,
@@ -34,28 +34,35 @@ export class TransactionsController {
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(
     @Request() req: RequestWithUser,
     @Query() query: TransactionQueryDto,
   ) {
-    return this.transactionsService.findAll(req.user.tenantId, query);
+    return this.transactionsService.findAll(
+      req.user.tenantId,
+      req.user.sub,
+      query,
+    );
   }
 
   @Get('ledger-summary')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'AGENT')
   ledgerSummary(@Request() req: RequestWithUser) {
-    return this.transactionsService.ledgerSummary(req.user.tenantId);
+    return this.transactionsService.ledgerSummary(
+      req.user.tenantId,
+      req.user.sub,
+    );
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.transactionsService.findOne(id, req.user.tenantId);
+    return this.transactionsService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Post(':id/void')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'FINANCE_MANAGER')
+  @Roles('ADMINISTRATOR', 'MANAGER')
   voidTransaction(
     @Request() req: RequestWithUser,
     @Param('id') id: string,

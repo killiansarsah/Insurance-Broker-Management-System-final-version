@@ -121,7 +121,11 @@ async function bootstrap(): Promise<void> {
   // --- STARTUP CHECK: Super Admin Existence ---
   try {
     const superAdminCount = await prismaService.user.count({
-      where: { userRoleMappings: { some: { role: { name: { in: ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN'] } } } } },
+      where: {
+        role: {
+          in: ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'PLATFORM_SUPER_ADMIN'],
+        },
+      },
     });
     if (superAdminCount === 0) {
       logger.warn(

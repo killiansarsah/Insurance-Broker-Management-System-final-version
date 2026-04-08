@@ -27,13 +27,13 @@ export class CalendarController {
   constructor(private readonly calendarService: CalendarService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateCalendarEventDto) {
     return this.calendarService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(
     @Request() req: RequestWithUser,
     @Query('from') from: string,
@@ -53,13 +53,13 @@ export class CalendarController {
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.calendarService.findOne(id, req.user.tenantId);
+    return this.calendarService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -74,7 +74,7 @@ export class CalendarController {
   }
 
   @Delete(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   remove(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.calendarService.remove(id, req.user.tenantId, req.user.sub);
   }

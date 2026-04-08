@@ -5,26 +5,12 @@
 // --- Enums ---
 
 export type UserRole =
-    // New 5-tier system roles
+    | 'PLATFORM_SUPER_ADMIN'
     | 'WORKSPACE_OWNER'
     | 'ADMINISTRATOR'
     | 'MANAGER'
     | 'SUPERVISOR'
-    | 'AGENT'
-    // Legacy role names (backward compatibility)
-    | 'PLATFORM_SUPER_ADMIN'
-    | 'SUPER_ADMIN'
-    | 'TENANT_ADMIN'
-    | 'ADMIN'
-    | 'BRANCH_MANAGER'
-    | 'COMPLIANCE_OFFICER'
-    | 'FINANCE_MANAGER'
-    | 'SENIOR_BROKER'
-    | 'BROKER'
-    | 'UNDERWRITER'
-    | 'SECRETARY'
-    | 'DATA_ENTRY'
-    | 'VIEWER';
+    | 'AGENT';
 
 export type ClientType = 'INDIVIDUAL' | 'CORPORATE';
 export type ClientStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'BLACKLISTED';

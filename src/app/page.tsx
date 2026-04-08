@@ -153,6 +153,12 @@ export default function LandingPage() {
 
     return (
         <main className="landing-theme">
+            <div className="liquid-orbs">
+                <div className="orb orb-1"></div>
+                <div className="orb orb-2"></div>
+                <div className="orb orb-3"></div>
+            </div>
+
             <div className="cursor" id="cursor" ref={cursorRef}></div>
             <div className="cursor-ring" id="cursorRing" ref={ringRef}></div>
             <canvas id="hexCanvas" ref={canvasRef} style={{position: 'absolute', inset: 0, opacity: 0.25, pointerEvents: 'none'}}></canvas>
@@ -175,9 +181,9 @@ export default function LandingPage() {
                     <a href="#pricing">Pricing</a>
                     <a href="#contact">Contact</a>
                     {isAuthenticated ? (
-                        <Link href="/dashboard" className="nav-cta">Go to Dashboard</Link>
+                        <a href="/dashboard" className="nav-cta">Go to Dashboard</a>
                     ) : (
-                        <Link href="/login" className="nav-cta">Login</Link>
+                        <a href="/login" className="nav-cta">Login</a>
                     )}
                 </div>
                 <div className="hamburger" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -202,22 +208,22 @@ export default function LandingPage() {
 {/*  HERO  */}
 <section className="hero">
   <div className="hero-inner">
-    <div className="hero-badge">
+    <div className="hero-badge reveal">
       <span className="hero-badge-dot"></span>
       Built for Ghana · NIC Act 1061 Compliant
     </div>
-    <h1 className="hero-title">
-      Insurance Brokerage,<br/>
-      <em>Finally</em> Under Control
+    <h1 className="hero-title reveal" style={{maxWidth: '1000px', margin: '0 auto 24px'}}>
+      The Operating System for<br/>
+      <em>Modern</em> Brokerages
     </h1>
-    <p className="hero-sub">
-      Brokerium is the only broker management platform built specifically for Ghana's insurance industry — handling clients, policies, claims, renewals, and NIC compliance in one place.
+    <p className="hero-sub reveal" style={{maxWidth: '700px'}}>
+      From quote to claim, Brokerium automates your entire workflow while keeping you 100% compliant with the National Insurance Commission of Ghana.
     </p>
-    <div className="hero-actions">
-      <Link href="/login" className="btn-primary">
+    <div className="hero-actions reveal">
+      <a href="/start-trial" className="btn-primary accent">
         Start Free Trial
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
-      </Link>
+      </a>
       <a href="#features" className="btn-secondary">
         <svg viewBox="0 0 16 16" fill="currentColor" width="16" height="16"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.5"/><polygon points="6.5,5 11.5,8 6.5,11"/></svg>
         See how it works
@@ -225,37 +231,36 @@ export default function LandingPage() {
     </div>
 
     {/*  DASHBOARD MOCKUP  */}
-    <div className="hero-mockup">
+    <div className="hero-mockup reveal" style={{marginTop: '40px'}}>
       <div className="mockup-wrap">
         <div className="mockup-bar">
           <div className="dot-r"></div><div className="dot-y"></div><div className="dot-g"></div>
           <div className="mockup-url">app.brokerium.gh/dashboard</div>
         </div>
-        <div className="mockup-body">
+        <div className="mockup-body" style={{padding: '12px', background: 'var(--bg2)', display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px', minHeight: '380px'}}>
           <div className="mockup-sidebar">
-            <div className="ms-logo"><div className="ms-hex"></div><div className="ms-name">Brokerium</div></div>
+            <div className="ms-logo" style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)'}}>
+               <img src="/logo-icon.png" alt="B" className="w-5 h-5 object-contain" />
+               <div className="ms-name" style={{fontSize: '11px', fontWeight: '600', color: 'var(--t1)'}}>Brokerium</div>
+            </div>
             <div className="ms-item active"><div className="ms-dot teal"></div><div className="ms-lbl active"></div></div>
             <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
             <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
             <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
             <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
-            <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
           </div>
-          <div className="mockup-main">
-            <div className="mockup-cards">
-              <div className="mc"><div className="mc-label"></div><div className="mc-value"></div><div className="mc-change"></div></div>
-              <div className="mc"><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(96,165,250,.25)'}}></div><div className="mc-change" style={{background: 'rgba(96,165,250,.15)'}}></div></div>
-              <div className="mc"><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(251,191,36,.2)'}}></div><div className="mc-change"></div></div>
-              <div className="mc"><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(52,211,153,.2)'}}></div><div className="mc-change"></div></div>
+          <div className="mockup-main" style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
+            <div className="mockup-cards" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
+              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value"></div></div>
+              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(59,130,246,.2)'}}></div></div>
+              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(251,191,36,.1)'}}></div></div>
+              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(52,211,153,.15)'}}></div></div>
             </div>
-            <div className="mockup-chart">
-              <div className="mc-label" style={{width: '40%', marginBottom: '0'}}></div>
-              <div className="chart-bars">{heights.map((h, i) => <div key={i} className="chart-bar" style={{height: `${h}%`}}></div>)}</div>
-            </div>
-            <div className="mockup-table">
-              <div className="mt-row"><div className="mt-av"></div><div className="mt-name"></div><div className="mt-badge"></div></div>
-              <div className="mt-row"><div className="mt-av" style={{background: 'linear-gradient(135deg,#185fa5,#60a5fa)'}}></div><div className="mt-name"></div><div className="mt-badge" style={{background: 'rgba(251,191,36,.15)', borderColor: 'rgba(251,191,36,.25)'}}></div></div>
-              <div className="mt-row"><div className="mt-av" style={{background: 'linear-gradient(135deg,#633806,#fbbf24)'}}></div><div className="mt-name"></div><div className="mt-badge"></div></div>
+            <div className="mockup-chart" style={{flex: 1, padding: '16px'}}>
+              <div className="mc-label" style={{width: '30%', marginBottom: '16px'}}></div>
+              <div className="chart-bars" style={{display: 'flex', alignItems: 'flex-end', gap: '6px', height: '100px'}}>
+                {heights.map((h, i) => <div key={i} className="chart-bar" style={{height: `${h}%`, flex: 1, borderRadius: '4px 4px 0 0', background: i % 2 === 0 ? 'var(--t2)' : 'var(--t4)', opacity: 0.6}}></div>)}
+              </div>
             </div>
           </div>
         </div>
@@ -264,19 +269,30 @@ export default function LandingPage() {
   </div>
 </section>
 
-{/*  TRUST BAR  */}
+{/*  TRUST CAROUSEL  */}
 <div className="trust">
-  <div className="trust-label">Designed for Ghanaian insurance brokers</div>
-  <div className="trust-logos">
-    <div className="nic-badge">
-      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 1L1 4.5V9c0 3.6 2.9 6.8 7 8 4.1-1.2 7-4.4 7-8V4.5L8 1z"/></svg>
-      NIC Compliant
+  <div className="trust-label reveal">Trusted by brokers working with Ghana's leading carriers</div>
+  <div className="logo-carousel">
+    <div className="logo-track">
+      {[...Array(2)].map((_, i) => (
+        <React.Fragment key={i}>
+          <img src="/images/carriers/enterprise-insurance.png" className="trust-logo" alt="Enterprise" />
+          <img src="/images/carriers/sic-insurance-plc.png" className="trust-logo" alt="SIC" />
+          <img src="/images/carriers/hollard-insurance-ghana-ltd.png" className="trust-logo" alt="Hollard" />
+          <img src="/images/carriers/activa-international-insurance-ghana.png" className="trust-logo" alt="Activa" />
+          <img src="/images/carriers/star-assurance.png" className="trust-logo" alt="Star" />
+          <img src="/images/carriers/starlife-assurance.png" className="trust-logo" alt="StarLife" />
+          <img src="/images/carriers/vanguard-assurance-company-ltd.png" className="trust-logo" alt="Vanguard" />
+          <img src="/images/carriers/ghana-union-assurance.png" className="trust-logo" alt="GUA" />
+          <img src="/images/carriers/old-mutual-life-assurance-company-ltd.png" className="trust-logo" alt="Old Mutual" />
+          <img src="/images/carriers/prudential-life.png" className="trust-logo" alt="Prudential" />
+          <img src="/images/carriers/nsia-insurance-ltd.png" className="trust-logo" alt="NSIA" />
+          <img src="/images/carriers/coronation-insurance-ghana-ltd.png" className="trust-logo" alt="Coronation" />
+          <img src="/images/carriers/sanlam-allianz.jpeg" className="trust-logo" alt="Sanlam" />
+          <img src="/images/carriers/bedrock-insurance.png" className="trust-logo" alt="Bedrock" />
+        </React.Fragment>
+      ))}
     </div>
-    <div className="trust-item">Enterprise Insurance</div>
-    <div className="trust-item">Hollard Ghana</div>
-    <div className="trust-item">Allianz Insurance</div>
-    <div className="trust-item">StarLife Assurance</div>
-    <div className="trust-item">SIC Insurance</div>
   </div>
 </div>
 
@@ -319,37 +335,49 @@ export default function LandingPage() {
   </div>
   <div className="features-grid stagger">
     <div className="feat-card reveal">
-      <div className="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M4 4h14a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zm4 4H6v2h2V8zm0 4H6v2h2v-2zm4-4h-2v2h2V8zm0 4h-2v2h2v-2zm4-4h-2v2h2V8z"/></svg></div>
+      <div className="feat-icon blue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+      </div>
       <div className="feat-title">Policy Management</div>
       <div className="feat-text">Create, manage, and track every policy across all lines — Motor, Fire, Marine, Life, and more. Full policy lifecycle from placement to expiry.</div>
       <div className="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>All policy classes supported</div>
     </div>
     <div className="feat-card reveal">
-      <div className="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M11 2a9 9 0 100 18A9 9 0 0011 2zm0 3v5.5l3.5 2"/></svg></div>
+      <div className="feat-icon green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/><path d="M8 12a4 4 0 1 0 8 0 4 4 0 1 0-8 0z"/></svg>
+      </div>
       <div className="feat-title">Automated Renewals</div>
       <div className="feat-text">Never miss a renewal again. Brokerium sends automatic reminders to your clients 90, 60, and 30 days before expiry — via email and SMS.</div>
       <div className="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>Zero policies lapse on your watch</div>
     </div>
     <div className="feat-card reveal">
-      <div className="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M11 2L2 7v8l9 5 9-5V7l-9-5zm0 3l6 3.3v5.4L11 17l-6-3.3V8.3L11 5z"/></svg></div>
+      <div className="feat-icon orange">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 14 4-4"/><path d="m3 3 3 18 3-18"/><path d="M12 8V2"/><path d="M5 22h14"/><path d="M16 10l4 4"/><path d="m16 14 4-4"/><path d="m12 10 4 4"/></svg>
+      </div>
       <div className="feat-title">Claims Pipeline</div>
       <div className="feat-text">7-stage claims lifecycle from intimation to closure. Track every claim in real-time, upload documents, and keep clients informed at every step.</div>
       <div className="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>Intimate → Investigate → Settle</div>
     </div>
     <div className="feat-card reveal">
-      <div className="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M4 4h6v6H4V4zm8 0h6v6h-6V4zm-8 8h6v6H4v-6zm8 3h2v-2h2v2h2v2h-2v2h-2v-2h-2v-2z"/></svg></div>
+      <div className="feat-icon teal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
       <div className="feat-title">Client Management</div>
       <div className="feat-text">Full CRM for your clients — individual and corporate. KYC documents, contact history, policy portfolio, claims history, all in one clean profile.</div>
       <div className="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>KYC/AML built in</div>
     </div>
     <div className="feat-card reveal">
-      <div className="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M3 3h16v2H3V3zm2 4h12v2H5V7zm-2 4h16v2H3v-2zm2 4h12v2H5v-2z"/></svg></div>
+      <div className="feat-icon gold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
       <div className="feat-title">Commission Tracking</div>
       <div className="feat-text">Automatic commission calculation with Ghana's NIC levy and withholding tax already baked in. Know exactly what you're owed, every month.</div>
       <div className="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>VLOOKUP-free forever</div>
     </div>
     <div className="feat-card reveal">
-      <div className="feat-icon"><svg viewBox="0 0 22 22" fill="currentColor"><path d="M3 5h16v14H3V5zm3-3h10v2H6V2zM7 9h8v2H7V9zm0 4h5v2H7v-2z"/></svg></div>
+      <div className="feat-icon slate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+      </div>
       <div className="feat-title">Reports & Exports</div>
       <div className="feat-text">One-click NIC compliance reports, premium remittance summaries, and business performance dashboards. Export to PDF or Excel, ready to submit.</div>
       <div className="feat-tag"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>NIC-ready PDFs included</div>
@@ -507,7 +535,7 @@ export default function LandingPage() {
         <div className="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>Bulk data import (Excel)</div>
         <div className="pf"><svg viewBox="0 0 16 16" fill="currentColor"><polyline points="2,8 6,12 14,4" fill="none" stroke="currentColor" strokeWidth="2"/></svg>Commission tracking</div>
       </div>
-      <a href="#contact" className="plan-btn plan-btn-solid">Start 30-day free trial</a>
+      <a href="/start-trial" className="plan-btn plan-btn-solid">Start 30-day free trial</a>
     </div>
 
     <div className="plan-card reveal">
@@ -610,7 +638,7 @@ export default function LandingPage() {
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
       </button>
     </div>
-    <p className="cta-note">Or call us directly: <a href="tel:+233200000000" style={{color: 'var(--t2)', fontWeight: '600'}}>+233 XX XXX XXXX</a> · <a href="mailto:hello@brokerium.gh" style={{color: 'var(--t2)', fontWeight: '600'}}>hello@brokerium.gh</a></p>
+    <p className="cta-note">Mobile: <a href="tel:+233246761751" style={{color: 'var(--t2)', fontWeight: '600'}}>+233 24 676 1751</a> · Whatsapp: <a href="https://wa.me/233246761751" target="_blank" rel="noopener noreferrer" style={{color: 'var(--t2)', fontWeight: '600'}}>+233 24 676 1751</a> · Email: <a href="mailto:comp@theelira.com" style={{color: 'var(--t2)', fontWeight: '600'}}>comp@theelira.com</a></p>
   </div>
 </section>
 

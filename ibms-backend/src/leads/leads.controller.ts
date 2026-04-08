@@ -24,31 +24,31 @@ export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
   @Post()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   create(@Request() req: RequestWithUser, @Body() dto: CreateLeadDto) {
     return this.leadsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: LeadQueryDto) {
-    return this.leadsService.findAll(req.user.tenantId, query);
+    return this.leadsService.findAll(req.user.tenantId, req.user.sub, query);
   }
 
   @Get('kanban')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   kanban(@Request() req: RequestWithUser) {
-    return this.leadsService.kanban(req.user.tenantId);
+    return this.leadsService.kanban(req.user.tenantId, req.user.sub);
   }
 
   @Get(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
-    return this.leadsService.findOne(id, req.user.tenantId);
+    return this.leadsService.findOne(id, req.user.tenantId, req.user.sub);
   }
 
   @Patch(':id')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   update(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -58,7 +58,7 @@ export class LeadsController {
   }
 
   @Patch(':id/stage')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   changeStage(
     @Request() req: RequestWithUser,
     @Param('id') id: string,
@@ -73,7 +73,7 @@ export class LeadsController {
   }
 
   @Post(':id/convert')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   convert(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.leadsService.convert(id, req.user.tenantId, req.user.sub);
   }

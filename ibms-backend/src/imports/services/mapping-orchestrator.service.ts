@@ -42,12 +42,9 @@ export class MappingOrchestratorService {
     const ruleResults = this.rules.detectMappings(headers);
 
     // Step 2: Count columns that need AI help
-    const needsAI = ruleResults.filter(
-      (m) => m.confidence !== 'high',
-    ).length;
+    const needsAI = ruleResults.filter((m) => m.confidence !== 'high').length;
 
-    const aiEnabled =
-      this.config.get<string>('ENABLE_AI_MAPPING') === 'true';
+    const aiEnabled = this.config.get<string>('ENABLE_AI_MAPPING') === 'true';
 
     let aiUsed = false;
     let aiCallSucceeded = false;
@@ -76,8 +73,10 @@ export class MappingOrchestratorService {
       });
 
       // Anonymise before any external call
-      const anonymisedRows =
-        this.anonymise.anonymiseSampleRows(headers, stringRows);
+      const anonymisedRows = this.anonymise.anonymiseSampleRows(
+        headers,
+        stringRows,
+      );
 
       // Call Gemini with anonymised data ONLY
       const aiResults = await this.gemini.detectMappings(
@@ -91,9 +90,7 @@ export class MappingOrchestratorService {
         // Step 4: Merge results — AI wins where confidence >= rule confidence
         finalMappings = this.mergeResults(ruleResults, aiResults);
 
-        columnsFromAI = finalMappings.filter(
-          (m) => m.source === 'ai',
-        ).length;
+        columnsFromAI = finalMappings.filter((m) => m.source === 'ai').length;
         columnsFromRules = finalMappings.filter(
           (m) => m.source === 'rules',
         ).length;

@@ -95,7 +95,10 @@ export const CLIENT_TARGET_FIELDS: Record<
   middle_name: { label: 'Middle Name', group: 'Personal Identity' },
   last_name: { label: 'Last Name / Surname', group: 'Personal Identity' },
   full_name: { label: 'Full Name (will be split)', group: 'Personal Identity' },
-  company_name: { label: 'Company / Business Name', group: 'Personal Identity' },
+  company_name: {
+    label: 'Company / Business Name',
+    group: 'Personal Identity',
+  },
   date_of_birth: { label: 'Date of Birth', group: 'Personal Identity' },
   gender: { label: 'Gender', group: 'Personal Identity' },
   marital_status: { label: 'Marital Status', group: 'Personal Identity' },
@@ -119,8 +122,14 @@ export const CLIENT_TARGET_FIELDS: Record<
   aml_risk: { label: 'AML Risk Level', group: 'AML & Compliance' },
   pep: { label: 'Politically Exposed Person', group: 'AML & Compliance' },
   source_of_funds: { label: 'Source of Funds', group: 'AML & Compliance' },
-  purpose_of_relationship: { label: 'Purpose of Relationship', group: 'AML & Compliance' },
-  expected_annual_volume: { label: 'Expected Annual Volume', group: 'AML & Compliance' },
+  purpose_of_relationship: {
+    label: 'Purpose of Relationship',
+    group: 'AML & Compliance',
+  },
+  expected_annual_volume: {
+    label: 'Expected Annual Volume',
+    group: 'AML & Compliance',
+  },
   bank_name: { label: 'Bank Name', group: 'Banking' },
   account_name: { label: 'Account Name', group: 'Banking' },
   account_number: { label: 'Account Number', group: 'Banking' },

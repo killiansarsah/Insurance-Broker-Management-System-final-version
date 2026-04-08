@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { parse } from 'csv-parse/sync';
@@ -9,8 +10,12 @@ import {
   LeadSource,
   LeadPriority,
   Gender,
+  ImportJob,
 } from '@prisma/client';
 import { NIC_LEVY_RATE } from '../common/constants/nic.constants';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 import type { ImportDataType } from './dto/import.dto';
 
 export interface ImportResult {
@@ -79,6 +84,30 @@ export class ImportsService {
   private readonly logger = new Logger(ImportsService.name);
 
   constructor(private readonly prisma: PrismaService) {}
+
+  async getImportJobForActor(
+    tenantId: string,
+    userId: string,
+    jobId: string,
+  ): Promise<ImportJob> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    const where: Prisma.ImportJobWhereInput = {
+      id: jobId,
+      tenantId,
+      ...(actorLevel < supervisorLevel && { createdById: userId }),
+    };
+
+    const job: ImportJob | null = await this.prisma.importJob.findFirst({
+      where,
+    });
+    if (!job) {
+      throw new BadRequestException('Import job not found');
+    }
+
+    return job;
+  }
 
   // ─── PUBLIC ENTRY POINT ───────────────────────────────────
   async generateTemplate(dataType: string): Promise<Buffer> {
@@ -258,13 +287,11 @@ export class ImportsService {
 
   async validateMapping(
     tenantId: string,
+    userId: string,
     jobId: string,
     mapping: Record<string, string>,
   ) {
-    const job = await this.prisma.importJob.findUnique({
-      where: { id: jobId, tenantId },
-    });
-    if (!job) throw new BadRequestException('Import job not found');
+    const job = await this.getImportJobForActor(tenantId, userId, jobId);
 
     await this.prisma.importJob.update({
       where: { id: jobId },
@@ -1726,7 +1753,8 @@ export class ImportsService {
     });
     if (last && last.invoiceNumber) {
       const match = last.invoiceNumber.match(/INV-(\d+)/);
-      if (match) return `INV-${String(parseInt(match[1]) + 1).padStart(6, '0')}`;
+      if (match)
+        return `INV-${String(parseInt(match[1]) + 1).padStart(6, '0')}`;
     }
     const count = await this.prisma.invoice.count({ where: { tenantId } });
     return `INV-${String(count + 1).padStart(6, '0')}`;

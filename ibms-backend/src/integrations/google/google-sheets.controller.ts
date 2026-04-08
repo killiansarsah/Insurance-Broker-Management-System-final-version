@@ -11,7 +11,7 @@ export class GoogleSheetsController {
   constructor(private readonly sheetsService: GoogleSheetsService) {}
 
   @Post('export')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER')
+  @Roles('ADMINISTRATOR', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   export(
     @Request() req: RequestWithUser,
     @Query('type')

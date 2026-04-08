@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -11,6 +12,9 @@ import {
 } from './dto/approval.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import {
+  ROLE_LEVEL,
+} from '../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class ApprovalsService {
@@ -65,13 +69,16 @@ export class ApprovalsService {
     return approval;
   }
 
-  async findAll(tenantId: string, query: ApprovalQueryDto) {
+  async findAll(tenantId: string, userId: string, query: ApprovalQueryDto) {
     const { page = 1, limit = 20, status, type, sortOrder = 'desc' } = query;
 
     const skip = (page - 1) * limit;
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
 
     const where: Prisma.ApprovalWhereInput = {
       tenantId,
+      ...(actorLevel < supervisorLevel && { requestedById: userId }),
       ...(status && { status }),
       ...(type && { type }),
     };

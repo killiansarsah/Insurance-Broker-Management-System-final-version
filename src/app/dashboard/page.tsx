@@ -100,10 +100,10 @@ const availableYears = [2026, 2025, 2024, 2023, 2022, 2021];
 // =====================================================================
 
 const activityColors: Record<string, string> = {
-    policy: 'bg-primary-100 text-primary-600',
-    client: 'bg-success-100 text-success-600',
-    claim: 'bg-danger-100 text-danger-600',
-    commission: 'bg-success-100 text-success-600',
+    POLICY: 'bg-primary-100 text-primary-600',
+    CLIENT: 'bg-success-100 text-success-600',
+    CLAIM: 'bg-danger-100 text-danger-600',
+    COMMISSION: 'bg-success-100 text-success-600',
 };
 
 // =====================================================================
@@ -875,7 +875,7 @@ export default function DashboardPage() {
                                 {activity.type === 'POLICY' && <FileText size={16} />}
                                 {activity.type === 'CLIENT' && <Users size={16} />}
                                 {activity.type === 'CLAIM' && <AlertCircle size={16} />}
-                                {activity.type === 'commission' && <TrendingUp size={16} />}
+                                {activity.type === 'COMMISSION' && <TrendingUp size={16} />}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-surface-900 group-hover:text-primary-600 transition-colors">{activity.action}</p>
@@ -887,9 +887,9 @@ export default function DashboardPage() {
                     ))}
                 </div>
                 <div className="px-6 py-4 bg-surface-50/50 border-t border-surface-100">
-                    <button onClick={() => toast.info('Activity Log', { description: 'Full audit trail available in Reports section.' })} className="text-sm text-primary-600 font-semibold hover:text-primary-700 cursor-pointer transition-colors flex items-center gap-1.5">
+                    <Link href="/dashboard/audit" className="text-sm text-primary-600 font-semibold hover:text-primary-700 cursor-pointer transition-colors flex items-center gap-1.5 w-max">
                         Access Full Activity Log <ArrowUpRight size={14} />
-                    </button>
+                    </Link>
                 </div>
             </Card>
         </div>

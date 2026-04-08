@@ -32,7 +32,7 @@ const REFRESH_COOKIE_OPTIONS = {
 
 @Controller('platform-admin/impersonate')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('PLATFORM_SUPER_ADMIN', 'SUPER_ADMIN')
+@Roles('WORKSPACE_OWNER')
 export class ImpersonationController {
   constructor(
     private readonly prisma: PrismaService,
@@ -65,17 +65,15 @@ export class ImpersonationController {
       targetUser = await this.prisma.user.findFirst({
         where: {
           tenantId,
-          userRoleMappings: { some: { role: { name: 'TENANT_ADMIN' } } },
+          role: 'ADMINISTRATOR',
           isActive: true,
           deletedAt: null,
         },
-        include: { userRoleMappings: { select: { role: { select: { name: true, permissions: { select: { permission: { select: { action: true } } } } } } } } },
       });
       if (!targetUser) {
         // Fallback: any active user in the tenant
         targetUser = await this.prisma.user.findFirst({
           where: { tenantId, isActive: true, deletedAt: null },
-          include: { userRoleMappings: { select: { role: { select: { name: true, permissions: { select: { permission: { select: { action: true } } } } } } } } },
         });
       }
       if (!targetUser)
@@ -89,18 +87,13 @@ export class ImpersonationController {
     // Since issueAccessToken might not take custom claims directly, we'll embed the impersonator ID in the token manually if we can,
     // or just rely on the frontend storing its own original token.
     // Actually, generating standard tokens for the target user is fine if the frontend manages the context swap.
-    const targetRoles = (targetUser as any).userRoleMappings?.map((m: any) => m.role.name) ?? [];
-    const targetPerms = new Set<string>();
-    for (const m of (targetUser as any).userRoleMappings ?? []) {
-      for (const rp of m.role.permissions ?? []) {
-        targetPerms.add(rp.permission.action);
-      }
-    }
+    const targetRoles = [targetUser.role];
+    const targetPerms = targetUser.permissions || [];
     const accessToken = await this.auth.issueAccessToken({
       id: targetUser.id,
       tenantId: targetUser.tenantId,
       roles: targetRoles,
-      permissions: [...targetPerms],
+      permissions: targetPerms,
     });
 
     const refreshToken = await this.auth.issueRefreshToken(

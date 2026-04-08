@@ -1,3 +1,4 @@
+import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
   NotFoundException,
@@ -8,10 +9,32 @@ import { CommissionQueryDto } from './dto/commission-query.dto';
 import { ReceiveCommissionDto } from './dto/receive-commission.dto';
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
+import { ROLE_LEVEL } from '../../common/constants/role-hierarchy.js';
 
 @Injectable()
 export class CommissionsService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private async buildCommissionScopeWhere(
+    tenantId: string,
+    userId: string,
+  ): Promise<Prisma.CommissionWhereInput> {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+
+    if (actorLevel >= supervisorLevel) {
+      return { tenantId };
+    }
+
+    return {
+      tenantId,
+      OR: [
+        { brokerId: userId },
+        { policy: { brokerId: userId } },
+        { client: { assignedBrokerId: userId } },
+      ],
+    };
+  }
 
   private async logAudit(
     tenantId: string,
@@ -33,7 +56,7 @@ export class CommissionsService {
   }
 
   // ─── FIND ALL ───────────────────────────────────────
-  async findAll(tenantId: string, query: CommissionQueryDto) {
+  async findAll(tenantId: string, userId: string, query: CommissionQueryDto) {
     const {
       page = 1,
       limit = 20,
@@ -50,8 +73,10 @@ export class CommissionsService {
 
     const skip = (page - 1) * limit;
 
+    const scopeWhere = await this.buildCommissionScopeWhere(tenantId, userId);
+
     const where: Prisma.CommissionWhereInput = {
-      tenantId,
+      ...scopeWhere,
       ...(status && { status }),
       ...(clientId && { clientId }),
       ...(brokerId && { brokerId }),
@@ -107,15 +132,15 @@ export class CommissionsService {
         },
       }),
       this.prisma.commission.aggregate({
-        where: { tenantId, status: 'PENDING' },
+        where: { ...scopeWhere, status: 'PENDING' },
         _sum: { commissionAmount: true },
       }),
       this.prisma.commission.aggregate({
-        where: { tenantId, status: 'EARNED' },
+        where: { ...scopeWhere, status: 'EARNED' },
         _sum: { commissionAmount: true },
       }),
       this.prisma.commission.aggregate({
-        where: { tenantId, status: 'PAID' },
+        where: { ...scopeWhere, status: 'PAID' },
         _sum: { commissionAmount: true },
       }),
     ]);

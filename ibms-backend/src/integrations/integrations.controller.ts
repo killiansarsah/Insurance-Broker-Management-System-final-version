@@ -26,14 +26,14 @@ export class IntegrationsController {
 
   /** GET /integrations — list all integrations for tenant */
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   findAll(@Request() req: RequestWithUser) {
     return this.service.findAll(req.user.tenantId);
   }
 
   /** GET /integrations/:serviceKey — get single integration */
   @Get(':serviceKey')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   findOne(
     @Request() req: RequestWithUser,
     @Param('serviceKey') serviceKey: string,
@@ -43,14 +43,14 @@ export class IntegrationsController {
 
   /** POST /integrations/connect — connect an integration */
   @Post('connect')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   connect(@Request() req: RequestWithUser, @Body() dto: ConnectIntegrationDto) {
     return this.service.connect(req.user.tenantId, dto);
   }
 
   /** POST /integrations/disconnect/:serviceKey — disconnect */
   @Post('disconnect/:serviceKey')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   disconnect(
     @Request() req: RequestWithUser,
     @Param('serviceKey') serviceKey: string,
@@ -60,7 +60,7 @@ export class IntegrationsController {
 
   /** PATCH /integrations/:serviceKey — update config */
   @Patch(':serviceKey')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   update(
     @Request() req: RequestWithUser,
     @Param('serviceKey') serviceKey: string,
@@ -71,7 +71,7 @@ export class IntegrationsController {
 
   /** POST /integrations/:serviceKey/sync — trigger manual sync */
   @Post(':serviceKey/sync')
-  @Roles('ADMIN', 'TENANT_ADMIN')
+  @Roles('ADMINISTRATOR')
   sync(
     @Request() req: RequestWithUser,
     @Param('serviceKey') serviceKey: string,

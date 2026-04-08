@@ -11,7 +11,7 @@ export class SearchController {
   constructor(private readonly searchService: SearchService) {}
 
   @Get()
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   async search(
     @Request() req: RequestWithUser,
     @Query('q') query: string,
@@ -19,13 +19,14 @@ export class SearchController {
   ) {
     return this.searchService.globalSearch(
       req.user.tenantId,
+      req.user.sub,
       query,
       limit ? parseInt(limit, 10) : 20,
     );
   }
 
   @Get('recent')
-  @Roles('ADMIN', 'TENANT_ADMIN', 'BROKER', 'VIEWER')
+  @Roles('ADMINISTRATOR', 'AGENT')
   async getRecent(
     @Request() req: RequestWithUser,
     @Query('limit') limit?: string,

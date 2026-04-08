@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
+import { getBrokeriumTemplate } from './brokerium-email.template';
 
 @Injectable()
 export class EmailService {
@@ -40,21 +41,48 @@ export class EmailService {
   ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
     const subject = 'You have been invited to IBMS';
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #2563eb; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">Welcome to IBMS</h1>
+    const content = `
+      <div class="greeting" style="font-size: 15px; text-align: center; margin-bottom: 12px; color: #4B5563;">
+        <span style="font-weight: 600; color: #1F2937;">Admin User</span> has invited you to join the
+        <span style="font-weight: 600; color: #1F2937;">Insurance Broker Management System</span> as a team member.
+      </div>
+      <div class="body-text" style="font-size: 14.5px; text-align: center; color: #6B7280; margin-bottom: 24px; line-height: 1.6;">
+        Brokerium helps your team manage policies, clients, premiums, and renewals — all in one place.
+      </div>
+
+      <div class="cta-wrap" style="text-align: center; margin-bottom: 24px;">
+        <a href="${inviteUrl}" class="cta-btn blue" style="padding: 14px 44px; font-size: 15px; border-radius: 100px; display: inline-block; text-decoration: none; color: white; background: #3B82F6; box-shadow: 0 4px 14px rgba(59,130,246,0.35);">Accept Invitation</a>
+        <div class="expire-note" style="margin-top: 12px; font-size: 13px; color: #9CA3AF;">This invitation expires in <strong>48 hours</strong>.</div>
+      </div>
+
+      <hr class="divider" style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;">
+      
+      <div class="info-card" style="background: #fff; border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+        <div class="info-card-hdr blue" style="background:#EFF6FF; color:#1E40AF; padding: 14px 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">YOUR ACCOUNT DETAILS</div>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Organisation</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">SIC Insurance GH</div>
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">You have been invited to join the Insurance Broker Management System.</p>
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${inviteUrl}" style="display:inline-block;padding:14px 32px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Accept Invitation</a>
-          </div>
-          <p style="color: #6b7280; font-size: 14px;">This link expires in 48 hours.</p>
-          <p style="color: #9ca3af; font-size: 12px;">If you did not expect this invitation, please ignore this email.</p>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Role Assigned</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">Broker Agent</div>
+        </div>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Invited By</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">Admin User</div>
         </div>
       </div>
+
+      <div class="body-text" style="font-size: 13px; color: #9CA3AF; text-align: center;">
+        If you didn't expect this invitation, safely ignore this email. The link will expire automatically.
+      </div>
     `;
+    const html = getBrokeriumTemplate(
+      content,
+      'blue',
+      `You're invited!`,
+      'Join your team on Brokerium IBMS',
+    );
 
     await this.send(email, subject, html);
   }
@@ -69,51 +97,57 @@ export class EmailService {
     insuranceType: string,
   ): Promise<void> {
     const subject = `Policy Renewal Reminder: ${policyNumber} - ${daysUntilExpiry} Days Remaining`;
-    const urgency = daysUntilExpiry <= 30 ? 'URGENT' : 'UPCOMING';
-    const urgencyColor = daysUntilExpiry <= 30 ? '#dc2626' : '#f59e0b';
+    const isUrgent = daysUntilExpiry <= 30;
+    const theme = isUrgent ? 'red' : 'amber';
+    const headerTitle = isUrgent
+      ? 'Urgent: Policy Expiration'
+      : 'Policy Renewal Reminder';
+    const headerSub = `Action required within ${daysUntilExpiry} days`;
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${urgencyColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0;">${urgency}: Policy Renewal Required</h2>
+    const content = `
+      <div class="greeting" style="font-size: 15px; margin-bottom: 12px; color: #4B5563;">Dear <strong>${clientName}</strong>,</div>
+      <div class="body-text" style="font-size: 14.5px; line-height: 1.7; color: #4B5563; margin-bottom: 24px;">
+        Your <strong>${insuranceType} insurance policy</strong> is approaching its renewal date. To avoid any lapse in coverage, please contact your broker to initiate the renewal process at your earliest convenience.
+      </div>
+      
+      <div class="info-card" style="border: 1px solid #E5E7EB; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
+        <div class="info-card-hdr amber" style="background:#FFFBEB; color:#92400E; padding: 14px 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">POLICY SUMMARY</div>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Policy Number</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">${policyNumber}</div>
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">Dear ${clientName},</p>
-          <p style="color: #374151;">Your ${insuranceType} insurance policy is due for renewal.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${urgencyColor};">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Policy Number:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">${policyNumber}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Expiry Date:</td>
-                <td style="padding: 8px 0; color: #111827;">${expiryDate.toLocaleDateString()}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Days Remaining:</td>
-                <td style="padding: 8px 0; color: ${urgencyColor}; font-weight: bold; font-size: 18px;">${daysUntilExpiry} days</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Premium Amount:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">GHS ${premiumAmount.toLocaleString()}</td>
-              </tr>
-            </table>
-          </div>
-
-          <p style="color: #374151; margin: 20px 0;">To ensure continuous coverage, please contact your broker to renew your policy before the expiry date.</p>
-          
-          <div style="background: #fef3c7; border: 1px solid #fbbf24; padding: 12px; border-radius: 6px; margin: 20px 0;">
-            <p style="margin: 0; color: #92400e; font-size: 14px;">
-              <strong>Important:</strong> Your coverage will cease on the expiry date if not renewed. Ensure timely renewal to avoid any gaps in protection.
-            </p>
-          </div>
-
-          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">Best regards,<br/>Your Insurance Broker Team</p>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Policy Class</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">${insuranceType}</div>
+        </div>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Expiry Date</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">${expiryDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+        </div>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Days Remaining</div>
+          <div class="info-val" style="font-weight: 600; font-size: 13.5px; color: #D97706;">${daysUntilExpiry} days remaining</div>
+        </div>
+        <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
+          <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Premium Amount</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">GHS ${premiumAmount.toLocaleString()}</div>
         </div>
       </div>
+
+      <div class="warn-box red" style="background:#FEF2F2; border:1px solid #FCA5A5; color:#991B1B; border-radius:12px; padding:15px 18px; font-size:13.5px; line-height:1.65; margin-bottom:22px; display:flex; gap:11px; align-items:flex-start;">
+        <span class="warn-icon" style="flex-shrink:0;">⚠️</span>
+        <div><strong>Important:</strong> Your coverage ceases on the expiry date if not renewed. Gaps in ${insuranceType.toLowerCase()} insurance can expose your business to significant liability.</div>
+      </div>
+
+      <div class="body-text" style="font-size: 14.5px; line-height: 1.7; color: #4B5563; margin-bottom: 28px;">
+        Renewal is quick and easy through the Brokerium portal. Please reach out to your broker as soon as possible to ensure continuous, uninterrupted coverage.
+      </div>
+
+      <div class="cta-wrap" style="text-align: center;">
+        <a href="#" class="cta-btn amber" style="padding: 14px 44px; font-size: 15px; border-radius: 100px; display: inline-block; text-decoration: none; color: white; background: #F59E0B; box-shadow: 0 4px 14px rgba(245,158,11,0.35);">Initiate Renewal Now</a>
+      </div>
     `;
+    const html = getBrokeriumTemplate(content, theme, headerTitle, headerSub);
 
     await this.send(email, subject, html);
   }
@@ -128,57 +162,61 @@ export class EmailService {
     notes?: string,
   ): Promise<void> {
     const subject = `Claim Update: ${claimNumber} - Status Changed to ${newStatus}`;
-    const statusColor =
-      newStatus === 'APPROVED'
-        ? '#10b981'
-        : newStatus === 'REJECTED'
-          ? '#ef4444'
-          : '#3b82f6';
+    let theme: 'teal' | 'blue' | 'red' | 'amber' = 'blue';
+    let statusClass = 'link';
+    if (
+      newStatus.toUpperCase().includes('APPROVED') ||
+      newStatus.toUpperCase().includes('SETTLED')
+    ) {
+      theme = 'teal';
+      statusClass = 'val';
+    } else if (
+      newStatus.toUpperCase().includes('REJECTED') ||
+      newStatus.toUpperCase().includes('DENIED')
+    ) {
+      theme = 'red';
+      statusClass = 'danger';
+    } else if (newStatus.toUpperCase().includes('PENDING')) {
+      theme = 'amber';
+      statusClass = 'warn';
+    }
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: ${statusColor}; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0;">Claim Status Update</h2>
+    const content = `
+      <div class="greeting">Dear <strong>${clientName}</strong>,</div>
+      <div class="body-text">
+        Your insurance claim status has been updated from <strong>${oldStatus}</strong> to <strong class="${statusClass}">${newStatus}</strong>.
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr ${theme}">Claim Status Update</div>
+        <div class="info-row">
+          <div class="info-lbl">Claim Number</div>
+          <div class="info-val">${claimNumber}</div>
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">Dear ${clientName},</p>
-          <p style="color: #374151;">Your insurance claim status has been updated.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${statusColor};">
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Claim Number:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">${claimNumber}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Previous Status:</td>
-                <td style="padding: 8px 0; color: #6b7280;">${oldStatus}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">New Status:</td>
-                <td style="padding: 8px 0; color: ${statusColor}; font-weight: bold; font-size: 18px;">${newStatus}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Claim Amount:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">GHS ${claimAmount.toLocaleString()}</td>
-              </tr>
-            </table>
-          </div>
-
-          ${
-            notes
-              ? `<div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 12px; border-radius: 6px; margin: 20px 0;">
-            <p style="margin: 0; color: #1e40af; font-size: 14px;"><strong>Notes:</strong> ${notes}</p>
-          </div>`
-              : ''
-          }
-
-          <p style="color: #374151; margin: 20px 0;">If you have any questions about your claim, please contact your broker or claims department.</p>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">Best regards,<br/>Claims Department</p>
+        <div class="info-row">
+          <div class="info-lbl">Claim Amount</div>
+          <div class="info-val">GHS ${claimAmount.toLocaleString()}</div>
         </div>
       </div>
+
+      ${
+        notes
+          ? `<div class="warn-box amber">
+               <div><strong>Notes:</strong> ${notes}</div>
+             </div>`
+          : ''
+      }
+
+      <div class="cta-wrap">
+        <a href="#" class="cta-btn ${theme}">View Claim Details</a>
+      </div>
     `;
+    const html = getBrokeriumTemplate(
+      content,
+      theme,
+      'Claim Update',
+      `Status changed to ${newStatus}`,
+    );
 
     await this.send(email, subject, html);
   }
@@ -193,47 +231,56 @@ export class EmailService {
     assignedBy: string,
   ): Promise<void> {
     const subject = `New Task Assigned: ${taskTitle}`;
-    const priorityColor =
-      priority === 'HIGH'
-        ? '#dc2626'
-        : priority === 'MEDIUM'
-          ? '#f59e0b'
-          : '#10b981';
+    const isHigh = priority.toUpperCase() === 'HIGH';
+    const badgeClass = isHigh
+      ? 'high'
+      : priority.toUpperCase() === 'MEDIUM'
+        ? 'medium'
+        : 'low';
+    const theme = isHigh ? 'red' : 'blue';
 
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #2563eb; color: white; padding: 16px; border-radius: 8px 8px 0 0;">
-          <h2 style="margin: 0;">New Task Assignment</h2>
-        </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">Hi ${assigneeName},</p>
-          <p style="color: #374151;">You have been assigned a new task by ${assignedBy}.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid ${priorityColor};">
-            <h3 style="margin: 0 0 12px 0; color: #111827;">${taskTitle}</h3>
-            <p style="color: #6b7280; margin: 12px 0;">${taskDescription}</p>
-            <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Priority:</td>
-                <td style="padding: 8px 0; color: ${priorityColor}; font-weight: bold;">${priority}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Due Date:</td>
-                <td style="padding: 8px 0; color: #111827;">${dueDate.toLocaleDateString()}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Assigned By:</td>
-                <td style="padding: 8px 0; color: #111827;">${assignedBy}</td>
-              </tr>
-            </table>
+    const content = `
+      <div class="greeting">Hi <strong>${assigneeName}</strong>,</div>
+      <div class="body-text">
+        You have a new task assigned to you. Please review the details below and update the status in your dashboard once actioned.
+      </div>
+      
+      <div class="task-card ${isHigh ? 'red-accent' : ''}" style="border: 1px solid #E5E7EB; border-radius: 0 14px 14px 0; border-left: 4px solid ${isHigh ? '#EF4444' : '#E5E7EB'}; padding: 20px; margin-bottom: 24px; position: relative; overflow: hidden; background: #fff;">
+        <div style="position: absolute; top:0; right: 0; width: 80px; height: 80px; border-radius: 50%; transform: translate(24px, -24px); opacity: ${isHigh ? '0.06' : '0'}; background: #EF4444;"></div>
+        <div class="task-title" style="font-size: 16.5px; font-weight: 700; color: #1F2937; margin-bottom: 8px; position: relative; z-index: 1;">${taskTitle}</div>
+        <div class="task-desc" style="font-size: 14px; color: #4B5563; line-height: 1.7; margin-bottom: 20px; position: relative; z-index: 1;">${taskDescription}</div>
+        <div class="task-meta" style="display: flex; gap: 24px; position: relative; z-index: 1; flex-wrap: wrap;">
+          <div class="task-meta-item" style="display: flex; flex-direction: column; gap: 2px;">
+            <div class="task-meta-lbl" style="font-size: 10.5px; color: #6B7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px;">Priority</div>
+            <div class="badge ${badgeClass}" style="display: inline-block; padding: 3px 10px; border-radius: 100px; font-size: 11.5px; font-weight: 700; ${isHigh ? 'background: #FEF2F2; color: #EF4444; border: 1px solid #FCA5A5;' : 'background: #FFFBEB; color: #D97706; border: 1px solid #FCD34D;'}">${priority.toUpperCase()}</div>
           </div>
-
-          <p style="color: #374151; margin: 20px 0;">Please log in to the IBMS dashboard to view full task details and update progress.</p>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">Best regards,<br/>IBMS Team</p>
+          <div class="task-meta-item" style="display: flex; flex-direction: column; gap: 2px;">
+            <div class="task-meta-lbl" style="font-size: 10.5px; color: #6B7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px;">Due Date</div>
+            <div class="task-meta-val" style="font-size: 13.5px; font-weight: 600; color: #1F2937;">${dueDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          </div>
+          <div class="task-meta-item" style="display: flex; flex-direction: column; gap: 2px;">
+            <div class="task-meta-lbl" style="font-size: 10.5px; color: #6B7280; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 4px;">Assigned By</div>
+            <div class="task-meta-val" style="font-size: 13.5px; font-weight: 600; color: #1F2937;">${assignedBy}</div>
+          </div>
         </div>
       </div>
+
+      <div class="cta-wrap" style="text-align: center; margin-top: 30px;">
+        <a href="#" class="cta-btn ${theme}" style="padding: 14px 40px; font-size: 15px; border-radius: 100px; display: inline-block; text-decoration: none; color: white; background: #3B82F6; box-shadow: 0 4px 14px rgba(59,130,246,0.35);">View Task in Dashboard</a>
+      </div>
+
+      <hr class="divider" style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">
+
+      <div class="body-text" style="font-size: 13.5px; color: #6B7280; text-align: center;">
+        Log in to the IBMS dashboard to view full task details, add notes, and update progress.
+      </div>
     `;
+    const html = getBrokeriumTemplate(
+      content,
+      'blue',
+      'New Task Assigned',
+      `Assigned by ${assignedBy} · ${priority.toUpperCase()} Priority`,
+    );
 
     await this.send(email, subject, html);
   }
@@ -245,50 +292,61 @@ export class EmailService {
     brokerEmail: string,
     brokerPhone: string,
   ): Promise<void> {
-    const subject = 'Welcome to Our Insurance Services';
-
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #10b981; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 28px;">Welcome!</h1>
+    const subject = 'Welcome to Brokerium IBMS';
+    const content = `
+      <div class="greeting">Dear <strong>${clientName}</strong>,</div>
+      <div class="body-text">
+        We're delighted to welcome you to Brokerium. You now have a dedicated broker assigned to your account — someone who'll be your personal guide through every policy, claim, and renewal.
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr teal" style="background:#F0FDF4;color:#065F46;">YOUR DEDICATED BROKER</div>
+        <div class="info-row">
+          <div class="info-lbl">Name</div>
+          <div class="info-val">${brokerName}</div>
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">Dear ${clientName},</p>
-          <p style="color: #374151; line-height: 1.6;">Welcome to our insurance family! We're thrilled to have you as our client and look forward to protecting what matters most to you.</p>
-          
-          <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e5e7eb;">
-            <h3 style="margin: 0 0 16px 0; color: #111827;">Your Dedicated Broker</h3>
-            <table style="width: 100%; border-collapse: collapse;">
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Name:</td>
-                <td style="padding: 8px 0; color: #111827; font-weight: bold;">${brokerName}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Email:</td>
-                <td style="padding: 8px 0; color: #2563eb;"><a href="mailto:${brokerEmail}" style="color: #2563eb; text-decoration: none;">${brokerEmail}</a></td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #6b7280; font-weight: 600;">Phone:</td>
-                <td style="padding: 8px 0; color: #111827;">${brokerPhone}</td>
-              </tr>
-            </table>
-          </div>
-
-          <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 16px; border-radius: 6px; margin: 20px 0;">
-            <h4 style="margin: 0 0 8px 0; color: #1e40af;">What's Next?</h4>
-            <ul style="margin: 8px 0; padding-left: 20px; color: #1e40af;">
-              <li style="margin: 6px 0;">Review your policy documents</li>
-              <li style="margin: 6px 0;">Save your broker's contact information</li>
-              <li style="margin: 6px 0;">Reach out with any questions</li>
-            </ul>
-          </div>
-
-          <p style="color: #374151; margin: 20px 0;">We're here to support you every step of the way. Don't hesitate to reach out if you need anything!</p>
-          
-          <p style="color: #6b7280; font-size: 14px; margin-top: 24px;">Warm regards,<br/>Your Insurance Team</p>
+        <div class="info-row">
+          <div class="info-lbl">Email</div>
+          <div class="info-val link"><a href="mailto:${brokerEmail}" style="color: #3B82F6; text-decoration: none;">${brokerEmail}</a></div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Phone</div>
+          <div class="info-val">${brokerPhone}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Office Hours</div>
+          <div class="info-val">Mon - Fri, 8:00 am - 5:00 pm</div>
         </div>
       </div>
+
+      <div class="next-steps" style="background: #F0FDF4; border: 1px solid #A7F3D0; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+        <div class="next-steps-ttl" style="font-size: 13.5px; font-weight: 700; color: #047857; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
+          <span style="font-size:16px;">ⓘ</span> What to do next
+        </div>
+        <div class="step-item" style="display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px; color: #065F46; margin-bottom: 12px;">
+          <div class="step-num" style="width: 22px; height: 22px; border-radius: 50%; background: #10B981; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">1</div>
+          <div>Log in to your Brokerium portal and complete your profile</div>
+        </div>
+        <div class="step-item" style="display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px; color: #065F46; margin-bottom: 12px;">
+          <div class="step-num" style="width: 22px; height: 22px; border-radius: 50%; background: #10B981; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">2</div>
+          <div>Review your policy documents in the Documents section</div>
+        </div>
+        <div class="step-item" style="display: flex; align-items: flex-start; gap: 12px; font-size: 13.5px; color: #065F46;">
+          <div class="step-num" style="width: 22px; height: 22px; border-radius: 50%; background: #10B981; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">3</div>
+          <div>Save your broker's contact for quick access anytime</div>
+        </div>
+      </div>
+
+      <div class="body-text" style="font-size: 14.5px; line-height: 1.8; color: #4B5563;">
+        We're here for you every step of the way. Don't hesitate to reach out — your broker is just a message away.
+      </div>
     `;
+    const html = getBrokeriumTemplate(
+      content,
+      'teal',
+      'Your insurance account is active',
+      'Welcome to Brokerium IBMS',
+    );
 
     await this.send(email, subject, html);
   }
@@ -300,20 +358,49 @@ export class EmailService {
   ): Promise<void> {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
     const subject = 'IBMS Password Reset';
-    const html = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <div style="background: #f59e0b; color: white; padding: 24px; border-radius: 8px 8px 0 0; text-align: center;">
-          <h1 style="margin: 0; font-size: 24px;">Password Reset</h1>
+    const content = `
+      <div class="body-text" style="font-size: 14.5px; line-height: 1.8; color: #374151; margin-bottom: 22px; text-align: center;">
+        A password reset was requested for your Brokerium account.<br><br>
+        <span style="color: #6b7280;">If this was you, click below to choose a new password.</span>
+      </div>
+
+      <div class="cta-wrap">
+        <a href="${resetUrl}" class="cta-btn amber">Reset My Password</a>
+        <div class="expire-note">This link expires in <strong>1 hour</strong> for your security.</div>
+      </div>
+
+      <hr class="divider" style="border: none; border-top: 1px solid #E5E7EB; margin: 24px 0;">
+
+      <div class="warn-box amber">
+        <span class="warn-icon">⚠️</span>
+        <div>
+          <strong>Didn't request this?</strong> Your account is safe — ignore this email. No changes have been made. If concerned, <a href="mailto:support@brokerium.com" style="color: #d97706; text-decoration: underline;">contact support</a>.
         </div>
-        <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-          <p style="font-size: 16px; color: #111827;">A password reset was requested for your account.</p>
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;background:#2563eb;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px;">Reset Password</a>
-          </div>
-          <p style="color: #6b7280; font-size: 14px;">This link expires in 1 hour. If you did not request this, you can safely ignore this email.</p>
+      </div>
+      
+      <div class="info-card">
+        <div class="info-card-hdr amber" style="background:#FFFBEB;color:#92400E;">REQUEST DETAILS</div>
+        <div class="info-row">
+          <div class="info-lbl">IP Address</div>
+          <div class="info-val">196.168.xx.xx</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Device</div>
+          <div class="info-val">Chrome on Windows</div>
+        </div>
+        <div class="info-row">
+          <div class="info-lbl">Location</div>
+          <div class="info-val">Accra, Ghana</div>
         </div>
       </div>
     `;
+    const requestDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric', hour: 'numeric', minute: 'numeric' }).format(new Date());
+    const html = getBrokeriumTemplate(
+      content,
+      'amber',
+      'Password Reset',
+      `Requested · ${requestDate}`,
+    );
 
     await this.send(email, subject, html);
   }
@@ -395,8 +482,14 @@ export class EmailService {
       agency_email: string;
     },
   ): Promise<void> {
-    const resolvedSubject = this.renderTemplate(templateSubject, vars as Record<string, string>);
-    const resolvedBody = this.renderTemplate(templateBody, vars as Record<string, string>);
+    const resolvedSubject = this.renderTemplate(
+      templateSubject,
+      vars as Record<string, string>,
+    );
+    const resolvedBody = this.renderTemplate(
+      templateBody,
+      vars as Record<string, string>,
+    );
 
     // Convert plain-text body to simple HTML
     const html = `
@@ -416,4 +509,3 @@ export class EmailService {
     await this.send(toEmail, resolvedSubject, html);
   }
 }
-

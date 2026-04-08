@@ -14,7 +14,7 @@ import type { RequestWithUser } from '../common/types/request.types.js';
 
 @Controller('audit')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN', 'TENANT_ADMIN')
+@Roles('ADMINISTRATOR')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}
 

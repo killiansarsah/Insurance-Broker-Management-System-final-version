@@ -37,14 +37,34 @@ export class NotificationsGateway
   // userId -> Set of socket IDs
   private readonly userSockets = new Map<string, Set<string>>();
 
+  private extractToken(client: Socket): string | undefined {
+    const authToken = client.handshake.auth?.token;
+    if (typeof authToken === 'string' && authToken.trim().length > 0) {
+      return authToken.trim();
+    }
+
+    const queryToken = client.handshake.query?.token;
+    if (typeof queryToken === 'string' && queryToken.trim().length > 0) {
+      return queryToken.trim();
+    }
+
+    const authHeader = client.handshake.headers?.authorization;
+    if (typeof authHeader === 'string' && authHeader.trim().length > 0) {
+      return authHeader.replace(/^Bearer\s+/i, '').trim();
+    }
+
+    return undefined;
+  }
+
   handleConnection(client: AuthenticatedSocket) {
     try {
-      const token: string | undefined =
-        (client.handshake.auth?.token as string | undefined) ??
-        client.handshake.headers?.authorization?.replace('Bearer ', '');
+      const token = this.extractToken(client);
 
       if (!token) {
-        client.disconnect();
+        this.logger.debug(
+          `Notification socket rejected: missing token (socket: ${client.id})`,
+        );
+        client.disconnect(true);
         return;
       }
 
@@ -56,7 +76,7 @@ export class NotificationsGateway
         publicKey = fs.readFileSync(keyPath, 'utf8');
       } catch {
         this.logger.error('Failed to read JWT public key');
-        client.disconnect();
+        client.disconnect(true);
         return;
       }
 
@@ -79,8 +99,10 @@ export class NotificationsGateway
         `Notification socket connected: ${client.id} (user: ${payload.sub})`,
       );
     } catch {
-      this.logger.warn('Notification connection rejected: invalid JWT');
-      client.disconnect();
+      this.logger.debug(
+        `Notification socket rejected: invalid JWT (socket: ${client.id})`,
+      );
+      client.disconnect(true);
     }
   }
 
@@ -94,8 +116,14 @@ export class NotificationsGateway
           this.userSockets.delete(userId);
         }
       }
+      this.logger.log(`Notification socket disconnected: ${client.id}`);
+      return;
     }
-    this.logger.log(`Notification socket disconnected: ${client.id}`);
+
+    // Unauthenticated disconnects are expected when clients connect without/with stale tokens.
+    this.logger.debug(
+      `Notification socket disconnected before auth: ${client.id}`,
+    );
   }
 
   /**
