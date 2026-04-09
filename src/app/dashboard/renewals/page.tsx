@@ -529,15 +529,17 @@ export default function RenewalsPage() {
 
     // Pipeline tab
     const tabParam = (searchParams.get('tab') as PipelineTab) || 'all';
+    const statusParam = (searchParams.get('status') as RenewalWorkflowStatus | 'all') || 'all';
     const [activeTab, setActiveTab] = useState<PipelineTab>(tabParam);
-    const [workflowFilter, setWorkflowFilter] = useState<RenewalWorkflowStatus | 'all'>('all');
+    const [workflowFilter, setWorkflowFilter] = useState<RenewalWorkflowStatus | 'all'>(statusParam);
     const [agentFilter, setAgentFilter] = useState<string>('all');
     const [selectedRenewal, setSelectedRenewal] = useState<Renewal | null>(null);
     const [notifyingAll, setNotifyingAll] = useState(false);
 
     useEffect(() => {
         setActiveTab(tabParam);
-    }, [tabParam]);
+        setWorkflowFilter(statusParam);
+    }, [tabParam, statusParam]);
 
     // Unique agents list
     const agents = useMemo(() => {
@@ -549,10 +551,10 @@ export default function RenewalsPage() {
         const rawReport = Array.isArray(reportApiData) ? reportApiData[0] : (reportApiData as any)?.data ?? reportApiData;
         const report = rawReport || {};
         
-        const overdue = allRenewals.filter(r => r.daysToExpiry < 0);
-        const next30 = allRenewals.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30);
-        const next60 = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 30 && r.daysToExpiry <= 60);
-        const next90 = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED' && r.daysToExpiry > 60 && r.daysToExpiry <= 90);
+        const overdue = allRenewals.filter(r => r.daysToExpiry < 0 && r.urgencyLevel !== 'LAPSED');
+        const next30 = allRenewals.filter(r => r.daysToExpiry >= 0 && r.daysToExpiry <= 30 && r.urgencyLevel !== 'LAPSED');
+        const next60 = allRenewals.filter(r => r.daysToExpiry > 30 && r.daysToExpiry <= 60 && r.urgencyLevel !== 'LAPSED');
+        const next90 = allRenewals.filter(r => r.daysToExpiry > 60 && r.daysToExpiry <= 90 && r.urgencyLevel !== 'LAPSED');
         const lapsed = allRenewals.filter(r => r.urgencyLevel === 'LAPSED');
         const activeRenewals = allRenewals.filter(r => r.urgencyLevel !== 'LAPSED');
         

@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { PaginatedResponse } from '@/types/api';
 
@@ -20,6 +20,18 @@ export function useClients(params?: Record<string, unknown>) {
     return useQuery({
         queryKey: ['clients', params],
         queryFn: () => apiClient.get<PaginatedResponse<ClientData>>('/clients', params),
+        placeholderData: keepPreviousData,
+    });
+}
+
+export function useClientMetrics() {
+    return useQuery({
+        queryKey: ['clients', 'metrics'],
+        queryFn: async () => {
+            const res = await apiClient.get<any>('/clients/metrics');
+            return res;
+        },
+        staleTime: 30_000,
     });
 }
 

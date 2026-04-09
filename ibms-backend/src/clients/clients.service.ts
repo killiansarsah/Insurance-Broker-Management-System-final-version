@@ -202,6 +202,33 @@ export class ClientsService {
     return client;
   }
 
+  async getMetrics(tenantId: string, userId: string) {
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [total, kycVerified, highRisk, newThisMonth] = await Promise.all([
+      this.prisma.client.count({ where: { tenantId } }),
+      this.prisma.client.count({ where: { tenantId, kycStatus: 'VERIFIED' } }),
+      this.prisma.client.count({
+        where: {
+          tenantId,
+          OR: [{ amlRiskLevel: 'HIGH' }, { amlRiskLevel: 'CRITICAL' }],
+        },
+      }),
+      this.prisma.client.count({
+        where: {
+          tenantId,
+          createdAt: {
+            gte: firstDayOfMonth,
+          },
+        },
+      }),
+    ]);
+
+    return { total, kycVerified, highRisk, newThisMonth };
+  }
+
+
   async findAll(tenantId: string, userId: string, query: ClientQueryDto) {
     const {
       page = 1,

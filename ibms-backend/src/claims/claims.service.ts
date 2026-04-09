@@ -193,6 +193,64 @@ export class ClaimsService {
     });
   }
 
+  // ─── METRICS ─────────────────────────────────────────
+  async getMetrics(tenantId: string, userId: string) {
+    const scopeWhere = await this.buildClaimScopeWhere(tenantId, userId);
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [
+      totalClaims,
+      openClaims,
+      settledClaims,
+      totalClaimAmountAgg,
+      overdueClaims,
+      newThisMonth,
+    ] = await Promise.all([
+      this.prisma.claim.count({ where: scopeWhere }),
+      this.prisma.claim.count({
+        where: {
+          ...scopeWhere,
+          status: { notIn: ['SETTLED', 'CLOSED', 'REJECTED'] },
+        },
+      }),
+      this.prisma.claim.count({
+        where: { ...scopeWhere, status: 'SETTLED' },
+      }),
+      this.prisma.claim.aggregate({
+        where: scopeWhere,
+        _sum: { claimAmount: true },
+      }),
+      this.prisma.claim.count({
+        where: {
+          ...scopeWhere,
+          OR: [
+            { acknowledgmentDeadline: { lt: now }, status: 'INTIMATED' },
+            {
+              processingDeadline: { lt: now },
+              status: { notIn: ['SETTLED', 'CLOSED'] },
+            },
+          ],
+        },
+      }),
+      this.prisma.claim.count({
+        where: {
+          ...scopeWhere,
+          createdAt: { gte: firstDayOfMonth },
+        },
+      }),
+    ]);
+
+    return {
+      totalClaims,
+      openClaims,
+      settledClaims,
+      totalClaimAmount: totalClaimAmountAgg._sum.claimAmount || 0,
+      overdueClaims,
+      newThisMonth,
+    };
+  }
+
   // ─── FIND ALL ───────────────────────────────────────
   async findAll(tenantId: string, userId: string, query: ClaimQueryDto) {
     const {

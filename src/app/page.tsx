@@ -2,17 +2,25 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth-store';
 import './landing.css';
 
+type CarrierLogoProps = {
+  src: string;
+  alt: string;
+};
+
+function CarrierLogo({ src, alt }: CarrierLogoProps) {
+  return <img src={src} className="trust-logo" alt={alt} loading="lazy" decoding="async" fetchPriority="low" />;
+}
+
 export default function LandingPage() {
     const { isAuthenticated } = useAuthStore();
-    const router = useRouter();
 
     const [isScrolled, setIsScrolled] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false);
     const [billing, setBilling] = useState<'monthly' | 'annual'>('monthly');
+    const [showDeferredContent, setShowDeferredContent] = useState(true);
     const [toastVisible, setToastVisible] = useState(false);
     const [stats, setStats] = useState({ compliance: 0, onboarding: 0, trial: 0 });
 
@@ -21,8 +29,39 @@ export default function LandingPage() {
     const ringRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handleScroll = () => setIsScrolled(window.scrollY > 50);
-        window.addEventListener('scroll', handleScroll);
+      let timeoutId: number | undefined;
+      let idleId: number | undefined;
+      const w = window as Window & {
+        requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+        cancelIdleCallback?: (id: number) => void;
+      };
+
+      if (typeof w.requestIdleCallback === 'function') {
+        idleId = w.requestIdleCallback(
+          () => setShowDeferredContent(true),
+          { timeout: 2000 }
+        );
+      } else {
+        timeoutId = window.setTimeout(() => setShowDeferredContent(true), 900);
+      }
+
+      return () => {
+        if (idleId !== undefined && typeof w.cancelIdleCallback === 'function') {
+          w.cancelIdleCallback(idleId);
+        }
+        if (timeoutId !== undefined) {
+          window.clearTimeout(timeoutId);
+        }
+      };
+    }, []);
+
+    useEffect(() => {
+      const handleScroll = () => setIsScrolled(window.scrollY > 50);
+      window.addEventListener('scroll', handleScroll, { passive: true });
+
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const supportsPointerEffects = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const enableHeavyEffects = supportsPointerEffects && !prefersReducedMotion && window.innerWidth >= 1024;
         
         let mx = 0, my = 0, rx = 0, ry = 0;
         let pId: number;
@@ -42,15 +81,17 @@ export default function LandingPage() {
             }
             pId = requestAnimationFrame(animRing);
         };
-        window.addEventListener('mousemove', handleMouseMove);
-        animRing();
+        if (enableHeavyEffects) {
+          window.addEventListener('mousemove', handleMouseMove);
+          animRing();
+        }
 
         const canvas = canvasRef.current;
         let cId: number;
         
-        if (canvas) {
+        if (canvas && enableHeavyEffects) {
             const ctx = canvas.getContext('2d');
-            let hexes: any[] = [];
+          let hexes: Array<{ x: number; y: number; size: number; alpha: number; phase: number; speed: number }> = [];
             const buildHexes = () => {
                 if (!canvas || !ctx) return;
                 canvas.width = window.innerWidth;
@@ -100,9 +141,7 @@ export default function LandingPage() {
             });
         }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
         
-        setTimeout(() => {
-            document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
-        }, 500);
+        document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
 
         const animateCounter = (key: string, target: number, dur: number) => {
             const start = Date.now();
@@ -126,14 +165,14 @@ export default function LandingPage() {
             });
         }, { threshold: 0.5 });
         
-        setTimeout(() => {
-            const statEl = document.querySelector('.stats-section');
-            if (statEl) statObserver.observe(statEl);
-        }, 500);
+        const statEl = document.querySelector('.stats-section');
+        if (statEl) statObserver.observe(statEl);
 
         return () => {
             window.removeEventListener('scroll', handleScroll);
-            window.removeEventListener('mousemove', handleMouseMove);
+            if (enableHeavyEffects) {
+              window.removeEventListener('mousemove', handleMouseMove);
+            }
             cancelAnimationFrame(pId);
             cancelAnimationFrame(cId);
             observer.disconnect();
@@ -141,15 +180,29 @@ export default function LandingPage() {
         };
     }, []);
 
-    const submitDemo = () => {
-        const email = (document.getElementById('ctaEmail') as HTMLInputElement)?.value;
+    const submitDemo = async () => {
+        const input = document.getElementById('ctaEmail') as HTMLInputElement;
+        const email = input?.value?.trim();
         if (!email || !email.includes('@')) return;
-        setToastVisible(true);
-        setTimeout(() => setToastVisible(false), 5000);
+
+        try {
+            const res = await fetch('/api/request-demo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+            if (res.ok) {
+                input.value = '';
+                setToastVisible(true);
+                setTimeout(() => setToastVisible(false), 5000);
+            }
+        } catch {
+            // silently fail — toast won't show
+        }
     };
 
     const heights = [45, 62, 38, 78, 55, 90, 42, 70, 58, 85, 65, 95];
-    const prices = { monthly: [500, 1000, 1450], annual: [400, 800, 1160] };
+    const prices = { monthly: [200, 500, 800], annual: [160, 400, 640] };
 
     return (
         <main className="landing-theme">
@@ -173,7 +226,7 @@ export default function LandingPage() {
 
             <nav id="nav" className={isScrolled ? 'scrolled' : ''}>
                 <Link className="nav-logo" href="#">
-                    <img src="/logo-blue.png" alt="Brokerium Logo" className="h-8 w-auto" />
+                  <img src="/logo-blue.png" alt="Brokerium Logo" className="h-8 w-auto" loading="lazy" decoding="async" />
                 </Link>
                 <div className="nav-links">
                     <a href="#features">Features</a>
@@ -208,18 +261,18 @@ export default function LandingPage() {
 {/*  HERO  */}
 <section className="hero">
   <div className="hero-inner">
-    <div className="hero-badge reveal">
+    <div className="hero-badge">
       <span className="hero-badge-dot"></span>
       Built for Ghana · NIC Act 1061 Compliant
     </div>
-    <h1 className="hero-title reveal" style={{maxWidth: '1000px', margin: '0 auto 24px'}}>
+    <h1 className="hero-title" style={{maxWidth: '1000px', margin: '0 auto 24px'}}>
       The Operating System for<br/>
       <em>Modern</em> Brokerages
     </h1>
-    <p className="hero-sub reveal" style={{maxWidth: '700px'}}>
+    <p className="hero-sub" style={{maxWidth: '700px'}}>
       From quote to claim, Brokerium automates your entire workflow while keeping you 100% compliant with the National Insurance Commission of Ghana.
     </p>
-    <div className="hero-actions reveal">
+    <div className="hero-actions">
       <a href="/start-trial" className="btn-primary accent">
         Start Free Trial
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
@@ -231,7 +284,7 @@ export default function LandingPage() {
     </div>
 
     {/*  DASHBOARD MOCKUP  */}
-    <div className="hero-mockup reveal" style={{marginTop: '40px'}}>
+    <div className="hero-mockup" style={{marginTop: '40px'}}>
       <div className="mockup-wrap">
         <div className="mockup-bar">
           <div className="dot-r"></div><div className="dot-y"></div><div className="dot-g"></div>
@@ -240,7 +293,7 @@ export default function LandingPage() {
         <div className="mockup-body" style={{padding: '12px', background: 'var(--bg2)', display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px', minHeight: '380px'}}>
           <div className="mockup-sidebar">
             <div className="ms-logo" style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)'}}>
-               <img src="/logo-icon.png" alt="B" className="w-5 h-5 object-contain" />
+               <img src="/logo-icon.png" alt="B" className="w-5 h-5 object-contain" loading="lazy" decoding="async" />
                <div className="ms-name" style={{fontSize: '11px', fontWeight: '600', color: 'var(--t1)'}}>Brokerium</div>
             </div>
             <div className="ms-item active"><div className="ms-dot teal"></div><div className="ms-lbl active"></div></div>
@@ -269,6 +322,8 @@ export default function LandingPage() {
   </div>
 </section>
 
+{showDeferredContent && (
+<>
 {/*  TRUST CAROUSEL  */}
 <div className="trust">
   <div className="trust-label reveal">Trusted by brokers working with Ghana's leading carriers</div>
@@ -276,20 +331,20 @@ export default function LandingPage() {
     <div className="logo-track">
       {[...Array(2)].map((_, i) => (
         <React.Fragment key={i}>
-          <img src="/images/carriers/enterprise-insurance.png" className="trust-logo" alt="Enterprise" />
-          <img src="/images/carriers/sic-insurance-plc.png" className="trust-logo" alt="SIC" />
-          <img src="/images/carriers/hollard-insurance-ghana-ltd.png" className="trust-logo" alt="Hollard" />
-          <img src="/images/carriers/activa-international-insurance-ghana.png" className="trust-logo" alt="Activa" />
-          <img src="/images/carriers/star-assurance.png" className="trust-logo" alt="Star" />
-          <img src="/images/carriers/starlife-assurance.png" className="trust-logo" alt="StarLife" />
-          <img src="/images/carriers/vanguard-assurance-company-ltd.png" className="trust-logo" alt="Vanguard" />
-          <img src="/images/carriers/ghana-union-assurance.png" className="trust-logo" alt="GUA" />
-          <img src="/images/carriers/old-mutual-life-assurance-company-ltd.png" className="trust-logo" alt="Old Mutual" />
-          <img src="/images/carriers/prudential-life.png" className="trust-logo" alt="Prudential" />
-          <img src="/images/carriers/nsia-insurance-ltd.png" className="trust-logo" alt="NSIA" />
-          <img src="/images/carriers/coronation-insurance-ghana-ltd.png" className="trust-logo" alt="Coronation" />
-          <img src="/images/carriers/sanlam-allianz.jpeg" className="trust-logo" alt="Sanlam" />
-          <img src="/images/carriers/bedrock-insurance.png" className="trust-logo" alt="Bedrock" />
+          <CarrierLogo src="/images/carriers/enterprise-insurance.png" alt="Enterprise" />
+          <CarrierLogo src="/images/carriers/sic-insurance-plc.png" alt="SIC" />
+          <CarrierLogo src="/images/carriers/hollard-insurance-ghana-ltd.png" alt="Hollard" />
+          <CarrierLogo src="/images/carriers/activa-international-insurance-ghana.png" alt="Activa" />
+          <CarrierLogo src="/images/carriers/star-assurance.png" alt="Star" />
+          <CarrierLogo src="/images/carriers/starlife-assurance.png" alt="StarLife" />
+          <CarrierLogo src="/images/carriers/vanguard-assurance-company-ltd.png" alt="Vanguard" />
+          <CarrierLogo src="/images/carriers/ghana-union-assurance.png" alt="GUA" />
+          <CarrierLogo src="/images/carriers/old-mutual-life-assurance-company-ltd.png" alt="Old Mutual" />
+          <CarrierLogo src="/images/carriers/prudential-life.png" alt="Prudential" />
+          <CarrierLogo src="/images/carriers/nsia-insurance-ltd.png" alt="NSIA" />
+          <CarrierLogo src="/images/carriers/coronation-insurance-ghana-ltd.png" alt="Coronation" />
+          <CarrierLogo src="/images/carriers/sanlam-allianz.jpeg" alt="Sanlam" />
+          <CarrierLogo src="/images/carriers/bedrock-insurance.png" alt="Bedrock" />
         </React.Fragment>
       ))}
     </div>
@@ -647,7 +702,7 @@ export default function LandingPage() {
   <div className="footer-top">
     <div className="footer-brand">
       <div className="footer-logo">
-        <img src="/logo-blue.png" alt="Brokerium" className="h-10 w-auto" />
+        <img src="/logo-blue.png" alt="Brokerium" className="h-10 w-auto" loading="lazy" decoding="async" />
         <span style={{fontFamily: 'var(--display)', fontSize: '18px', color: 'var(--t4)'}}>Brokerium</span>
       </div>
       <p className="footer-desc">The Insurance Broker Management System built for Ghana's regulated insurance market. NIC Act 1061 compliant from day one.</p>
@@ -688,6 +743,9 @@ export default function LandingPage() {
     </div>
   </div>
 </footer>
+
+</>
+) }
 
 {/*  SUCCESS TOAST  */}
             {toastVisible && (

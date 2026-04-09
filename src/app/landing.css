@@ -17,6 +17,21 @@ html{scroll-behavior:smooth;font-size:16px}
   --mono:'DM Mono',monospace;
 }
 
+/* Skip deep paint/layout work for below-the-fold sections until needed. */
+.problem,
+.features,
+.nic-section,
+.stats-section,
+.how,
+.pricing,
+.testimonials,
+.cta-section,
+ .trust,
+footer {
+  content-visibility: auto;
+  contain-intrinsic-size: 900px;
+}
+
 /* Light Liquid Glass Protocol */
 .feat-card, .plan-card, .testi-card, .pain-card, .mockup-sidebar, .mockup-table, .mc, .mockup-chart, .nic-check {
   background: rgba(255, 255, 255, 0.45) !important;
@@ -94,6 +109,12 @@ html{scroll-behavior:smooth;font-size:16px}
   content:'';position:fixed;inset:0;
   background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   pointer-events:none;z-index:0;opacity:.5;
+}
+
+@media (prefers-reduced-motion: reduce), (max-width: 1024px) {
+  .landing-theme::before {
+    display: none;
+  }
 }
 
 /* ── NAV ── */
@@ -302,6 +323,7 @@ section{position:relative;z-index:1}
   animation: scroll 60s linear infinite;
   gap: 60px;
   align-items: center;
+  will-change: transform;
 }
 
 .trust-logo {
@@ -686,6 +708,13 @@ footer{
 
 /* ── RESPONSIVE ── */
 @media(max-width:1024px){
+  .hero-badge,
+  .hero-title,
+  .hero-sub,
+  .hero-actions,
+  .hero-mockup {
+    animation: none !important;
+  }
   .features-grid{grid-template-columns:repeat(2,1fr)}
   .pricing-grid{grid-template-columns:1fr}
   .testi-grid{grid-template-columns:1fr 1fr}
@@ -717,4 +746,30 @@ footer{
   .stats-grid{grid-template-columns:1fr}
   .hero-actions{flex-direction:column;align-items:stretch}
   .btn-primary,.btn-secondary{justify-content:center}
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb,
+  .logo-track,
+  .shield-ring,
+  .hero::before,
+  .hero::after,
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .hero-badge,
+  .hero-title,
+  .hero-sub,
+  .hero-actions,
+  .hero-mockup {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .reveal,
+  .reveal-left,
+  .reveal-right {
+    opacity: 1 !important;
+  }
 }

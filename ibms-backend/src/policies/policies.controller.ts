@@ -35,6 +35,12 @@ export class PoliciesController {
     return this.policiesService.create(req.user.tenantId, req.user.sub, dto);
   }
 
+  @Get('metrics')
+  @Roles('ADMINISTRATOR', 'AGENT')
+  getMetrics(@Request() req: RequestWithUser) {
+    return this.policiesService.getMetrics(req.user.tenantId, req.user.sub);
+  }
+
   @Get()
   @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: PolicyQueryDto) {

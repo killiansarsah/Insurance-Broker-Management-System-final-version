@@ -19,7 +19,12 @@
             "approve": true,
             "matchCommandLine": true
         },
-        "Group-Object": true
+        "Group-Object": true,
+        "New-Item": true,
+        "Out-Null": true,
+        "git mv": true,
+        "Get-Item": true,
+        "Test-NetConnection": true
     },
     "workbench.browser.openLocalhostLinks": true,
     "workbench.browser.enableChatTools": true,

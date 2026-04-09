@@ -78,6 +78,25 @@ export function useCommissions(params?: Record<string, unknown>) {
     });
 }
 
+export function useCommissionMetrics() {
+    return useQuery({
+        queryKey: ['commissions', 'metrics'],
+        queryFn: () => apiClient.get<any>('/commissions/metrics'),
+    });
+}
+
+export function useReceiveCommission() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+            apiClient.post(`/commissions/${id}/receive`, data),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['commissions'] });
+            qc.invalidateQueries({ queryKey: ['finance-dashboard'] });
+        },
+    });
+}
+
 // ─── EXPENSES ───
 export function useExpenses(params?: Record<string, unknown>) {
     return useQuery({

@@ -159,6 +159,73 @@ export class CommissionsService {
     };
   }
 
+  // ─── METRICS ────────────────────────────────────────
+  async getMetrics(tenantId: string, userId: string) {
+    const scopeWhere = await this.buildCommissionScopeWhere(tenantId, userId);
+
+    const [earnedAgg, paidAgg, pendingAgg, clawbackAgg, leaderboardRaw] = await Promise.all([
+      this.prisma.commission.aggregate({
+        where: { ...scopeWhere, status: 'EARNED' },
+        _sum: { commissionAmount: true },
+      }),
+      this.prisma.commission.aggregate({
+        where: { ...scopeWhere, status: 'PAID' },
+        _sum: { commissionAmount: true },
+      }),
+      this.prisma.commission.aggregate({
+        where: { ...scopeWhere, status: 'PENDING' },
+        _sum: { commissionAmount: true },
+        _count: true,
+      }),
+      this.prisma.commission.aggregate({
+        where: { ...scopeWhere, status: 'CLAWBACK' as any },
+        _sum: { commissionAmount: true },
+      }),
+      this.prisma.commission.groupBy({
+        by: ['brokerId'],
+        where: scopeWhere,
+        _sum: { commissionAmount: true, netCommission: true },
+        _count: { _all: true },
+      }),
+    ]);
+
+    // Build leaderboard
+    const brokerIds = leaderboardRaw.map((r) => r.brokerId).filter(Boolean);
+    const brokers = await this.prisma.user.findMany({
+      where: { id: { in: brokerIds }, tenantId },
+      select: { id: true, firstName: true, lastName: true },
+    });
+
+    const brokerMap = new Map(brokers.map((b) => [b.id, `${b.firstName} ${b.lastName}`]));
+
+    const paidByBrokerRaw = await this.prisma.commission.groupBy({
+      by: ['brokerId'],
+      where: { ...scopeWhere, status: 'PAID' },
+      _sum: { commissionAmount: true },
+    });
+
+    const paidMap = new Map(paidByBrokerRaw.map((r) => [r.brokerId, Number(r._sum.commissionAmount || 0)]));
+
+    const brokerLeaderboard = leaderboardRaw
+      .map((r) => ({
+        brokerId: r.brokerId,
+        brokerName: brokerMap.get(r.brokerId) || 'Unknown Broker',
+        totalCommissions: Number(r._sum.commissionAmount || 0),
+        paidCommissions: paidMap.get(r.brokerId) || 0,
+        policyCount: r._count._all,
+      }))
+      .sort((a, b) => b.totalCommissions - a.totalCommissions);
+
+    return {
+      totalEarned: Number(earnedAgg._sum.commissionAmount || 0),
+      totalPaid: Number(paidAgg._sum.commissionAmount || 0),
+      totalPending: Number(pendingAgg._sum.commissionAmount || 0),
+      totalClawback: Number(clawbackAgg._sum.commissionAmount || 0),
+      pendingCount: pendingAgg._count,
+      brokerLeaderboard,
+    };
+  }
+
   // ─── RECEIVE ────────────────────────────────────────
   async receive(
     id: string,

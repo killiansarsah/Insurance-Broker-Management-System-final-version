@@ -25,6 +25,12 @@ import type { RequestWithUser } from '../common/types/request.types.js';
 export class RenewalsController {
   constructor(private readonly renewalsService: RenewalsService) {}
 
+  @Get('renewals/metrics')
+  @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
+  getMetrics(@Request() req: RequestWithUser) {
+    return this.renewalsService.getMetrics(req.user.tenantId, req.user.sub);
+  }
+
   @Get('renewals')
   @Roles('ADMINISTRATOR', 'AGENT', 'WORKSPACE_OWNER', 'MANAGER', 'SUPERVISOR')
   getUpcoming(

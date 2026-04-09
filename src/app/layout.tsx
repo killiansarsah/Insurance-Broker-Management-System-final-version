@@ -3,7 +3,6 @@ import { Outfit, DM_Mono } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/layout/theme-provider';
 import { QueryProvider } from '@/lib/query-provider';
-import { AppLoader } from '@/components/ui/AppLoader';
 import './globals.css';
 
 const outfit = Outfit({
@@ -81,7 +80,6 @@ export default function RootLayout({
                 />
             </head>
             <body className="antialiased">
-                <AppLoader message="Loading application workspace..." fullScreen={true} />
                 <ThemeProvider />
                 <QueryProvider>
                     {children}

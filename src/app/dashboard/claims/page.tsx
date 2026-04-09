@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { useClaims } from '@/hooks/api';
+import { useClaims, useClaimMetrics } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { AppLoader } from '@/components/ui/AppLoader';
@@ -79,7 +79,18 @@ export default function ClaimsPage() {
     const [dateFrom, setDateFrom] = useState('');
     const [dateTo, setDateTo] = useState('');
 
-    const { data: claimsData, isLoading } = useClaims();
+    // Server-side pagination state
+    const [ssPage, setSsPage] = useState(1);
+    const [ssPageSize, setSsPageSize] = useState(10);
+    const [ssSearch, setSsSearch] = useState('');
+
+    const { data: claimsData, isLoading } = useClaims({
+        page: ssPage,
+        limit: ssPageSize,
+        ...(ssSearch && { search: ssSearch }),
+    });
+    const { data: metricsData } = useClaimMetrics();
+
     const claims: any[] = (claimsData as any)?.items ?? (claimsData as any)?.data ?? (Array.isArray(claimsData) ? claimsData : []);
 
     // Motor/Non-Motor URL param
@@ -125,21 +136,7 @@ export default function ClaimsPage() {
         });
     }, [baseData, statusFilter, overdueOnly, typeFilter, dateFrom, dateTo]);
 
-    // Stats
-    const now = new Date();
-    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const monthEnd = new Date(nextMonth.getTime() - 86_400_000).toISOString().split('T')[0];
-    const settledThisMonth = baseData.filter(c => c.status === 'SETTLED' && c.settlementDate && c.settlementDate.slice(0, 10) >= monthStart && c.settlementDate.slice(0, 10) <= monthEnd);
-    const settledClaims = baseData.filter(c => c.settlementDate && c.intimationDate);
-    const avgDays = settledClaims.length > 0
-        ? Math.round(settledClaims.reduce((sum, c) => {
-            const start = new Date(c.intimationDate!).getTime();
-            const end = new Date(c.settlementDate!).getTime();
-            return sum + (end - start) / 86_400_000;
-        }, 0) / settledClaims.length)
-        : 0;
-
+    // Stats from server-side metrics
     const getTitle = () => {
         if (typeParam === 'MOTOR') return 'Motor Claims';
         if (typeParam === 'non-motor') return 'Non-Motor Claims';
@@ -147,10 +144,10 @@ export default function ClaimsPage() {
     };
 
     const stats = [
-        { label: 'Open Claims', value: baseData.filter(c => ['INTIMATED', 'REGISTERED', 'UNDER_REVIEW', 'ASSESSED'].includes(c.status)).length, icon: AlertCircle, color: 'text-warning-600', bg: 'bg-warning-50' },
-        { label: 'Settled This Month', value: settledThisMonth.length, icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
-        { label: 'Avg. Settlement Time', value: `${avgDays}d`, icon: Clock, color: 'text-primary-600', bg: 'bg-primary-50' },
-        { label: 'Total Incurred', value: formatCurrency(baseData.reduce((sum, c) => sum + (c.settledAmount || c.claimAmount || 0), 0)), icon: FileText, color: 'text-surface-600', bg: 'bg-surface-50' },
+        { label: 'Open Claims', value: metricsData?.openClaims ?? 0, icon: AlertCircle, color: 'text-warning-600', bg: 'bg-warning-50' },
+        { label: 'Settled', value: metricsData?.settledClaims ?? 0, icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Overdue', value: metricsData?.overdueClaims ?? 0, icon: Clock, color: 'text-danger-600', bg: 'bg-danger-50' },
+        { label: 'Total Incurred', value: formatCurrency(metricsData?.totalClaimAmount ?? 0), icon: FileText, color: 'text-surface-600', bg: 'bg-surface-50' },
     ];
 
     const hasFilters = overdueOnly || typeFilter || dateFrom || dateTo || statusFilter !== 'all';
@@ -436,6 +433,13 @@ export default function ClaimsPage() {
                 searchKeys={['claimNumber', 'policyNumber', 'clientName', 'insuranceType', 'status', 'incidentDate', 'claimAmount']}
                 onRowClick={(row) => router.push(`/dashboard/claims/${row.id}`)}
                 emptyMessage="No claims match the current filters."
+                serverSide
+                totalCount={(claimsData as any)?.meta?.total ?? 0}
+                currentPage={ssPage}
+                onPageChange={setSsPage}
+                onSearchChange={setSsSearch}
+                onPageSizeChange={setSsPageSize}
+                loading={isLoading}
             />
         </div>
     );

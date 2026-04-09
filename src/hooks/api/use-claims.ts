@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type { PaginatedResponse } from '@/types/api';
 
@@ -20,6 +20,18 @@ export function useClaims(params?: Record<string, unknown>) {
     return useQuery({
         queryKey: ['claims', params],
         queryFn: () => apiClient.get<PaginatedResponse<ClaimData>>('/claims', params),
+        placeholderData: keepPreviousData,
+    });
+}
+
+export function useClaimMetrics() {
+    return useQuery({
+        queryKey: ['claims', 'metrics'],
+        queryFn: async () => {
+            const res = await apiClient.get<any>('/claims/metrics');
+            return res;
+        },
+        staleTime: 30_000,
     });
 }
 

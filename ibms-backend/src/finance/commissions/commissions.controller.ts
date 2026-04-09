@@ -22,6 +22,12 @@ import type { RequestWithUser } from '../../common/types/request.types.js';
 export class CommissionsController {
   constructor(private readonly commissionsService: CommissionsService) {}
 
+  @Get('metrics')
+  @Roles('ADMINISTRATOR', 'MANAGER', 'SUPERVISOR', 'AGENT')
+  getMetrics(@Request() req: RequestWithUser) {
+    return this.commissionsService.getMetrics(req.user.tenantId, req.user.sub);
+  }
+
   @Get()
   @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: CommissionQueryDto) {

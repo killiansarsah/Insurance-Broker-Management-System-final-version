@@ -40,6 +40,12 @@ export class ClaimsController {
     return this.claimsService.create(req.user.tenantId, req.user.sub, dto);
   }
 
+  @Get('metrics')
+  @Roles('ADMINISTRATOR', 'AGENT')
+  getMetrics(@Request() req: RequestWithUser) {
+    return this.claimsService.getMetrics(req.user.tenantId, req.user.sub);
+  }
+
   @Get()
   @Roles('ADMINISTRATOR', 'AGENT')
   findAll(@Request() req: RequestWithUser, @Query() query: ClaimQueryDto) {

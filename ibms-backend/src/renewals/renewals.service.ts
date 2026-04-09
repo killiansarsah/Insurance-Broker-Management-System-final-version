@@ -41,6 +41,53 @@ export class RenewalsService {
     };
   }
 
+  async getMetrics(tenantId: string, userId: string) {
+    const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
+    const now = new Date();
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const in60Days = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    const in90Days = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+
+    const [totalUpcoming, urgentCount, lapsedCount, atRiskPremiumAgg] =
+      await Promise.all([
+        this.prisma.policy.count({
+          where: {
+            ...scopeWhere,
+            status: 'ACTIVE',
+            expiryDate: { lte: in90Days, gte: now },
+          },
+        }),
+        this.prisma.policy.count({
+          where: {
+            ...scopeWhere,
+            status: 'ACTIVE',
+            expiryDate: { lte: in30Days, gte: now },
+          },
+        }),
+        this.prisma.policy.count({
+          where: {
+            ...scopeWhere,
+            status: { in: ['EXPIRED', 'LAPSED'] },
+          },
+        }),
+        this.prisma.policy.aggregate({
+          where: {
+            ...scopeWhere,
+            status: 'ACTIVE',
+            expiryDate: { lte: in90Days, gte: now },
+          },
+          _sum: { premiumAmount: true },
+        }),
+      ]);
+
+    return {
+      totalUpcoming,
+      urgentCount,
+      lapsedCount,
+      atRiskPremium: atRiskPremiumAgg._sum.premiumAmount || 0,
+    };
+  }
+
   async getUpcomingRenewals(
     tenantId: string,
     userId: string,

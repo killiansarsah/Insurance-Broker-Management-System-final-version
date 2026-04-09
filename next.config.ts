@@ -8,7 +8,27 @@ const REPO_NAME = 'Insurance-Broker-Management-System-final-version';
 const nextConfig: NextConfig = {
   ...(isStaticExport ? { output: 'export' as const } : {}),
   images: {
-    unoptimized: true, // Required for localhost dev + static export; enable with remotePatterns for production
+    // Keep unoptimized only for static export builds.
+    unoptimized: isStaticExport,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        pathname: '/uploads/**',
+      },
+    ],
+  },
+  turbopack: {
+    root: __dirname,
   },
   basePath: isStaticExport ? `/${REPO_NAME}` : '',
   assetPrefix: isStaticExport ? `/${REPO_NAME}/` : '',

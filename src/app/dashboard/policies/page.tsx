@@ -26,7 +26,7 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { usePolicies, useCancelPolicy } from '@/hooks/api';
+import { usePolicies, usePolicyMetrics, useCancelPolicy } from '@/hooks/api';
 import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
@@ -140,7 +140,19 @@ export default function PoliciesPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const typeParam = searchParams.get('type') as 'MOTOR' | 'non-motor' | null;
-    const { data: policiesData, isLoading } = usePolicies({ limit: 5000 });
+
+    // Server-side pagination state
+    const [ssPage, setSsPage] = useState(1);
+    const [ssPageSize, setSsPageSize] = useState(10);
+    const [ssSearch, setSsSearch] = useState('');
+    
+    const { data: policiesData, isLoading } = usePolicies({
+        page: ssPage,
+        limit: ssPageSize,
+        ...(ssSearch && { search: ssSearch }),
+    });
+    const { data: metricsData } = usePolicyMetrics();
+
     const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
     
     const [selectedPolicies, setSelectedPolicies] = useState<any[]>([]);
@@ -303,56 +315,52 @@ export default function PoliciesPage() {
     }), [baseData, filterStatus, filterType, filterBroker, filterDateFrom, filterDateTo]);
 
     // KPI Calculations
-    const activePolicies = baseData.filter((p) => p.status === 'ACTIVE');
-    const totalPremium = baseData.reduce((s, p) => s + Number(p.premiumAmount || 0), 0);
-    const expiringSoon = baseData.filter((p) => ((p.daysToExpiry as number) ?? 999) <= 30 && p.status === 'ACTIVE');
-    const pendingDraft = baseData.filter((p) => p.status === 'PENDING' || p.status === 'DRAFT');
-    const lapsedPolicies = baseData.filter((p) => p.status === 'LAPSED');
-    const now = new Date();
-    const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-    const monthEnd = new Date(nextMonth.getTime() - 86_400_000).toISOString().split('T')[0];
-    const newThisMonth = baseData.filter((p) => (p.inceptionDate as string) >= monthStart && (p.inceptionDate as string) <= monthEnd);
+    const activePoliciesCount = metricsData?.activePolicies ?? 0;
+    const totalPremiumCount = metricsData?.totalPremium ?? 0;
+    const expiringSoonCount = metricsData?.expiringSoon ?? 0;
+    const pendingDraftCount = metricsData?.pendingDraft ?? 0;
+    const lapsedPoliciesCount = metricsData?.lapsedPolicies ?? 0;
+    const newThisMonthCount = metricsData?.newThisMonth ?? 0;
 
     const kpis = [
         {
             label: `Active ${typeParam ? (typeParam === 'MOTOR' ? 'Motor' : 'Non-Motor') : ''} Policies`,
-            value: activePolicies.length,
+            value: activePoliciesCount,
             icon: <FileText size={22} strokeWidth={2.5} />,
             color: 'text-primary-600 bg-primary-50 ring-primary-100',
             borderColor: 'bg-primary-500',
         },
         {
             label: 'Total Premium',
-            value: formatCurrency(totalPremium),
+            value: formatCurrency(totalPremiumCount),
             icon: <TrendingUp size={22} strokeWidth={2.5} />,
             color: 'text-success-600 bg-success-50 ring-success-100',
             borderColor: 'bg-success-500',
         },
         {
             label: 'Expiring ≤30d',
-            value: expiringSoon.length,
+            value: expiringSoonCount,
             icon: <Clock size={22} strokeWidth={2.5} />,
             color: 'text-accent-600 bg-accent-50 ring-accent-100',
             borderColor: 'bg-accent-500',
         },
         {
             label: 'Pending / Draft',
-            value: pendingDraft.length,
+            value: pendingDraftCount,
             icon: <AlertCircle size={22} strokeWidth={2.5} />,
             color: 'text-warning-600 bg-warning-50 ring-warning-100',
             borderColor: 'bg-warning-500',
         },
         {
             label: 'Lapsed',
-            value: lapsedPolicies.length,
+            value: lapsedPoliciesCount,
             icon: <ShieldAlert size={22} strokeWidth={2.5} />,
             color: 'text-danger-600 bg-danger-50 ring-danger-100',
             borderColor: 'bg-danger-500',
         },
         {
             label: 'New This Month',
-            value: newThisMonth.length,
+            value: newThisMonthCount,
             icon: <Activity size={22} strokeWidth={2.5} />,
             color: 'text-info-600 bg-info-50 ring-info-100',
             borderColor: 'bg-info-500',
@@ -653,6 +661,13 @@ export default function PoliciesPage() {
                 }
                 exportable={true}
                 onExport={() => exportToExcel(filtered)}
+                serverSide
+                totalCount={(policiesData as any)?.meta?.total ?? 0}
+                currentPage={ssPage}
+                onPageChange={setSsPage}
+                onSearchChange={setSsSearch}
+                onPageSizeChange={setSsPageSize}
+                loading={isLoading}
                 selectable={true}
                 selectedRows={selectedPolicies}
                 onSelectionChange={setSelectedPolicies}

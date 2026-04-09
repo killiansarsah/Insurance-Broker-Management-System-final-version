@@ -28,7 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { useClients } from '@/hooks/api';
+import { useClients, useClientMetrics } from '@/hooks/api';
 import { formatCurrency, formatPhone, formatDate, cn, getClientDisplayName } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { Client, ClientStatus, KycStatus, AmlRiskLevel, ClientType } from '@/types';
@@ -38,17 +38,25 @@ import { AppLoader } from '@/components/ui/AppLoader';
 
 export default function ClientsPage() {
     const router = useRouter();
-    const { data: clientsData, isLoading } = useClients({ limit: 5000 });
+
+    // Server-side pagination state
+    const [ssPage, setSsPage] = useState(1);
+    const [ssPageSize, setSsPageSize] = useState(10);
+    const [ssSearch, setSsSearch] = useState('');
+    const { data: clientsData, isLoading } = useClients({
+        page: ssPage,
+        limit: ssPageSize,
+        ...(ssSearch && { search: ssSearch }),
+    });
+    const { data: metricsData, isLoading: metricsLoading } = useClientMetrics();
+
     const clients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
+    const meta = (clientsData as any)?.meta;
     
-    const totalClients = clients.length;
-    const kycVerified = clients.filter((c) => c.kycStatus === 'VERIFIED').length;
-    const highRisk = clients.filter((c) => c.amlRiskLevel === 'HIGH' || c.amlRiskLevel === 'CRITICAL').length;
-    const newThisMonth = clients.filter((c) => {
-        const d = new Date(c.createdAt as string);
-        const now = new Date();
-        return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
-    }).length;
+    const totalClients = metricsData?.total ?? 0;
+    const kycVerified = metricsData?.kycVerified ?? 0;
+    const highRisk = metricsData?.highRisk ?? 0;
+    const newThisMonth = metricsData?.newThisMonth ?? 0;
     const uniqueBrokers = [...new Set(clients.map(c => c.assignedBrokerName).filter(Boolean))] as string[];
     const [showFilters, setShowFilters] = useState(false);
     const [filterStatus, setFilterStatus] = useState<ClientStatus | ''>('');
@@ -576,11 +584,18 @@ export default function ClientsPage() {
             <DataTable<any>
                 data={filteredClients}
                 columns={columns}
-                searchPlaceholder="Search by name, client number, phone, email…"
+                searchPlaceholder="Search by name, client number, phone, email..."
                 searchKeys={['firstName', 'lastName', 'companyName', 'clientNumber', 'PHONE', 'EMAIL', 'status', 'kycStatus', 'amlRiskLevel', 'type', 'assignedBrokerName']}
                 onRowClick={(row) => router.push(`/dashboard/clients/${row.id}`)}
                 emptyMessage="No clients match the current filters."
                 onExport={handleExport}
+                serverSide
+                totalCount={meta?.total ?? 0}
+                currentPage={ssPage}
+                onPageChange={setSsPage}
+                onSearchChange={setSsSearch}
+                onPageSizeChange={setSsPageSize}
+                loading={isLoading}
                 headerActions={
                     <Link 
                         href="/dashboard/integrations#bulk-import"

@@ -11,7 +11,7 @@ import {
   Request,
   Res,
 } from '@nestjs/common';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { ClientsService } from './clients.service';
 import { CreateClientDto } from './dto/create-client.dto';
 import { UpdateClientDto } from './dto/update-client.dto';
@@ -44,6 +44,12 @@ export class ClientsController {
       req.user.sub,
       createClientDto,
     );
+  }
+
+  @Get('metrics')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
+  getMetrics(@Request() req: RequestWithUser) {
+    return this.clientsService.getMetrics(req.user.tenantId, req.user.sub);
   }
 
   @Get()

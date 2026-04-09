@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
     TrendingUp,
     CheckCircle2,
@@ -14,50 +14,55 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { BackButton } from '@/components/ui/back-button';
-import { useCommissions } from '@/hooks/api/use-finance';
+import { useCommissions, useCommissionMetrics } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
-
+// removed nuqs import
+import { ReceiveCommissionModal } from '@/components/finance/receive-commission-modal';
 export default function CommissionsPage() {
-    const [statusFilter, setStatusFilter] = useState<string>('all');
-    const [brokerFilter, setBrokerFilter] = useState<string>('all');
+    // Local state for pagination
+    const [page, setPage] = useState(1);
+    const [limit, setLimit] = useState(10);
+    
+    // Local state for filters
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [brokerFilter, setBrokerFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+    
+    // Modal state
+    const [receivingCommission, setReceivingCommission] = useState<any | null>(null);
 
-    const { data: commissionsData } = useCommissions();
-    const allCommissions: any[] = ((commissionsData as any)?.items ?? (commissionsData as any)?.data ?? (Array.isArray(commissionsData) ? commissionsData : []));
+    // Data Fetching
+    const { data: commissionsData, isLoading: isLoadingTable } = useCommissions({
+        page,
+        limit,
+        ...(statusFilter !== 'all' && { status: statusFilter }),
+        ...(brokerFilter !== 'all' && { brokerId: brokerFilter }),
+        ...(searchQuery && { search: searchQuery })
+    });
 
-    const totalEarned = allCommissions.filter((c: any) => c.status === 'EARNED' || c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
-    const totalPaid = allCommissions.filter((c: any) => c.status === 'PAID').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
-    const totalPending = allCommissions.filter((c: any) => c.status === 'PENDING').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
-    const totalClawback = allCommissions.filter((c: any) => c.status === 'clawback').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+    const { data: metricsData, isLoading: isLoadingMetrics } = useCommissionMetrics();
+
+    const items = (commissionsData as any)?.items || [];
+    const meta = (commissionsData as any)?.meta || { total: 0, page: 1, limit: 10, totalPages: 1 };
 
     const KPIS = [
-        { label: 'Total Earned', value: formatCurrency(totalEarned), icon: TrendingUp, color: 'text-success-600', bg: 'bg-success-50' },
-        { label: 'Paid Out', value: formatCurrency(totalPaid), icon: CheckCircle2, color: 'text-primary-600', bg: 'bg-primary-50' },
-        { label: 'Pending Payment', value: formatCurrency(totalPending), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
-        { label: 'Clawback', value: formatCurrency(totalClawback), icon: ArrowDownRight, color: 'text-danger-600', bg: 'bg-danger-50' },
+        { label: 'Total Earned', value: formatCurrency(meta.totalEarned || 0), icon: TrendingUp, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Paid Out', value: formatCurrency(meta.totalPaid || 0), icon: CheckCircle2, color: 'text-primary-600', bg: 'bg-primary-50' },
+        { label: 'Pending Payment', value: formatCurrency(meta.totalPending || 0), icon: Clock, color: 'text-warning-600', bg: 'bg-warning-50' },
+        { label: 'Clawback', value: formatCurrency(meta.totalClawback || 0), icon: ArrowDownRight, color: 'text-danger-600', bg: 'bg-danger-50' },
     ];
 
-    // Build broker breakdown from data
-    const brokerMap = allCommissions.reduce((acc: Record<string, { broker: string; total: number; paid: number; count: number }>, c: any) => {
-        const name = c.brokerName || 'Unknown';
-        if (!acc[name]) acc[name] = { broker: name, total: 0, paid: 0, count: 0 };
-        acc[name].total += (c.commissionAmount || 0);
-        if (c.status === 'PAID') acc[name].paid += (c.commissionAmount || 0);
-        acc[name].count += 1;
-        return acc;
-    }, {} as Record<string, any>);
-    const brokerList = (Object.values(brokerMap) as { broker: string; total: number; paid: number; count: number }[]).sort((a, b) => b.total - a.total);
-    const maxBrokerTotal = Math.max(...brokerList.map(b => b.total), 1);
+    const brokerList = metricsData?.brokerLeaderboard || [];
+    const maxBrokerTotal = Math.max(...brokerList.map((b: any) => b.totalCommissions), 1);
 
     const BROKER_OPTIONS = [
         { label: 'All Brokers', value: 'all' },
-        ...brokerList.map(b => ({ label: b.broker, value: b.broker })),
+        ...brokerList.map((b: any) => ({ label: b.brokerName, value: b.brokerId })),
     ];
 
-    const filtered = allCommissions
-        .filter((c: any) => statusFilter === 'all' || c.status === statusFilter)
-        .filter((c: any) => brokerFilter === 'all' || c.brokerName === brokerFilter);
+// Removed separate rowActions variable
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -71,14 +76,15 @@ export default function CommissionsPage() {
                     </div>
                 </div>
                 <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
+                    // Quick local export based on current view
                     const csv = ['Policy #,Client,Product,Broker,Rate %,Premium,Commission,NIC Levy,Net Commission,Status,Date Issued',
-                        ...filtered.map(c => `${c.policyNumber},"${c.clientName}",${c.productType},${c.brokerName},${c.commissionRate},${c.premiumAmount},${c.commissionAmount},${c.nicLevy},${c.netCommission},${c.status},${c.datePolicyIssued}`)
+                        ...items.map((c: any) => `${c.policyNumber},"${c.clientName}",${c.productType},${c.brokerName},${c.commissionRate},${c.premiumAmount},${c.commissionAmount},${c.nicLevy},${c.netCommission},${c.status},${c.datePolicyIssued}`)
                     ].join('\n');
                     const blob = new Blob([csv], { type: 'text/csv' });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a'); a.href = url; a.download = 'commission-statement.csv'; a.click();
                     URL.revokeObjectURL(url);
-                }}>Export Statement</Button>
+                }}>Export View</Button>
             </div>
 
             {/* KPI Strip */}
@@ -90,7 +96,11 @@ export default function CommissionsPage() {
                         </div>
                         <div>
                             <p className="text-xs font-semibold text-surface-500 uppercase tracking-wider">{kpi.label}</p>
-                            <p className="text-xl font-bold text-surface-900 mt-0.5 tabular-nums">{kpi.value}</p>
+                            {isLoadingMetrics ? (
+                                <div className="h-6 w-24 bg-surface-200 animate-pulse rounded mt-1" />
+                            ) : (
+                                <p className="text-xl font-bold text-surface-900 mt-0.5 tabular-nums">{kpi.value}</p>
+                            )}
                         </div>
                     </Card>
                 ))}
@@ -102,47 +112,64 @@ export default function CommissionsPage() {
                     <Users size={16} className="text-surface-400" />
                     <CardHeader title="Broker Performance" />
                 </div>
-                <div className="space-y-3">
-                    {brokerList.map((broker, i) => {
-                        const pct = Math.round((broker.total / maxBrokerTotal) * 100);
-                        return (
-                            <div key={broker.broker} className="flex items-center gap-4">
-                                <div className="w-6 text-center text-xs font-bold text-surface-400">#{i + 1}</div>
-                                <div className="w-32 shrink-0">
-                                    <p className="text-sm font-semibold text-surface-900 truncate">{broker.broker}</p>
-                                    <p className="text-xs text-surface-400">{broker.count} policies</p>
+                {isLoadingMetrics ? (
+                    <div className="space-y-3">
+                        {[1, 2, 3].map(i => <div key={i} className="h-8 bg-surface-100 animate-pulse rounded" />)}
+                    </div>
+                ) : (
+                    <div className="space-y-3">
+                        {brokerList.slice(0, 5).map((broker: any, i: number) => {
+                            const pct = Math.round((broker.totalCommissions / maxBrokerTotal) * 100);
+                            return (
+                                <div key={broker.brokerId} className="flex items-center gap-4">
+                                    <div className="w-6 text-center text-xs font-bold text-surface-400">#{i + 1}</div>
+                                    <div className="w-32 shrink-0">
+                                        <p className="text-sm font-semibold text-surface-900 truncate" title={broker.brokerName}>{broker.brokerName}</p>
+                                        <p className="text-xs text-surface-400">{broker.policyCount} policies</p>
+                                    </div>
+                                    <div className="flex-1 h-2 bg-surface-100 rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-700"
+                                            style={{ width: `${pct}%` }}
+                                        />
+                                    </div>
+                                    <div className="w-24 text-right shrink-0">
+                                        <p className="text-sm font-bold text-surface-900 tabular-nums">{formatCurrency(broker.totalCommissions)}</p>
+                                        <p className="text-xs text-success-600">{formatCurrency(broker.paidCommissions)} paid</p>
+                                    </div>
                                 </div>
-                                <div className="flex-1 h-2 bg-surface-100 rounded-full overflow-hidden">
-                                    <div
-                                        className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-700"
-                                        style={{ width: `${pct}%` }}
-                                    />
-                                </div>
-                                <div className="w-24 text-right shrink-0">
-                                    <p className="text-sm font-bold text-surface-900 tabular-nums">{formatCurrency(broker.total)}</p>
-                                    <p className="text-xs text-success-600">{formatCurrency(broker.paid)} paid</p>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                        {brokerList.length === 0 && <p className="text-sm text-surface-500">No broker data available.</p>}
+                    </div>
+                )}
             </Card>
 
             {/* Commission Ledger */}
             <DataTable
-                data={filtered}
+                data={items}
+                serverSide={true}
+                loading={isLoadingTable}
+                currentPage={meta.page}
+                totalCount={meta.total}
+                onPageChange={(p) => setPage(p)}
+                onPageSizeChange={(s) => setLimit(s)}
+                onSearchChange={(val) => {
+                    setSearchQuery(val || '');
+                    setPage(1);
+                }}
                 columns={[
                     {
                         key: 'policyNumber',
                         label: 'Policy #',
                         sortable: true,
-                        render: (c) => (
+                        render: (c: any) => (
                             <Link
-                                href={`/dashboard/policies/${c.policyId}`}
+                                href={`/dashboard/policies/${c.policy?.id || c.policyId}`}
                                 className="font-mono font-bold text-xs text-primary-600 hover:underline underline-offset-2"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {c.policyNumber}
+                                {c.policy?.policyNumber || c.policyNumber || 'Unknown'}
                             </Link>
                         ),
                     },
@@ -150,62 +177,73 @@ export default function CommissionsPage() {
                         key: 'clientName',
                         label: 'Client',
                         sortable: true,
-                        render: (c) => (
-                            <Link
-                                href={`/dashboard/clients/${c.clientId}`}
-                                className="text-sm font-medium text-surface-900 hover:text-primary-600 hover:underline underline-offset-2"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {c.clientName}
-                            </Link>
-                        ),
+                        render: (c: any) => {
+                            const name = c.client ? (c.client.companyName || `${c.client.firstName} ${c.client.lastName}`) : 'Unknown';
+                            return (
+                                <Link
+                                    href={`/dashboard/clients/${c.clientId}`}
+                                    className="text-sm font-medium text-surface-900 hover:text-primary-600 hover:underline underline-offset-2"
+                                    onClick={(e) => e.stopPropagation()}
+                                    title={name}
+                                >
+                                    <span className="line-clamp-1">{name}</span>
+                                </Link>
+                            )
+                        },
                     },
-                    { key: 'productType', label: 'Product', sortable: true, render: (c) => <span className="text-xs text-surface-600">{c.productType}</span> },
-                    { key: 'brokerName', label: 'Broker', sortable: true, render: (c) => <span className="text-sm font-medium">{c.brokerName}</span> },
+                    { key: 'brokerName', label: 'Broker', sortable: true, render: (c: any) => <span className="text-sm font-medium whitespace-nowrap">{c.broker?.firstName} {c.broker?.lastName}</span> },
                     {
                         key: 'commissionRate',
                         label: 'Rate',
                         sortable: true,
-                        render: (c) => <span className="text-sm font-semibold text-surface-700">{c.commissionRate}%</span>,
+                        render: (c: any) => <span className="text-sm font-semibold text-surface-700">{c.commissionRate}%</span>,
                     },
                     {
                         key: 'premiumAmount',
                         label: 'Premium',
                         sortable: true,
-                        render: (c) => <span className="text-sm tabular-nums text-surface-600">{formatCurrency(c.premiumAmount)}</span>,
+                        render: (c: any) => <span className="text-sm tabular-nums text-surface-600">{formatCurrency(c.premiumAmount)}</span>,
                     },
                     {
                         key: 'commissionAmount',
-                        label: 'Commission',
+                        label: 'Comm. Amt',
                         sortable: true,
-                        render: (c) => <span className="font-bold text-sm tabular-nums text-surface-900">{formatCurrency(c.commissionAmount)}</span>,
-                    },
-                    {
-                        key: 'nicLevy',
-                        label: 'NIC Levy',
-                        sortable: true,
-                        render: (c) => <span className="text-sm tabular-nums text-danger-600">{formatCurrency(c.nicLevy)}</span>,
-                    },
-                    {
-                        key: 'netCommission',
-                        label: 'Net Comm.',
-                        sortable: true,
-                        render: (c) => <span className="font-bold text-sm tabular-nums text-success-700">{formatCurrency(c.netCommission)}</span>,
+                        render: (c: any) => <span className="font-bold text-sm tabular-nums text-surface-900">{formatCurrency(c.commissionAmount)}</span>,
                     },
                     {
                         key: 'status',
                         label: 'Status',
                         sortable: true,
-                        render: (c) => <StatusBadge status={c.status} />,
+                        render: (c: any) => <StatusBadge status={c.status} />,
                     },
                     {
-                        key: 'datePolicyIssued',
-                        label: 'Issued',
+                        key: 'createdAt',
+                        label: 'Created',
                         sortable: true,
-                        render: (c) => <span className="text-xs text-surface-500">{formatDate(c.datePolicyIssued)}</span>,
+                        render: (c: any) => <span className="text-xs text-surface-500 whitespace-nowrap">{formatDate(c.createdAt)}</span>,
                     },
+                    {
+                        key: 'actions',
+                        label: '',
+                        render: (c: any) => {
+                            if (c.status === 'PENDING' || c.status === 'EARNED') {
+                                return (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-7 text-xs gap-1.5 px-2"
+                                        onClick={() => setReceivingCommission(c)}
+                                    >
+                                        <CheckCircle2 size={14} className="text-primary-600" />
+                                        <span>Receive</span>
+                                    </Button>
+                                );
+                            }
+                            return null;
+                        }
+                    }
                 ]}
-                searchKeys={['policyNumber', 'clientName', 'brokerName', 'productType', 'status', 'netCommission', 'premiumAmount']}
+                searchPlaceholder="Search policies or insurers..."
                 emptyMessage="No commission records found."
                 headerActions={
                     <div className="flex items-center gap-2">
@@ -213,7 +251,10 @@ export default function CommissionsPage() {
                             label="Broker"
                             options={BROKER_OPTIONS}
                             value={brokerFilter}
-                            onChange={(v) => setBrokerFilter(v as string)}
+                            onChange={(v) => {
+                                setBrokerFilter(v as string);
+                                setPage(1);
+                            }}
                         />
                         <CustomSelect
                             label="Status"
@@ -222,13 +263,27 @@ export default function CommissionsPage() {
                                 { label: 'Earned', value: 'EARNED' },
                                 { label: 'Paid', value: 'PAID' },
                                 { label: 'Pending', value: 'PENDING' },
-                                { label: 'Clawback', value: 'clawback' },
+                                { label: 'Clawback', value: 'CLAWBACK' },
                             ]}
                             value={statusFilter}
-                            onChange={(v) => setStatusFilter(v as string)}
+                            onChange={(v) => {
+                                setStatusFilter(v as string);
+                                setPage(1);
+                            }}
                         />
                     </div>
                 }
+            />
+
+            <ReceiveCommissionModal
+                isOpen={!!receivingCommission}
+                onClose={() => setReceivingCommission(null)}
+                commission={receivingCommission ? {
+                    id: receivingCommission.id,
+                    policyNumber: receivingCommission.policy?.policyNumber || 'Unknown',
+                    commissionAmount: receivingCommission.commissionAmount,
+                    clientName: receivingCommission.client ? (receivingCommission.client.companyName || `${receivingCommission.client.firstName} ${receivingCommission.client.lastName}`) : 'Unknown',
+                } : null}
             />
         </div>
     );

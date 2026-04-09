@@ -247,6 +247,55 @@ export class PoliciesService {
     });
   }
 
+  async getMetrics(tenantId: string, userId: string) {
+    const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+    const [
+      activePolicies,
+      totalPremiumAgg,
+      expiringSoon,
+      pendingDraft,
+      lapsedPolicies,
+      newThisMonth
+    ] = await Promise.all([
+      this.prisma.policy.count({ where: { AND: [scopeWhere, { status: 'ACTIVE' }] } }),
+      this.prisma.policy.aggregate({
+        where: scopeWhere,
+        _sum: { premiumAmount: true }
+      }),
+      this.prisma.policy.count({
+        where: {
+          AND: [
+            scopeWhere,
+            { status: 'ACTIVE' },
+            { expiryDate: { lte: in30Days, gte: now } }
+          ]
+        }
+      }),
+      this.prisma.policy.count({
+        where: { AND: [scopeWhere, { status: { in: ['PENDING', 'DRAFT'] } }] }
+      }),
+      this.prisma.policy.count({
+        where: { AND: [scopeWhere, { status: 'LAPSED' }] }
+      }),
+      this.prisma.policy.count({
+        where: { AND: [scopeWhere, { inceptionDate: { gte: firstDayOfMonth } }] }
+      })
+    ]);
+
+    return {
+      activePolicies,
+      totalPremium: totalPremiumAgg._sum.premiumAmount || 0,
+      expiringSoon,
+      pendingDraft,
+      lapsedPolicies,
+      newThisMonth
+    };
+  }
+
   // ─── FIND ALL (with search, totalPremium) ───────────
   async findAll(tenantId: string, userId: string, query: PolicyQueryDto) {
     const {

@@ -43,6 +43,16 @@ interface DataTableProps<T> {
     selectable?: boolean;
     selectedRows?: T[];
     onSelectionChange?: (rows: T[]) => void;
+
+    // Server-side pagination props
+    serverSide?: boolean;
+    totalCount?: number;
+    currentPage?: number;
+    onPageChange?: (page: number) => void;
+    onSearchChange?: (term: string) => void;
+    onSortChange?: (key: string, dir: 'asc' | 'desc') => void;
+    onPageSizeChange?: (size: number) => void;
+    loading?: boolean;
 }
 
 type SortDirection = 'asc' | 'desc' | null;
@@ -123,6 +133,14 @@ export function DataTable<T>({
     selectable = false,
     selectedRows = [],
     onSelectionChange,
+    serverSide = false,
+    totalCount,
+    currentPage,
+    onPageChange,
+    onSearchChange,
+    onSortChange,
+    onPageSizeChange: onPageSizeChangeProp,
+    loading = false,
 }: DataTableProps<T>) {
     const [search, setSearch] = useState('');
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -147,7 +165,11 @@ export function DataTable<T>({
         }
     }, [search, searchFocused]);
     
+    // Debounce timer for remote search
+    const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
     const filteredData = useMemo(() => {
+        if (serverSide) return data;
         if (!search.trim()) return data;
         const term = search.toLowerCase();
         const keys = searchKeys || columns.map((c) => c.key);
@@ -158,9 +180,10 @@ export function DataTable<T>({
                 return String(value).toLowerCase().includes(term);
             })
         );
-    }, [data, search, searchKeys, columns]);
+    }, [data, search, searchKeys, columns, serverSide]);
 
     const sortedData = useMemo(() => {
+        if (serverSide) return filteredData;
         if (!sortKey || !sortDir) return filteredData;
         return [...filteredData].sort((a, b) => {
             const aVal = (a as Record<string, unknown>)[sortKey];
@@ -174,28 +197,38 @@ export function DataTable<T>({
             const comparison = String(aVal).localeCompare(String(bVal));
             return sortDir === 'asc' ? comparison : -comparison;
         });
-    }, [filteredData, sortKey, sortDir]);
+    }, [filteredData, sortKey, sortDir, serverSide]);
 
-    const totalPages = Math.max(1, Math.ceil(sortedData.length / currentPageSize));
-    const safePage = Math.min(page, totalPages);
-    const paginatedData = sortedData.slice(
-        (safePage - 1) * currentPageSize,
-        safePage * currentPageSize
-    );
+    // In server-side mode, use external totalCount and currentPage for pagination
+    const effectiveTotalItems = serverSide ? (totalCount ?? 0) : sortedData.length;
+    const totalPages = Math.max(1, Math.ceil(effectiveTotalItems / currentPageSize));
+    const effectivePage = serverSide ? (currentPage ?? 1) : Math.min(page, totalPages);
+    const paginatedData = serverSide
+        ? data
+        : sortedData.slice(
+            (effectivePage - 1) * currentPageSize,
+            effectivePage * currentPageSize
+        );
 
     const handleSort = useCallback((key: string) => {
+        let newDir: SortDirection = 'asc';
         if (sortKey === key) {
-            if (sortDir === 'asc') setSortDir('desc');
+            if (sortDir === 'asc') newDir = 'desc';
             else if (sortDir === 'desc') {
                 setSortKey(null);
                 setSortDir(null);
+                if (serverSide && onSortChange) onSortChange(key, 'desc');
+                if (serverSide && onPageChange) onPageChange(1);
+                else setPage(1);
+                return;
             }
-        } else {
-            setSortKey(key);
-            setSortDir('asc');
         }
-        setPage(1);
-    }, [sortKey, sortDir]);
+        setSortKey(key);
+        setSortDir(newDir);
+        if (serverSide && onSortChange) onSortChange(key, newDir as 'asc' | 'desc');
+        if (serverSide && onPageChange) onPageChange(1);
+        else setPage(1);
+    }, [sortKey, sortDir, serverSide, onSortChange, onPageChange]);
 
     const isAllSelected = filteredData.length > 0 && filteredData.every(row => selectedRows?.includes(row));
     const isSomeSelected = filteredData.length > 0 && filteredData.some(row => selectedRows?.includes(row));
@@ -245,8 +278,13 @@ export function DataTable<T>({
 
     const handlePageSizeChange = useCallback((newSize: number) => {
         setCurrentPageSize(newSize);
-        setPage(1);
-    }, []);
+        if (serverSide) {
+            onPageSizeChangeProp?.(newSize);
+            onPageChange?.(1);
+        } else {
+            setPage(1);
+        }
+    }, [serverSide, onPageSizeChangeProp, onPageChange]);
 
     return (
         <div className={cn(
@@ -267,8 +305,17 @@ export function DataTable<T>({
                             type="text"
                             value={search}
                             onChange={(e) => {
-                                setSearch(e.target.value);
-                                setPage(1);
+                                const val = e.target.value;
+                                setSearch(val);
+                                if (serverSide) {
+                                    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+                                    searchTimerRef.current = setTimeout(() => {
+                                        onSearchChange?.(val);
+                                        onPageChange?.(1);
+                                    }, 350);
+                                } else {
+                                    setPage(1);
+                                }
                             }}
                             onFocus={() => setSearchFocused(true)}
                             onBlur={() => setSearchFocused(false)}
@@ -281,7 +328,13 @@ export function DataTable<T>({
                             <button
                                 onClick={() => {
                                     setSearch('');
-                                    setPage(1);
+                                    if (serverSide) {
+                                        if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+                                        onSearchChange?.('');
+                                        onPageChange?.(1);
+                                    } else {
+                                        setPage(1);
+                                    }
                                 }}
                                 className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full text-surface-400 hover:text-surface-700 dark:hover:text-slate-200 hover:bg-surface-100 dark:hover:bg-slate-700 cursor-pointer transition-all"
                             >
@@ -323,7 +376,7 @@ export function DataTable<T>({
             {/* Record count bar */}
             <div className="px-5 py-2 bg-surface-50/50 dark:bg-slate-800/50 border-b border-surface-100 dark:border-slate-700/60 flex items-center justify-between">
                 <p className="text-[11px] font-semibold text-surface-400 uppercase tracking-widest">
-                    {sortedData.length} record{sortedData.length !== 1 ? 's' : ''}
+                    {effectiveTotalItems} record{effectiveTotalItems !== 1 ? 's' : ''}
                     {search && <span className="text-primary-500 ml-1">matching &ldquo;{search}&rdquo;</span>}
                 </p>
                 {sortKey && (
@@ -389,10 +442,19 @@ export function DataTable<T>({
                         </tr>
                     </thead>
                     <tbody>
-                        {paginatedData.length === 0 ? (
+                        {loading ? (
+                            <tr>
+                                <td colSpan={columns.length + (selectable ? 1 : 0)} className="px-5 py-20 text-center">
+                                    <div className="flex flex-col items-center gap-3">
+                                        <div className="w-8 h-8 border-3 border-primary-200 border-t-primary-500 rounded-full animate-spin" />
+                                        <p className="text-sm text-surface-400">Loading records…</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        ) : paginatedData.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={columns.length}
+                                    colSpan={columns.length + (selectable ? 1 : 0)}
                                     className="px-5 py-20 text-center"
                                 >
                                     {typeof emptyMessage === 'string' ? (
@@ -413,7 +475,7 @@ export function DataTable<T>({
                         ) : (
                             paginatedData.map((row, i) => (
                                 <MemoTableRow
-                                    key={i}
+                                    key={(row as Record<string, unknown>)['id'] as string ?? i}
                                     row={row}
                                     columns={columns}
                                     index={i}
@@ -434,12 +496,12 @@ export function DataTable<T>({
                     <p className="text-xs text-surface-500">
                         Showing{' '}
                         <span className="font-bold text-surface-800 dark:text-slate-200">
-                            {sortedData.length === 0 ? 0 : (safePage - 1) * currentPageSize + 1}
+                            {effectiveTotalItems === 0 ? 0 : (effectivePage - 1) * currentPageSize + 1}
                             –
-                            {Math.min(safePage * currentPageSize, sortedData.length)}
+                            {Math.min(effectivePage * currentPageSize, effectiveTotalItems)}
                         </span>
                         {' '}of{' '}
-                        <span className="font-bold text-surface-800 dark:text-slate-200">{sortedData.length}</span>
+                        <span className="font-bold text-surface-800 dark:text-slate-200">{effectiveTotalItems}</span>
                     </p>
                     <div className="flex items-center gap-2 border-l border-surface-200 dark:border-slate-700 pl-4">
                         <label htmlFor="page-size" className="text-xs text-surface-400 dark:text-slate-500 font-medium">Rows per page</label>
@@ -455,8 +517,11 @@ export function DataTable<T>({
                 </div>
                 <div className="flex items-center gap-1.5">
                     <button
-                        disabled={safePage <= 1}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        disabled={effectivePage <= 1}
+                        onClick={() => {
+                            if (serverSide) onPageChange?.(effectivePage - 1);
+                            else setPage((p) => Math.max(1, p - 1));
+                        }}
                         className="w-9 h-9 rounded-lg flex items-center justify-center text-surface-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
                     >
                         <ChevronLeft size={16} />
@@ -465,20 +530,23 @@ export function DataTable<T>({
                         let pageNum: number;
                         if (totalPages <= 5) {
                             pageNum = idx + 1;
-                        } else if (safePage <= 3) {
+                        } else if (effectivePage <= 3) {
                             pageNum = idx + 1;
-                        } else if (safePage >= totalPages - 2) {
+                        } else if (effectivePage >= totalPages - 2) {
                             pageNum = totalPages - 4 + idx;
                         } else {
-                            pageNum = safePage - 2 + idx;
+                            pageNum = effectivePage - 2 + idx;
                         }
                         return (
                             <button
                                 key={pageNum}
-                                onClick={() => setPage(pageNum)}
+                                onClick={() => {
+                                    if (serverSide) onPageChange?.(pageNum);
+                                    else setPage(pageNum);
+                                }}
                                 className={cn(
                                     'w-9 h-9 rounded-lg text-xs font-bold cursor-pointer transition-all duration-200',
-                                    pageNum === safePage
+                                    pageNum === effectivePage
                                         ? 'bg-primary-500 text-white shadow-md shadow-primary-500/30 scale-105'
                                         : 'text-surface-600 dark:text-slate-400 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 shadow-sm'
                                 )}
@@ -488,8 +556,11 @@ export function DataTable<T>({
                         );
                     })}
                     <button
-                        disabled={safePage >= totalPages}
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        disabled={effectivePage >= totalPages}
+                        onClick={() => {
+                            if (serverSide) onPageChange?.(effectivePage + 1);
+                            else setPage((p) => Math.min(totalPages, p + 1));
+                        }}
                         className="w-9 h-9 rounded-lg flex items-center justify-center text-surface-500 dark:text-slate-400 bg-white dark:bg-slate-800 border border-surface-200 dark:border-slate-600 hover:bg-surface-50 dark:hover:bg-slate-700 hover:border-surface-300 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all shadow-sm"
                     >
                         <ChevronRight size={16} />

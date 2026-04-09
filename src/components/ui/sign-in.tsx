@@ -172,6 +172,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                         src="/logo-icon.png"
                                         alt="IBMS Logo"
                                         fill
+                                        sizes="80px"
                                         className="object-contain p-2"
                                         priority
                                     />

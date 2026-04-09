@@ -106,11 +106,6 @@ const navigation: NavSection[] = [
                 label: 'Renewals',
                 href: '/dashboard/renewals',
                 icon: <FileBarChart size={18} />,
-                children: [
-                    { label: 'Upcoming (30 Days)', href: '/dashboard/renewals?tab=0-30' },
-                    { label: 'Overdue', href: '/dashboard/renewals?tab=overdue' },
-                    { label: 'Renewed', href: '/dashboard/renewals?tab=renewed' },
-                ],
             },
         ],
     },
