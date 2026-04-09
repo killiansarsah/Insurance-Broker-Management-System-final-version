@@ -2,13 +2,17 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Resend } from 'resend';
 import { getBrokeriumTemplate } from './brokerium-email.template';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
   private readonly resend: Resend | null;
 
-  constructor(private config: ConfigService) {
+  constructor(
+    private config: ConfigService,
+    private prisma: PrismaService,
+  ) {
     const apiKey = this.config.get<string>('RESEND_API_KEY');
     if (apiKey) {
       this.resend = new Resend(apiKey);
@@ -26,7 +30,7 @@ export class EmailService {
   private get from(): string {
     return this.config.get<string>(
       'EMAIL_FROM',
-      'IBMS <onboarding@resend.dev>',
+      'Brokerium <onboarding@resend.dev>',
     );
   }
 
@@ -40,7 +44,7 @@ export class EmailService {
     frontendUrl: string,
   ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
-    const subject = 'You have been invited to IBMS';
+    const subject = 'You have been invited to Brokerium';
     const content = `
       <div class="greeting" style="font-size: 15px; text-align: center; margin-bottom: 12px; color: #4B5563;">
         <span style="font-weight: 600; color: #1F2937;">Admin User</span> has invited you to join the
@@ -81,7 +85,7 @@ export class EmailService {
       content,
       'blue',
       `You're invited!`,
-      'Join your team on Brokerium IBMS',
+      'Join your team on Brokerium',
     );
 
     await this.send(email, subject, html);
@@ -272,7 +276,7 @@ export class EmailService {
       <hr class="divider" style="border: none; border-top: 1px solid #E5E7EB; margin: 30px 0;">
 
       <div class="body-text" style="font-size: 13.5px; color: #6B7280; text-align: center;">
-        Log in to the IBMS dashboard to view full task details, add notes, and update progress.
+        Log in to the Brokerium dashboard to view full task details, add notes, and update progress.
       </div>
     `;
     const html = getBrokeriumTemplate(
@@ -292,7 +296,7 @@ export class EmailService {
     brokerEmail: string,
     brokerPhone: string,
   ): Promise<void> {
-    const subject = 'Welcome to Brokerium IBMS';
+    const subject = 'Welcome to Brokerium';
     const content = `
       <div class="greeting">Dear <strong>${clientName}</strong>,</div>
       <div class="body-text">
@@ -345,7 +349,7 @@ export class EmailService {
       content,
       'teal',
       'Your insurance account is active',
-      'Welcome to Brokerium IBMS',
+      'Welcome to Brokerium',
     );
 
     await this.send(email, subject, html);
@@ -357,7 +361,7 @@ export class EmailService {
     frontendUrl: string,
   ): Promise<void> {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
-    const subject = 'IBMS Password Reset';
+    const subject = 'Brokerium Password Reset';
     const content = `
       <div class="body-text" style="font-size: 14.5px; line-height: 1.8; color: #374151; margin-bottom: 22px; text-align: center;">
         A password reset was requested for your Brokerium account.<br><br>
@@ -424,14 +428,34 @@ export class EmailService {
           this.logger.error(
             `Resend API error sending to ${to}: ${JSON.stringify(error)}`,
           );
+          await this.prisma.errorLog.create({
+            data: {
+              errorType: 'EMAIL_DELIVERY_FAILURE',
+              message: `Resend API failed to send to ${to}`,
+              stackTrace: JSON.stringify(error),
+              severity: 'FATAL',
+              requestMethod: 'BACKGROUND_JOB',
+              notes: 'Integration Failure: Resend',
+            },
+          }).catch(dbErr => this.logger.error('Failed to write Email Error to DB', dbErr));
           return;
         }
 
         this.logger.log(
           `Email sent successfully to ${to} [Resend ID: ${data?.id}]`,
         );
-      } catch (err) {
+      } catch (err: any) {
         this.logger.error(`Failed to send email to ${to} via Resend`, err);
+        await this.prisma.errorLog.create({
+          data: {
+            errorType: 'EMAIL_SERVICE_EXCEPTION',
+            message: `Unexpected exception sending to ${to}: ${err.message || String(err)}`,
+            stackTrace: err.stack || String(err),
+            severity: 'FATAL',
+            requestMethod: 'BACKGROUND_JOB',
+            notes: 'Integration Failure: Resend',
+          },
+        }).catch(dbErr => this.logger.error('Failed to write Email Error to DB', dbErr));
       }
       return;
     }

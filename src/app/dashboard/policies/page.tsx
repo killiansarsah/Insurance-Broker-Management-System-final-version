@@ -65,7 +65,7 @@ async function exportToExcel(policies: any[]) {
         // 1. Title Rows
         sheet.mergeCells('A1:N1');
         const titleCell = sheet.getCell('A1');
-        titleCell.value = `IBMS — Policies Export — ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
+        titleCell.value = `Brokerium — Policies Export — ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`;
         titleCell.font = { bold: true, size: 14 };
 
         sheet.mergeCells('A2:N2');
@@ -82,7 +82,7 @@ async function exportToExcel(policies: any[]) {
         headerRow.fill = {
             type: 'pattern',
             pattern: 'solid',
-            fgColor: { argb: 'FF085041' }, // Deep IBMS green
+            fgColor: { argb: 'FF085041' }, // Deep Brokerium green
         };
 
         // Freeze top 4 rows
@@ -150,8 +150,13 @@ export default function PoliciesPage() {
         page: ssPage,
         limit: ssPageSize,
         ...(ssSearch && { search: ssSearch }),
+        ...(typeParam && { 
+            insuranceType: typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor' 
+        }),
     });
-    const { data: metricsData } = usePolicyMetrics();
+    const { data: metricsData } = usePolicyMetrics(
+        typeParam ? { insuranceType: typeParam } : undefined
+    );
 
     const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
     

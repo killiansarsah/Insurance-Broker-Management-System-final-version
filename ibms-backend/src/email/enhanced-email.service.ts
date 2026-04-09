@@ -36,7 +36,7 @@ export class EnhancedEmailService {
   private get from(): string {
     return this.config.get<string>(
       'EMAIL_FROM',
-      'IBMS <onboarding@resend.dev>',
+      'Brokerium <onboarding@resend.dev>',
     );
   }
 
@@ -100,12 +100,12 @@ export class EnhancedEmailService {
     userId?: string,
   ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
-    const subject = 'You have been invited to IBMS';
+    const subject = 'You have been invited to Brokerium';
 
     const content = `
       <div class="greeting">Hello,</div>
       <div class="body-text">
-        You have been invited to join the Insurance Broker Management System (IBMS).
+        You have been invited to join the Insurance Broker Management System (Brokerium).
       </div>
       
       <div class="info-card">
@@ -147,7 +147,7 @@ export class EnhancedEmailService {
     userId?: string,
   ): Promise<void> {
     const resetUrl = `${frontendUrl}/reset-password?token=${rawToken}`;
-    const subject = 'IBMS Password Reset';
+    const subject = 'Brokerium Password Reset';
 
     const content = `
       <div class="body-text" style="font-size: 14.5px; line-height: 1.8; color: #374151; margin-bottom: 22px; text-align: center;">

@@ -37,7 +37,7 @@ export class TwoFactorService {
     });
 
     const otpauthUrl = generateURI({
-      issuer: 'IBMS',
+      issuer: 'Brokerium',
       label: user.email,
       secret,
       algorithm: 'sha1' as const,

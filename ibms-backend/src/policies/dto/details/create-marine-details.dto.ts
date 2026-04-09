@@ -3,27 +3,16 @@ import { Type } from 'class-transformer';
 
 export class CreateMarineDetailsDto {
   @IsString()
-  vesselName!: string;
-
-  @IsString()
   @IsOptional()
-  vesselType?: string;
+  vesselName?: string;
 
   @IsString()
   @IsOptional()
   imoNumber?: string;
 
-  @Type(() => Number)
-  @IsOptional()
-  grossTonnage?: number;
-
   @IsString()
   @IsOptional()
-  voyageFrom?: string;
-
-  @IsString()
-  @IsOptional()
-  voyageTo?: string;
+  voyageRoute?: string;
 
   @IsString()
   @IsOptional()
@@ -32,4 +21,9 @@ export class CreateMarineDetailsDto {
   @Type(() => Number)
   @IsOptional()
   cargoValue?: number;
+
+  @IsString()
+  @IsOptional()
+  conveyanceType?: string;
+
 }

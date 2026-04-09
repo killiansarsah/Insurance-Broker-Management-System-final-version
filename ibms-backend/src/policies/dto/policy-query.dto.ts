@@ -7,9 +7,9 @@ export class PolicyQueryDto extends PaginationDto {
   @IsOptional()
   status?: PolicyStatus;
 
-  @IsEnum(InsuranceType)
+  @IsString()
   @IsOptional()
-  insuranceType?: InsuranceType;
+  insuranceType?: string;
 
   @IsString()
   @IsOptional()

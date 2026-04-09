@@ -18,7 +18,7 @@ import { PlatformAuditService } from '../services/platform-audit.service.js';
 
 @Controller('platform-admin/system-health')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class SystemHealthController {
   constructor(
     private readonly prisma: PrismaService,

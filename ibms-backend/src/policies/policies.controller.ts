@@ -37,8 +37,15 @@ export class PoliciesController {
 
   @Get('metrics')
   @Roles('ADMINISTRATOR', 'AGENT')
-  getMetrics(@Request() req: RequestWithUser) {
-    return this.policiesService.getMetrics(req.user.tenantId, req.user.sub);
+  getMetrics(
+    @Request() req: RequestWithUser,
+    @Query('insuranceType') insuranceType?: string,
+  ) {
+    return this.policiesService.getMetrics(
+      req.user.tenantId,
+      req.user.sub,
+      insuranceType,
+    );
   }
 
   @Get()

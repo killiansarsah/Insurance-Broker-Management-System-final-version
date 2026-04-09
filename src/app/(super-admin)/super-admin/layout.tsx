@@ -7,8 +7,8 @@ import { ImpersonationProvider } from '@/contexts/ImpersonationContext';
 import '@/styles/super-admin-theme.css';
 
 export const metadata: Metadata = {
-  title: 'Platform Command Centre | IBMS',
-  description: 'Super administrator dashboard for monitoring IBMS instances, managing tenants, logs, and billing.',
+  title: 'Platform Command Centre | Brokerium',
+  description: 'Super administrator dashboard for monitoring Brokerium instances, managing tenants, logs, and billing.',
 };
 
 /**

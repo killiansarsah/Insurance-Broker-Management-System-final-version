@@ -81,7 +81,7 @@ export default function ProvisionTenantPage() {
     <div className="max-w-4xl mx-auto space-y-6 sa-stagger">
       <PageHeader
         title="Provision New Tenant"
-        subtitle="Set up a new brokerage or agency environment on the IBMS platform."
+        subtitle="Set up a new brokerage or agency environment on the Brokerium platform."
         icon={Building2}
         breadcrumbs={[
           { label: 'Overview', href: '/super-admin' },

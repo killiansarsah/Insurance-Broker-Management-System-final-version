@@ -7,7 +7,7 @@ import type { AuditCategory, AuditSeverity, AuditStatus } from '@prisma/client';
 
 @Controller('platform-admin/audit-logs')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class AuditLogsController {
   constructor(private readonly auditService: PlatformAuditService) {}
 

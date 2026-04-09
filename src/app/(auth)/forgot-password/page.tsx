@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
                 transition={{ delay: 0.5 }}
                 className="mt-8 text-sm font-medium text-surface-500"
             >
-                &copy; {new Date().getFullYear()} IBMS Ghana. Secure Recovery System.
+                &copy; {new Date().getFullYear()} Brokerium. Secure Recovery System.
             </motion.p>
         </div>
     );

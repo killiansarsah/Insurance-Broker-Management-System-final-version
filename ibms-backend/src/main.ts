@@ -91,7 +91,7 @@ async function bootstrap(): Promise<void> {
     const throttleTtl = configService.get<number>('throttle.ttl', 60000) / 1000;
     const throttleLimit = configService.get<number>('throttle.limit', 100);
     const swaggerConfig = new DocumentBuilder()
-      .setTitle('IBMS API')
+      .setTitle('Brokerium API')
       .setDescription(
         `Insurance Broker Management System API\n\n` +
           `**Rate Limiting:** ${throttleLimit} requests per ${throttleTtl}s window per IP.\n` +
@@ -139,7 +139,7 @@ async function bootstrap(): Promise<void> {
   }
 
   await app.listen(port);
-  logger.log(`IBMS Backend running on port ${port}`);
+  logger.log(`Brokerium Backend running on port ${port}`);
   logger.log(
     `Environment: ${configService.get<string>('nodeEnv', 'development')}`,
   );

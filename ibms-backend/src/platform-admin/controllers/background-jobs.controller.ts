@@ -20,7 +20,7 @@ import type { JobStatus } from '@prisma/client';
 
 @Controller('platform-admin/jobs')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class BackgroundJobsController {
   constructor(
     private readonly prisma: PrismaService,

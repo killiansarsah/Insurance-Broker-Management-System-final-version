@@ -40,7 +40,7 @@ const envSchema = z.object({
   // Email (optional — logs only if not configured)
   TESTMAIL_API_KEY: z.string().optional(),
   TESTMAIL_NAMESPACE: z.string().optional(),
-  EMAIL_FROM: z.string().default('IBMS <noreply@ibms.test>'),
+  EMAIL_FROM: z.string().default('Brokerium <noreply@brokerium.test>'),
 
   // Google OAuth2 (optional — required for Google integrations)
   GOOGLE_CLIENT_ID: z.string().optional(),

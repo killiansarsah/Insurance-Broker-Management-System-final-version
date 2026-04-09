@@ -1,4 +1,4 @@
-import { PERMISSIONS as P } from './permissions.js';
+import { PERMISSIONS as P } from './permissions';
 
 export const DEFAULT_ROLE_PERMISSIONS: Record<string, string[]> = {
   PLATFORM_SUPER_ADMIN: Object.values(P),

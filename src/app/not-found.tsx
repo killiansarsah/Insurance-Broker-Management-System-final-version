@@ -34,7 +34,7 @@ export default function NotFound() {
                         </Link>
                     </div>
 
-                    <p className="text-xs text-surface-400">IBMS · Insurance Broking Management System</p>
+                    <p className="text-xs text-surface-400">Brokerium · Insurance Broking Management System</p>
                 </div>
             </div>
     );

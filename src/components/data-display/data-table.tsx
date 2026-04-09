@@ -271,7 +271,7 @@ export function DataTable<T>({
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `IBMS_Export_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.download = `Brokerium_Export_${new Date().toISOString().slice(0, 10)}.csv`;
         link.click();
         URL.revokeObjectURL(url);
     }, [columns, sortedData, onExport]);

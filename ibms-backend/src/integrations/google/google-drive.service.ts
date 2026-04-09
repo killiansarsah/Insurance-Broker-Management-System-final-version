@@ -23,12 +23,12 @@ export class GoogleDriveService {
   }
 
   /**
-   * Find or create the root IBMS folder in Google Drive.
+   * Find or create the root Brokerium folder in Google Drive.
    */
   private async getOrCreateRootFolder(drive: drive_v3.Drive): Promise<string> {
-    // Search for existing IBMS folder
+    // Search for existing Brokerium folder
     const response = await drive.files.list({
-      q: "name = 'IBMS Documents' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+      q: "name = 'Brokerium Documents' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
       fields: 'files(id, name)',
       spaces: 'drive',
     });
@@ -40,7 +40,7 @@ export class GoogleDriveService {
     // Create root folder
     const folder = await drive.files.create({
       requestBody: {
-        name: 'IBMS Documents',
+        name: 'Brokerium Documents',
         mimeType: 'application/vnd.google-apps.folder',
       },
       fields: 'id',
@@ -50,7 +50,7 @@ export class GoogleDriveService {
   }
 
   /**
-   * Find or create a subfolder under the root IBMS folder.
+   * Find or create a subfolder under the root Brokerium folder.
    */
   private async getOrCreateSubfolder(
     drive: drive_v3.Drive,
@@ -81,7 +81,7 @@ export class GoogleDriveService {
 
   /**
    * Upload a single document to Google Drive under the appropriate category folder.
-   * Folder structure: IBMS Documents / {Category} / {filename}
+   * Folder structure: Brokerium Documents / {Category} / {filename}
    */
   async uploadDocument(
     tenantId: string,
@@ -137,18 +137,19 @@ export class GoogleDriveService {
   async mirrorDocuments(
     tenantId: string,
   ): Promise<{ mirrored: number; skipped: number; errors: string[] }> {
-    const drive = await this.getDriveApi(tenantId);
-    const rootId = await this.getOrCreateRootFolder(drive);
-
-    const documents = await this.prisma.document.findMany({
-      where: { tenantId },
-      orderBy: { createdAt: 'desc' },
-      take: 500,
-    });
-
     let mirrored = 0;
     let skipped = 0;
     const errors: string[] = [];
+
+    try {
+      const drive = await this.getDriveApi(tenantId);
+      const rootId = await this.getOrCreateRootFolder(drive);
+
+      const documents = await this.prisma.document.findMany({
+        where: { tenantId },
+        orderBy: { createdAt: 'desc' },
+        take: 500,
+      });
 
     for (const doc of documents) {
       if (!doc.url && !doc.storagePath) {
@@ -181,7 +182,7 @@ export class GoogleDriveService {
             name: doc.name,
             parents: [categoryFolder],
             mimeType: doc.mimeType,
-            description: `IBMS Document - Category: ${doc.category}, Uploaded: ${doc.createdAt.toISOString()}`,
+            description: `Brokerium Document - Category: ${doc.category}, Uploaded: ${doc.createdAt.toISOString()}`,
           },
           fields: 'id',
         });
@@ -194,13 +195,32 @@ export class GoogleDriveService {
       }
     }
 
-    await this.logSyncEvent(tenantId, mirrored, errors.length);
+      await this.logSyncEvent(tenantId, mirrored, errors.length);
 
-    return { mirrored, skipped, errors };
+      return { mirrored, skipped, errors };
+    } catch (err: any) {
+      const msg = `FATAL: Failed to connect to Google Drive or initialize root. ${err.message || String(err)}`;
+      this.logger.error(msg, err.stack);
+      await this.logSyncEvent(tenantId, 0, 1, msg);
+      
+      await this.prisma.errorLog.create({
+        data: {
+          errorType: 'GOOGLE_DRIVE_INTEGRATION_FAILURE',
+          message: msg,
+          stackTrace: err.stack || String(err),
+          severity: 'ERROR',
+          requestMethod: 'BACKGROUND_JOB',
+          notes: `Tenant ID: ${tenantId}`,
+          tenantId: tenantId,
+        },
+      }).catch(dbErr => this.logger.error('Failed to write Drive Error to DB', dbErr));
+
+      return { mirrored: 0, skipped: 0, errors: [msg, ...errors] };
+    }
   }
 
   /**
-   * List files in the IBMS Documents folder on Google Drive.
+   * List files in the Brokerium Documents folder on Google Drive.
    */
   async listDriveFiles(
     tenantId: string,
@@ -244,6 +264,7 @@ export class GoogleDriveService {
     tenantId: string,
     count: number,
     errorCount: number,
+    overrideMessage?: string,
   ) {
     const integration = await this.prisma.integration.findUnique({
       where: {
@@ -259,7 +280,7 @@ export class GoogleDriveService {
     const syncEvent = {
       id: `evt-${Date.now()}`,
       type: 'sync',
-      message: `Drive mirror: ${count} documents${errorCount > 0 ? `, ${errorCount} errors` : ''}`,
+      message: overrideMessage || `Drive mirror: ${count} documents${errorCount > 0 ? `, ${errorCount} errors` : ''}`,
       timestamp: new Date().toISOString(),
     };
 

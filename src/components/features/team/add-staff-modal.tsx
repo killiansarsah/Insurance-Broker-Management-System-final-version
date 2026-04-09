@@ -67,7 +67,7 @@ export function AddStaffModal({ isOpen, onClose, onAdd }: AddStaffModalProps) {
             isOpen={isOpen}
             onClose={onClose}
             title="Register New Staff Member"
-            description="Onboard a new member to the IBMS fleet. Complete all fields below to grant system access."
+            description="Onboard a new member to the Brokerium fleet. Complete all fields below to grant system access."
             size="xl"
         >
             <form onSubmit={handleSubmit} className="space-y-8 py-2">

@@ -88,8 +88,8 @@ const navigation: NavSection[] = [
                 href: '/dashboard/policies',
                 icon: <FileText size={18} />,
                 children: [
-                    { label: 'Motor', href: '/dashboard/policies?type=motor' },
-                    { label: 'Other Policies', href: '/dashboard/policies?type=non-motor' },
+                    { label: 'Motor', href: '/dashboard/policies?type=MOTOR' },
+                    { label: 'Non-Motor', href: '/dashboard/policies?type=non-motor' },
                 ],
             },
             {

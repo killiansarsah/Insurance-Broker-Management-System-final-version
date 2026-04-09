@@ -856,7 +856,7 @@ export function SettingsIntegrations() {
                                     ) : (
                                         <div className="text-center">
                                             <p className="text-[14px] text-surface-600 dark:text-surface-400 leading-relaxed mb-6">
-                                                Allow <strong>IBMS Workspace</strong> to access your <strong>{connectingService.name}</strong> account for seamless data synchronization.
+                                                Allow <strong>Brokerium Workspace</strong> to access your <strong>{connectingService.name}</strong> account for seamless data synchronization.
                                             </p>
                                             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold border border-emerald-100 dark:border-emerald-800">
                                                 <Shield size={12} /> Secure OAuth 2.0 Login
@@ -869,7 +869,7 @@ export function SettingsIntegrations() {
                             {connectionStep === 'permissions' && (
                                 <div className="space-y-4 animate-in slide-in-from-right-4 fade-in duration-300">
                                     <p className="text-[13px] text-surface-600 dark:text-surface-400 text-center mb-5">
-                                        <strong>IBMS Workspace</strong> is requesting the following access:
+                                        <strong>Brokerium Workspace</strong> is requesting the following access:
                                     </p>
                                     <div className="space-y-2.5">
                                         {connectingService.scopes.map((scope, idx) => (
@@ -1207,7 +1207,7 @@ export function SettingsIntegrations() {
                                         <div className="mt-3 p-3 rounded-lg bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-900/30 flex items-start gap-2.5">
                                             <AlertTriangle size={14} className="text-amber-600 dark:text-amber-500 mt-0.5 shrink-0" />
                                             <p className="text-[12px] text-amber-800 dark:text-amber-400 font-medium leading-snug">
-                                                <strong>Smart Routing Active:</strong> IBMS will automatically detect the data types based on your column headers.
+                                                <strong>Smart Routing Active:</strong> Brokerium will automatically detect the data types based on your column headers.
                                             </p>
                                         </div>
                                     )}

@@ -37,7 +37,7 @@ interface ClaimStatusModalProps {
     onUpdate: (updatedClaim: Partial<Claim>) => void;
 }
 
-// ─── Standard IBMS Claim Workflow ─────────────────────────────────────────────
+// ─── Standard Brokerium Claim Workflow ─────────────────────────────────────────────
 // INTIMATED → REGISTERED     (Acknowledge — NIC 5 business day rule)
 // REGISTERED → UNDER_REVIEW  (Investigate — assign loss adjuster)
 // UNDER_REVIEW → ASSESSED    (Assess — record loss amount after survey)

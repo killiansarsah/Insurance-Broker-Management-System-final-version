@@ -1,4 +1,5 @@
 import { IsString, IsEnum, IsInt, IsOptional, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { MotorCoverType } from '@prisma/client';
 
 export class CreateVehicleDetailsDto {
@@ -42,4 +43,12 @@ export class CreateVehicleDetailsDto {
   @IsEnum(MotorCoverType)
   @IsOptional()
   motorCoverType?: MotorCoverType;
+
+  @IsString()
+  @IsOptional()
+  engineCapacity?: string;
+
+  @Type(() => Number)
+  @IsOptional()
+  estimatedValue?: number;
 }

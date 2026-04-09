@@ -59,7 +59,7 @@ export function generateReportPdf(title: string, sections: ReportSection[]) {
     </div>
     ${sectionHtml}
     <div class="footer">
-        IBMS — Insurance Broker Management System &bull; Confidential
+        Brokerium — Insurance Broker Management System &bull; Confidential
     </div>
 </body></html>`;
 

@@ -20,7 +20,7 @@ import type { ErrorSeverity } from '@prisma/client';
 
 @Controller('platform-admin/errors')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class ErrorTrackingController {
   constructor(
     private readonly prisma: PrismaService,

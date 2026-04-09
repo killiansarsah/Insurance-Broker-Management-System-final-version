@@ -13,6 +13,9 @@ import {
     AlertTriangle,
     CheckCircle2,
     Hash,
+    Car,
+    Home,
+    Anchor,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -42,6 +45,9 @@ interface EditFormState {
     commissionRate: number;
     premiumFrequency: PremiumFrequency;
     coverageDetails: string;
+    vehicleDetails?: any;
+    propertyDetails?: any;
+    marineDetails?: any;
 }
 
 export default function EditPolicyPage() {
@@ -68,6 +74,9 @@ export default function EditPolicyPage() {
                 commissionRate: Number(policy.commissionRate) || 0,
                 premiumFrequency: policy.premiumFrequency || 'ANNUAL',
                 coverageDetails: policy.coverageDetails || '',
+                vehicleDetails: policy.vehicleDetails ? { ...policy.vehicleDetails } : undefined,
+                propertyDetails: policy.propertyDetails ? { ...policy.propertyDetails } : undefined,
+                marineDetails: policy.marineDetails ? { ...policy.marineDetails } : undefined,
             });
         }
     }, [policy, form]);
@@ -83,6 +92,19 @@ export default function EditPolicyPage() {
                 next.expiryDate = d.toISOString().split('T')[0];
             }
             return next;
+        });
+    }
+
+    function updateNested(section: 'vehicleDetails' | 'propertyDetails' | 'marineDetails', field: string, value: any) {
+        setForm(prev => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                [section]: {
+                    ...(prev[section] || {}),
+                    [field]: value
+                }
+            };
         });
     }
 
@@ -109,6 +131,17 @@ export default function EditPolicyPage() {
         }
 
         setIsSaving(true);
+        
+        // Strip ids before sending update
+        const cleanVehicle = form.vehicleDetails ? { ...form.vehicleDetails } : undefined;
+        if (cleanVehicle) { delete cleanVehicle.id; delete cleanVehicle.policyId; }
+        
+        const cleanProperty = form.propertyDetails ? { ...form.propertyDetails } : undefined;
+        if (cleanProperty) { delete cleanProperty.id; delete cleanProperty.policyId; }
+        
+        const cleanMarine = form.marineDetails ? { ...form.marineDetails } : undefined;
+        if (cleanMarine) { delete cleanMarine.id; delete cleanMarine.policyId; }
+
         try {
             await updateMutation.mutateAsync({
                 id: policyId,
@@ -121,6 +154,9 @@ export default function EditPolicyPage() {
                     premiumFrequency: form.premiumFrequency,
                     coverageDetails: form.coverageDetails || undefined,
                     commission: form.commissionRate,
+                    vehicleDetails: cleanVehicle,
+                    propertyDetails: cleanProperty,
+                    marineDetails: cleanMarine,
                 },
             });
             toast.success('Policy updated successfully', {
@@ -163,7 +199,7 @@ export default function EditPolicyPage() {
         form.coverageDetails !== (policy.coverageDetails || '');
 
     return (
-        <div className="w-full space-y-6 pb-20 animate-fade-in max-w-4xl mx-auto">
+        <div className="w-full pb-20 animate-fade-in max-w-6xl mx-auto flex flex-col gap-6">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -204,6 +240,7 @@ export default function EditPolicyPage() {
                 </div>
             )}
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
             {/* ─── Policy Number ────────────────────────────────── */}
             <Card className="p-0 overflow-hidden">
                 <div className="bg-surface-50/50 border-b border-surface-100 px-6 py-4">
@@ -324,7 +361,7 @@ export default function EditPolicyPage() {
             </Card>
 
             {/* ─── Coverage Notes ───────────────────────────────── */}
-            <Card className="p-0 overflow-hidden">
+            <Card className="p-0 overflow-hidden lg:col-span-2">
                 <div className="bg-surface-50/50 border-b border-surface-100 px-6 py-4">
                     <h3 className="font-semibold text-surface-900 flex items-center gap-2">
                         <FileText size={18} className="text-primary-500" /> Coverage Notes
@@ -340,6 +377,202 @@ export default function EditPolicyPage() {
                     />
                 </div>
             </Card>
+
+            {/* ─── Vehicle Details (Motor Only) ─────────────────── */}
+            {policy.insuranceType === 'MOTOR' && (
+                <Card className="p-0 overflow-hidden lg:col-span-2">
+                    <div className="bg-surface-50/50 border-b border-surface-100 px-6 py-4">
+                        <h3 className="font-semibold text-surface-900 flex items-center gap-2">
+                            <Car size={18} className="text-primary-500" /> Vehicle Details
+                        </h3>
+                    </div>
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Registration Number</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. GW-1234-21"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all font-mono"
+                                    value={form.vehicleDetails?.registrationNumber || ''}
+                                    onChange={(e) => updateNested('vehicleDetails', 'registrationNumber', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Motor Cover Type</label>
+                                <CustomSelect
+                                    options={[
+                                        { label: 'Comprehensive', value: 'COMPREHENSIVE' },
+                                        { label: 'Third Party', value: 'THIRD_PARTY' },
+                                        { label: 'Third Party Fire & Theft', value: 'THIRD_PARTY_FIRE_THEFT' },
+                                    ]}
+                                    value={form.vehicleDetails?.motorCoverType || 'COMPREHENSIVE'}
+                                    onChange={(v) => updateNested('vehicleDetails', 'motorCoverType', v)}
+                                    className="w-full"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Make</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Toyota"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.vehicleDetails?.make || ''}
+                                    onChange={(e) => updateNested('vehicleDetails', 'make', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Model</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Corolla"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.vehicleDetails?.model || ''}
+                                    onChange={(e) => updateNested('vehicleDetails', 'model', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Year of Manufacture</label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 2018"
+                                    min="1900"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.vehicleDetails?.year || ''}
+                                    onChange={(e) => updateNested('vehicleDetails', 'year', parseInt(e.target.value) || 0)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Chassis Number</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all font-mono"
+                                    value={form.vehicleDetails?.chassisNumber || ''}
+                                    onChange={(e) => updateNested('vehicleDetails', 'chassisNumber', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* ─── Property Details (Fire Only) ─────────────────── */}
+            {policy.insuranceType === 'FIRE' && (
+                <Card className="p-0 overflow-hidden lg:col-span-2">
+                    <div className="bg-surface-50/50 border-b border-surface-100 px-6 py-4">
+                        <h3 className="font-semibold text-surface-900 flex items-center gap-2">
+                            <Home size={18} className="text-primary-500" /> Property Details
+                        </h3>
+                    </div>
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Property Address</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.propertyDetails?.propertyAddress || ''}
+                                    onChange={(e) => updateNested('propertyDetails', 'propertyAddress', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Property Type</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Commercial Building"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.propertyDetails?.propertyType || ''}
+                                    onChange={(e) => updateNested('propertyDetails', 'propertyType', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Construction Type</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Brick/Concrete"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.propertyDetails?.constructionType || ''}
+                                    onChange={(e) => updateNested('propertyDetails', 'constructionType', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Year Built</label>
+                                <input
+                                    type="number"
+                                    min="1800"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.propertyDetails?.yearBuilt || ''}
+                                    onChange={(e) => updateNested('propertyDetails', 'yearBuilt', parseInt(e.target.value) || 0)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Occupancy Type</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Residential, Retail"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.propertyDetails?.occupancyType || ''}
+                                    onChange={(e) => updateNested('propertyDetails', 'occupancyType', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            {/* ─── Marine Details (Marine Only) ─────────────────── */}
+            {policy.insuranceType === 'MARINE' && (
+                <Card className="p-0 overflow-hidden lg:col-span-2">
+                    <div className="bg-surface-50/50 border-b border-surface-100 px-6 py-4">
+                        <h3 className="font-semibold text-surface-900 flex items-center gap-2">
+                            <Anchor size={18} className="text-primary-500" /> Marine Details
+                        </h3>
+                    </div>
+                    <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Vessel Name</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.marineDetails?.vesselName || ''}
+                                    onChange={(e) => updateNested('marineDetails', 'vesselName', e.target.value)}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">IMO Number</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all font-mono"
+                                    value={form.marineDetails?.imoNumber || ''}
+                                    onChange={(e) => updateNested('marineDetails', 'imoNumber', e.target.value)}
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Voyage Route</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. Tema, Ghana to Lagos, Nigeria"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.marineDetails?.voyageRoute || ''}
+                                    onChange={(e) => updateNested('marineDetails', 'voyageRoute', e.target.value)}
+                                />
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-surface-600 mb-1.5">Cargo Description</label>
+                                <input
+                                    type="text"
+                                    className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500 focus:ring-2 transition-all"
+                                    value={form.marineDetails?.cargoDescription || ''}
+                                    onChange={(e) => updateNested('marineDetails', 'cargoDescription', e.target.value)}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
+            </div>
 
             {/* ─── Sticky Save Bar ──────────────────────────────── */}
             {hasChanges && (

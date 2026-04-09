@@ -32,7 +32,7 @@ const REFRESH_COOKIE_OPTIONS = {
 
 @Controller('platform-admin/impersonate')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class ImpersonationController {
   constructor(
     private readonly prisma: PrismaService,

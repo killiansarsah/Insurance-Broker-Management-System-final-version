@@ -147,7 +147,7 @@ export function generateReceipt(txn: Transaction) {
 <body>
     <div class="receipt">
         <div class="header">
-            <h1>IBMS Ghana</h1>
+            <h1>Brokerium</h1>
             <div class="subtitle">Insurance Brokerage Management System</div>
             <div class="receipt-badge">Payment Confirmed</div>
         </div>
@@ -196,7 +196,7 @@ export function generateReceipt(txn: Transaction) {
         </div>
 
         <div class="footer">
-            <p>This is a system-generated receipt from IBMS Ghana.<br/>For queries, contact support@ibms.com.gh</p>
+            <p>This is a system-generated receipt from Brokerium.<br/>For queries, contact comp@theelira.com</p>
         </div>
     </div>
 

@@ -1,5 +1,5 @@
 // ============================================================
-// IBMS TypeScript Interfaces — Derived from SRS Database Schema
+// Brokerium TypeScript Interfaces — Derived from SRS Database Schema
 // ============================================================
 
 // --- Enums ---

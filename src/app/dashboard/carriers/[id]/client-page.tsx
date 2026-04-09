@@ -234,7 +234,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
                                     )}
                                     {otherProducts.length > 0 && (
                                         <DropdownMenuItem onClick={() => document.getElementById('other-section')?.scrollIntoView({ behavior: 'smooth' })}>
-                                            Other Policies ({otherProducts.length})
+                                            Non-Motor ({otherProducts.length})
                                         </DropdownMenuItem>
                                     )}
                                 </DropdownMenuContent>
@@ -271,7 +271,7 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
                         <div id="other-section" className="scroll-mt-24">
                             <div className="flex items-center gap-3 mb-5">
                                 <div className="h-px bg-surface-200 flex-1" />
-                                <h3 className="text-sm font-black text-surface-400 uppercase tracking-widest">Other Policies</h3>
+                                <h3 className="text-sm font-black text-surface-400 uppercase tracking-widest">Non-Motor</h3>
                                 <div className="h-px bg-surface-200 flex-1" />
                             </div>
 

@@ -141,7 +141,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#F3F4F6;min-height:10
         ${content}
       </div>
       <div class="email-footer">
-        <img class="footer-logo" src="${logoUrl}" alt="IBMS Logo">
+        <img class="footer-logo" src="${logoUrl}" alt="Brokerium Logo">
         <div class="footer-brand">Brokerium</div>
         <div class="footer-text">
           Insurance Broker Management System<br>

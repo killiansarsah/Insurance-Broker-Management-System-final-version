@@ -37,8 +37,8 @@ export function SettingsTerms() {
                     <div className="p-8 rounded-2xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 max-h-[320px] overflow-y-auto custom-scrollbar-subtle prose prose-slate dark:prose-invert prose-sm max-w-none">
                         <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight mb-4">1. Acceptance of Terms</h4>
                         <p className="text-slate-600 leading-relaxed mb-6">
-                            By accessing and using the Insurance Broker Management System (&quot;IBMS&quot;), you agree to be bound by these Terms of Service.
-                            IBMS is a cloud-based platform designed for licensed insurance brokers operating in the Republic of Ghana
+                            By accessing and using the Insurance Broker Management System (&quot;Brokerium&quot;), you agree to be bound by these Terms of Service.
+                            Brokerium is a cloud-based platform designed for licensed insurance brokers operating in the Republic of Ghana
                             under the regulatory framework of the National Insurance Commission (NIC).
                         </p>
 
@@ -51,14 +51,14 @@ export function SettingsTerms() {
 
                         <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4">3. Data Ownership</h4>
                         <p className="text-slate-600 leading-relaxed mb-6">
-                            All client data, policy records, and business information entered into IBMS remains the property of the
-                            subscribing brokerage firm. IBMS acts solely as a data processor and will not share, sell, or transfer
+                            All client data, policy records, and business information entered into Brokerium remains the property of the
+                            subscribing brokerage firm. Brokerium acts solely as a data processor and will not share, sell, or transfer
                             any tenant data without explicit written consent.
                         </p>
 
                         <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4">4. Service Availability</h4>
                         <p className="text-slate-600 leading-relaxed">
-                            IBMS commits to maintaining a minimum uptime of 99.5% for Basic tier, 99.9% for Professional tier,
+                            Brokerium commits to maintaining a minimum uptime of 99.5% for Basic tier, 99.9% for Professional tier,
                             and 99.99% for Enterprise tier subscribers, measured on a monthly basis. Scheduled maintenance windows
                             will be communicated at least 48 hours in advance.
                         </p>
@@ -84,7 +84,7 @@ export function SettingsTerms() {
                     <div className="p-8 rounded-2xl bg-slate-50 border border-slate-100 max-h-[320px] overflow-y-auto custom-scrollbar-subtle prose prose-slate prose-sm max-w-none">
                         <h4 className="text-sm font-black text-slate-900 uppercase tracking-tight mb-4">Data Collection & Usage</h4>
                         <p className="text-slate-600 leading-relaxed mb-6">
-                            IBMS collects personal information necessary for brokerage operations including: client names, contact details,
+                            Brokerium collects personal information necessary for brokerage operations including: client names, contact details,
                             national identification numbers (Ghana Card), and financial information related to insurance policies.
                             This data is processed in compliance with the Ghana Data Protection Act, 2012 (Act 843).
                         </p>
@@ -131,7 +131,7 @@ export function SettingsTerms() {
                     <DpaSummaryCard
                         icon="cloud_sync"
                         title="Data Processor"
-                        value="IBMS Platform"
+                        value="Brokerium Platform"
                         desc="We process data strictly per your instructions."
                     />
                     <DpaSummaryCard

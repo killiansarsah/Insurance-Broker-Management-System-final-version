@@ -237,7 +237,7 @@ export function detectColumns(data: string[][]): string[] {
 }
 
 /**
- * Auto-maps columns from the uploaded file to IBMS fields using fuzzy matching.
+ * Auto-maps columns from the uploaded file to Brokerium fields using fuzzy matching.
  */
 export function autoMapColumns(
     sourceColumns: string[],

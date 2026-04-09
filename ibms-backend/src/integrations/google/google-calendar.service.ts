@@ -25,7 +25,7 @@ export class GoogleCalendarService {
   }
 
   /**
-   * Push IBMS events to Google Calendar.
+   * Push Brokerium events to Google Calendar.
    * Creates/updates events that don't yet have a googleEventId, or whose data changed.
    */
   async pushToGoogle(
@@ -113,7 +113,7 @@ export class GoogleCalendarService {
   }
 
   /**
-   * Pull events from Google Calendar into IBMS.
+   * Pull events from Google Calendar into Brokerium.
    * Imports events from the last 30 days to 90 days ahead.
    */
   async pullFromGoogle(
@@ -160,7 +160,7 @@ export class GoogleCalendarService {
         );
 
         if (existing) {
-          // Update existing IBMS event from Google
+          // Update existing Brokerium event from Google
           await this.prisma.calendarEvent.update({
             where: { id: existing.id },
             data: {
@@ -172,7 +172,7 @@ export class GoogleCalendarService {
             },
           });
         } else {
-          // Create new IBMS event from Google
+          // Create new Brokerium event from Google
           const newEvent = await this.prisma.calendarEvent.create({
             data: {
               tenantId,
@@ -226,7 +226,7 @@ export class GoogleCalendarService {
   }
 
   /**
-   * Delete a Google Calendar event when an IBMS event is cancelled.
+   * Delete a Google Calendar event when an Brokerium event is cancelled.
    */
   async deleteFromGoogle(
     tenantId: string,
@@ -246,7 +246,7 @@ export class GoogleCalendarService {
     }
   }
 
-  /** Map a Google event to the closest IBMS CalendarEventType. */
+  /** Map a Google event to the closest Brokerium CalendarEventType. */
   private mapGoogleEventType(
     gEvent: calendar_v3.Schema$Event,
   ): CalendarEventType {

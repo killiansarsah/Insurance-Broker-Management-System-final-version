@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
     title: 'Reset Password',
-    description: 'Set a new password for your IBMS Portal account.',
+    description: 'Set a new password for your Brokerium Portal account.',
     alternates: { canonical: '/reset-password' },
 };
 

@@ -399,7 +399,7 @@ export class ClientsService {
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
     });
-    const agencyName = tenant?.name || 'IBMS';
+    const agencyName = tenant?.name || 'Brokerium';
 
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Clients');

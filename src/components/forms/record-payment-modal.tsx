@@ -131,13 +131,15 @@ export function RecordPaymentModal({
 
         try {
             const payload: Record<string, unknown> = {
+                type: 'PREMIUM',
                 policyId,
+                clientId,
                 amount: parsedAmount,
-                currency,
-                method,
+                paymentMethod: method,
+                date: new Date().toISOString(),
                 reference,
                 description,
-                ...(method === 'MOBILE_MONEY' && { momoNetwork, phoneNumber }),
+                ...(method === 'MOBILE_MONEY' && { momoNetwork, momoPhone: phoneNumber }),
                 ...(method === 'BANK_TRANSFER' && { bankName }),
                 ...(method === 'CHEQUE' && { chequeNumber }),
             };

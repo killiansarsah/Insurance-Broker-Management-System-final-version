@@ -21,11 +21,11 @@ export function usePolicies(params?: Record<string, unknown>) {
     });
 }
 
-export function usePolicyMetrics() {
+export function usePolicyMetrics(params?: Record<string, unknown>) {
     return useQuery({
-        queryKey: ['policies', 'metrics'],
+        queryKey: ['policies', 'metrics', params],
         queryFn: async () => {
-            const res = await apiClient.get<any>('/policies/metrics');
+            const res = await apiClient.get<any>('/policies/metrics', params);
             return res;
         },
         staleTime: 30_000,

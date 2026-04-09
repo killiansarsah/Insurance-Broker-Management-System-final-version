@@ -4,10 +4,11 @@ import { Type } from 'class-transformer';
 export class CreatePropertyDetailsDto {
   @IsString()
   @IsOptional()
-  propertyType?: string;
+  propertyAddress?: string;
 
   @IsString()
-  address!: string;
+  @IsOptional()
+  propertyType?: string;
 
   @IsString()
   @IsOptional()
@@ -18,17 +19,11 @@ export class CreatePropertyDetailsDto {
   @IsOptional()
   yearBuilt?: number;
 
-  @IsInt()
-  @Min(1)
+  @Type(() => Number)
   @IsOptional()
-  numberOfFloors?: number;
+  estimatedValue?: number;
 
   @IsString()
   @IsOptional()
   occupancyType?: string;
-
-  // Decimal mapped dynamically via validation layer
-  @Type(() => Number)
-  @IsOptional()
-  squareMeters?: number;
 }

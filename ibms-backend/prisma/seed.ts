@@ -45,7 +45,7 @@ import {
 } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { NIC_LEVY_RATE } from '../src/common/constants/nic.constants';
-import { seedRbac, migrateExistingUsersToRbac, LEGACY_ROLE_MAP } from './seed-rbac';
+import { seedRbac, migrateExistingUsersToRbac, LEGACY_ROLE_MAP, DEFAULT_ROLE_PERMISSIONS } from './seed-rbac';
 
 const prisma = new PrismaClient();
 
@@ -254,13 +254,16 @@ async function main(): Promise<void> {
       const ln = ghanaLastNames[i % ghanaLastNames.length];
       const email = s.prefix === 'admin' ? `admin@${domain}` : `${s.prefix}@${domain}`;
 
-      // Map legacy role to new 5-tier system role
-      const newRoleName = LEGACY_ROLE_MAP[s.legacyRole] || 'AGENT';
-      const systemRoleId = roleMap[newRoleName];
+      // Map legacy role string → flat SystemRole enum value
+      const newRoleName = (LEGACY_ROLE_MAP[s.legacyRole] || 'AGENT') as any;
+      const defaultPerms = DEFAULT_ROLE_PERMISSIONS[newRoleName] ?? [];
 
       const u = await prisma.user.upsert({
         where: { tenantId_email: { tenantId: tenant.id, email } },
-        update: {},
+        update: {
+          role: newRoleName,
+          permissions: defaultPerms,
+        },
         create: {
           tenantId: tenant.id,
           email,
@@ -273,17 +276,10 @@ async function main(): Promise<void> {
           departmentId: deptMap[tenant.id][i % deptMap[tenant.id].length],
           isActive: true,
           mustChangePassword: s.prefix === 'admin',
+          role: newRoleName,
+          permissions: defaultPerms,
         },
       });
-
-      // Assign new system role via UserRoleMapping
-      if (systemRoleId) {
-        await prisma.userRoleMapping.upsert({
-          where: { userId_roleId: { userId: u.id, roleId: systemRoleId } },
-          update: {},
-          create: { userId: u.id, roleId: systemRoleId },
-        });
-      }
 
       userMap[tenant.id].push(u.id);
       if (['BROKER', 'SENIOR_BROKER', 'AGENT'].includes(s.legacyRole)) {
@@ -1114,7 +1110,10 @@ async function main(): Promise<void> {
   // ════════════════════════════════════════════════════
   const superAdmin = await prisma.user.upsert({
     where: { tenantId_email: { tenantId: sicTenant.id, email: 'superadmin@brokerium.com' } },
-    update: {},
+    update: {
+      role: 'PLATFORM_SUPER_ADMIN' as any,
+      permissions: DEFAULT_ROLE_PERMISSIONS['PLATFORM_SUPER_ADMIN'] ?? [],
+    },
     create: {
       tenantId: sicTenant.id,
       email: 'superadmin@brokerium.com',
@@ -1126,22 +1125,14 @@ async function main(): Promise<void> {
       branchId: branchMap[sicTenant.id][0],
       isActive: true,
       mustChangePassword: false,
+      role: 'PLATFORM_SUPER_ADMIN' as any,
+      permissions: DEFAULT_ROLE_PERMISSIONS['PLATFORM_SUPER_ADMIN'] ?? [],
     },
   });
-
-  // Assign WORKSPACE_OWNER role (the new top-tier system role)
-  const wsOwnerRoleId = roleMap['WORKSPACE_OWNER'];
-  if (wsOwnerRoleId) {
-    await prisma.userRoleMapping.upsert({
-      where: { userId_roleId: { userId: superAdmin.id, roleId: wsOwnerRoleId } },
-      update: {},
-      create: { userId: superAdmin.id, roleId: wsOwnerRoleId },
-    });
-  }
   console.log('✅ Platform Super Admin: superadmin@brokerium.com / Admin@123');
 
-  // Migrate any existing users without role mappings
-  await migrateExistingUsersToRbac(prisma, roleMap);
+  // migrateExistingUsersToRbac is deprecated for fresh seeding
+  // await migrateExistingUsersToRbac(prisma, roleMap);
 
   // ════════════════════════════════════════════════════
   // ─── SUBSCRIPTIONS ─────────────────────────────────
@@ -1455,8 +1446,10 @@ async function main(): Promise<void> {
   ];
 
   for (const flag of featureFlags) {
-    await prisma.featureFlag.create({
-      data: {
+    await prisma.featureFlag.upsert({
+      where: { key: flag.key },
+      update: {},
+      create: {
         key: flag.key,
         label: flag.label,
         description: flag.desc,

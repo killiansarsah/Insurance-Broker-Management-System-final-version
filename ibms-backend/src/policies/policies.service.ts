@@ -247,8 +247,20 @@ export class PoliciesService {
     });
   }
 
-  async getMetrics(tenantId: string, userId: string) {
+  async getMetrics(tenantId: string, userId: string, insuranceType?: string) {
     const scopeWhere = await this.buildPolicyScopeWhere(tenantId, userId);
+    
+    // Apply insurance type filter if provided
+    const typeFilter: Prisma.PolicyWhereInput = insuranceType === 'non-motor'
+      ? { insuranceType: { not: 'MOTOR' as const } }
+      : insuranceType
+        ? { insuranceType: insuranceType as any }
+        : {};
+
+    const metricsWhere: Prisma.PolicyWhereInput = {
+      AND: [scopeWhere, typeFilter]
+    };
+
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const in30Days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -261,28 +273,28 @@ export class PoliciesService {
       lapsedPolicies,
       newThisMonth
     ] = await Promise.all([
-      this.prisma.policy.count({ where: { AND: [scopeWhere, { status: 'ACTIVE' }] } }),
+      this.prisma.policy.count({ where: { AND: [metricsWhere, { status: 'ACTIVE' }] } }),
       this.prisma.policy.aggregate({
-        where: scopeWhere,
+        where: metricsWhere,
         _sum: { premiumAmount: true }
       }),
       this.prisma.policy.count({
         where: {
           AND: [
-            scopeWhere,
+            metricsWhere,
             { status: 'ACTIVE' },
             { expiryDate: { lte: in30Days, gte: now } }
           ]
         }
       }),
       this.prisma.policy.count({
-        where: { AND: [scopeWhere, { status: { in: ['PENDING', 'DRAFT'] } }] }
+        where: { AND: [metricsWhere, { status: { in: ['PENDING', 'DRAFT'] } }] }
       }),
       this.prisma.policy.count({
-        where: { AND: [scopeWhere, { status: 'LAPSED' }] }
+        where: { AND: [metricsWhere, { status: 'LAPSED' }] }
       }),
       this.prisma.policy.count({
-        where: { AND: [scopeWhere, { inceptionDate: { gte: firstDayOfMonth } }] }
+        where: { AND: [metricsWhere, { inceptionDate: { gte: firstDayOfMonth } }] }
       })
     ]);
 
@@ -319,7 +331,11 @@ export class PoliciesService {
 
     const baseWhere: Prisma.PolicyWhereInput = {
       ...(status && { status }),
-      ...(insuranceType && { insuranceType }),
+      ...(insuranceType && (
+        insuranceType === 'non-motor'
+          ? { insuranceType: { not: 'MOTOR' as const } }
+          : { insuranceType: insuranceType as any }
+      )),
       ...(carrierId && { carrierId }),
       ...(clientId && { clientId }),
       ...(premiumFrequency && { premiumFrequency }),
@@ -528,6 +544,33 @@ export class PoliciesService {
       updateData.commissionRate = dto.commission;
       const premium = dto.premiumAmount ?? 0;
       updateData.commissionAmount = (premium * dto.commission) / 100;
+    }
+
+    if (dto.vehicleDetails !== undefined) {
+      updateData.vehicleDetails = {
+        upsert: {
+          create: dto.vehicleDetails as unknown as Prisma.VehicleDetailCreateWithoutPolicyInput,
+          update: dto.vehicleDetails as unknown as Prisma.VehicleDetailUpdateWithoutPolicyInput,
+        },
+      };
+    }
+
+    if (dto.propertyDetails !== undefined) {
+      updateData.propertyDetails = {
+        upsert: {
+          create: dto.propertyDetails as unknown as Prisma.PropertyDetailCreateWithoutPolicyInput,
+          update: dto.propertyDetails as unknown as Prisma.PropertyDetailUpdateWithoutPolicyInput,
+        },
+      };
+    }
+
+    if (dto.marineDetails !== undefined) {
+      updateData.marineDetails = {
+        upsert: {
+          create: dto.marineDetails as unknown as Prisma.MarineDetailCreateWithoutPolicyInput,
+          update: dto.marineDetails as unknown as Prisma.MarineDetailUpdateWithoutPolicyInput,
+        },
+      };
     }
     if (Object.keys(updateData).length === 0) {
       throw new BadRequestException('No fields to update');

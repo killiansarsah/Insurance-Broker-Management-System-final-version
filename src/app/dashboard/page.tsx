@@ -393,7 +393,7 @@ export default function DashboardPage() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `IBMS_Dashboard_${format(new Date(), 'yyyy-MM-dd')}.csv`;
+        link.download = `Brokerium_Dashboard_${format(new Date(), 'yyyy-MM-dd')}.csv`;
         link.click();
         URL.revokeObjectURL(url);
         toast.success('Dashboard Exported', { description: 'CSV file downloaded successfully.' });

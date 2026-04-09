@@ -23,7 +23,7 @@ import { SystemRole } from '@prisma/client';
 
 @Controller('platform-admin/users')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class UserManagementController {
   constructor(
     private readonly prisma: PrismaService,

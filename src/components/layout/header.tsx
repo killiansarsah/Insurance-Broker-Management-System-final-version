@@ -103,7 +103,7 @@ export function Header() {
                     <Calculator size={20} />
                 </button>
                 <button
-                    onClick={() => toast.info('Contact Support', { description: 'Email support@ibms.africa or call +233-302-123-456 for assistance.' })}
+                    onClick={() => toast.info('Contact Support', { description: 'Email comp@theelira.com or call +233-302-123-456 for assistance.' })}
                     className="p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
                     title="Contact Support"
                 >
@@ -158,7 +158,7 @@ export function Header() {
                                     My Profile
                                 </button>
 
-                                {(user?.role === 'WORKSPACE_OWNER' || user?.role === 'PLATFORM_SUPER_ADMIN') && (
+                                {(user?.role === 'PLATFORM_SUPER_ADMIN') && (
                                     <button
                                         onClick={() => {
                                             router.push('/super-admin/overview');

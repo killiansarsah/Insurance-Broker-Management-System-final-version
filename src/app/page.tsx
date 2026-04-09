@@ -708,7 +708,7 @@ export default function LandingPage() {
       <p className="footer-desc">The Insurance Broker Management System built for Ghana's regulated insurance market. NIC Act 1061 compliant from day one.</p>
       <div className="footer-badges">
         <span className="fbadge">NIC Compliant</span>
-        <span className="fbadge">IBMS</span>
+        <span className="fbadge">Brokerium</span>
         <span className="fbadge">Made in Ghana</span>
       </div>
     </div>

@@ -20,8 +20,8 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
     title: {
-        default: 'IBMS — Insurance Broker Management System',
-        template: '%s | IBMS',
+        default: 'Brokerium — Insurance Broker Management System',
+        template: 'Brokerium — %s',
     },
     description:
         'NIC-compliant insurance brokerage management platform for Ghana. Manage clients, policies, claims, leads, and compliance.',

@@ -21,7 +21,7 @@ import { PlatformAuditService } from '../services/platform-audit.service.js';
 
 @Controller('platform-admin/tenants')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('WORKSPACE_OWNER')
+@Roles('PLATFORM_SUPER_ADMIN')
 export class TenantManagementController {
   constructor(
     private readonly prisma: PrismaService,
@@ -184,30 +184,8 @@ export class TenantManagementController {
       },
     });
 
-    // Auto-provision: clone system roles to tenant scope for future customization
-    const systemRoles = await this.prisma.role.findMany({
-      where: { tenantId: null, isSystem: true },
-      include: { permissions: { select: { permissionId: true } } },
-    });
-    for (const sysRole of systemRoles) {
-      const tenantRole = await this.prisma.role.create({
-        data: {
-          tenantId: tenant.id,
-          name: sysRole.name,
-          description: sysRole.description,
-          isSystem: false,
-        },
-      });
-      // Copy permission mappings
-      if (sysRole.permissions.length > 0) {
-        await this.prisma.rolePermission.createMany({
-          data: sysRole.permissions.map((rp) => ({
-            roleId: tenantRole.id,
-            permissionId: rp.permissionId,
-          })),
-        });
-      }
-    }
+    // Note: Roles and Permissions are now managed via the flat SystemRole enum and string arrays,
+    // so no database entries need to be cloned per tenant.
 
     // Create subscription
     const now = new Date();
