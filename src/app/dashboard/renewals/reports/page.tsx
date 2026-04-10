@@ -18,14 +18,32 @@ interface RenewalReport {
 }
 
 function exportToExcel(data: RenewalReport) {
-    import('xlsx').then(({ utils, writeFile }) => {
-        const wb = utils.book_new();
-        // Summary sheet
-        const summary = [
-            ['Renewal Rate Report'],
-            ['Generated:', new Date().toLocaleString()],
-            [],
-            ['Metric', 'Value'],
+    import('exceljs').then(async (ExcelJS) => {
+        const { saveAs } = await import('file-saver');
+        const workbook = new ExcelJS.Workbook();
+
+        // --- Summary Sheet ---
+        const summarySheet = workbook.addWorksheet('Summary');
+        summarySheet.mergeCells('A1:B1');
+        summarySheet.getCell('A1').value = 'Renewal Rate Report';
+        summarySheet.getCell('A1').font = { bold: true, size: 14 };
+        summarySheet.mergeCells('A2:B2');
+        summarySheet.getCell('A2').value = `Generated: ${new Date().toLocaleString()}`;
+        summarySheet.getCell('A2').font = { size: 10, color: { argb: 'FF64748B' } };
+
+        // Row 4: headers
+        const summaryHeaders = ['Metric', 'Value'];
+        const summaryHeaderRow = summarySheet.getRow(4);
+        summaryHeaderRow.values = summaryHeaders;
+        summaryHeaderRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        summaryHeaderRow.eachCell((cell, colNumber) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colNumber === 1 ? 'FFEA580C' : 'FF047857' } };
+            cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+        summarySheet.views = [{ state: 'frozen', ySplit: 4 }];
+
+        const summaryData = [
             ['Total Policies Due', data.totalDue],
             ['Total Renewed', data.totalRenewed],
             ['Renewal Rate', `${data.renewalRate.toFixed(1)}%`],
@@ -33,15 +51,47 @@ function exportToExcel(data: RenewalReport) {
             ['Upcoming Revenue (GHS)', data.upcomingRevenue.toLocaleString()],
             ['Lapsed Policies', data.lapsedCount],
         ];
-        utils.book_append_sheet(wb, utils.aoa_to_sheet(summary), 'Summary');
+        summaryData.forEach((rowData, i) => {
+            const row = summarySheet.addRow(rowData);
+            row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' } };
+            row.eachCell((cell) => {
+                cell.border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, left: { style: 'thin', color: { argb: 'FFE2E8F0' } }, bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }, right: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+            });
+        });
+        summarySheet.getColumn(1).width = 30;
+        summarySheet.getColumn(2).width = 25;
 
-        // By type sheet
-        const byTypeData = [
-            ['Insurance Type', 'Policies Due', 'Renewed', 'Renewal Rate %'],
-            ...data.byType.map(r => [r.insuranceType, r.due, r.renewed, `${r.rate.toFixed(1)}%`]),
-        ];
-        utils.book_append_sheet(wb, utils.aoa_to_sheet(byTypeData), 'By Type');
-        writeFile(wb, `renewal-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
+        // --- By Type Sheet ---
+        const typeSheet = workbook.addWorksheet('By Type');
+        typeSheet.mergeCells('A1:D1');
+        typeSheet.getCell('A1').value = 'Renewal Rate by Product Type';
+        typeSheet.getCell('A1').font = { bold: true, size: 14 };
+
+        const typeHeaders = ['Insurance Type', 'Policies Due', 'Renewed', 'Renewal Rate %'];
+        const typeHeaderRow = typeSheet.getRow(3);
+        typeHeaderRow.values = typeHeaders;
+        typeHeaderRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+        const typeColors = ['FFEA580C', 'FF1D4ED8', 'FF047857', 'FFBE123C']; // Orange, Blue, Emerald, Rose
+        typeHeaderRow.eachCell((cell, colNumber) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: typeColors[colNumber - 1] || 'FF374151' } };
+            cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+        typeSheet.views = [{ state: 'frozen', ySplit: 3 }];
+
+        data.byType.forEach((r, i) => {
+            const row = typeSheet.addRow([r.insuranceType, r.due, r.renewed, `${r.rate.toFixed(1)}%`]);
+            row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' } };
+            row.eachCell((cell) => {
+                cell.border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, left: { style: 'thin', color: { argb: 'FFE2E8F0' } }, bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }, right: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+            });
+        });
+        typeSheet.columns.forEach((col) => { col.width = 22; });
+
+        // Generate and download
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `renewal-report-${new Date().toISOString().slice(0, 10)}.xlsx`);
     });
 }
 

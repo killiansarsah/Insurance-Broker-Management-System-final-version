@@ -209,7 +209,7 @@ function GlobalRail() {
             <GlobalSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
             {/* Organization Logo */}
-            <Link href="/dashboard/settings?tab=organization" className="relative w-8 h-8 mb-6 rounded-lg overflow-hidden hover:opacity-80 transition-opacity ring-2 ring-surface-200 dark:ring-slate-700 flex items-center justify-center bg-surface-100 dark:bg-slate-800" title="Organization Settings">
+            <Link href="/dashboard/settings?tab=organization" prefetch={false} className="relative w-8 h-8 mb-6 rounded-lg overflow-hidden hover:opacity-80 transition-opacity ring-2 ring-surface-200 dark:ring-slate-700 flex items-center justify-center bg-surface-100 dark:bg-slate-800" title="Organization Settings">
                 {logoUrl ? (
                     <Image src={logoUrl} alt="Organization" fill className="object-cover" sizes="32px" />
                 ) : (
@@ -354,6 +354,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
             ) : (
                 <Link
                     href={item.href}
+                    prefetch={false}
                     aria-current={isActive ? 'page' : undefined}
                     className={cn(
                         'flex items-center gap-3 w-full px-3 py-2.5 rounded-xl',
@@ -386,6 +387,7 @@ function NavItem({ item, collapsed }: { item: NavItemConfig; collapsed: boolean 
                             <Link
                                 key={child.label}
                                 href={child.href}
+                                prefetch={false}
                                 className={cn(
                                     'flex items-center gap-2 px-3 py-2 text-xs rounded-lg transition-all duration-200',
                                     'hover:translate-x-1',
@@ -463,7 +465,7 @@ export function Sidebar() {
                         sidebarCollapsed ? 'justify-center' : 'px-6'
                     )}>
                         {sidebarCollapsed ? (
-                            <Link href="/dashboard/settings?tab=organization" className="relative w-8 h-8 hover:opacity-80 transition-opacity" title="Organization Settings">
+                            <Link href="/dashboard/settings?tab=organization" prefetch={false} className="relative w-8 h-8 hover:opacity-80 transition-opacity" title="Organization Settings">
                                 <img
                                     src="/logo-blue.png"
                                     alt="Brokerium Logo"

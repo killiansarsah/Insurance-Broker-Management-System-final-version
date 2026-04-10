@@ -2,7 +2,6 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import * as XLSX from 'xlsx';
 import {
     DollarSign,
     Download,
@@ -36,7 +35,7 @@ import { toast } from 'sonner';
 import { BackButton } from '@/components/ui/back-button';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { useExpenses, useCommissions } from '@/hooks/api/use-finance';
-import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 
 // Local type definitions (formerly from stubs)
 type ExpenseCategory = 'fuel_car_maintenance' | 'printing_stationery' | 'tele_post' | 'utilities' | 'levies_licenses' | 'transport' | 'provisions_toiletries' | 'allowances' | 'training' | 'subscriptions' | 'miscellaneous' | 'food' | 'salaries' | 'ssnit' | 'insurance' | 'business_prospecting';
@@ -115,8 +114,36 @@ const LS_HEADERS_KEY = 'ibms_expense_col_headers';
 const EXCEL_COL_HEADERS = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...EXCEL_COLUMNS.map(c => c.header)];
 const EXCEL_TOTAL_COLS = EXCEL_COL_HEADERS.length; // 20
 
-// â”€â”€â”€ XLSX Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function exportToXLSX(data: Expense[], company: string, colHeaders: string[], commissionsList: any[] = []) {
+// ——————————————————————————————————————————————————————————————————————————————
+async function exportToXLSX(data: Expense[], company: string, colHeaders: string[], commissionsList: any[] = []) {
+    const ExcelJS = await import('exceljs');
+    const { saveAs } = await import('file-saver');
+
+    const workbook = new ExcelJS.Workbook();
+    const expColHeaders = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
+
+    // Premium style helpers
+    const applyHeaderColors = (row: any, colors: string[]) => {
+        row.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+        row.eachCell((cell: any, colNumber: number) => {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors[(colNumber - 1) % colors.length] || 'FF374151' } };
+            cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+    };
+    const applyDataRow = (row: any, index: number) => {
+        row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: index % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' } };
+        row.eachCell((cell: any) => {
+            cell.border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, left: { style: 'thin', color: { argb: 'FFE2E8F0' } }, bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }, right: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+        });
+    };
+
+    // Monthly expense header colors: Date=Orange, Description=Blue, Ref=Indigo, Cost=Emerald, Categories=Teal/Rose rotating
+    const expHeaderColors = [
+        'FFEA580C', 'FF1D4ED8', 'FF4338CA', 'FF047857',
+        ...colHeaders.map((_, i) => i % 2 === 0 ? 'FF0F766E' : 'FFBE123C')
+    ];
+
     const monthMap = new Map<string, Expense[]>();
     data.forEach(e => {
         const key = e.date.slice(0, 7);
@@ -124,174 +151,184 @@ function exportToXLSX(data: Expense[], company: string, colHeaders: string[], co
         monthMap.get(key)!.push(e);
     });
 
-    const wb = XLSX.utils.book_new();
-    const expColHeaders = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
-
-    // Monthly expense sheets (JANUARY, FEBRUARY, MARCH â€¦)
+    // Monthly expense sheets
     [...monthMap.keys()].sort().forEach(month => {
         const entries = monthMap.get(month)!;
         const [yr, mo] = month.split('-');
         const sheetName = (MONTH_NAMES[mo] || month).slice(0, 31);
+        const sheet = workbook.addWorksheet(sheetName);
 
-        const rows: (string | number)[][] = [
-            [`${company}, ${sheetName} ${yr} EXPENSES`],
-            expColHeaders,
-        ];
+        // Title row
+        const lastCol = String.fromCharCode(64 + Math.min(expColHeaders.length, 26));
+        sheet.mergeCells(`A1:${lastCol}1`);
+        sheet.getCell('A1').value = `${company}, ${sheetName} ${yr} EXPENSES`;
+        sheet.getCell('A1').font = { bold: true, size: 14 };
 
-        // Data rows â€” pad up to minimum 18 rows so template looks like original
+        // Header row (row 2)
+        const headerRow = sheet.getRow(2);
+        headerRow.values = expColHeaders;
+        applyHeaderColors(headerRow, expHeaderColors);
+        sheet.views = [{ state: 'frozen', ySplit: 2 }];
+
+        // Data rows
         const NUM_ROWS = Math.max(18, entries.length);
         for (let i = 0; i < NUM_ROWS; i++) {
             const e = entries[i];
-            if (e) {
-                rows.push([
-                    e.date,
-                    e.description,
-                    i + 1,
-                    e.amount,
-                    ...EXCEL_COLUMNS.map(c => c.key === e.category ? e.amount : ''),
-                ]);
-            } else {
-                // blank row with pre-filled REF NO
-                rows.push(['', '', i + 1, '', ...EXCEL_COLUMNS.map(() => '')]);
-            }
+            const rowData = e
+                ? [e.date, e.description, i + 1, e.amount, ...EXCEL_COLUMNS.map(c => c.key === e.category ? e.amount : '')]
+                : ['', '', i + 1, '', ...EXCEL_COLUMNS.map(() => '')];
+            const row = sheet.addRow(rowData);
+            applyDataRow(row, i);
         }
 
-        // Blank separator row
-        rows.push(new Array(EXCEL_TOTAL_COLS).fill(''));
-
-        // Totals row
-        rows.push([
+        // Blank + Totals
+        sheet.addRow([]);
+        const totalsRow = sheet.addRow([
             '', 'TOTAL', '',
             entries.reduce((s, e) => s + e.amount, 0),
             ...EXCEL_COLUMNS.map(c =>
                 entries.filter(e => e.category === c.key).reduce((s, e) => s + e.amount, 0) || ''
             ),
         ]);
+        totalsRow.font = { bold: true };
 
-        // Blank row then STAFF / DIRECTOR / SSNIT footer labels
-        rows.push(new Array(EXCEL_TOTAL_COLS).fill(''));
-        rows.push(['STAFF', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
-        rows.push(['DIRECTOR', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
-        rows.push(['SSNIT', ...new Array(EXCEL_TOTAL_COLS - 1).fill('')]);
+        // Footer labels
+        sheet.addRow([]);
+        sheet.addRow(['STAFF']);
+        sheet.addRow(['DIRECTOR']);
+        sheet.addRow(['SSNIT']);
 
-        const ws = XLSX.utils.aoa_to_sheet(rows);
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: EXCEL_TOTAL_COLS - 1 } }];
-        XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        // Auto-width
+        sheet.columns.forEach((col) => { col.width = 16; });
+        if (sheet.getColumn(2)) sheet.getColumn(2).width = 28;
     });
 
     // COMMISSION sheet
     {
-        const commRows: (string | number)[][] = [
-            [`${company} - COMMISSIONS`],
-            ['DATE', 'CLIENT', 'POLICY NO', 'PRODUCT TYPE', 'INSURER',
-                'PREMIUM (GHS)', 'RATE %', 'GROSS COMMISSION (GHS)',
-                'NIC LEVY', 'NET COMMISSION (GHS)', 'STATUS'],
-        ];
-        commissionsList.forEach(c => {
-            commRows.push([
+        const sheet = workbook.addWorksheet('COMMISSION');
+        const lastCol = 'K';
+        sheet.mergeCells(`A1:${lastCol}1`);
+        sheet.getCell('A1').value = `${company} - COMMISSIONS`;
+        sheet.getCell('A1').font = { bold: true, size: 14 };
+
+        const commHeaders = ['DATE', 'CLIENT', 'POLICY NO', 'PRODUCT TYPE', 'INSURER',
+            'PREMIUM (GHS)', 'RATE %', 'GROSS COMMISSION (GHS)',
+            'NIC LEVY', 'NET COMMISSION (GHS)', 'STATUS'];
+        const commColors = ['FFEA580C', 'FFEA580C', 'FF1D4ED8', 'FF1D4ED8', 'FF4338CA',
+            'FF047857', 'FF047857', 'FF047857',
+            'FFBE123C', 'FF047857', 'FF0F766E'];
+        const headerRow = sheet.getRow(2);
+        headerRow.values = commHeaders;
+        applyHeaderColors(headerRow, commColors);
+        sheet.views = [{ state: 'frozen', ySplit: 2 }];
+
+        commissionsList.forEach((c, i) => {
+            const row = sheet.addRow([
                 c.dateEarned, c.clientName, c.policyNumber, c.productType,
                 c.insurerName, c.premiumAmount, c.commissionRate,
                 c.commissionAmount, c.nicLevy, c.netCommission,
                 c.status.toUpperCase(),
             ]);
+            applyDataRow(row, i);
         });
         const totalGross = commissionsList.reduce((s, c) => s + c.commissionAmount, 0);
         const totalNic = commissionsList.reduce((s, c) => s + c.nicLevy, 0);
         const totalNet = commissionsList.reduce((s, c) => s + c.netCommission, 0);
-        commRows.push(['', '', '', '', 'TOTAL', '', '', totalGross, totalNic, totalNet, '']);
-        const ws = XLSX.utils.aoa_to_sheet(commRows);
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 10 } }];
-        XLSX.utils.book_append_sheet(wb, ws, 'COMMISSION');
+        const totRow = sheet.addRow(['', '', '', '', 'TOTAL', '', '', totalGross, totalNic, totalNet, '']);
+        totRow.font = { bold: true };
+        sheet.columns.forEach((col) => { col.width = 18; });
     }
 
-    // OVER RIDER sheet â€” commission totals grouped by insurer
+    // OVER RIDER sheet
     {
+        const sheet = workbook.addWorksheet('OVER RIDER');
+        sheet.mergeCells('A1:C1');
+        sheet.getCell('A1').value = `${company} - OVER RIDER`;
+        sheet.getCell('A1').font = { bold: true, size: 14 };
+
+        const headerRow = sheet.getRow(2);
+        headerRow.values = ['INSURER', 'AMOUNT GHS', 'NET GHS'];
+        applyHeaderColors(headerRow, ['FFEA580C', 'FF047857', 'FF1D4ED8']);
+        sheet.views = [{ state: 'frozen', ySplit: 2 }];
+
         const insurerMap = new Map<string, { gross: number; net: number }>();
         commissionsList.forEach(c => {
             const cur = insurerMap.get(c.insurerName) || { gross: 0, net: 0 };
-            insurerMap.set(c.insurerName, {
-                gross: cur.gross + c.commissionAmount,
-                net: cur.net + c.netCommission,
-            });
+            insurerMap.set(c.insurerName, { gross: cur.gross + c.commissionAmount, net: cur.net + c.netCommission });
         });
-        const orRows: (string | number)[][] = [
-            [`${company} - OVER RIDER`],
-            ['INSURER', 'AMOUNT GHS', 'NET GHS'],
-        ];
-        insurerMap.forEach((v, insurer) => orRows.push([insurer, v.gross, v.net]));
+        let idx = 0;
+        insurerMap.forEach((v, insurer) => {
+            const row = sheet.addRow([insurer, v.gross, v.net]);
+            applyDataRow(row, idx++);
+        });
         const totalGross = [...insurerMap.values()].reduce((s, v) => s + v.gross, 0);
         const totalNet = [...insurerMap.values()].reduce((s, v) => s + v.net, 0);
-        orRows.push(['TOTAL', totalGross, totalNet]);
-        const ws = XLSX.utils.aoa_to_sheet(orRows);
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }];
-        XLSX.utils.book_append_sheet(wb, ws, 'OVER RIDER');
+        const totRow = sheet.addRow(['TOTAL', totalGross, totalNet]);
+        totRow.font = { bold: true };
+        sheet.columns.forEach((col) => { col.width = 25; });
     }
 
     // ACCOUNT sheet
     {
+        const sheet = workbook.addWorksheet('ACCOUNT');
+        sheet.mergeCells('A1:B1');
+        sheet.getCell('A1').value = `${company} - ACCOUNT SUMMARY`;
+        sheet.getCell('A1').font = { bold: true, size: 14 };
+
         const totalExp = data.reduce((s, e) => s + e.amount, 0);
         const totalComm = commissionsList.reduce((s, c) => s + c.netCommission, 0);
-        const acRows: (string | number)[][] = [
-            [`${company} - ACCOUNT SUMMARY`],
-            ['', ''],
+        const acData = [
             ['Total Commission Earned (GHS)', totalComm],
             ['Total Expenses (GHS)', totalExp],
             ['Net Balance (GHS)', totalComm - totalExp],
-            ['', ''],
-            ['Generated', new Date().toLocaleDateString('en-GB')],
         ];
-        const ws = XLSX.utils.aoa_to_sheet(acRows);
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }];
-        XLSX.utils.book_append_sheet(wb, ws, 'ACCOUNT');
+
+        const headerRow = sheet.getRow(3);
+        headerRow.values = ['Metric', 'Amount (GHS)'];
+        applyHeaderColors(headerRow, ['FFEA580C', 'FF047857']);
+
+        acData.forEach((rowData, i) => {
+            const row = sheet.addRow(rowData);
+            applyDataRow(row, i);
+        });
+        sheet.addRow([]);
+        sheet.addRow(['Generated', new Date().toLocaleDateString('en-GB')]);
+        sheet.getColumn(1).width = 35;
+        sheet.getColumn(2).width = 25;
     }
 
     // BUSINESS TYPE sheet
     {
+        const sheet = workbook.addWorksheet('BUSINESS TYPE');
+        sheet.mergeCells('A1:D1');
+        sheet.getCell('A1').value = `${company} - BUSINESS TYPE`;
+        sheet.getCell('A1').font = { bold: true, size: 14 };
+
+        const headerRow = sheet.getRow(2);
+        headerRow.values = ['PRODUCT TYPE', 'POLICY COUNT', 'TOTAL PREMIUM (GHS)', 'NET COMMISSION (GHS)'];
+        applyHeaderColors(headerRow, ['FFEA580C', 'FF1D4ED8', 'FF047857', 'FFBE123C']);
+        sheet.views = [{ state: 'frozen', ySplit: 2 }];
+
         const btMap = new Map<string, { count: number; premium: number; commission: number }>();
         commissionsList.forEach(c => {
             const cur = btMap.get(c.productType) || { count: 0, premium: 0, commission: 0 };
-            btMap.set(c.productType, {
-                count: cur.count + 1,
-                premium: cur.premium + c.premiumAmount,
-                commission: cur.commission + c.netCommission,
-            });
+            btMap.set(c.productType, { count: cur.count + 1, premium: cur.premium + c.premiumAmount, commission: cur.commission + c.netCommission });
         });
-        const btRows: (string | number)[][] = [
-            [`${company} - BUSINESS TYPE`],
-            ['PRODUCT TYPE', 'POLICY COUNT', 'TOTAL PREMIUM (GHS)', 'NET COMMISSION (GHS)'],
-        ];
-        btMap.forEach((v, type) => btRows.push([type, v.count, v.premium, v.commission]));
-        const ws = XLSX.utils.aoa_to_sheet(btRows);
-        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }];
-        XLSX.utils.book_append_sheet(wb, ws, 'BUSINESS TYPE');
+        let idx = 0;
+        btMap.forEach((v, type) => {
+            const row = sheet.addRow([type, v.count, v.premium, v.commission]);
+            applyDataRow(row, idx++);
+        });
+        sheet.columns.forEach((col) => { col.width = 25; });
     }
 
     const year = data[0]?.date.slice(0, 4) || new Date().getFullYear();
-    XLSX.writeFile(wb, `DEZAG_Expenses_${year}.xlsx`);
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    saveAs(blob, `DEZAG_Expenses_${year}.xlsx`);
 }
 
-// â”€â”€â”€ CSV Export (wide format matching Excel layout) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-function exportToCSV(data: Expense[], colHeaders: string[]) {
-    const headers = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...colHeaders];
 
-    let refNo = 1;
-    const rows = data.map(e => [
-        safeCsvCell(e.date),
-        safeCsvCell(e.description),
-        refNo++,
-        e.amount.toFixed(2),
-        ...EXCEL_COLUMNS.map(c => c.key === e.category ? e.amount.toFixed(2) : ''),
-    ]);
-
-    const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `DEZAG_Expenses_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-}
 
 // â”€â”€â”€ CSV Import (parse) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function parseCSV(text: string): Partial<Expense>[] {
@@ -702,13 +739,7 @@ export default function ExpensesPage() {
                     >
                         Import CSV
                     </Button>
-                    <Button
-                        variant="outline"
-                        leftIcon={<Download size={16} />}
-                        onClick={() => exportToCSV(filtered, customHeaders)}
-                    >
-                        Export CSV
-                    </Button>
+
                     <Button
                         variant="outline"
                         leftIcon={<FileSpreadsheet size={16} />}
@@ -1213,7 +1244,7 @@ export default function ExpensesPage() {
                         <div className="flex items-center justify-between px-6 py-4 border-b border-surface-100">
                             <div>
                                 <h2 className="text-base font-bold text-surface-900">Customize Export</h2>
-                                <p className="text-xs text-surface-500 mt-0.5">Edit your company name and rename any column header. Changes apply to both CSV and Excel exports and are saved in your browser.</p>
+                                <p className="text-xs text-surface-500 mt-0.5">Edit your company name and rename any column header. Changes apply to the Excel export and are saved in your browser.</p>
                             </div>
                             <button onClick={() => setShowCustomize(false)} className="p-1.5 rounded-lg hover:bg-surface-100 text-surface-400 hover:text-surface-700 transition-colors cursor-pointer">
                                 <X size={18} />

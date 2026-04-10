@@ -531,11 +531,40 @@ export class ClientsService {
       const headerRow = sheet.getRow(4);
       headerRow.values = headers;
       headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-      headerRow.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FF085041' },
-      };
+      // Apply segmented colors and clean borders to header
+      headerRow.eachCell((cell) => {
+        const text = cell.value?.toString() || '';
+        let bgColor = 'FF0F172A'; // Default Slate 900
+        
+        const basic = ['Client Number', 'Client Type', 'First Name', 'Middle Name', 'Last Name', 'Company Name', 'Full Name'];
+        const demog = ['Date of Birth (DD/MM/YYYY)', 'Gender', 'Marital Status', 'Nationality', 'Ghana Card Number', 'TIN'];
+        const cont = ['Phone Primary', 'Phone Secondary', 'Phone', 'Email', 'Digital Address', 'Residential Address', 'City', 'Region'];
+        const emp = ['Occupation', 'Employer', 'Industry'];
+        const kyc = ['KYC Status', 'AML Risk Level', 'PEP', 'PEP (Yes/No)', 'Source of Funds', 'Purpose of Relationship', 'Date Verified', 'Documents Uploaded'];
+        const fin = ['Expected Annual Volume', 'Bank Name', 'Account Name', 'Account Number', 'Branch', 'MoMo Network', 'MoMo Number'];
+        
+        if (basic.includes(text)) bgColor = 'FFEA580C'; // Orange 600
+        else if (demog.includes(text)) bgColor = 'FF1D4ED8'; // Blue 700
+        else if (cont.includes(text)) bgColor = 'FF4338CA'; // Indigo 700
+        else if (emp.includes(text)) bgColor = 'FF0F766E'; // Teal 700
+        else if (kyc.includes(text)) bgColor = 'FFBE123C'; // Rose 700
+        else if (fin.includes(text)) bgColor = 'FF047857'; // Emerald 700
+        else bgColor = 'FF374151'; // Gray 700 (Metrics, Status)
+
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: bgColor }
+        };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF1E293B' } },
+          left: { style: 'thin', color: { argb: 'FF1E293B' } },
+          bottom: { style: 'thin', color: { argb: 'FF1E293B' } },
+          right: { style: 'thin', color: { argb: 'FF1E293B' } },
+        };
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      });
+
 
       sheet.views = [{ state: 'frozen', ySplit: 4 }];
     } else {
@@ -638,8 +667,18 @@ export class ClientsService {
         row.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF0FAF6' },
+          fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' }, // Crisp White / Slate 50 alternating
         };
+        // Apply crisp subtle borders to all data cells
+        row.eachCell((cell) => {
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, // Slate 200
+            left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+            right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          };
+          cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
       }
     }
 

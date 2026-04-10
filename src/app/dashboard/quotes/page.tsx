@@ -31,8 +31,10 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { useQuotes, useSendQuote, useAcceptQuote, useDeclineQuote, useDeleteQuote } from '@/hooks/api/use-quotes';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 // ─── Inline Types & Config (no backend API for quotes yet) ───
 type QuoteStatus = 'DRAFT' | 'SENT' | 'ACCEPTED' | 'DECLINED' | 'EXPIRED' | 'CONVERTED';
@@ -94,26 +96,108 @@ function QuoteStatusBadge({ status }: { status: QuoteStatus }) {
     );
 }
 
-// ─── CSV Export ───
-function exportToCsv(quotes: Quote[]) {
-    const headers = ['Quote #', 'Client', 'Type', 'Coverage', 'Status', 'Sum Insured Req.', 'Best Premium', 'Best Carrier', 'Commission', 'Request Date', 'Valid Until', 'Prepared By'];
-    const rows = quotes.map(q => {
-        const best = q.options.find((o: any) => o.isRecommended) || q.options[0];
-        return [
-            q.quoteNumber, q.clientName, q.insuranceType, q.coverageType, q.status,
-            q.sumInsuredRequested.toFixed(2), best?.premium?.toFixed(2) ?? '—', best?.carrierName ?? '—',
-            best?.commissionAmount?.toFixed(2) ?? '—', q.requestDate, q.validUntil, q.preparedBy,
+// ─── Excel Export ───
+async function exportToExcel(quotes: Quote[]) {
+    try {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Brokerium IBMS';
+        workbook.created = new Date();
+
+        const sheet = workbook.addWorksheet('Quotes Report');
+
+        // Main headers
+        sheet.columns = [
+            { header: 'Quote #', key: 'quoteNum', width: 20 },
+            { header: 'Client', key: 'client', width: 25 },
+            { header: 'Type', key: 'type', width: 20 },
+            { header: 'Coverage', key: 'coverage', width: 20 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Sum Insured Req.', key: 'sumInsured', width: 20 },
+            { header: 'Best Premium', key: 'bestPremium', width: 20 },
+            { header: 'Best Carrier', key: 'bestCarrier', width: 20 },
+            { header: 'Commission', key: 'commission', width: 15 },
+            { header: 'Request Date', key: 'reqDate', width: 15 },
+            { header: 'Valid Until', key: 'validUntil', width: 15 },
+            { header: 'Prepared By', key: 'preparedBy', width: 20 },
         ];
-    });
-    const csv = [headers, ...rows].map(r => r.map(c => safeCsvCell(c)).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `quotes-export-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success(`Exported ${quotes.length} quotes to CSV`);
+
+        // Format header row
+        const headerRow = sheet.getRow(1);
+        headerRow.eachCell((cell, colNumber) => {
+            cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+            // Premium color coding similar to expenses
+            let fillColor = 'FF3B82F6'; // Default Blue
+            if (colNumber === 1 || colNumber === 5) fillColor = 'FFF97316'; // Orange for Ref/Status
+            if (colNumber >= 6 && colNumber <= 9) fillColor = 'FF10B981'; // Emerald for Financials
+
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: fillColor },
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+            };
+        });
+        headerRow.height = 30;
+
+        // Add rows
+        quotes.forEach((q, index) => {
+            const best = q.options.find((o: any) => o.isRecommended) || q.options[0];
+            const row = sheet.addRow({
+                quoteNum: q.quoteNumber,
+                client: q.clientName,
+                type: q.insuranceType,
+                coverage: q.coverageType,
+                status: q.status,
+                sumInsured: q.sumInsuredRequested,
+                bestPremium: best?.premium ?? 0,
+                bestCarrier: best?.carrierName ?? '—',
+                commission: best?.commissionAmount ?? 0,
+                reqDate: q.requestDate ? formatDate(q.requestDate) : '—',
+                validUntil: q.validUntil ? formatDate(q.validUntil) : '—',
+                preparedBy: q.preparedBy,
+            });
+
+            // Format monetary columns
+            row.getCell('sumInsured').numFmt = '#,##0.00';
+            row.getCell('bestPremium').numFmt = '#,##0.00';
+            row.getCell('commission').numFmt = '#,##0.00';
+
+            // Alternating row colors
+            if (index % 2 === 1) {
+                row.eachCell((cell) => {
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                });
+            }
+
+            // Cell borders
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                };
+            });
+        });
+
+        sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+        // Download
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `Quotes-Export-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+        toast.success(`Exported ${quotes.length} quotes to Excel.`);
+    } catch (error) {
+        console.error('Export failed:', error);
+        toast.error('Failed to export quotes');
+    }
 }
 
 // ─── Quote Detail Modal ───
@@ -639,9 +723,9 @@ export default function QuotesPage() {
                         variant="outline"
                         size="sm"
                         leftIcon={<Download size={14} />}
-                        onClick={() => exportToCsv(filtered)}
+                        onClick={() => exportToExcel(filtered)}
                     >
-                        Export CSV
+                        Export Excel
                     </Button>
                     <Button
                         variant="primary"

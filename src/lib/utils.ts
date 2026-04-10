@@ -89,16 +89,3 @@ export function getClientDisplayName(client: { type: string; companyName?: strin
     return `${client.firstName || ''} ${client.lastName || ''}`.trim();
 }
 
-/**
- * Escape a CSV cell value: quote fields with commas/quotes/newlines,
- * and prefix formula-triggering characters to prevent CSV injection.
- */
-export function safeCsvCell(value: unknown): string {
-    const str = value == null ? '' : String(value);
-    // Prevent formula injection: prefix dangerous first characters with a single quote
-    const safe = /^[=+\-@\t\r]/.test(str) ? `'${str}` : str;
-    if (safe.includes(',') || safe.includes('"') || safe.includes('\n')) {
-        return `"${safe.replace(/"/g, '""')}"`;
-    }
-    return safe;
-}

@@ -191,7 +191,7 @@ export function NotificationsPopover() {
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center gap-3">
                             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${(TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).bg} ${(TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).text}`}>
-                                {React.cloneElement((TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).icon as React.ReactElement, { size: 24 })}
+                                {React.cloneElement((TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).icon as React.ReactElement<any>, { size: 24 })}
                             </div>
                             <div>
                                 <h2 className="text-[11px] font-black uppercase tracking-[3px] text-surface-500 mb-1">{selectedNotification.type} Notification</h2>

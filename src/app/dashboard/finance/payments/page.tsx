@@ -20,6 +20,9 @@ import { useTransactions } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import { toast } from 'sonner';
 
 type Method = 'all' | 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'CASH' | 'CHEQUE' | 'CARD';
 
@@ -80,6 +83,91 @@ export default function PaymentsPage() {
         ? allReceipts
         : allReceipts.filter((r: any) => r.paymentMethod === methodFilter);
 
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Payments Statement');
+
+            // Columns setup
+            sheet.columns = [
+                { header: 'Receipt #', key: 'receiptNumber', width: 20 },
+                { header: 'Client', key: 'clientName', width: 25 },
+                { header: 'Policy #', key: 'policyNumber', width: 20 },
+                { header: 'Invoice #', key: 'invoiceNumber', width: 20 },
+                { header: 'Amount', key: 'amount', width: 15 },
+                { header: 'Method', key: 'paymentMethod', width: 20 },
+                { header: 'Reference', key: 'reference', width: 20 },
+                { header: 'Date', key: 'dateReceived', width: 15 },
+            ];
+
+            // Header formatting
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Using Emerald/Green for finances
+                let fillColor = 'FF10B981'; // Default Emerald
+                if (colNumber === 1 || colNumber === 6) fillColor = 'FFF97316'; // Orange for Ref/Method
+                if (colNumber === 2 || colNumber === 3) fillColor = 'FF3B82F6'; // Blue for Client/Policy
+
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            // Rows
+            filtered.forEach((r, index) => {
+                const row = sheet.addRow({
+                    receiptNumber: r.receiptNumber,
+                    clientName: r.clientName,
+                    policyNumber: r.policyNumber || '—',
+                    invoiceNumber: r.invoiceNumber || '—',
+                    amount: r.amount ?? 0,
+                    paymentMethod: METHOD_LABELS[r.paymentMethod] || r.paymentMethod,
+                    reference: r.reference || '—',
+                    dateReceived: formatDate(r.dateReceived),
+                });
+
+                row.getCell('amount').numFmt = '#,##0.00';
+
+                if (index % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Payments-Statement-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported ${filtered.length} payments to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export payments');
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -91,15 +179,7 @@ export default function PaymentsPage() {
                         <p className="text-sm text-surface-500 mt-1">Complete record of all premium payments received.</p>
                     </div>
                 </div>
-                <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
-                    const csv = ['Receipt #,Client,Policy #,Invoice #,Amount,Method,Reference,Date',
-                        ...filtered.map(r => `${r.receiptNumber},"${r.clientName}",${r.policyNumber || ''},${r.invoiceNumber || ''},${r.amount},${r.paymentMethod},${r.reference},${r.dateReceived}`)
-                    ].join('\n');
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = 'payment-statement.csv'; a.click();
-                    URL.revokeObjectURL(url);
-                }}>Export Statement</Button>
+                <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>Export Statement</Button>
             </div>
 
             {/* KPI Strip */}

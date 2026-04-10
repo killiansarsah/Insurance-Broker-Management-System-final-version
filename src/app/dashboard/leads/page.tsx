@@ -15,6 +15,7 @@ import {
     ArrowRight,
     Search,
     ChevronDown,
+    Download,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { Card } from '@/components/ui/card';
@@ -28,6 +29,9 @@ import { formatCurrency, formatDate, cn, getInitials } from '@/lib/utils';
 import type { Lead, LeadStatus, LeadPriority } from '@/types';
 import Link from 'next/link';
 import { AppLoader } from '@/components/ui/AppLoader';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import { toast } from 'sonner';
 
 // --- Lead Pipeline Stages ---
 const LEAD_STAGES = [
@@ -103,6 +107,87 @@ export default function LeadsPage() {
         }
     };
 
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Leads Pipeline');
+
+            sheet.columns = [
+                { header: 'Lead No.', key: 'leadNumber', width: 15 },
+                { header: 'Contact Name', key: 'contactName', width: 25 },
+                { header: 'Company Name', key: 'companyName', width: 25 },
+                { header: 'Status', key: 'status', width: 20 },
+                { header: 'Priority', key: 'priority', width: 15 },
+                { header: 'Strength (%)', key: 'score', width: 15 },
+                { header: 'Est. Premium', key: 'estimatedPremium', width: 20 },
+                { header: 'Agent', key: 'assignedBrokerName', width: 25 },
+            ];
+
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Blue theme for leads
+                let fillColor = 'FF3B82F6'; // Blue 500
+                if (colNumber === 4 || colNumber === 5) fillColor = 'FFF59E0B'; // Amber 500
+                if (colNumber >= 6 && colNumber <= 7) fillColor = 'FF10B981'; // Emerald 500
+
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            filteredLeads.forEach((l, index) => {
+                const row = sheet.addRow({
+                    leadNumber: l.leadNumber || '—',
+                    contactName: l.contactName || '—',
+                    companyName: l.companyName || '—',
+                    status: l.status || '—',
+                    priority: l.priority || '—',
+                    score: l.score || 0,
+                    estimatedPremium: l.estimatedPremium || 0,
+                    assignedBrokerName: l.assignedBrokerName || 'Unassigned',
+                });
+
+                row.getCell('estimatedPremium').numFmt = '#,##0.00';
+                
+                if (index % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Leads-Export-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported ${filteredLeads.length} leads to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export leads');
+        }
+    };
+
     if (isLoading) {
         return <AppLoader message="Loading leads..." isLoading={true} />;
     }
@@ -142,6 +227,15 @@ export default function LeadsPage() {
                             <List size={18} />
                         </button>
                     </div>
+
+                    <Button
+                        variant="outline"
+                        className="rounded-xl px-4"
+                        onClick={handleExportExcel}
+                        leftIcon={<Download size={18} />}
+                    >
+                        Export Excel
+                    </Button>
 
                     <Link href="/dashboard/leads/new">
                         <Button

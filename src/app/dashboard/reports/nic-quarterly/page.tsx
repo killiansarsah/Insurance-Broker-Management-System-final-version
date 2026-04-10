@@ -60,7 +60,7 @@ export default function NicQuarterlyReturnPage() {
                             <option key={q} value={q}>Q{q}</option>
                         ))}
                     </select>
-                    <Button variant="primary" leftIcon={<Download size={16} />} onClick={() => toast.success('Export Started', { description: 'NIC quarterly return is being generated.' })}>
+                    <Button variant="primary" leftIcon={<Download size={16} />} onClick={handleExcel}>
                         Export Filing
                     </Button>
                 </div>

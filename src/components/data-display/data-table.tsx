@@ -13,7 +13,7 @@ import {
     Inbox,
     FileSpreadsheet,
 } from 'lucide-react';
-import { cn, safeCsvCell } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 
 interface Column<T> {
@@ -250,30 +250,48 @@ export function DataTable<T>({
         onSelectionChange(newArray);
     }, [selectedRows, onSelectionChange]);
 
-    const handleExportCSV = useCallback(() => {
+    const handleExportCSV = useCallback(async () => {
         if (onExport) {
             onExport();
             return;
         }
-        const headers = columns.map((c) => c.label).join(',');
-        const rows = sortedData.map((row) =>
-            columns
-                .map((c) => {
-                    // Check if there is an export value function, otherwise rely on the key
-                    if (c.exportValue) return safeCsvCell(c.exportValue(row));
+
+        try {
+            const ExcelJS = await import('exceljs');
+            const { saveAs } = await import('file-saver');
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet('Export');
+
+            const headers = columns.map((c) => c.label);
+            const headerRow = sheet.addRow(headers);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+            headerRow.eachCell(cell => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF374151' } };
+                cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+            });
+
+            sortedData.forEach((row, i) => {
+                const rowData = columns.map((c) => {
+                    if (c.exportValue) return c.exportValue(row) ?? '';
                     const val = (row as Record<string, unknown>)[c.key];
-                    return safeCsvCell(val);
-                })
-                .join(',')
-        );
-        const csv = [headers, ...rows].join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Brokerium_Export_${new Date().toISOString().slice(0, 10)}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
+                    return val ?? '';
+                });
+                const excelRow = sheet.addRow(rowData);
+                excelRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' } };
+                excelRow.eachCell((cell) => {
+                    cell.border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }, left: { style: 'thin', color: { argb: 'FFE2E8F0' } }, right: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+                });
+            });
+
+            sheet.columns.forEach(col => { col.width = 20; });
+            sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Brokerium_Export_${new Date().toISOString().slice(0, 10)}.xlsx`);
+        } catch (err) {
+            console.error('Export failed:', err);
+        }
     }, [columns, sortedData, onExport]);
 
     const handlePageSizeChange = useCallback((newSize: number) => {

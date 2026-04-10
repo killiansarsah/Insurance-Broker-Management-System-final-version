@@ -86,15 +86,44 @@ export default function InvoicesPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
-                        const csv = ['Invoice #,Client,Policy #,Description,Amount,Paid,Balance,Due Date,Status',
-                            ...filtered.map(i => `${i.invoiceNumber},"${i.clientName}",${i.policyNumber},"${i.description}",${i.amount},${i.amountPaid},${i.amount - i.amountPaid},${i.dateDue},${i.status}`)
-                        ].join('\n');
-                        const blob = new Blob([csv], { type: 'text/csv' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a'); a.href = url; a.download = 'invoices.csv'; a.click();
-                        URL.revokeObjectURL(url);
-                    }}>Export CSV</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={async () => {
+                        const ExcelJS = await import('exceljs');
+                        const { saveAs } = await import('file-saver');
+                        const workbook = new ExcelJS.Workbook();
+                        const sheet = workbook.addWorksheet('Invoices');
+
+                        sheet.mergeCells('A1:I1');
+                        sheet.getCell('A1').value = 'Invoice Report';
+                        sheet.getCell('A1').font = { bold: true, size: 14 };
+                        sheet.mergeCells('A2:I2');
+                        sheet.getCell('A2').value = `Generated: ${new Date().toLocaleString()}`;
+                        sheet.getCell('A2').font = { size: 10, color: { argb: 'FF64748B' } };
+
+                        const headers = ['Invoice #', 'Client', 'Policy #', 'Description', 'Amount (GHS)', 'Paid (GHS)', 'Balance (GHS)', 'Due Date', 'Status'];
+                        const headerRow = sheet.getRow(4);
+                        headerRow.values = headers;
+                        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+                        const headerColors = ['FFEA580C', 'FFEA580C', 'FF1D4ED8', 'FF1D4ED8', 'FF047857', 'FF047857', 'FFBE123C', 'FF4338CA', 'FF0F766E'];
+                        headerRow.eachCell((cell: any, colNumber: number) => {
+                            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: headerColors[colNumber - 1] || 'FF374151' } };
+                            cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+                            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+                        });
+                        sheet.views = [{ state: 'frozen', ySplit: 4 }];
+
+                        filtered.forEach((inv: any, i: number) => {
+                            const row = sheet.addRow([inv.invoiceNumber, inv.clientName, inv.policyNumber, inv.description, inv.amount, inv.amountPaid, inv.amount - (inv.amountPaid || 0), inv.dateDue, inv.status]);
+                            row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' } };
+                            row.eachCell((cell: any) => {
+                                cell.border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, left: { style: 'thin', color: { argb: 'FFE2E8F0' } }, bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }, right: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+                            });
+                        });
+                        sheet.columns.forEach((col: any) => { col.width = 20; });
+
+                        const buffer = await workbook.xlsx.writeBuffer();
+                        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                        saveAs(blob, `invoices-${new Date().toISOString().slice(0, 10)}.xlsx`);
+                    }}>Export Excel</Button>
                     <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setShowNewInvoice(true)}>New Invoice</Button>
                 </div>
             </div>

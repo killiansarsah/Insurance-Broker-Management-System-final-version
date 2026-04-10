@@ -31,7 +31,7 @@ export function ClientExportModal({
   filteredCount,
 }: ClientExportModalProps) {
   const [exportType, setExportType] = useState('FULL');
-  const [format, setFormat] = useState('XLSX');
+  const [format] = useState('XLSX');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [isExporting, setIsExporting] = useState(false);
@@ -150,43 +150,7 @@ export function ClientExportModal({
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h4 className="text-sm font-medium text-surface-900">File Format</h4>
-            <div className="flex gap-4">
-              <label
-                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  format === 'XLSX' ? 'border-primary-500 bg-primary-50/50 text-primary-700' : 'border-surface-200 text-surface-600 hover:bg-surface-50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="format"
-                  value="XLSX"
-                  checked={format === 'XLSX'}
-                  onChange={(e) => setFormat(e.target.value)}
-                  className="sr-only"
-                />
-                <FileSpreadsheet size={18} />
-                <span className="text-sm font-medium">Excel (.xlsx)</span>
-              </label>
-              <label
-                className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  format === 'CSV' ? 'border-primary-500 bg-primary-50/50 text-primary-700' : 'border-surface-200 text-surface-600 hover:bg-surface-50'
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="format"
-                  value="CSV"
-                  checked={format === 'CSV'}
-                  onChange={(e) => setFormat(e.target.value)}
-                  className="sr-only"
-                />
-                <FileText size={18} />
-                <span className="text-sm font-medium">CSV</span>
-              </label>
-            </div>
-          </div>
+
 
           <div className="space-y-3">
             <h4 className="text-sm font-medium text-surface-900 flex items-center gap-2">

@@ -18,7 +18,9 @@ import { useCommissions, useCommissionMetrics } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
-// removed nuqs import
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import { toast } from 'sonner';
 import { ReceiveCommissionModal } from '@/components/finance/receive-commission-modal';
 export default function CommissionsPage() {
     // Local state for pagination
@@ -62,7 +64,100 @@ export default function CommissionsPage() {
         ...brokerList.map((b: any) => ({ label: b.brokerName, value: b.brokerId })),
     ];
 
-// Removed separate rowActions variable
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Commission Statement');
+
+            // Columns setup
+            sheet.columns = [
+                { header: 'Policy #', key: 'policyNumber', width: 20 },
+                { header: 'Client', key: 'clientName', width: 25 },
+                { header: 'Product', key: 'product', width: 20 },
+                { header: 'Broker', key: 'brokerName', width: 20 },
+                { header: 'Rate (%)', key: 'commissionRate', width: 12 },
+                { header: 'Premium', key: 'premium', width: 15 },
+                { header: 'Commission', key: 'commission', width: 15 },
+                { header: 'NIC Levy', key: 'nicLevy', width: 15 },
+                { header: 'Net Commission', key: 'netCommission', width: 18 },
+                { header: 'Status', key: 'status', width: 15 },
+                { header: 'Date Issued', key: 'dateIssued', width: 15 },
+            ];
+
+            // Header formatting
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Using Emerald/Green for finances
+                let fillColor = 'FF10B981'; // Default Emerald
+                if (colNumber === 1 || colNumber === 10) fillColor = 'FFF97316'; // Orange for Ref/Status
+                if (colNumber >= 2 && colNumber <= 4) fillColor = 'FF3B82F6'; // Blue for Details
+
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            // Rows
+            items.forEach((c: any, index: number) => {
+                const row = sheet.addRow({
+                    policyNumber: c.policy?.policyNumber || c.policyNumber || 'Unknown',
+                    clientName: c.client ? (c.client.companyName || `${c.client.firstName} ${c.client.lastName}`) : 'Unknown',
+                    product: c.productType || '—',
+                    brokerName: c.broker?.firstName ? `${c.broker.firstName} ${c.broker.lastName}` : c.brokerName || '—',
+                    commissionRate: c.commissionRate || 0,
+                    premium: c.premiumAmount || 0,
+                    commission: c.commissionAmount || 0,
+                    nicLevy: c.nicLevy || 0,
+                    netCommission: c.netCommission || 0,
+                    status: c.status || '—',
+                    dateIssued: c.datePolicyIssued ? formatDate(c.datePolicyIssued) : '—',
+                });
+
+                row.getCell('commissionRate').numFmt = '0.00%';
+                row.getCell('premium').numFmt = '#,##0.00';
+                row.getCell('commission').numFmt = '#,##0.00';
+                row.getCell('nicLevy').numFmt = '#,##0.00';
+                row.getCell('netCommission').numFmt = '#,##0.00';
+
+                if (index % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Commission-Statement-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported ${items.length} commission records to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export commissions');
+        }
+    };
 
     return (
         <div className="space-y-6 animate-fade-in">
@@ -75,16 +170,7 @@ export default function CommissionsPage() {
                         <p className="text-sm text-surface-500 mt-1">Broker earnings, payouts, and clawbacks.</p>
                     </div>
                 </div>
-                <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => {
-                    // Quick local export based on current view
-                    const csv = ['Policy #,Client,Product,Broker,Rate %,Premium,Commission,NIC Levy,Net Commission,Status,Date Issued',
-                        ...items.map((c: any) => `${c.policyNumber},"${c.clientName}",${c.productType},${c.brokerName},${c.commissionRate},${c.premiumAmount},${c.commissionAmount},${c.nicLevy},${c.netCommission},${c.status},${c.datePolicyIssued}`)
-                    ].join('\n');
-                    const blob = new Blob([csv], { type: 'text/csv' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = 'commission-statement.csv'; a.click();
-                    URL.revokeObjectURL(url);
-                }}>Export View</Button>
+                <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>Export Statement</Button>
             </div>
 
             {/* KPI Strip */}

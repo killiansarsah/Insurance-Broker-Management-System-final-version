@@ -27,7 +27,7 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { usePolicies, usePolicyMetrics, useCancelPolicy } from '@/hooks/api';
-import { formatCurrency, formatDate, cn, safeCsvCell } from '@/lib/utils';
+import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -75,20 +75,46 @@ async function exportToExcel(policies: any[]) {
         // Blank Row 3
         sheet.addRow([]);
 
-        // 2. Header Row Styling
+        // 2. Header Row Styling — Premium multi-color by category
         const headerRow = sheet.getRow(4);
         headerRow.values = headers;
         headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
-        headerRow.fill = {
-            type: 'pattern',
-            pattern: 'solid',
-            fgColor: { argb: 'FF085041' }, // Deep Brokerium green
-        };
+
+        // Color-code headers by category
+        headerRow.eachCell((cell) => {
+            const text = cell.value?.toString() || '';
+            let bgColor = 'FF374151'; // Default Gray 700
+
+            const identity = ['POLICY NUMBER', 'CLIENT', 'INSURANCE TYPE', 'COVERAGE', 'STATUS'];
+            const insurer = ['INSURER'];
+            const financial = ['PREMIUM (GHS)', 'SUM INSURED (GHS)', 'COMMISSION RATE', 'COMMISSION AMT', 'PAYMENT STATUS'];
+            const dates = ['INCEPTION', 'EXPIRY'];
+            const broker = ['BROKER'];
+
+            if (identity.includes(text)) bgColor = 'FFEA580C'; // Orange 600
+            else if (insurer.includes(text)) bgColor = 'FF1D4ED8'; // Blue 700
+            else if (financial.includes(text)) bgColor = 'FF047857'; // Emerald 700
+            else if (dates.includes(text)) bgColor = 'FF4338CA'; // Indigo 700
+            else if (broker.includes(text)) bgColor = 'FF0F766E'; // Teal 700
+
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: bgColor },
+            };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'FF1E293B' } },
+                left: { style: 'thin', color: { argb: 'FF1E293B' } },
+                bottom: { style: 'thin', color: { argb: 'FF1E293B' } },
+                right: { style: 'thin', color: { argb: 'FF1E293B' } },
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
 
         // Freeze top 4 rows
         sheet.views = [{ state: 'frozen', ySplit: 4 }];
 
-        // 3. Data Rows & Alternating Colors
+        // 3. Data Rows & Alternating Colors with borders
         policies.forEach((p, index) => {
             const rowData = [
                 p.policyNumber || '-',
@@ -111,8 +137,17 @@ async function exportToExcel(policies: any[]) {
             row.fill = {
                 type: 'pattern',
                 pattern: 'solid',
-                fgColor: { argb: index % 2 === 0 ? 'FFFFFFFF' : 'FFF0FAF6' }, // Alternating rows
+                fgColor: { argb: index % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' }, // White / Slate 50
             };
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                };
+                cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            });
         });
 
         // 4. Footer & Column Widths

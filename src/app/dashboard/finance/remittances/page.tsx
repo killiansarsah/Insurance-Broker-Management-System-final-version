@@ -18,6 +18,8 @@ import { BackButton } from '@/components/ui/back-button';
 import { useRemittances, useCreateRemittance, useConfirmRemittance } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const STATUS_OPTIONS = [
     { label: 'All Statuses', value: 'all' },
@@ -102,6 +104,79 @@ export default function RemittancesPage() {
         );
     };
 
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            const sheet = workbook.addWorksheet('Remittances');
+
+            sheet.columns = [
+                { header: 'Remittance #', key: 'remittanceNumber', width: 20 },
+                { header: 'Carrier', key: 'carrier', width: 25 },
+                { header: 'Policy', key: 'policy', width: 20 },
+                { header: 'Premium', key: 'premiumAmount', width: 15 },
+                { header: 'Remitted', key: 'amountRemitted', width: 15 },
+                { header: 'Status', key: 'status', width: 15 },
+                { header: 'Date', key: 'remittanceDate', width: 20 },
+            ];
+
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Teal theme for remittances
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0D9488' } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            remittances.forEach((r: any, i) => {
+                const row = sheet.addRow({
+                    remittanceNumber: r.remittanceNumber,
+                    carrier: r.carrier?.name || '—',
+                    policy: r.policy?.policyNumber || '—',
+                    premiumAmount: Number(r.premiumAmount) || 0,
+                    amountRemitted: Number(r.amountRemitted) || 0,
+                    status: r.status,
+                    remittanceDate: r.remittanceDate ? formatDate(r.remittanceDate) : '—',
+                });
+
+                row.getCell('premiumAmount').numFmt = '#,##0.00';
+                row.getCell('amountRemitted').numFmt = '#,##0.00';
+
+                if (i % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', ySplit: 1 }];
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Remittances-Export-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported ${remittances.length} remittances to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export remittances');
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -114,8 +189,8 @@ export default function RemittancesPage() {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.info('Export coming soon')}>
-                        Export
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>
+                        Export Excel
                     </Button>
                     <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => setShowForm(v => !v)}>
                         {showForm ? 'Cancel' : 'New Remittance'}

@@ -14,6 +14,10 @@ import { useClaims, useClaimMetrics } from '@/hooks/api';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
 import { AppLoader } from '@/components/ui/AppLoader';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
+import { toast } from 'sonner';
+import { Download } from 'lucide-react';
 
 const CLAIM_STATUSES = [
     { label: 'All', value: 'all' },
@@ -143,6 +147,93 @@ export default function ClaimsPage() {
         return 'All Claims';
     };
 
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Claims Data');
+
+            sheet.columns = [
+                { header: 'Claim #', key: 'claimNumber', width: 20 },
+                { header: 'Client Name', key: 'clientName', width: 25 },
+                { header: 'Policy #', key: 'policyNumber', width: 20 },
+                { header: 'Type', key: 'insuranceType', width: 20 },
+                { header: 'Status', key: 'status', width: 15 },
+                { header: 'Incident Date', key: 'incidentDate', width: 15 },
+                { header: 'Claimed Amt', key: 'claimAmount', width: 20 },
+                { header: 'Approved Amt', key: 'assessedAmount', width: 20 },
+                { header: '5-Day Deadline', key: 'acknowledgmentDeadline', width: 15 },
+                { header: '30-Day Deadline', key: 'processingDeadline', width: 15 },
+            ];
+
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Red/Danger for claims
+                let fillColor = 'FFDC2626'; // Red 600
+                if (colNumber === 1 || colNumber === 5) fillColor = 'FFF97316'; // Orange
+                if (colNumber >= 7 && colNumber <= 8) fillColor = 'FF10B981'; // Emerald 
+
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            filteredClaims.forEach((c: any, index: number) => {
+                const row = sheet.addRow({
+                    claimNumber: c.claimNumber || '—',
+                    clientName: c.clientName || '—',
+                    policyNumber: c.policyNumber || '—',
+                    insuranceType: c.insuranceType || '—',
+                    status: c.status || '—',
+                    incidentDate: c.incidentDate ? formatDate(c.incidentDate as string) : '—',
+                    claimAmount: c.claimAmount || 0,
+                    assessedAmount: c.assessedAmount || 0,
+                    acknowledgmentDeadline: c.acknowledgmentDeadline ? formatDate(c.acknowledgmentDeadline as string) : '—',
+                    processingDeadline: c.processingDeadline ? formatDate(c.processingDeadline as string) : '—',
+                });
+
+                row.getCell('claimAmount').numFmt = '#,##0.00';
+                row.getCell('assessedAmount').numFmt = '#,##0.00';
+
+                if (index % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+                
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Claims-Export-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported ${filteredClaims.length} claims to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export claims');
+        }
+    };
+
     const stats = [
         { label: 'Open Claims', value: metricsData?.openClaims ?? 0, icon: AlertCircle, color: 'text-warning-600', bg: 'bg-warning-50' },
         { label: 'Settled', value: metricsData?.settledClaims ?? 0, icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
@@ -203,6 +294,13 @@ export default function ClaimsPage() {
                     {typeParam && (
                         <Button variant="ghost" onClick={() => router.push('/dashboard/claims')}>View All</Button>
                     )}
+                    <Button
+                        variant="outline"
+                        leftIcon={<Download size={16} />}
+                        onClick={handleExportExcel}
+                    >
+                        Export Excel
+                    </Button>
                     <Button
                         variant="primary"
                         leftIcon={<Plus size={16} />}

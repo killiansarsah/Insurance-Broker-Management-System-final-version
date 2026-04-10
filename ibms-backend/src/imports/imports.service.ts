@@ -141,15 +141,41 @@ export class ImportsService {
     }
 
     templateSheet.addRow(headers);
-    templateSheet.getRow(1).font = { bold: true };
-    templateSheet.getRow(1).fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: 'FFE0E0E0' },
-    };
+    const headerRow = templateSheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+    // Apply category-based coloring to import template headers
+    headerRow.eachCell((cell) => {
+      const text = cell.value?.toString() || '';
+      let bgColor = 'FF374151'; // Default Gray 700
+
+      const basic = ['Client Type', 'First Name', 'Last Name', 'Company Name'];
+      const demog = ['Date of Birth (YYYY-MM-DD)', 'Gender', 'Marital Status', 'Nationality', 'Ghana Card Number', 'TIN'];
+      const contact = ['Phone', 'Email', 'Digital Address', 'Residential Address'];
+      const employ = ['Occupation'];
+      const kyc = ['KYC Status', 'AML Risk Level', 'PEP (Yes/No)'];
+
+      if (basic.includes(text)) bgColor = 'FFEA580C'; // Orange 600
+      else if (demog.includes(text)) bgColor = 'FF1D4ED8'; // Blue 700
+      else if (contact.includes(text)) bgColor = 'FF4338CA'; // Indigo 700
+      else if (employ.includes(text)) bgColor = 'FF0F766E'; // Teal 700
+      else if (kyc.includes(text)) bgColor = 'FFBE123C'; // Rose 700
+
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: bgColor },
+      };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF1E293B' } },
+        left: { style: 'thin', color: { argb: 'FF1E293B' } },
+        bottom: { style: 'thin', color: { argb: 'FF1E293B' } },
+        right: { style: 'thin', color: { argb: 'FF1E293B' } },
+      };
+      cell.alignment = { vertical: 'middle', horizontal: 'left' };
+    });
 
     if (dataType === 'clients') {
-      templateSheet.addRow([
+      const sampleRow = templateSheet.addRow([
         'INDIVIDUAL',
         'John',
         'Doe',
@@ -169,6 +195,20 @@ export class ImportsService {
         'LOW',
         'No',
       ]);
+      // Style the sample row with subtle alternating color
+      sampleRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFF8FAFC' }, // Slate 50
+      };
+      sampleRow.eachCell((cell) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+          right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+        };
+      });
     }
 
     templateSheet.columns.forEach((c) => {
@@ -202,7 +242,14 @@ export class ImportsService {
         'AML Risk Level',
         'PEP',
       ]);
-      validValuesSheet.getRow(1).font = { bold: true };
+      const vvHeaderRow = validValuesSheet.getRow(1);
+      vvHeaderRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+      const vvColors = ['FFEA580C', 'FF1D4ED8', 'FF4338CA', 'FFBE123C', 'FFBE123C', 'FF0F766E'];
+      vvHeaderRow.eachCell((cell, colNumber) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: vvColors[colNumber - 1] || 'FF374151' } };
+        cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+        cell.alignment = { vertical: 'middle', horizontal: 'left' };
+      });
 
       const maxRows = 4;
       const clientTypes = ['INDIVIDUAL', 'CORPORATE', '', ''];

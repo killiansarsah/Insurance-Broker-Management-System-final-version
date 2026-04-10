@@ -18,23 +18,7 @@ function deadlineStatus(deadline?: string, completedDate?: string): 'MET' | 'BRE
     return new Date(deadline) < new Date() ? 'BREACHED' : 'PENDING';
 }
 
-// ─── CSV export ───────────────────────────────────────────────────────────────
-function exportCsv(rows: Record<string, string>[], filename: string) {
-    if (rows.length === 0) return toast.error('No data to export');
-    const headers = Object.keys(rows[0]);
-    const lines = [
-        headers.join(','),
-        ...rows.map(r => headers.map(h => `"${(r[h] ?? '').replace(/"/g, '""')}"`).join(','))
-    ];
-    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Excel file downloaded');
-}
+
 
 // ─── Quarterly shortcuts ──────────────────────────────────────────────────────
 function getQuarterRange(offset: number): { from: string; to: string; label: string } {
@@ -140,13 +124,68 @@ export default function NicRegisterPage() {
         'Follow-Up Interactions', 'Account Officer',
     ];
 
-    function handleExcel() {
+    async function handleExcel() {
+        const ExcelJS = await import('exceljs');
+        const { saveAs } = await import('file-saver');
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet('NIC Claims Register');
+
+        // Title
+        const lastColLetter = String.fromCharCode(64 + Math.min(DISPLAY_COLUMNS.length, 26));
+        sheet.mergeCells(`A1:${lastColLetter}1`);
+        sheet.getCell('A1').value = `NIC Claims Register — ${dateFrom} to ${dateTo}`;
+        sheet.getCell('A1').font = { bold: true, size: 14 };
+        sheet.mergeCells(`A2:${lastColLetter}2`);
+        sheet.getCell('A2').value = `Generated: ${new Date().toLocaleString()} · NIC Act 1061`;
+        sheet.getCell('A2').font = { size: 10, color: { argb: 'FF64748B' } };
+
+        // Header row (row 4) with category colors
+        const headerRow = sheet.getRow(4);
+        headerRow.values = DISPLAY_COLUMNS;
+        headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+
+        const identityCols = ['Claim Number', 'Policy Number', 'Client Name', 'Client TIN'];
+        const insurerCols = ['Carrier Name', 'Insurance Type', 'Peril Type'];
+        const dateCols = ['Incident Date', 'Date Intimated', 'Date Acknowledged', '5-Day Deadline', 'Settlement Date', '30-Day Deadline'];
+        const complianceCols = ['5-Day Compliance', '30-Day Compliance', 'Claim Status'];
+        const financialCols = ['Claimed Amount (GHS)', 'Approved Amount (GHS)'];
+        const otherCols = ['Follow-Up Interactions', 'Account Officer'];
+
+        headerRow.eachCell((cell: any, colNumber: number) => {
+            const text = cell.value?.toString() || '';
+            let bgColor = 'FF374151'; // Gray default
+            if (identityCols.includes(text)) bgColor = 'FFEA580C'; // Orange
+            else if (insurerCols.includes(text)) bgColor = 'FF1D4ED8'; // Blue
+            else if (dateCols.includes(text)) bgColor = 'FF4338CA'; // Indigo
+            else if (complianceCols.includes(text)) bgColor = 'FFBE123C'; // Rose
+            else if (financialCols.includes(text)) bgColor = 'FF047857'; // Emerald
+            else if (otherCols.includes(text)) bgColor = 'FF0F766E'; // Teal
+
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+            cell.border = { top: { style: 'thin', color: { argb: 'FF1E293B' } }, left: { style: 'thin', color: { argb: 'FF1E293B' } }, bottom: { style: 'thin', color: { argb: 'FF1E293B' } }, right: { style: 'thin', color: { argb: 'FF1E293B' } } };
+            cell.alignment = { vertical: 'middle', horizontal: 'left' };
+        });
+        sheet.views = [{ state: 'frozen', ySplit: 4 }];
+
+        // Data rows
         const exportRows = rows.map(r => {
             const o: Record<string, string> = {};
             DISPLAY_COLUMNS.forEach(col => { o[col] = (r as any)[col] ?? ''; });
             return o;
         });
-        exportCsv(exportRows, `NIC-Claims-Register-${dateFrom}-to-${dateTo}.csv`);
+        exportRows.forEach((r, i) => {
+            const row = sheet.addRow(DISPLAY_COLUMNS.map(col => r[col]));
+            row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC' } };
+            row.eachCell((cell: any) => {
+                cell.border = { top: { style: 'thin', color: { argb: 'FFE2E8F0' } }, left: { style: 'thin', color: { argb: 'FFE2E8F0' } }, bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } }, right: { style: 'thin', color: { argb: 'FFE2E8F0' } } };
+            });
+        });
+        sheet.columns.forEach((col: any) => { col.width = 18; });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `NIC-Claims-Register-${dateFrom}-to-${dateTo}.xlsx`);
+        toast.success('Excel file downloaded');
     }
 
     function handlePdf() {

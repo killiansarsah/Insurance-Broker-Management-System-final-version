@@ -24,6 +24,8 @@ import { useCommissions } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 const MODULE_CARDS = [
     {
@@ -119,6 +121,77 @@ export default function FinanceOverviewPage() {
         { label: 'Commissions Earned', value: formatCurrency(totalCommissionsEarned), icon: DollarSign, color: 'text-amber-600', bg: 'bg-amber-50' },
     ];
 
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Finance Overview');
+
+            sheet.columns = [
+                { header: 'Metric', key: 'metric', width: 30 },
+                { header: 'Value', key: 'value', width: 20 },
+            ];
+
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Emerald
+                let fillColor = 'FF10B981'; 
+
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            const metrics = [
+                { metric: 'Total Revenue', value: totalRevenue },
+                { metric: 'Collected', value: collected },
+                { metric: 'Outstanding', value: outstanding },
+                { metric: 'Overdue', value: overdue },
+                { metric: 'Commissions Earned', value: totalCommissionsEarned },
+            ];
+
+            metrics.forEach((m, index) => {
+                const row = sheet.addRow(m);
+                row.getCell('value').numFmt = '#,##0.00';
+
+                if (index % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Finance-Overview-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported Finance Overview to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export finance overview');
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -128,7 +201,7 @@ export default function FinanceOverviewPage() {
                     <p className="text-sm text-surface-500 mt-1">Premium collection, commissions & financial reporting.</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={() => toast.success('Export Ready', { description: 'Finance report has been generated and is downloading.' })}>Export</Button>
+                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>Export Excel</Button>
                     <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => router.push('/dashboard/finance/invoices?new=1')}>New Invoice</Button>
                 </div>
             </div>

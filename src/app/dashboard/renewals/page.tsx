@@ -9,7 +9,6 @@ import {
     AlertTriangle,
     XCircle,
     CheckCircle2,
-    TrendingUp,
     CalendarDays,
     Phone,
     Mail,
@@ -25,7 +24,11 @@ import {
     FileText,
     Zap,
     History,
+    Download,
+    TrendingUp,
 } from 'lucide-react';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { Card } from '@/components/ui/card';
@@ -615,6 +618,90 @@ export default function RenewalsPage() {
         router.push(`/dashboard/renewals?tab=${tab}`, { scroll: false });
     };
 
+    // --- Excel Export ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Renewals');
+
+            sheet.columns = [
+                { header: 'Policy No.', key: 'policyNumber', width: 22 },
+                { header: 'Client Name', key: 'clientName', width: 30 },
+                { header: 'Agent', key: 'assignedAgent', width: 25 },
+                { header: 'Urgency', key: 'urgencyLevel', width: 15 },
+                { header: 'Status', key: 'renewalStatus', width: 20 },
+                { header: 'Expiry Date', key: 'expiryDate', width: 15 },
+                { header: 'Days to Expiry', key: 'daysToExpiry', width: 15 },
+                { header: 'Current Premium', key: 'currentPremium', width: 18 },
+                { header: 'Proposed Premium', key: 'proposedPremium', width: 18 },
+            ];
+
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell, colNumber) => {
+                cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                // Blue/Teal theme for renewals
+                let fillColor = 'FF0F766E'; // Teal 700
+                if (colNumber >= 8) fillColor = 'FF10B981'; // Emerald 500
+                if (colNumber === 4 || colNumber === 5) fillColor = 'FFF59E0B'; // Amber 500
+
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = {
+                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
+                };
+            });
+            headerRow.height = 30;
+
+            filteredRenewals.forEach((r, index) => {
+                const row = sheet.addRow({
+                    policyNumber: r.policyNumber || '—',
+                    clientName: r.clientName || '—',
+                    assignedAgent: r.assignedAgent || '—',
+                    urgencyLevel: r.urgencyLevel || '—',
+                    renewalStatus: r.renewalStatus || '—',
+                    expiryDate: r.expiryDate ? formatDate(r.expiryDate) : '—',
+                    daysToExpiry: r.daysToExpiry,
+                    currentPremium: r.currentPremium || 0,
+                    proposedPremium: r.proposedPremium || 0,
+                });
+
+                row.getCell('currentPremium').numFmt = '#,##0.00';
+                row.getCell('proposedPremium').numFmt = '#,##0.00';
+
+                if (index % 2 === 1) {
+                    row.eachCell((cell) => {
+                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                    });
+                }
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
+                    };
+                });
+            });
+
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Renewals-Export-${new Date().toISOString().split('T')[0]}.xlsx`);
+
+            toast.success(`Exported ${filteredRenewals.length} renewals to Excel.`);
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export renewals');
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}
@@ -629,6 +716,13 @@ export default function RenewalsPage() {
                     </p>
                 </div>
                 <div className="flex gap-2">
+                    <Button
+                        variant="outline"
+                        leftIcon={<Download size={16} />}
+                        onClick={handleExportExcel}
+                    >
+                        Export Excel
+                    </Button>
                     <Button
                         variant="outline"
                         leftIcon={<Mail size={16} />}

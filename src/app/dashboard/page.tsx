@@ -26,7 +26,7 @@ import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { cn, formatCurrency, safeCsvCell } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth-store';
@@ -34,6 +34,8 @@ import { useDashboardData } from '@/hooks/api/use-dashboard-data';
 import { toast } from 'sonner';
 import { Download } from 'lucide-react';
 import { DashboardSkeleton } from '@/components/ui/dashboard-skeleton';
+import ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 // Lazy-load heavy chart components (recharts ~240KB)
 const ChartSkeleton = () => (
@@ -365,38 +367,116 @@ export default function DashboardPage() {
     // Total expiring count for renewals header
     const totalExpiring = renewalsData.reduce((sum, r) => sum + r.count, 0);
 
-    // --- Export Dashboard as CSV ---
-    const handleExportCSV = () => {
-        const rows: string[][] = [
-            ['Metric', 'Value', 'Change', 'Subtitle'],
-            ...kpiData.map(k => [k.label, k.value, `${k.change}%`, k.subtitle]),
-            [],
-            ['Claims Ratio Details'],
-            ['Claims Paid', `GHS ${claimsRatioData.claimsPaid.toFixed(2)}`],
-            ['Premium Received', `GHS ${claimsRatioData.premiumReceived.toFixed(2)}`],
-            ['Ratio', `${claimsRatioData.ratio.toFixed(1)}%`],
-            [],
-            ['Commission Tracking'],
-            ['Expected', `GHS ${commissionData.expected.toFixed(2)}`],
-            ['Paid', `GHS ${commissionData.paid.toFixed(2)}`],
-            ['Outstanding', `GHS ${commissionData.outstanding.toFixed(2)}`],
-            [],
-            ['Renewals by Product', 'Count', 'Premium'],
-            ...renewalsData.map(r => [r.product, r.count.toString(), `GHS ${r.premium.toFixed(2)}`]),
-            [],
-            ['Lapsed Policies'],
-            ['Count', lapsedCount.toString()],
-            ['Premium at Risk', `GHS ${lapsedPremium.toFixed(2)}`],
-        ];
-        const csvContent = rows.map(r => r.map(safeCsvCell).join(',')).join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Brokerium_Dashboard_${format(new Date(), 'yyyy-MM-dd')}.csv`;
-        link.click();
-        URL.revokeObjectURL(url);
-        toast.success('Dashboard Exported', { description: 'CSV file downloaded successfully.' });
+    // --- Export Dashboard as Excel ---
+    const handleExportExcel = async () => {
+        try {
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'Brokerium IBMS';
+            workbook.created = new Date();
+
+            const sheet = workbook.addWorksheet('Dashboard Overview');
+
+            // --- Define Styles ---
+            const titleFont = { name: 'Arial', size: 14, bold: true, color: { argb: 'FFFFFFFF' } };
+            const headerFont = { name: 'Arial', size: 12, bold: true, color: { argb: 'FF1F2937' } };
+            const dataFont = { name: 'Arial', size: 11, color: { argb: 'FF374151' } };
+            const titleFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }; // Blue-600
+            const sectionBg = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } }; // Gray-100
+            
+            // Set columns
+            sheet.columns = [
+                { header: 'Metric', key: 'metric', width: 35 },
+                { header: 'Value', key: 'value', width: 25 },
+                { header: 'Change', key: 'change', width: 15 },
+                { header: 'Context', key: 'context', width: 35 },
+            ];
+
+            // Setup Header
+            const headerRow = sheet.getRow(1);
+            headerRow.eachCell((cell) => {
+                cell.font = titleFont;
+                cell.fill = titleFill as any;
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                cell.border = { bottom: { style: 'medium', color: { argb: 'FFFFFFFF' } } };
+            });
+            headerRow.height = 30;
+
+            let currentRow = 2;
+
+            // --- Helper for Section Headers ---
+            const addSectionHeader = (title: string, columnSpan: number = 4) => {
+                const row = sheet.addRow([title]);
+                sheet.mergeCells(`A${row.number}:D${row.number}`);
+                const cell = row.getCell(1);
+                cell.font = headerFont;
+                cell.fill = sectionBg as any;
+                cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+                row.height = 25;
+                currentRow++;
+            };
+
+            // --- 1. KPI Data ---
+            addSectionHeader(`Key Performance Indicators (${periodLabels[period]})`);
+            kpiData.forEach(k => {
+                const row = sheet.addRow([k.label, k.value, `${k.direction === 'up' ? '+' : '-'}${k.change}%`, k.subtitle]);
+                row.font = dataFont;
+                row.getCell(3).font = { ...dataFont, color: { argb: k.direction === 'up' ? 'FF16A34A' : 'FFDC2626' } };
+            });
+
+            sheet.addRow([]);
+
+            // --- 2. Claims Ratio ---
+            addSectionHeader('Claims Ratio Details');
+            sheet.addRow(['Claims Paid', claimsRatioData.claimsPaid, '', '']).font = dataFont;
+            sheet.addRow(['Premium Received', claimsRatioData.premiumReceived, '', '']).font = dataFont;
+            sheet.addRow(['Ratio', `${claimsRatioData.ratio.toFixed(1)}%`, '', '']).font = { ...dataFont, bold: true, color: { argb: claimsRatioData.ratio > 70 ? 'FFDC2626' : 'FF16A34A' } };
+            
+            sheet.getCell(`B${sheet.rowCount - 2}`).numFmt = '#,##0.00';
+            sheet.getCell(`B${sheet.rowCount - 1}`).numFmt = '#,##0.00';
+
+            sheet.addRow([]);
+
+            // --- 3. Commission Tracking ---
+            addSectionHeader('Commission Tracking');
+            sheet.addRow(['Expected Commission', commissionData.expected, '', '']).font = dataFont;
+            sheet.addRow(['Paid Commission', commissionData.paid, '', '']).font = dataFont;
+            sheet.addRow(['Outstanding Commission', commissionData.outstanding, '', '']).font = dataFont;
+
+            sheet.getCell(`B${sheet.rowCount - 2}`).numFmt = '#,##0.00';
+            sheet.getCell(`B${sheet.rowCount - 1}`).numFmt = '#,##0.00';
+            sheet.getCell(`B${sheet.rowCount}`).numFmt = '#,##0.00';
+
+            sheet.addRow([]);
+
+            // --- 4. Renewals ---
+            addSectionHeader('Renewals by Product');
+            renewalsData.forEach(r => {
+                const row = sheet.addRow([r.product, r.count, '', r.premium]);
+                row.font = dataFont;
+                row.getCell(4).numFmt = '#,##0.00';
+            });
+
+            sheet.addRow([]);
+
+            // --- 5. Lapsed Policies ---
+            addSectionHeader('Lapsed Policies Risk');
+            sheet.addRow(['Count', lapsedCount, '', '']).font = dataFont;
+            sheet.addRow(['Premium at Risk', lapsedPremium, '', '']).font = dataFont;
+            sheet.getCell(`B${sheet.rowCount}`).numFmt = '#,##0.00';
+
+            // Freeze header
+            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
+
+            // Download
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Brokerium_Dashboard_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+
+            toast.success('Dashboard Exported', { description: 'Excel file downloaded successfully.' });
+        } catch (error) {
+            console.error('Export failed:', error);
+            toast.error('Failed to export dashboard');
+        }
     };
 
     return (
@@ -431,7 +511,7 @@ export default function DashboardPage() {
                             </button>
                         )}
                         <button
-                            onClick={handleExportCSV}
+                            onClick={handleExportExcel}
                             className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-background/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-background hover:text-success-600 hover:border-success-300 transition-all cursor-pointer shadow-sm group active:scale-95"
                         >
                             <Download size={12} className="group-hover:translate-y-0.5 transition-transform" />
