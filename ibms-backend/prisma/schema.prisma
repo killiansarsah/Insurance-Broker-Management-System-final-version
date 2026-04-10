@@ -118,6 +118,7 @@ model User {
   lastLoginAt             DateTime?
   failedAttempts          Int                     @default(0)
   lockedUntil             DateTime?
+  forceLogoutAt           DateTime?
   twoFactorEnabled        Boolean                 @default(false)
   twoFactorSecret         String?
   delegatedTo             String?                 @db.Uuid

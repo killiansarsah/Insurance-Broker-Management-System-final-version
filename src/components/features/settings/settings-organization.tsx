@@ -35,6 +35,15 @@ export function SettingsOrganization() {
             setLCorporatePhone(t.phone || '');
             setLNicLicense(t.nicLicense || '');
             setLStreet(t.street || t.address || '');
+
+            // Hydrate profile store so sidebar/header always shows current tenant data
+            updateProfile({
+                companyName: t.name || '',
+                companyEmail: t.email || '',
+                corporatePhone: t.phone || '',
+                street: t.street || t.address || '',
+            });
+
             // Hydrate logo from backend if available
             if (t.logoUrl) {
                 const backendBase = process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:3001';
@@ -42,6 +51,8 @@ export function SettingsOrganization() {
                     ? (t.logoUrl as string)
                     : `${backendBase}${t.logoUrl}`;
                 updateProfile({ logoUrl: fullUrl });
+            } else {
+                updateProfile({ logoUrl: null });
             }
         }
     }, [tenant, updateProfile]);
@@ -110,7 +121,7 @@ export function SettingsOrganization() {
                     <div className="relative group">
                         <div className="size-40 rounded-full border-4 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 flex items-center justify-center overflow-hidden shadow-inner p-4 relative font-black text-3xl text-primary-600">
                             {logoUrl ? (
-                                <Image src={logoUrl} alt="Company Logo" width={160} height={160} className="w-full h-full object-contain group-hover:grayscale transition-all duration-500" />
+                                <Image src={logoUrl} alt="Company Logo" width={160} height={160} unoptimized={true} className="w-full h-full object-contain group-hover:grayscale transition-all duration-500" />
                             ) : (
                                 `${lCompanyName.charAt(0)}${lCompanyName.split(/\s+/).slice(1, 2).map(w => w[0]).join('')}`
                             )}

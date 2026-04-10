@@ -50,6 +50,7 @@ export function Avatar({ name, src, icon, size = 'md', className }: AvatarProps)
                 alt={name}
                 width={dim}
                 height={dim}
+                unoptimized={true}
                 className={cn(
                     'rounded-full object-cover ring-2 ring-white',
                     sizeStyles[size],

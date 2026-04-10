@@ -36,6 +36,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { useExpenses, useCommissions } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
+import { useAuthStore } from '@/stores/auth-store';
 
 // Local type definitions (formerly from stubs)
 type ExpenseCategory = 'fuel_car_maintenance' | 'printing_stationery' | 'tele_post' | 'utilities' | 'levies_licenses' | 'transport' | 'provisions_toiletries' | 'allowances' | 'training' | 'subscriptions' | 'miscellaneous' | 'food' | 'salaries' | 'ssnit' | 'insurance' | 'business_prospecting';
@@ -109,8 +110,9 @@ const EXCEL_COLUMNS: { key: ExpenseCategory; header: string }[] = [
 
 const DEFAULT_COMPANY = 'DEZAG INSURANCE BROKERS';
 const DEFAULT_COL_HEADERS = EXCEL_COLUMNS.map(c => c.header);
-const LS_COMPANY_KEY = 'ibms_expense_company';
-const LS_HEADERS_KEY = 'ibms_expense_col_headers';
+// Tenant-scoped localStorage keys to prevent cross-tenant branding leakage
+function getLsCompanyKey(tenantId?: string) { return `ibms_expense_company_${tenantId || 'default'}`; }
+function getLsHeadersKey(tenantId?: string) { return `ibms_expense_col_headers_${tenantId || 'default'}`; }
 const EXCEL_COL_HEADERS = ['DATE', 'DESCRIPTION', 'REF NO', 'COST', ...EXCEL_COLUMNS.map(c => c.header)];
 const EXCEL_TOTAL_COLS = EXCEL_COL_HEADERS.length; // 20
 
@@ -439,6 +441,7 @@ export default function ExpensesPage() {
     const fetchedExpenses: Expense[] = ((expensesData as any)?.items ?? (expensesData as any)?.data ?? (Array.isArray(expensesData) ? expensesData : []));
     const { data: commissionsRaw } = useCommissions();
     const allCommissions: any[] = ((commissionsRaw as any)?.items ?? (commissionsRaw as any)?.data ?? (Array.isArray(commissionsRaw) ? commissionsRaw : []));
+    const tenantId = useAuthStore((s) => s.user?.tenantId);
 
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [expensesInit, setExpensesInit] = useState(false);
@@ -464,11 +467,11 @@ export default function ExpensesPage() {
     const [showCustomize, setShowCustomize] = useState(false);
     const [customCompany, setCustomCompany] = useState(() => {
         if (typeof window === 'undefined') return DEFAULT_COMPANY;
-        return localStorage.getItem(LS_COMPANY_KEY) || DEFAULT_COMPANY;
+        return localStorage.getItem(getLsCompanyKey(tenantId)) || DEFAULT_COMPANY;
     });
     const [customHeaders, setCustomHeaders] = useState<string[]>(() => {
         if (typeof window === 'undefined') return DEFAULT_COL_HEADERS;
-        const hd = localStorage.getItem(LS_HEADERS_KEY);
+        const hd = localStorage.getItem(getLsHeadersKey(tenantId));
         if (hd) {
             try {
                 const parsed = JSON.parse(hd) as string[];
@@ -493,8 +496,8 @@ export default function ExpensesPage() {
         const hd = draftHeaders.map(h => h.trim() || DEFAULT_COL_HEADERS[draftHeaders.indexOf(h)]);
         setCustomCompany(co);
         setCustomHeaders(hd);
-        localStorage.setItem(LS_COMPANY_KEY, co);
-        localStorage.setItem(LS_HEADERS_KEY, JSON.stringify(hd));
+        localStorage.setItem(getLsCompanyKey(tenantId), co);
+        localStorage.setItem(getLsHeadersKey(tenantId), JSON.stringify(hd));
         setShowCustomize(false);
         toast.success('Export settings saved');
     };

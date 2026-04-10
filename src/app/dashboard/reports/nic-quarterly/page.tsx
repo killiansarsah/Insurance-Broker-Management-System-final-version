@@ -33,6 +33,77 @@ export default function NicQuarterlyReturnPage() {
     const remittances = data?.remittances as Record<string, unknown> | undefined;
     const complaints = data?.complaints as Record<string, unknown> | undefined;
 
+    const handleExcel = async () => {
+        try {
+            const ExcelJS = await import('exceljs');
+            const { saveAs } = await import('file-saver');
+            const workbook = new ExcelJS.Workbook();
+            const sheet = workbook.addWorksheet(`NIC Q${quarter} ${year}`);
+
+            // Title rows
+            sheet.mergeCells('A1:F1');
+            sheet.getCell('A1').value = `NIC Quarterly Return — Q${quarter} ${year}`;
+            sheet.getCell('A1').font = { bold: true, size: 14 };
+            sheet.mergeCells('A2:F2');
+            sheet.getCell('A2').value = `Generated: ${new Date().toLocaleString()} · NIC Act 1061`;
+            sheet.getCell('A2').font = { size: 10, color: { argb: 'FF64748B' } };
+
+            // Headers row
+            const headers = ['Category', 'Sub-Category', 'Value'];
+            const headerRow = sheet.getRow(4);
+            headerRow.values = headers;
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+            headerRow.eachCell((cell: any) => {
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEA580C' } };
+                cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            });
+            sheet.views = [{ state: 'frozen', ySplit: 4 }];
+
+            const dataRows = [
+                ['Premiums', 'Gross Premium', `₵${Number(premiums?.total ?? 0).toFixed(2)}`],
+                ['Policies', 'New Policies', String(policies?.newPolicies ?? 0)],
+                ['Policies', 'Active Policies', String(policies?.activePolicies ?? 0)],
+                ['Claims', 'Total Claims', String(claims?.totalClaims ?? 0)],
+                ['Claims', 'Settled Claims', String(claims?.settledClaims ?? 0)],
+                ['Claims', 'Total Claim Amount', `₵${Number(claims?.totalAmount ?? 0).toFixed(2)}`],
+                ['Claims', 'Loss Ratio (%)', `${Number(claims?.claimsRatio ?? 0).toFixed(1)}%`],
+                ['Commission', 'Commission Earned', `₵${Number(commissions?.totalEarned ?? 0).toFixed(2)}`],
+                ['Commission', 'NIC Levy (1%)', `₵${Number(commissions?.nicLevy ?? 0).toFixed(2)}`],
+                ['Commission', 'Net Commission', `₵${Number(commissions?.netCommission ?? 0).toFixed(2)}`],
+                ['Remittances', 'Total Remitted', `₵${Number(remittances?.totalRemitted ?? 0).toFixed(2)}`],
+                ['Remittances', 'Pending Remittance', `₵${Number(remittances?.totalPending ?? 0).toFixed(2)}`],
+                ['Complaints', 'Total Complaints', String(complaints?.total ?? 0)],
+                ['Complaints', 'SLA Breaches', String(complaints?.slaBreaches ?? 0)],
+            ];
+
+            const sectionColors: Record<string, string> = {
+                Premiums: 'FF1D4ED8', Policies: 'FF047857', Claims: 'FFBE123C',
+                Commission: 'FFEA580C', Remittances: 'FF0F766E', Complaints: 'FF4338CA',
+            };
+
+            dataRows.forEach((rowData, i) => {
+                const row = sheet.addRow(rowData);
+                const bgColor = i % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFC';
+                row.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+                // Color the category cell
+                const categoryCell = row.getCell(1);
+                const sectionColor = sectionColors[rowData[0]] ?? 'FF374151';
+                categoryCell.font = { bold: true, color: { argb: sectionColor } };
+            });
+
+            sheet.columns = [{ width: 20 }, { width: 30 }, { width: 22 }];
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `NIC-Quarterly-Return-Q${quarter}-${year}.xlsx`);
+            toast.success('NIC Quarterly Return exported successfully.');
+        } catch (err) {
+            console.error('Export failed:', err);
+            toast.error('Failed to generate Excel export.');
+        }
+    };
+
     return (
         <div className="space-y-6 animate-fade-in">
             {/* Header */}

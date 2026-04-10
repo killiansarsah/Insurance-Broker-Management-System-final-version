@@ -138,8 +138,8 @@ async function bootstrap(): Promise<void> {
     logger.error('Failed to run super admin startup check', error.stack);
   }
 
-  await app.listen(port);
-  logger.log(`Brokerium Backend running on port ${port}`);
+  await app.listen(port, '0.0.0.0');
+  logger.log(`Brokerium Backend running on port ${port} (0.0.0.0)`);
   logger.log(
     `Environment: ${configService.get<string>('nodeEnv', 'development')}`,
   );

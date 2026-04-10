@@ -40,6 +40,8 @@ export function SettingsProfile() {
                     ? (profile.avatarUrl as string)
                     : `${backendBase}${profile.avatarUrl}`;
                 updateStore({ avatarUrl: fullUrl });
+            } else {
+                updateStore({ avatarUrl: null });
             }
         }
     }, [profile, updateStore]);
@@ -127,6 +129,7 @@ export function SettingsProfile() {
                                 alt="Profile" 
                                 width={144} 
                                 height={144} 
+                                unoptimized={true}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
                             />
                         ) : (

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
@@ -214,41 +215,98 @@ export function SettingsIntegrations() {
     const disconnectMutation = useDisconnectIntegration();
     const updateMutation = useUpdateIntegration();
     const syncMutation = useSyncIntegration();
+    const queryClient = useQueryClient();
     const googleAuthUrl = useGoogleAuthUrl();
     const calendarSync = useGoogleCalendarSync();
     const sheetsExport = useGoogleSheetsExport();
     const driveMirror = useGoogleDriveMirror();
 
-    // Handle OAuth callback
+    // Handle OAuth callback (Standard URL params)
     useEffect(() => {
+        const handleGoogleResult = (status: string | null, email: string | null, reason: string | null) => {
+            if (status === 'success' && email) {
+                setConnectionStep('success');
+                toast.success('Google Calendar connected!', {
+                    description: `Connected as ${email}. Syncing events...`,
+                });
+                // Trigger initial sync after successful connection
+                setTimeout(() => {
+                    calendarSync.mutate(undefined, {
+                        onSuccess: (r) => {
+                            if (r?.push && r?.pull) {
+                                toast.success(`Initial sync complete: ${r.push.pushed} pushed, ${r.pull.pulled} pulled`);
+                            } else {
+                                toast.success('Initial sync complete');
+                            }
+                            queryClient.invalidateQueries({ queryKey: ['integrations'] });
+                        },
+                        onError: () => {
+                            toast.warning('Connection successful, but initial sync failed. Try manual sync.');
+                            queryClient.invalidateQueries({ queryKey: ['integrations'] });
+                        },
+                    });
+                }, 1500);
+            } else if (status === 'error') {
+                setConnectionStep('idle');
+                toast.error('Google connection failed', {
+                    description: reason || 'Unknown error occurred',
+                });
+            }
+        };
+
+        // 1. Process URL params if they exist in this window
+        // 1. Process URL params if they exist
         const googleStatus = searchParams.get('google');
         const email = searchParams.get('email');
         const reason = searchParams.get('reason');
 
-        if (googleStatus === 'success' && email) {
-            toast.success('Google Calendar connected!', {
-                description: `Connected as ${email}. Syncing events...`,
-            });
-            // Trigger initial sync after successful connection
+        if (googleStatus) {
+            // Write to local storage for parent window (if we are the popup)
+            localStorage.setItem('oauth_callback', JSON.stringify({ googleStatus, email, reason, timestamp: Date.now() }));
+            
+            // Aggressively attempt to close. 
+            // Browsers will ONLY allow this if it's a JS-opened popup.
+            // If we are undeniably the popup, the browser kills this window instantly.
+            window.close();
+            
+            // If we are still alive after 300ms, it means we are the MAIN window.
+            // (e.g. the redirect happened in the primary tab, or browser blocked window.close)
             setTimeout(() => {
-                calendarSync.mutate(undefined, {
-                    onSuccess: (r) => {
-                        if (r?.push && r?.pull) {
-                            toast.success(`Initial sync complete: ${r.push.pushed} pushed, ${r.pull.pulled} pulled`);
-                        } else {
-                            toast.success('Initial sync complete');
-                        }
-                    },
-                    onError: () => {
-                        toast.warning('Connection successful, but initial sync failed. Try manual sync.');
-                    },
-                });
-            }, 1500);
-        } else if (googleStatus === 'error') {
-            toast.error('Google connection failed', {
-                description: reason || 'Unknown error occurred',
-            });
+                handleGoogleResult(googleStatus, email, reason);
+                // Clean the URL out so refreshing doesn't re-trigger it
+                window.history.replaceState({}, '', window.location.pathname);
+            }, 300);
+            
+            return;
         }
+
+        // 2. Listen for messages from the popup window (Method 1)
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'OAUTH_CALLBACK') {
+                handleGoogleResult(event.data.googleStatus, event.data.email, event.data.reason);
+            }
+        };
+
+        // 3. Listen for localStorage changes from the popup window (Method 2)
+        const handleStorage = (event: StorageEvent) => {
+            if (event.key === 'oauth_callback' && event.newValue) {
+                try {
+                    const data = JSON.parse(event.newValue);
+                    handleGoogleResult(data.googleStatus, data.email, data.reason);
+                    localStorage.removeItem('oauth_callback');
+                } catch (e) {
+                    // Ignore parsing error
+                }
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        window.addEventListener('storage', handleStorage);
+        
+        return () => {
+            window.removeEventListener('message', handleMessage);
+            window.removeEventListener('storage', handleStorage);
+        };
     }, [searchParams, calendarSync]);
 
     // Merge static catalog with API data
@@ -329,14 +387,12 @@ export function SettingsIntegrations() {
                         // Open Google consent in a popup
                         const popup = window.open(data.url, 'google-auth', 'width=500,height=600,left=200,top=100');
 
-                        // Listen for the callback redirect
                         const checkClosed = setInterval(() => {
                             if (popup?.closed) {
                                 clearInterval(checkClosed);
-                                // Refetch integrations to check if connection succeeded
+                                // If it's still 'connecting' after 1 second, the user manually aborted it
                                 setTimeout(() => {
-                                    setConnectionStep('success');
-                                    toast.success(`Connected to ${svc?.name}!`);
+                                    setConnectionStep(prev => prev === 'connecting' ? 'idle' : prev);
                                 }, 1000);
                             }
                         }, 500);

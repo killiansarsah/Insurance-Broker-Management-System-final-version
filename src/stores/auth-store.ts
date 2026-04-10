@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { User, UserRole } from '@/types';
 import { apiClient } from '@/lib/api-client';
+import { useProfileStore } from './profile-store';
 
 interface TenantOption {
     slug: string;
@@ -108,6 +109,7 @@ export const useAuthStore = create<AuthState>()(
                 // Clear persisted storage
                 if (typeof window !== 'undefined') {
                     sessionStorage.removeItem('ibms-auth');
+                    useProfileStore.getState().reset();
                     window.location.href = '/login';
                 }
             },

@@ -178,7 +178,7 @@ function SidebarCompanyHeader() {
     return (
         <div className="min-w-0">
             <h2 className="text-surface-900 dark:text-white font-bold text-base tracking-tight truncate">{companyName || 'Organization'}</h2>
-            <p className="text-[11px] text-surface-500 font-medium uppercase tracking-wider">Broker [MID 899597]</p>
+            <p className="text-[11px] text-surface-500 font-medium uppercase tracking-wider">Licensed Insurance Broker</p>
         </div>
     );
 }

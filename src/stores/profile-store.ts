@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 interface ProfileState {
     // User profile
@@ -36,49 +36,55 @@ interface ProfileState {
     logoUrl: string | null;
 
     // Actions
-    updateProfile: (data: Partial<Omit<ProfileState, 'updateProfile' | 'updateOrg'>>) => void;
+    updateProfile: (data: Partial<Omit<ProfileState, 'updateProfile' | 'reset'>>) => void;
+    reset: () => void;
 }
+
+const initialState = {
+    // User defaults
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    bio: '',
+    avatarUrl: null,
+    jobTitle: '',
+    location: '',
+
+    // Org defaults
+    companyName: '',
+    companyEmail: '',
+    corporatePhone: '',
+    mobileNumber: '',
+    tin: '',
+    street: '',
+    city: '',
+    region: '',
+    gps: '',
+    postal: '',
+    businessHours: '',
+    fiscalYear: '',
+    commission: '',
+    gracePeriod: '',
+    polPrefix: '',
+    clmPrefix: '',
+    cliPrefix: '',
+    ledPrefix: '',
+    primaryColor: '#c28532',
+    accentColor: '#2563eb',
+    logoUrl: null,
+};
 
 export const useProfileStore = create<ProfileState>()(
     persist(
         (set) => ({
-            // User defaults — populated from backend on login
-            firstName: '',
-            lastName: '',
-            email: '',
-            phone: '',
-            bio: '',
-            avatarUrl: null,
-            jobTitle: '',
-            location: '',
-
-            // Org defaults — populated from backend on login
-            companyName: '',
-            companyEmail: '',
-            corporatePhone: '',
-            mobileNumber: '',
-            tin: '',
-            street: '',
-            city: '',
-            region: '',
-            gps: '',
-            postal: '',
-            businessHours: '',
-            fiscalYear: '',
-            commission: '',
-            gracePeriod: '',
-            polPrefix: '',
-            clmPrefix: '',
-            cliPrefix: '',
-            ledPrefix: '',
-            primaryColor: '#c28532',
-            accentColor: '#2563eb',
-            logoUrl: null,
-
+            ...initialState,
             updateProfile: (data) => set((state) => ({ ...state, ...data })),
+            reset: () => set(initialState),
         }),
         {
             name: 'ibms-profile',
+            storage: createJSONStorage(() => sessionStorage),
         }
     )
 );

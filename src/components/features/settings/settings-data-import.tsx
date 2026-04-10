@@ -515,7 +515,7 @@ export function SettingsDataImport() {
                                     onClick={async () => {
                                         try {
                                             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/imports/template/${entityType || 'clients'}`, {
-                                                headers: { 'Authorization': `Bearer ${localStorage.getItem('accessToken')}` }
+                                                headers: { 'Authorization': `Bearer ${apiClient.getAccessToken()}` }
                                             });
                                             if (!response.ok) throw new Error('Download failed');
                                             const blob = await response.blob();

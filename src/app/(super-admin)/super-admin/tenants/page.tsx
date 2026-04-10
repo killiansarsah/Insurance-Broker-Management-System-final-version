@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { PageHeader } from '@/components/super-admin/PageHeader';
 import { DataTable } from '@/components/super-admin/DataTable';
 import { StatusPill } from '@/components/super-admin/StatusPill';
-import { Building2, Search, Filter, Plus, MoreHorizontal } from 'lucide-react';
+import { Building2, Search, Plus, MoreHorizontal } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 
 interface TenantRow {
@@ -31,6 +31,8 @@ interface TenantsApiResponse {
 export default function TenantsDirectoryPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
+  const [planFilter, setPlanFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
   const [tenants, setTenants] = useState<TenantRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -43,6 +45,8 @@ export default function TenantsDirectoryPage() {
         page,
         limit: 20,
         search: searchTerm || undefined,
+        plan: planFilter || undefined,
+        status: statusFilter || undefined,
       });
       setTenants(res.data);
       if (res.meta) {
@@ -54,7 +58,7 @@ export default function TenantsDirectoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchTerm]);
+  }, [page, searchTerm, planFilter, statusFilter]);
 
   useEffect(() => {
     fetchTenants();
@@ -152,16 +156,27 @@ export default function TenantsDirectoryPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button 
-          onClick={() => toast.info('Plan filter coming soon.')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
-          <Filter size={14} /> Plan: All
-        </button>
-        <button 
-          onClick={() => toast.info('Status filter coming soon.')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
-          <Filter size={14} /> Status: Active
-        </button>
+        <select
+          value={planFilter}
+          onChange={(e) => setPlanFilter(e.target.value)}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors border border-[var(--sa-border)] focus:outline-none focus:ring-2 focus:ring-[#10b981]"
+        >
+          <option value="">Plan: All</option>
+          <option value="BASIC">Basic</option>
+          <option value="PROFESSIONAL">Professional</option>
+          <option value="ENTERPRISE">Enterprise</option>
+        </select>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors border border-[var(--sa-border)] focus:outline-none focus:ring-2 focus:ring-[#10b981]"
+        >
+          <option value="">Status: All</option>
+          <option value="ACTIVE">Active</option>
+          <option value="TRIAL">Trial</option>
+          <option value="SUSPENDED">Suspended</option>
+          <option value="CHURNED">Churned</option>
+        </select>
       </div>
 
       {/* Table */}

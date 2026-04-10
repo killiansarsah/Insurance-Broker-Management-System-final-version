@@ -110,18 +110,26 @@ export default function CommissionsPage() {
 
             // Rows
             items.forEach((c: any, index: number) => {
+                const clientNameStr = c.client?.companyName?.trim() 
+                    ? c.client.companyName 
+                    : `${c.client?.firstName || ''} ${c.client?.lastName || ''}`.trim();
+                
+                const brokerNameStr = c.broker?.firstName 
+                    ? `${c.broker.firstName || ''} ${c.broker.lastName || ''}`.trim() 
+                    : (c.brokerName || '—');
+
                 const row = sheet.addRow({
                     policyNumber: c.policy?.policyNumber || c.policyNumber || 'Unknown',
-                    clientName: c.client ? (c.client.companyName || `${c.client.firstName} ${c.client.lastName}`) : 'Unknown',
-                    product: c.productType || '—',
-                    brokerName: c.broker?.firstName ? `${c.broker.firstName} ${c.broker.lastName}` : c.brokerName || '—',
+                    clientName: clientNameStr || 'Unknown',
+                    product: c.policy?.insuranceType || c.productType || '—',
+                    brokerName: brokerNameStr || '—',
                     commissionRate: c.commissionRate || 0,
                     premium: c.premiumAmount || 0,
                     commission: c.commissionAmount || 0,
                     nicLevy: c.nicLevy || 0,
                     netCommission: c.netCommission || 0,
                     status: c.status || '—',
-                    dateIssued: c.datePolicyIssued ? formatDate(c.datePolicyIssued) : '—',
+                    dateIssued: c.createdAt ? formatDate(c.createdAt) : '—',
                 });
 
                 row.getCell('commissionRate').numFmt = '0.00%';

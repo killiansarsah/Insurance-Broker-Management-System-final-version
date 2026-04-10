@@ -6,7 +6,7 @@ import { StatCard } from '@/components/super-admin/StatCard';
 import { DataTable } from '@/components/super-admin/DataTable';
 import { SlideDrawer } from '@/components/super-admin/SlideDrawer';
 import { StatusPill } from '@/components/super-admin/StatusPill';
-import { Mail, CheckCircle2, AlertTriangle, XCircle, Search, Filter, RotateCcw, MonitorPlay } from 'lucide-react';
+import { Mail, CheckCircle2, AlertTriangle, XCircle, Search, RotateCcw, MonitorPlay } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 
@@ -33,6 +33,8 @@ export default function EmailLogsPage() {
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [tenantFilter, setTenantFilter] = useState('');
   const [selectedEmail, setSelectedEmail] = useState<EmailLogRow | null>(null);
 
   const fetchEmails = useCallback(async () => {
@@ -40,6 +42,8 @@ export default function EmailLogsPage() {
     try {
       const params: Record<string, unknown> = { page, limit: 50 };
       if (searchTerm) params.recipient = searchTerm;
+      if (statusFilter) params.status = statusFilter;
+      if (tenantFilter) params.tenantId = tenantFilter;
       const res = await apiClient.get<EmailsResponse>('/platform-admin/email-logs', params);
       setEmails(res.data ?? []);
       if (res.meta) setTotalCount(res.meta.total);
@@ -49,7 +53,7 @@ export default function EmailLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchTerm]);
+  }, [page, searchTerm, statusFilter, tenantFilter]);
 
   useEffect(() => {
     fetchEmails();
@@ -163,16 +167,18 @@ export default function EmailLogsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button 
-          onClick={() => toast.info('Status filter coming soon.')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
-          <Filter size={14} /> Status: All
-        </button>
-        <button 
-          onClick={() => toast.info('Tenant filter coming soon.')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
-          <Filter size={14} /> Tenant: All
-        </button>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors border border-[var(--sa-border)] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]"
+        >
+          <option value="">Status: All</option>
+          <option value="SENT">Sent</option>
+          <option value="DELIVERED">Delivered</option>
+          <option value="BOUNCED">Bounced</option>
+          <option value="FAILED">Failed</option>
+          <option value="SPAM">Spam</option>
+        </select>
       </div>
 
       <div className="bg-[var(--sa-bg-card)] rounded-[var(--sa-radius-md)] border border-[var(--sa-border)] shadow-sm overflow-hidden min-h-[500px]">

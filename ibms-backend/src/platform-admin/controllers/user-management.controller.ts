@@ -282,9 +282,15 @@ export class UserManagementController {
     if (!targetUser)
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
 
-    // Invalidate sessions by deleting refresh tokens and bumping lockedUntil purely for session invalidation (auth layer will reject)
-    // Wait, locking the user is too aggressive just for logout. Better to just delete refresh tokens.
-    await this.prisma.refreshToken.deleteMany({ where: { userId: id } });
+    // Invalidate sessions by deleting refresh tokens AND setting forceLogoutAt to drop active access tokens
+    const now = new Date();
+    await this.prisma.$transaction([
+      this.prisma.refreshToken.deleteMany({ where: { userId: id } }),
+      this.prisma.user.update({
+        where: { id },
+        data: { forceLogoutAt: now },
+      }),
+    ]);
 
     await this.audit.log({
       actorId: user.sub,

@@ -40,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
           isActive: true,
           deletedAt: true,
           lockedUntil: true,
+          forceLogoutAt: true,
           tenantId: true,
         },
       });
@@ -48,6 +49,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       if (user.deletedAt) return null;
       if (!user.isActive) return null;
       if (user.lockedUntil && user.lockedUntil > new Date()) return null;
+      
+      // Reject if the user was forced to logout AFTER this token was issued
+      // jwt payload iat is in seconds; forceLogoutAt is a Date
+      if (user.forceLogoutAt && payload.iat && user.forceLogoutAt.getTime() > payload.iat * 1000) return null;
 
       return {
         sub: user.id,

@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/super-admin/PageHeader';
 import { DataTable } from '@/components/super-admin/DataTable';
 import { SlideDrawer } from '@/components/super-admin/SlideDrawer';
 import { StatusPill } from '@/components/super-admin/StatusPill';
-import { Clock, Search, Filter, Download, FileJson } from 'lucide-react';
+import { Clock, Search, Download, FileJson } from 'lucide-react';
 import { apiClient } from '@/lib/api-client';
 import { toast } from 'sonner';
 
@@ -43,6 +43,8 @@ export default function AuditLogsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState<AuditLogEntry | null>(null);
+  const [severityFilter, setSeverityFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
 
   const fetchLogs = useCallback(async () => {
     setLoading(true);
@@ -51,6 +53,8 @@ export default function AuditLogsPage() {
         page,
         limit: 50,
         search: searchTerm || undefined,
+        severity: severityFilter || undefined,
+        category: categoryFilter || undefined,
       });
       setLogs(res.data ?? []);
       if (res.meta) {
@@ -63,7 +67,7 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchTerm]);
+  }, [page, searchTerm, severityFilter, categoryFilter]);
 
   useEffect(() => {
     fetchLogs();
@@ -137,8 +141,26 @@ export default function AuditLogsPage() {
           { label: 'System Logs', href: '/super-admin/audit-logs' }
         ]}
         actions={
-          <button 
-            onClick={() => toast.info('CSV export coming soon.')}
+          <button
+            onClick={async () => {
+              try {
+                const res = await apiClient.get<AuditLogsResponse>('/platform-admin/audit-logs', { limit: 1000, page: 1 });
+                const rows = res.data ?? [];
+                const headers = ['Timestamp', 'Severity', 'Category', 'Actor', 'Role', 'Tenant', 'Action', 'Description', 'IP', 'Resource'];
+                const csv = [headers.join(','), ...rows.map(r => [
+                  `"${formatTimestamp(r.createdAt)}"`, r.severity, r.category,
+                  `"${r.actorEmail ?? 'system'}"`, r.actorRole, `"${r.tenantName ?? 'Platform'}"`,
+                  r.action, `"${r.description?.replace(/"/g, '""') ?? ''}"`,
+                  r.ipAddress ?? '', r.resourceType ?? ''
+                ].join(','))].join('\n');
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a'); a.href = url;
+                a.download = `audit-log-${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click(); URL.revokeObjectURL(url);
+                toast.success('Audit log exported as CSV.');
+              } catch { toast.error('Export failed.'); }
+            }}
             className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-card)] border border-[var(--sa-border)] hover:bg-[var(--sa-bg-card-alt)] rounded-full transition-colors sa-btn-hover">
             <Download size={14} /> Export CSV
           </button>
@@ -157,16 +179,31 @@ export default function AuditLogsPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button 
-          onClick={() => toast.info('Severity filter coming soon.')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
-          <Filter size={14} /> Severity
-        </button>
-        <button 
-          onClick={() => toast.info('Category filter coming soon.')}
-          className="flex items-center gap-2 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors sa-btn-hover">
-          <Filter size={14} /> Category
-        </button>
+        <select
+          value={severityFilter}
+          onChange={(e) => setSeverityFilter(e.target.value)}
+          className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors border border-[var(--sa-border)] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]"
+        >
+          <option value="">Severity: All</option>
+          <option value="LOW">Low</option>
+          <option value="MEDIUM">Medium</option>
+          <option value="HIGH">High</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-4 py-2 text-xs font-bold uppercase tracking-wider text-[var(--sa-text-primary)] bg-[var(--sa-bg-page)] hover:bg-[var(--sa-border)] rounded-full transition-colors border border-[var(--sa-border)] focus:outline-none focus:ring-2 focus:ring-[#1D9E75]"
+        >
+          <option value="">Category: All</option>
+          <option value="SECURITY">Security</option>
+          <option value="TENANT">Tenant</option>
+          <option value="FINANCE">Finance</option>
+          <option value="POLICY">Policy</option>
+          <option value="CLAIM">Claim</option>
+          <option value="SYSTEM">System</option>
+          <option value="ERROR">Error</option>
+        </select>
       </div>
 
       {/* Live Tailing Banner */}
