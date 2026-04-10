@@ -21,6 +21,7 @@ import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
 import { useCreateClient } from '@/hooks/api/use-clients';
 import { useCreateDocument } from '@/hooks/api/use-documents';
+import { apiClient } from '@/lib/api-client';
 
 const STEPS = [
     { id: 1, label: 'Basic Info', icon: <User size={16} /> },
@@ -395,15 +396,21 @@ export default function NewClientPage() {
                     if (clientId && Object.keys(documents).length > 0) {
                         // Submit all documents
                         for (const [docId, file] of Object.entries(documents)) {
-                            createDocMutation.mutate({
-                                name: `${docId} - ${file.name}`,
-                                mimeType: file.type || 'application/octet-stream',
-                                fileSize: file.size,
-                                fileUrl: `https://storage.placeholder.com/${Math.random().toString(36).substring(7)}/${file.name}`,
-                                category: 'KYC',
-                                linkedEntityType: 'CLIENT',
-                                linkedEntityId: clientId
-                            });
+                            try {
+                                const res = await apiClient.upload<{ fileUrl: string }>('/documents/upload', file);
+                                createDocMutation.mutate({
+                                    name: `${docId} - ${file.name}`,
+                                    mimeType: file.type || 'application/octet-stream',
+                                    fileSize: file.size,
+                                    fileUrl: res.fileUrl,
+                                    category: 'KYC',
+                                    linkedEntityType: 'CLIENT',
+                                    linkedEntityId: clientId
+                                });
+                            } catch (err) {
+                                console.error(`Failed to upload ${docId}`, err);
+                                toast.error(`Document Upload Failed: ${file.name}`);
+                            }
                         }
                     }
                     setIsSubmitting(false);

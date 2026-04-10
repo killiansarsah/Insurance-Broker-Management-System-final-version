@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { apiClient } from '@/lib/api-client';
+import { useCreateDocument } from '@/hooks/api/use-documents';
 
 interface UploadDocumentModalProps {
     isOpen: boolean;
@@ -26,6 +28,8 @@ interface UploadDocumentModalProps {
     /** Pre-set the category */
     defaultCategory?: string;
     onUploadComplete?: (uploadedDocs: any[]) => void;
+    linkedEntityType?: 'CLIENT' | 'POLICY' | 'CLAIM' | 'OTHER';
+    linkedEntityId?: string;
 }
 
 interface QueuedFile {
@@ -56,6 +60,8 @@ export function UploadDocumentModal({
     defaultReferenceId = '',
     defaultCategory = 'KYC',
     onUploadComplete,
+    linkedEntityType,
+    linkedEntityId,
 }: UploadDocumentModalProps) {
     const [files, setFiles] = useState<QueuedFile[]>([]);
     const [category, setCategory] = useState(defaultCategory);
@@ -63,6 +69,7 @@ export function UploadDocumentModal({
     const [description, setDescription] = useState('');
     const [isDragging, setIsDragging] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const createDocMutation = useCreateDocument();
     const inputRef = useRef<HTMLInputElement>(null);
 
     const validateFile = useCallback((file: File): string | null => {
@@ -116,44 +123,66 @@ export function UploadDocumentModal({
         }
         setIsUploading(true);
 
-        // Simulate individual file upload with progress
+        const uploadedDocs: any[] = [];
+
+        // Upload files one by one with progress
         for (let i = 0; i < files.length; i++) {
             const f = files[i];
             if (f.status === 'done') continue;
-            setFiles((prev) => prev.map((q) => q.id === f.id ? { ...q, status: 'uploading' } : q));
+            
+            setFiles((prev) => prev.map((q) => q.id === f.id ? { ...q, status: 'uploading', progress: 10 } : q));
 
-            // Simulate progress in steps
-            for (let p = 20; p <= 100; p += 20) {
-                await new Promise((r) => setTimeout(r, 250));
-                setFiles((prev) => prev.map((q) => q.id === f.id ? { ...q, progress: p } : q));
+            try {
+                // Upload to the genuine backend endpoint we just created
+                const res = await apiClient.upload<{ name: string; fileUrl: string; fileSize: number; mimeType: string }>('/documents/upload', f.file);
+
+                // Create the database record
+                const docRecord = await createDocMutation.mutateAsync({
+                    name: res.name,
+                    mimeType: res.mimeType,
+                    fileSize: res.fileSize,
+                    fileUrl: res.fileUrl,
+                    category: category || 'INTERNAL',
+                    linkedEntityType,
+                    linkedEntityId,
+                    notes: description,
+                });
+
+                setFiles((prev) => prev.map((q) => q.id === f.id ? { ...q, status: 'done', progress: 100 } : q));
+
+                uploadedDocs.push({
+                    ...docRecord,
+                    url: res.fileUrl // provide backwards compatible fallback for local usage
+                });
+            } catch (err: any) {
+                console.error('File Upload Error:', err);
+                toast.error(`Upload Failed: ${f.file.name}`, { description: err?.response?.data?.message || 'Could not upload file.' });
+                setFiles((prev) => prev.map((q) => q.id === f.id ? { ...q, status: 'error' } : q));
             }
-            setFiles((prev) => prev.map((q) => q.id === f.id ? { ...q, status: 'done', progress: 100 } : q));
         }
 
-        toast.success('Upload Complete', {
-            description: `${files.length} file${files.length > 1 ? 's' : ''} uploaded successfully.`,
-            icon: <CheckCircle2 className="text-success-500" size={18} />,
-        });
+        const successfulUploads = uploadedDocs.length;
+        
+        if (successfulUploads > 0) {
+            toast.success('Upload Complete', {
+                description: `${successfulUploads} file${successfulUploads > 1 ? 's' : ''} uploaded successfully.`,
+                icon: <CheckCircle2 className="text-success-500" size={18} />,
+            });
 
-        // Reset after short delay
-        setTimeout(() => {
-            if (onUploadComplete) {
-                const uploadedDocs = files.map(f => ({
-                    id: Math.random().toString(36).substring(2, 9),
-                    name: f.file.name,
-                    type: category || 'DOCUMENT',
-                    mimeType: f.file.type,
-                    url: URL.createObjectURL(f.file),
-                    uploadedAt: new Date().toISOString()
-                }));
-                onUploadComplete(uploadedDocs);
-            }
-            setFiles([]);
-            setReferenceId('');
-            setDescription('');
+            // Reset after short delay
+            setTimeout(() => {
+                if (onUploadComplete) {
+                    onUploadComplete(uploadedDocs);
+                }
+                setFiles([]);
+                setReferenceId('');
+                setDescription('');
+                setIsUploading(false);
+                onClose();
+            }, 600);
+        } else {
             setIsUploading(false);
-            onClose();
-        }, 600);
+        }
     };
 
     const handleClose = () => {
@@ -301,9 +330,10 @@ export function UploadDocumentModal({
                             options={[
                                 { label: 'KYC / Identification', value: 'KYC' },
                                 { label: 'Policy Document', value: 'POLICY' },
-                                { label: 'Claim Evidence', value: 'claims' },
-                                { label: 'Financial / Receipt', value: 'financial' },
-                                { label: 'Legal / Compliance', value: 'legal' },
+                                { label: 'Claim Evidence', value: 'CLAIM' },
+                                { label: 'Client Document', value: 'CLIENT' },
+                                { label: 'Compliance / Legal', value: 'COMPLIANCE' },
+                                { label: 'Internal Report', value: 'REPORT' },
                             ]}
                             value={category}
                             onChange={(v) => setCategory(v as string)}

@@ -40,6 +40,7 @@ import { BackButton } from '@/components/ui/back-button';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { apiClient } from '@/lib/api-client';
 import Link from 'next/link';
 import { AppLoader } from '@/components/ui/AppLoader';
 import { ROLE_HIERARCHY, useAuthStore } from '@/stores/auth-store';
@@ -852,24 +853,37 @@ function DocumentsTab({ documents, client }: { documents: any[]; client: any }) 
         const inp = document.createElement('input');
         inp.type = 'file';
         inp.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
-        inp.onchange = () => {
+        inp.onchange = async () => {
             if (inp.files?.[0]) {
                 const file = inp.files[0];
-                createDocMutation.mutate(
-                    { 
-                        name: file.name, 
-                        mimeType: file.type || 'application/octet-stream', 
-                        fileSize: file.size,
-                        fileUrl: `https://storage.placeholder.com/${Math.random().toString(36).substring(7)}/${file.name}`,
-                        category: 'CLIENT', 
-                        linkedEntityType: 'CLIENT',
-                        linkedEntityId: client.id 
-                    },
-                    {
-                        onSuccess: () => toast.success(`"${file.name}" uploaded`, { description: 'Document attached to client profile.' }),
-                        onError: () => toast.error('Upload failed', { description: 'Could not upload document. Please try again.' }),
-                    }
-                );
+                const toastId = toast.loading(`Uploading "${file.name}"...`);
+                try {
+                    const res = await apiClient.upload<{ fileUrl: string }>('/documents/upload', file);
+                    createDocMutation.mutate(
+                        { 
+                            name: file.name, 
+                            mimeType: file.type || 'application/octet-stream', 
+                            fileSize: file.size,
+                            fileUrl: res.fileUrl,
+                            category: 'CLIENT', 
+                            linkedEntityType: 'CLIENT',
+                            linkedEntityId: client.id 
+                        },
+                        {
+                            onSuccess: () => {
+                                toast.dismiss(toastId);
+                                toast.success(`"${file.name}" uploaded`, { description: 'Document attached to client profile.' });
+                            },
+                            onError: () => {
+                                toast.dismiss(toastId);
+                                toast.error('Upload failed', { description: 'Could not attach document. Please try again.' });
+                            },
+                        }
+                    );
+                } catch (err) {
+                    toast.dismiss(toastId);
+                    toast.error('Upload failed', { description: 'Could not process document upload.' });
+                }
             }
         };
         inp.click();

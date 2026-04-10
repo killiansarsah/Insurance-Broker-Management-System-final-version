@@ -733,15 +733,17 @@ export default function ClaimDetailPage({ id }: { id: string }) {
                 <UploadDocumentModal
                     isOpen={showUploadModal}
                     onClose={() => setShowUploadModal(false)}
-                    defaultCategory="claims"
+                    defaultCategory="CLAIM"
+                    linkedEntityType="CLAIM"
+                    linkedEntityId={id}
                     onUploadComplete={(docs) => {
                         docs.forEach((doc: any) => {
                             addDocumentMutation.mutate({
                                 claimId: id,
                                 data: {
                                     name: doc.name,
-                                    type: doc.type === 'claims' ? 'PHOTOGRAPH' : doc.type === 'financial' ? 'REPAIR_ESTIMATE' : 'CORRESPONDENCE',
-                                    url: doc.url || 'https://example.com/dummy-url.pdf',
+                                    type: doc.category === 'CLAIM' ? 'PHOTOGRAPH' : doc.category === 'financial' ? 'REPAIR_ESTIMATE' : 'CORRESPONDENCE',
+                                    url: doc.url || doc.fileUrl,
                                 }
                             });
                         });

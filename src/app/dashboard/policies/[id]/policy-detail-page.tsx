@@ -1326,6 +1326,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 onUploadComplete={(docs) => {
                     setLocalDocuments(prev => [...prev, ...docs]);
                 }}
+                linkedEntityType="POLICY"
+                linkedEntityId={policy.id}
             />
         </div>
     );

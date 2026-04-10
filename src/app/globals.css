@@ -516,11 +516,11 @@ dialog:not([open]) {
   --glass-shadow: var(--shadow-xl);
 
   /* Glass 26 (Premium Industrial Glass) */
-  --glass-26-bg: rgba(255, 255, 255, 0.65);
-  --glass-26-blur: 20px;
-  --glass-26-border: rgba(255, 255, 255, 0.6);
+  --glass-26-bg: rgba(255, 255, 255, 0.90);
+  --glass-26-blur: 24px;
+  --glass-26-border: rgba(255, 255, 255, 0.8);
   --glass-26-highlight: rgba(255, 255, 255, 1);
-  --glass-26-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.1);
+  --glass-26-shadow: 0 8px 32px 0 rgba(15, 23, 42, 0.05);
 }
 
 /* ── Premium Dark Theme ───────────────────────────────────── */

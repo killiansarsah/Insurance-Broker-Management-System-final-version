@@ -175,7 +175,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         </button>
                         <button
                             onClick={resetToToday}
-                            className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest bg-surface-900 text-white rounded-full hover:bg-black transition-all shadow-lg shadow-black/5 active:scale-95"
+                            className="px-6 py-2.5 text-[10px] font-black uppercase tracking-widest bg-surface-900 text-surface-50 rounded-full hover:bg-surface-800 transition-all shadow-lg shadow-black/5 active:scale-95"
                         >
                             Today
                         </button>
@@ -221,7 +221,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     className={cn(
                         "relative min-h-[100px] p-2 rounded-[var(--radius-xl)] transition-all cursor-pointer group flex flex-col gap-1.5",
                         isOutsideMonth ? "bg-surface-50/10 opacity-20" : "bg-background/40 border-surface-200/50 shadow-sm backdrop-blur-sm",
-                        isTodayDay && "border-primary-500/50 bg-primary-500/5 shadow-primary-500/20 ring-1 ring-primary-500/20",
+                        isTodayDay && "border-primary-500/50 bg-primary-500/5 shadow-primary-500/20 dark:shadow-none ring-1 ring-primary-500/20",
                         isSelected && "ring-2 ring-primary-500 ring-offset-2 z-10",
 
                         // Liquid Color Accents
@@ -239,7 +239,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     <div className="flex items-center justify-between">
                         <span className={cn(
                             "text-xs font-black tracking-tighter w-7 h-7 flex items-center justify-center rounded-lg transition-colors",
-                            isTodayDay ? "bg-primary-600 text-white shadow-lg shadow-primary-500/30" : "text-surface-900"
+                            isTodayDay ? "bg-primary-600 text-white shadow-lg shadow-primary-500/30 dark:shadow-none" : "text-surface-900"
                         )}>
                             {format(day, 'd')}
                         </span>
@@ -249,7 +249,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                 e.stopPropagation();
                                 handleOpenModal(day);
                             }}
-                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full bg-surface-900 text-white transition-opacity active:scale-90"
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-full bg-surface-900 text-surface-50 transition-opacity active:scale-90"
                         >
                             <Plus size={12} />
                         </button>
@@ -289,7 +289,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                     </div>
 
                     {/* Gloss Reflection */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none rounded-[var(--radius-2xl)]" />
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent pointer-events-none rounded-[var(--radius-2xl)] dark:opacity-0" />
                 </motion.div>
             );
         });
@@ -297,7 +297,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         return (
             <div className="relative">
                 {/* Background Shadow Glow */}
-                <div className="absolute inset-0 bg-primary-500/5 blur-[120px] rounded-full pointer-events-none" />
+                <div className="absolute inset-0 bg-primary-500/5 blur-[120px] rounded-full pointer-events-none dark:opacity-0" />
 
                 {/* Scrollable calendar grid — scrolls horizontally on small screens */}
                 <div className="overflow-x-auto -mx-1 px-1">
@@ -344,7 +344,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                     whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.95 }}
                                     onClick={() => handleOpenModal(day)}
-                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-2 px-5 py-2 rounded-full bg-surface-900 text-white text-[10px] font-black transition-all shadow-lg uppercase tracking-wider"
+                                    className="opacity-0 group-hover:opacity-100 flex items-center gap-2 px-5 py-2 rounded-full bg-surface-900 text-surface-50 text-[10px] font-black transition-all shadow-lg uppercase tracking-wider"
                                 >
                                     <Plus size={14} strokeWidth={3} /> Add
                                 </motion.button>
@@ -385,7 +385,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
         const dateParts = format(currentDate, 'EEEE,d,MMMM').split(',');
 
         return (
-            <div className="bg-background/40 backdrop-blur-xl border border-surface-200/50 rounded-[var(--radius-2xl)] shadow-2xl overflow-hidden min-h-[600px] flex flex-col lg:flex-row relative">
+            <div className="bg-background/40 backdrop-blur-xl border border-surface-200/50 rounded-[var(--radius-2xl)] shadow-2xl dark:shadow-none overflow-hidden min-h-[600px] flex flex-col lg:flex-row relative">
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
                 {/* Compact Focus Pillar */}
@@ -411,7 +411,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         NEW ACTION
                     </button>
 
-                    <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl" />
+                    <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-primary-500/10 rounded-full blur-3xl dark:opacity-0" />
                 </div>
 
                 {/* Refined Timeline narrative */}
@@ -510,7 +510,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                 {/* Additional Sidebar Info in Month View */}
                 {view === 'month' && (
                     <div className="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div className="lg:col-span-2 bg-background/40 backdrop-blur-xl rounded-[var(--radius-2xl)] p-8 shadow-2xl border border-surface-200/60 relative overflow-hidden">
+                        <div className="lg:col-span-2 bg-background/40 backdrop-blur-xl rounded-[var(--radius-2xl)] p-8 shadow-2xl dark:shadow-none border border-surface-200/60 relative overflow-hidden">
                             <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
 
                             <h3 className="text-2xl font-black text-surface-900 mb-8 flex items-center gap-4">
@@ -572,7 +572,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                         <p className="text-surface-400 font-black uppercase tracking-widest text-xs">No events scheduled</p>
                                         <button
                                             onClick={() => handleOpenModal(selectedDate)}
-                                            className="mt-6 px-10 py-3 rounded-full bg-surface-900 text-white font-black text-[10px] hover:bg-black transition-all shadow-xl shadow-black/10 active:scale-95 uppercase tracking-[2px]"
+                                            className="mt-6 px-10 py-3 rounded-full bg-surface-900 text-surface-50 font-black text-[10px] hover:bg-surface-800 transition-all shadow-xl shadow-black/10 active:scale-95 uppercase tracking-[2px]"
                                         >
                                             + Add First Event
                                         </button>
@@ -582,7 +582,7 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                         </div>
 
                         <div className="space-y-6">
-                            <div className="bg-surface-900 rounded-[var(--radius-2xl)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.2)] text-white relative overflow-hidden group h-full flex flex-col justify-center">
+                            <div className="bg-surface-900 dark:bg-[var(--bg-card)] border border-transparent dark:border-[var(--glass-border)] rounded-[var(--radius-2xl)] p-8 shadow-[0_20px_50px_rgba(0,0,0,0.2)] dark:shadow-none text-white relative overflow-hidden group h-full flex flex-col justify-center">
                                 <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] blend-overlay" />
 
                                 <div className="relative z-10">
@@ -593,14 +593,14 @@ export const CalendarView = React.forwardRef<CalendarViewHandle, {}>((props, ref
                                     </p>
                                     <button
                                         onClick={() => handleOpenModal()}
-                                        className="w-full bg-primary-600 text-white font-black py-5 rounded-2xl hover:bg-primary-500 transition-all shadow-2xl active:scale-95 uppercase tracking-[3px] text-xs border border-primary-400/30"
+                                        className="w-full bg-primary-600 text-white font-black py-5 rounded-2xl hover:bg-primary-500 transition-all shadow-2xl dark:shadow-none active:scale-95 uppercase tracking-[3px] text-xs border border-primary-400/30"
                                     >
                                         New Event
                                     </button>
                                 </div>
 
-                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-500/20 rounded-full blur-3xl group-hover:bg-primary-500/30 transition-all" />
-                                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-500/30 transition-all" />
+                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary-500/20 rounded-full blur-3xl group-hover:bg-primary-500/30 transition-all dark:opacity-0" />
+                                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl group-hover:bg-blue-500/30 transition-all dark:opacity-0" />
                             </div>
                         </div>
                     </div>

@@ -69,9 +69,9 @@ export default function NotificationsPage() {
     const markAllAsReadMutation = useMarkAllNotificationsRead();
     const deleteNotificationMutation = useDeleteNotification();
     
-    const notifications = Array.isArray(notificationsData)
-        ? notificationsData
-        : [];
+    const notifications = (notificationsData as any)?.items 
+        ?? (notificationsData as any)?.data 
+        ?? (Array.isArray(notificationsData) ? notificationsData : []);
 
     const [tab, setTab] = useState<TabKey>('all');
     const [typeFilter, setTypeFilter] = useState<NotificationType | 'all'>('all');

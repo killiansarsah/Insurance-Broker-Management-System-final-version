@@ -124,99 +124,106 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
         <Modal
             isOpen={isOpen}
             onClose={onClose}
-            size="xl"
+            size="2xl"
             className="overflow-visible"
         >
             <LiquidFilters />
-            <div className="relative px-2">
-                {/* Section Selector */}
-                <div className="flex items-center justify-center gap-4 mb-8">
+            
+            <div className="relative px-2 sm:px-6 pt-4 pb-8 flex flex-col min-h-full">
+                
+                {/* Header Decoration */}
+                
+                <div className="flex items-center gap-3 mb-12 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-600 text-white flex items-center justify-center shadow-lg shadow-primary-500/20">
+                        <Calculator size={24} strokeWidth={2.5} />
+                    </div>
+                    <div>
+                        <h2 className="text-3xl font-black text-slate-900 dark:text-white tracking-tighter">
+                            Premium Calculator
+                        </h2>
+                        <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-[2px] mt-1">Real-time Policy Quotes</p>
+                    </div>
+                </div>
+
+                {/* Premium Tab Selector */}
+                <div className="flex w-full mb-10 overflow-hidden rounded-[var(--radius-xl)] bg-slate-100/80 dark:bg-slate-900/80 border border-slate-200/50 dark:border-slate-800/50 p-1.5 shadow-inner backdrop-blur-md relative z-10">
                     {[
-                        { id: 'MOTOR', icon: Car, label: 'Motor' },
-                        { id: 'FIRE', icon: Flame, label: 'Fire' },
-                        { id: 'LIFE', icon: Heart, label: 'Life' }
+                        { id: 'MOTOR', icon: Car, label: 'Motor Vehicle' },
+                        { id: 'FIRE', icon: Flame, label: 'Fire & Property' },
+                        { id: 'LIFE', icon: Heart, label: 'Life Assurance' }
                     ].map((btn) => (
                         <button
                             key={btn.id}
                             onClick={() => setSection(btn.id as CalculatorSection)}
                             className={cn(
-                                "flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 backdrop-blur-md border",
+                                "flex-1 relative flex items-center justify-center gap-2.5 py-4 text-xs font-black uppercase tracking-widest transition-all duration-500 z-10 rounded-[calc(var(--radius-xl)-6px)] outline-none focus-visible:ring-2 focus-visible:ring-primary-500",
                                 section === btn.id
-                                    ? "bg-primary-500 text-white border-primary-400 shadow-lg scale-110"
-                                    : "bg-white/40 dark:bg-slate-800/40 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:bg-white/60 dark:hover:bg-slate-800/60"
+                                    ? "text-primary-700 dark:text-white shadow-sm"
+                                    : "text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
                             )}
                         >
-                            <btn.icon size={14} className={cn(section === btn.id ? "animate-pulse" : "")} />
+                            {section === btn.id && (
+                                <div className="absolute inset-0 bg-white dark:bg-slate-800 rounded-[calc(var(--radius-xl)-6px)] -z-10 shadow-[0_2px_8px_rgba(0,0,0,0.04)] border border-slate-200/50 dark:border-slate-700 animate-in zoom-in-95 duration-300" />
+                            )}
+                            <btn.icon size={18} className={cn("transition-all duration-500", section === btn.id ? "scale-110 drop-shadow-md text-primary-500" : "opacity-70")} />
                             {btn.label}
                         </button>
                     ))}
                 </div>
 
-                {/* Header with Icon */}
-                <div className="flex items-center justify-center gap-2 mb-10 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <div className="w-8 h-8 rounded-full bg-success-50 text-success-500 flex items-center justify-center border border-success-100 shadow-sm">
-                        <ShieldCheck size={18} fill="currentColor" fillOpacity={0.1} />
-                    </div>
-                    <h2 className="text-xl font-bold text-slate-800 dark:text-white tracking-tight">
-                        {section.charAt(0).toUpperCase() + section.slice(1)} Quote Calculator
-                    </h2>
-                </div>
-
                 {/* Form Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-7 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8 relative z-20">
                     {section === 'MOTOR' && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Number of Passengers</label>
-                            <div className="relative group">
+                        <div className="space-y-2.5 group">
+                            <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">Number of Passengers</label>
+                            <div className="relative">
                                 <Input
                                     type="number"
-                                    placeholder="Enter number of passengers"
+                                    placeholder="e.g. 5"
                                     value={passengers}
                                     onChange={(e) => setPassengers(e.target.value)}
-                                    className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm group-hover:shadow-md"
+                                    className="h-14 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-lg font-bold rounded-2xl shadow-sm transition-all"
                                 />
-                                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 text-slate-300 group-focus-within:text-warning-500 transition-colors">
-                                    <ChevronRight size={10} className="-rotate-90" />
-                                    <ChevronRight size={10} className="rotate-90" />
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all text-primary-500">
+                                    <ChevronRight size={16} />
                                 </div>
                             </div>
                         </div>
                     )}
 
                     {section === 'MOTOR' && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Registration Year</label>
+                        <div className="space-y-2.5 group">
+                            <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">Registration Year</label>
                             <Input
                                 type="number"
-                                placeholder="Enter registration year"
+                                placeholder="e.g. 2024"
                                 value={regYear}
                                 onChange={(e) => setRegYear(e.target.value)}
-                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-slate-300 focus:border-primary-400 transition-all duration-500 rounded-xl shadow-sm"
+                                className="h-14 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-lg font-bold rounded-2xl shadow-sm transition-all"
                             />
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">
-                            {section === 'LIFE' ? 'Sum Assured' : "Value to be Insured"}
+                    <div className="space-y-2.5 group md:col-span-2">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
+                            {section === 'LIFE' ? 'Sum Assured' : "Value to be Insured"} <span className="text-danger-500">*</span>
                         </label>
-                        <div className="relative group">
+                        <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg pointer-events-none">
+                                {currency === 'GHS' ? 'GH₵' : currency === 'USD' ? '$' : ''}
+                            </span>
                             <Input
                                 type="number"
                                 placeholder={`Enter ${section === 'LIFE' ? 'sum assured' : 'insured value'}`}
                                 value={insuredValue}
                                 onChange={(e) => setInsuredValue(e.target.value)}
-                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 hover:border-warning-300 focus:border-warning-400 transition-all duration-500 rounded-xl shadow-sm"
+                                className="h-16 pl-[4.5rem] bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-2xl font-black rounded-[var(--radius-xl)] shadow-sm transition-all"
                             />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col gap-0.5 text-slate-300 group-focus-within:text-warning-500 transition-colors">
-                                <ChevronRight size={10} className="-rotate-90" />
-                                <ChevronRight size={10} className="rotate-90" />
-                            </div>
                         </div>
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
+                    <div className="space-y-2.5 group relative z-40">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
                             Insurance Company <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -228,8 +235,8 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
+                    <div className="space-y-2.5 group relative z-30">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
                             Cover Type <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -245,8 +252,8 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
+                    <div className="space-y-2.5 group md:col-span-2 relative z-20">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
                             {section === 'LIFE' ? 'Product Category' : 'Risk Type'} <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -263,31 +270,31 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                     </div>
 
                     {section === 'MOTOR' && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Extra Third Party Property Damage Limit</label>
+                        <div className="space-y-2.5 group">
+                            <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">Extra TPPDL</label>
                             <Input
-                                placeholder="Enter extra TPPDL"
+                                placeholder="Enter extra TPPDL limit"
                                 value={extraTppdl}
                                 onChange={(e) => setExtraTppdl(e.target.value)}
-                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm"
+                                className="h-14 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-base font-bold rounded-2xl shadow-sm transition-all"
                             />
                         </div>
                     )}
 
                     {section === 'MOTOR' && (
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Umbrella Limit</label>
+                        <div className="space-y-2.5 group">
+                            <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">Umbrella Limit</label>
                             <Input
                                 placeholder="Enter umbrella limit"
                                 value={umbrellaLimit}
                                 onChange={(e) => setUmbrellaLimit(e.target.value)}
-                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm"
+                                className="h-14 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-base font-bold rounded-2xl shadow-sm transition-all"
                             />
                         </div>
                     )}
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
+                    <div className="space-y-2.5 group md:col-span-2 relative z-10">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
                             Currency <span className="text-danger-500">*</span>
                         </label>
                         <CustomSelect
@@ -299,72 +306,77 @@ export function CalculatorModal({ isOpen, onClose }: CalculatorModalProps) {
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
+                    <div className="space-y-2.5 group">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
                             Start Date <span className="text-danger-500">*</span>
                         </label>
-                        <div className="relative">
-                            <Input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm pr-10 appearance-none"
-                            />
-                        </div>
+                        <Input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            className="h-14 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-base font-bold rounded-2xl shadow-sm transition-all pr-4"
+                        />
                     </div>
 
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5 flex items-center gap-1">
+                    <div className="space-y-2.5 group">
+                        <label className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1 group-focus-within:text-primary-500 transition-colors">
                             End Date <span className="text-danger-500">*</span>
                         </label>
-                        <div className="relative">
-                            <Input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="h-11 bg-white/30 dark:bg-slate-700/30 backdrop-blur-xl border-slate-200 dark:border-slate-600 rounded-xl shadow-sm pr-10 appearance-none"
-                            />
-                        </div>
+                        <Input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            className="h-14 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700 focus:ring-4 focus:ring-primary-500/20 text-base font-bold rounded-2xl shadow-sm transition-all pr-4"
+                        />
                     </div>
-
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300 ml-0.5">Total Days</label>
-                        <div className="h-11 bg-slate-100/50 dark:bg-slate-700/50 backdrop-blur-md border border-slate-200 dark:border-slate-600 rounded-xl flex items-center px-4 text-slate-500 dark:text-slate-400 font-bold tracking-tight shadow-inner transition-all duration-500">
-                            {totalDays}
-                        </div>
+                </div>
+                
+                {/* Duration Receipt Box */}
+                <div className="mt-10 bg-gradient-to-br from-primary-500/10 dark:from-primary-500/5 to-transparent p-6 sm:p-8 rounded-[var(--radius-xl)] border border-primary-500/20 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 text-center sm:text-left transition-all hover:bg-primary-500/15 duration-500 shadow-inner group">
+                    <div>
+                        <h4 className="text-xl font-black text-slate-800 dark:text-slate-200 tracking-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">Total Duration</h4>
+                        <p className="text-xs font-bold uppercase tracking-[2px] text-slate-500 mt-1">Based on selected dates</p>
+                    </div>
+                    <div className="text-6xl font-black text-primary-600 drop-shadow-[0_2px_10px_rgba(59,130,246,0.3)] tracking-tighter">
+                        {totalDays} <span className="text-xl opacity-40 tracking-widest uppercase font-bold relative -top-3 ml-1">days</span>
                     </div>
                 </div>
 
-                {/* Footer Action */}
-                <div className="mt-12 flex justify-end border-t border-slate-100/50 pt-8 animate-in fade-in zoom-in duration-1000">
+                <div className="mt-auto pt-10 flex flex-col sm:flex-row justify-end gap-4 border-t border-slate-100/50 dark:border-slate-800/50">
                     <button
-                        onClick={() => toast.success('Quote Calculated', { description: `Your ${section} quote has been generated. Review the summary below.` })}
-                        className={cn(
-                            "flex items-center gap-2 px-7 py-3 rounded-2xl font-black uppercase tracking-widest transition-all duration-300 active:scale-95 shadow-lg relative overflow-hidden group border-none outline-none focus:ring-2 focus:ring-primary-500/40",
-                            "bg-gradient-to-r from-warning-400 to-warning-500 text-slate-900"
-                        )}
-                        style={{ filter: 'url(#liquid-glass-refraction)' }}
+                        onClick={onClose}
+                        className="px-8 py-5 rounded-[var(--radius-xl)] font-black uppercase tracking-[3px] text-xs transition-all duration-300 text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800"
                     >
-                        {/* Shimmer effect */}
-                        <div className="absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-
-                        Check Quote
-                        <Calculator size={16} strokeWidth={3} className="group-hover:rotate-12 transition-transform" />
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => toast.success('Quote Calculated', { description: `Your ${section} quote has been generated successfully.` })}
+                        className="shimmer-button flex-1 sm:flex-none flex items-center justify-center gap-3 px-12 py-5 rounded-[var(--radius-xl)] font-black uppercase tracking-[3px] text-sm text-white shadow-xl hover:-translate-y-1 transition-all active:scale-95 group focus:ring-4 focus:ring-primary-500/30 outline-none"
+                    >
+                        Calculate Quote
+                        <ChevronRight size={18} strokeWidth={4} className="group-hover:translate-x-1.5 transition-transform" />
                     </button>
                 </div>
             </div>
+            
 
-            {/* Global Style for Date Inputs */}
+
             <style jsx global>{`
                 input[type="date"]::-webkit-calendar-picker-indicator {
-                    opacity: 0.4;
+                    opacity: 0.5;
                     cursor: pointer;
                     transition: all 0.2s;
-                    padding: 5px;
+                    padding: 4px;
+                    border-radius: 4px;
                 }
                 input[type="date"]::-webkit-calendar-picker-indicator:hover {
-                    opacity: 0.8;
-                    transform: scale(1.2);
+                    opacity: 1;
+                    background-color: var(--color-surface-200);
+                    transform: scale(1.1);
+                }
+                .theme-dark input[type="date"]::-webkit-calendar-picker-indicator {
+                    filter: invert(1);
+                    opacity: 0.7;
                 }
             `}</style>
         </Modal>

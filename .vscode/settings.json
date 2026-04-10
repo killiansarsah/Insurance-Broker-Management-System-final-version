@@ -29,5 +29,6 @@
     "workbench.browser.openLocalhostLinks": true,
     "workbench.browser.enableChatTools": true,
     "terminal.integrated.suggest.insertTrailingSpace": false,
-    "postman.settings.dotenv-detection-notification-visibility": false
+    "postman.settings.dotenv-detection-notification-visibility": false,
+    "css.lint.unknownAtRules": "ignore"
 }

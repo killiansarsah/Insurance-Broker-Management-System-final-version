@@ -18,6 +18,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import { Modal } from "@/components/ui/modal"
 import {
     useNotifications,
     useUnreadNotificationCount,
@@ -28,6 +29,7 @@ import {
 import { useNotificationSocket } from "@/hooks/use-notification-socket"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
+import { formatDate } from "@/lib/utils"
 
 const TYPE_ICONS: Record<string, { icon: React.ReactNode; bg: string; text: string }> = {
     RENEWAL: { icon: <Clock size={14} />, bg: "bg-blue-100", text: "text-blue-600" },
@@ -62,8 +64,15 @@ export function NotificationsPopover() {
     const deleteNotification = useDeleteNotification()
     const { onNewNotification } = useNotificationSocket()
 
+    const [selectedId, setSelectedId] = React.useState<string | null>(null)
+    const [isModalOpen, setIsModalOpen] = React.useState(false)
+
     const notifications = (notificationsData as any)?.items ?? (notificationsData as any)?.data ?? (Array.isArray(notificationsData) ? notificationsData : [])
     const unreadCount = (unreadData as any)?.count ?? 0
+
+    const selectedNotification = React.useMemo(() =>
+        notifications.find((n: any) => n.id === selectedId) || null,
+        [notifications, selectedId])
 
     // Listen for real-time notifications
     React.useEffect(() => {
@@ -77,6 +86,7 @@ export function NotificationsPopover() {
     }, [onNewNotification, qc])
 
     return (
+        <>
         <Popover>
             <PopoverTrigger asChild>
                 <button
@@ -121,13 +131,11 @@ export function NotificationsPopover() {
                                 <div
                                     key={n.id}
                                     className={`p-4 border-b border-surface-100/50 dark:border-slate-700/50 hover:bg-surface-50 dark:hover:bg-slate-700/50 transition-colors group cursor-pointer ${!n.read ? 'bg-primary-50/30 dark:bg-primary-900/20' : ''}`}
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                        e.preventDefault()
                                         if (!n.read) markRead.mutate(n.id)
-                                        if (n.link && typeof window !== 'undefined') {
-                                            window.location.href = n.link
-                                        } else if (typeof window !== 'undefined') {
-                                            window.location.href = '/dashboard/notifications'
-                                        }
+                                        setSelectedId(n.id)
+                                        setIsModalOpen(true)
                                     }}
                                 >
                                     <div className="flex gap-3">
@@ -171,5 +179,62 @@ export function NotificationsPopover() {
                 </div>
             </PopoverContent>
         </Popover>
+
+        {selectedNotification && (
+            <Modal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title="Notification Details"
+                size="md"
+            >
+                <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 py-2 sm:py-4">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-3">
+                            <div className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-inner ${(TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).bg} ${(TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).text}`}>
+                                {React.cloneElement((TYPE_ICONS[selectedNotification.type] || TYPE_ICONS.SYSTEM).icon as React.ReactElement, { size: 24 })}
+                            </div>
+                            <div>
+                                <h2 className="text-[11px] font-black uppercase tracking-[3px] text-surface-500 mb-1">{selectedNotification.type} Notification</h2>
+                                <div className="text-sm font-bold text-surface-900 dark:text-white">{formatDate(selectedNotification.createdAt)}</div>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                deleteNotification.mutate(selectedNotification.id)
+                                setIsModalOpen(false)
+                            }}
+                            className="p-2.5 rounded-xl text-surface-400 hover:text-danger-600 hover:bg-danger-50 transition-colors"
+                            title="Delete Notification"
+                        >
+                            <Trash2 size={18} />
+                        </button>
+                    </div>
+
+                    <h1 className="text-xl md:text-2xl font-black text-surface-900 dark:text-white tracking-tight mb-6 leading-tight">
+                        {selectedNotification.title}
+                    </h1>
+
+                    <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none text-surface-600 dark:text-slate-300 mb-8">
+                        {selectedNotification.message.split('\n').map((line: string, i: number) => (
+                            <p key={i} className="mb-4 leading-relaxed text-[15px]">{line}</p>
+                        ))}
+                    </div>
+
+                    {selectedNotification.link && (
+                        <div className="mt-8 pt-6 border-t border-surface-100 dark:border-slate-800 flex justify-end">
+                            <a
+                                href={selectedNotification.link}
+                                onClick={() => setIsModalOpen(false)}
+                                className="inline-flex items-center justify-center gap-3 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-xl font-bold uppercase tracking-widest text-xs transition-shadow shadow-lg w-full sm:w-auto text-center"
+                            >
+                                Take Action
+                            </a>
+                        </div>
+                    )}
+                </div>
+            </Modal>
+        )}
+        </>
     )
 }

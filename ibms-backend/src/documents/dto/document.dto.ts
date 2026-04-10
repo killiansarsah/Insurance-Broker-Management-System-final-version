@@ -3,7 +3,6 @@ import {
   IsEnum,
   IsOptional,
   IsInt,
-  IsUrl,
   IsDateString,
   IsArray,
 } from 'class-validator';
@@ -17,7 +16,7 @@ export class CreateDocumentDto {
   @IsEnum(DocumentCategory)
   category!: DocumentCategory;
 
-  @IsUrl()
+  @IsString()
   fileUrl!: string;
 
   @Type(() => Number)

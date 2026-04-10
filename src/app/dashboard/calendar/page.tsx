@@ -135,7 +135,7 @@ export default function CalendarPage() {
                 </div>
 
                 {/* Satellite Control Pill */}
-                <div className="flex items-center gap-1 p-1 bg-background/60 backdrop-blur-xl border border-surface-200/50 rounded-full shadow-xl shadow-surface-900/5">
+                <div className="flex items-center gap-1 p-1 bg-background/60 backdrop-blur-xl border border-surface-200/50 rounded-full shadow-xl shadow-surface-900/5 dark:shadow-none">
                     <div className="flex items-center gap-1 pr-2 border-r border-surface-100/80 mr-1 ml-1">
                         <button
                             onClick={handleConnect}
@@ -168,7 +168,7 @@ export default function CalendarPage() {
 
                     <button
                         onClick={() => calendarRef.current?.openModal()}
-                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all active:scale-95 cursor-pointer"
+                        className="flex items-center gap-2 px-5 py-2 rounded-full bg-primary-600 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary-500/20 dark:shadow-none hover:bg-primary-700 transition-all active:scale-95 cursor-pointer"
                     >
                         <Plus size={14} strokeWidth={3} />
                         New Action

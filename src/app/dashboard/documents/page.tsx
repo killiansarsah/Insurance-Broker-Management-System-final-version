@@ -104,7 +104,10 @@ export default function DocumentsPage() {
                             { label: 'All Categories', value: 'all' },
                             { label: 'KYC / ID', value: 'KYC' },
                             { label: 'Policy Docs', value: 'POLICY' },
-                            { label: 'Claim Photos', value: 'claims' },
+                            { label: 'Claim Evidence', value: 'CLAIM' },
+                            { label: 'Client Files', value: 'CLIENT' },
+                            { label: 'Compliance', value: 'COMPLIANCE' },
+                            { label: 'Reports', value: 'REPORT' },
                         ]}
                         value={category}
                         onChange={(v) => setCategory(v as string)}
