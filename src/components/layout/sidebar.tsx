@@ -210,7 +210,7 @@ function GlobalRail() {
             {/* Organization Logo */}
             <Link href="/dashboard/settings?tab=organization" prefetch={false} className="relative w-8 h-8 mb-6 rounded-lg overflow-hidden hover:opacity-80 transition-opacity ring-2 ring-surface-200 dark:ring-slate-700 flex items-center justify-center bg-surface-100 dark:bg-slate-800" title="Organization Settings">
                 {logoUrl ? (
-                    <Image src={logoUrl} alt="Organization" fill className="object-cover" sizes="32px" unoptimized={true} />
+                    <Image src={logoUrl} alt="Organization" width={32} height={32} className="w-full h-full object-cover" unoptimized={true} />
                 ) : (
                     <Building2 size={16} className="text-surface-500" />
                 )}
