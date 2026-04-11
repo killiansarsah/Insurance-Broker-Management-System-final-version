@@ -342,6 +342,8 @@ model Client {
   deletedAt              DateTime?
   registrationNumber     String?
   tin                    String?
+  directorsDetails       Json?
+
   bankDetails            BankDetail[]
   beneficiaries          Beneficiary[]
   claims                 Claim[]

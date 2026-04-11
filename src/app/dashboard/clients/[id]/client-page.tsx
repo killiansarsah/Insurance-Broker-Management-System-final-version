@@ -407,7 +407,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                         />
                     )}
                     {activeTab === 'personal' && <PersonalInfoTab client={client} />}
-                    {activeTab === 'policies' && <PoliciesTab policies={clientPolicies} router={router} />}
+                    {activeTab === 'policies' && <PoliciesTab policies={clientPolicies} router={router} clientId={client.id} />}
                     {activeTab === 'claims' && <ClaimsTab claims={clientClaims} router={router} />}
                     {activeTab === 'documents' && <DocumentsTab documents={clientDocuments} client={client} />}
                     {activeTab === 'communication' && <CommunicationTab client={client} />}
@@ -644,24 +644,47 @@ function PersonalInfoTab({ client }: { client: any }) {
                         )}
                     </GlassCard>
 
-                    <GlassCard title="Next of Kin" icon={<Heart size={16} />}>
-                        {Array.isArray(client.nextOfKin) && client.nextOfKin.length > 0 ? (
-                            <div className="space-y-6">
-                                {client.nextOfKin.map((nk: any, i: number) => (
-                                    <div key={nk.id || i} className={i > 0 ? 'pt-4 border-t border-surface-100' : ''}>
-                                        <div className="space-y-4">
-                                            <InfoRow label="Full Name" value={nk.fullName} />
-                                            <InfoRow label="Relationship" value={nk.relationship} />
-                                            <InfoRow label="Phone" value={nk.phone} />
-                                            {nk.address && <InfoRow label="Address" value={nk.address} />}
+                    {client.type === 'INDIVIDUAL' && (
+                        <GlassCard title="Next of Kin" icon={<Heart size={16} />}>
+                            {Array.isArray(client.nextOfKin) && client.nextOfKin.length > 0 ? (
+                                <div className="space-y-6">
+                                    {client.nextOfKin.map((nk: any, i: number) => (
+                                        <div key={nk.id || i} className={i > 0 ? 'pt-4 border-t border-surface-100' : ''}>
+                                            <div className="space-y-4">
+                                                <InfoRow label="Full Name" value={nk.fullName} />
+                                                <InfoRow label="Relationship" value={nk.relationship} />
+                                                <InfoRow label="Phone" value={nk.phone} />
+                                                {nk.address && <InfoRow label="Address" value={nk.address} />}
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-sm text-surface-400 py-4">No next of kin recorded.</p>
-                        )}
-                    </GlassCard>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-surface-400 py-4">No next of kin recorded.</p>
+                            )}
+                        </GlassCard>
+                    )}
+
+                    {client.type === 'CORPORATE' && (
+                        <GlassCard title="Directors & Signatories" icon={<User size={16} />}>
+                            {Array.isArray(client.directorsDetails) && client.directorsDetails.length > 0 ? (
+                                <div className="space-y-6">
+                                    {client.directorsDetails.map((dir: any, i: number) => (
+                                        <div key={i} className={i > 0 ? 'pt-4 border-t border-surface-100' : ''}>
+                                            <div className="space-y-4">
+                                                <InfoRow label="Full Name" value={dir.name} />
+                                                <InfoRow label="Role / Title" value={dir.role} />
+                                                <InfoRow label="Ghana Card #" value={dir.ghanaCard} mono />
+                                                <InfoRow label="Phone" value={dir.phone} />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-surface-400 py-4">No directors recorded.</p>
+                            )}
+                        </GlassCard>
+                    )}
 
                     <GlassCard title="Beneficiaries" icon={<Users size={16} />}>
                         {Array.isArray(client.beneficiaries) && client.beneficiaries.length > 0 ? (
@@ -710,17 +733,32 @@ function PersonalInfoTab({ client }: { client: any }) {
 // ===========================================================
 // Policies Tab
 // ===========================================================
-function PoliciesTab({ policies, router }: { policies: any[]; router: any }) {
+function PoliciesTab({ policies, router, clientId }: { policies: any[]; router: any; clientId: string }) {
     return (
         <GlassCard title={`Policies (${policies.length})`} icon={<FileText size={16} />}>
             {policies.length === 0 ? (
-                <div className="text-center py-12 text-surface-400">
-                    <FileText size={32} className="mx-auto mb-3 opacity-40" />
-                    <p className="text-sm">No policies associated with this client.</p>
-                    <Link href="/dashboard/policies/new" className="text-primary-600 text-sm font-medium hover:underline mt-2 inline-block">+ Create Policy</Link>
+                <div className="text-center py-12 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-surface-100/50 rounded-full flex items-center justify-center mb-4">
+                        <FileText size={32} className="text-surface-300" />
+                    </div>
+                    <p className="text-sm font-medium text-surface-800">No policies associated with this client.</p>
+                    <p className="text-xs text-surface-500 mt-1 mb-6 max-w-sm">Create an insurance policy for this client to start tracking their premiums and coverages.</p>
+                    <Link href={`/dashboard/policies/new?clientId=${clientId}`}>
+                        <Button variant="primary" className="shadow-lg shadow-primary-500/20" leftIcon={<FileText size={16} />}>
+                            Create Policy
+                        </Button>
+                    </Link>
                 </div>
             ) : (
-                <div className="overflow-x-auto">
+                <div className="space-y-4">
+                    <div className="flex justify-end">
+                        <Link href={`/dashboard/policies/new?clientId=${clientId}`}>
+                            <Button variant="primary" size="sm" className="shadow-md shadow-primary-500/20" leftIcon={<FileText size={14} />}>
+                                Create Policy
+                            </Button>
+                        </Link>
+                    </div>
+                    <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="border-b border-surface-200/50">
@@ -752,6 +790,7 @@ function PoliciesTab({ policies, router }: { policies: any[]; router: any }) {
                             ))}
                         </tbody>
                     </table>
+                </div>
                 </div>
             )}
         </GlassCard>

@@ -134,6 +134,7 @@ export class ClientsService {
         contactPersonPhone: dto.contactPersonPhone,
         isPep: dto.isPep,
         eddRequired: dto.eddRequired,
+        directorsDetails: dto.directorsDetails ? (dto.directorsDetails as any) : undefined,
         assignedBrokerId: userId,
       },
       include: {
@@ -802,6 +803,7 @@ export class ClientsService {
         contactPersonPhone: dto.contactPersonPhone,
         isPep: dto.isPep,
         eddRequired: dto.eddRequired,
+        directorsDetails: dto.directorsDetails ? (dto.directorsDetails as any) : undefined,
       },
     });
 

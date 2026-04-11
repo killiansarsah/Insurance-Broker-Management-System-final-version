@@ -134,6 +134,9 @@ export class CreateClientDto {
   @IsOptional()
   eddRequired?: boolean;
 
+  @IsOptional()
+  directorsDetails?: any;
+
   // Inline next-of-kin (created after client)
   @IsString()
   @IsOptional()

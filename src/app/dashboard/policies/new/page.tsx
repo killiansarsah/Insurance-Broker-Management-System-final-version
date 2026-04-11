@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     ArrowLeft,
@@ -17,6 +17,14 @@ import {
     Home,
     Ship,
     Save,
+    Flame,
+    HeartPulse,
+    Activity,
+    Briefcase,
+    HardHat,
+    Plane,
+    Leaf,
+    HelpCircle
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,21 +45,21 @@ const STEPS = [
     { id: 5, label: 'Review & Submit', icon: <CheckCircle2 size={16} /> },
 ];
 
-const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
-    { label: 'Motor', value: 'MOTOR' },
-    { label: 'Fire / Property', value: 'FIRE' },
-    { label: 'Marine', value: 'MARINE' },
-    { label: 'Health', value: 'HEALTH' },
-    { label: 'Life', value: 'LIFE' },
-    { label: 'Liability', value: 'LIABILITY' },
-    { label: 'Engineering', value: 'ENGINEERING' },
-    { label: 'Bonds / Guarantees', value: 'BONDS' },
-    { label: 'Travel', value: 'TRAVEL' },
-    { label: 'Agriculture', value: 'AGRICULTURE' },
-    { label: 'Professional Indemnity', value: 'PROFESSIONAL_INDEMNITY' },
-    { label: 'Oil & Gas', value: 'OIL_GAS' },
-    { label: 'Aviation', value: 'AVIATION' },
-    { label: 'Other', value: 'OTHER' },
+const INSURANCE_TYPES: { label: string; value: InsuranceType; icon: any; color: string }[] = [
+    { label: 'Motor', value: 'MOTOR', icon: <Car size={18} />, color: 'blue' },
+    { label: 'Fire / Property', value: 'FIRE', icon: <Flame size={18} />, color: 'orange' },
+    { label: 'Marine', value: 'MARINE', icon: <Ship size={18} />, color: 'cyan' },
+    { label: 'Health', value: 'HEALTH', icon: <HeartPulse size={18} />, color: 'red' },
+    { label: 'Life', value: 'LIFE', icon: <Activity size={18} />, color: 'rose' },
+    { label: 'Liability', value: 'LIABILITY', icon: <Briefcase size={18} />, color: 'emerald' },
+    { label: 'Engineering', value: 'ENGINEERING', icon: <HardHat size={18} />, color: 'amber' },
+    { label: 'Bonds / Guarantees', value: 'BONDS', icon: <Shield size={18} />, color: 'indigo' },
+    { label: 'Travel', value: 'TRAVEL', icon: <Plane size={18} />, color: 'purple' },
+    { label: 'Agriculture', value: 'AGRICULTURE', icon: <Leaf size={18} />, color: 'green' },
+    { label: 'Professional Indemnity', value: 'PROFESSIONAL_INDEMNITY', icon: <Briefcase size={18} />, color: 'slate' },
+    { label: 'Oil & Gas', value: 'OIL_GAS', icon: <Flame size={18} />, color: 'yellow' },
+    { label: 'Aviation', value: 'AVIATION', icon: <Plane size={18} />, color: 'sky' },
+    { label: 'Other', value: 'OTHER', icon: <HelpCircle size={18} />, color: 'surface' },
 ];
 
 const PREMIUM_FREQUENCIES: { label: string; value: PremiumFrequency }[] = [
@@ -189,6 +197,26 @@ export default function NewPolicyPage() {
     const { data: carriersData } = useCarriers();
     const allCarriers: any[] = Array.isArray(carriersData) ? carriersData : (carriersData as any)?.items ?? (carriersData as any)?.data ?? [];
 
+    // Auto-populate client from URL if 'clientId' is present and we've loaded clients
+    useEffect(() => {
+        if (typeof window !== 'undefined' && allClients.length > 0 && !form.clientId) {
+            const params = new URLSearchParams(window.location.search);
+            const urlClientId = params.get('clientId');
+            if (urlClientId) {
+                const client = allClients.find((c: any) => c.id === urlClientId);
+                if (client) {
+                    setForm(prev => ({
+                        ...prev,
+                        clientId: client.id,
+                        clientName: client.companyName || `${client.firstName || ''} ${client.lastName || ''}`.trim()
+                    }));
+                    setStep(2); // Automatically skip the first step since client is selected
+                }
+            }
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [allClients]);
+
     const INSURER_OPTIONS = useMemo(() =>
         allCarriers
             .filter((c: any) => c.status !== 'INACTIVE') // Just don't include explicit inactive ones, in case they exist
@@ -307,20 +335,21 @@ export default function NewPolicyPage() {
     const isProperty = form.insuranceType === 'FIRE';
     const isMarine = form.insuranceType === 'MARINE';
     return (
-        <div className="w-full space-y-6 animate-fade-in pb-10 max-w-4xl mx-auto">
+        <div className="w-full flex flex-col h-[calc(100vh-6.5rem)] animate-fade-in max-w-6xl mx-auto overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+            <div className="flex-none flex items-center justify-between pb-3">
+                <div className="flex items-center gap-2">
                     <BackButton href="/dashboard/policies" />
                     <div>
-                        <h1 className="text-2xl font-bold text-surface-900 tracking-tight">New Policy</h1>
-                        <p className="text-sm text-surface-500">Create a new insurance policy record.</p>
+                        <h1 className="text-xl font-bold text-surface-900 tracking-tight">New Policy</h1>
+                        <p className="text-xs text-surface-500">Create a new insurance policy record.</p>
                     </div>
                 </div>
                 <Button
                     variant="outline"
                     size="sm"
-                    leftIcon={<Save size={14} />}
+                    className="shadow-sm border-surface-200 h-8 text-xs"
+                    leftIcon={<Save size={12} />}
                     onClick={handleSaveAsDraft}
                     disabled={!form.clientId}
                 >
@@ -329,23 +358,23 @@ export default function NewPolicyPage() {
             </div>
 
             {/* Stepper */}
-            <div className="flex items-center justify-between relative">
+            <div className="flex-none flex items-center justify-between relative py-1 px-4">
                 <div className="absolute top-1/2 left-0 w-full h-0.5 bg-surface-200 -z-10" />
                 {STEPS.map((s) => {
                     const isActive = s.id === step;
                     const isCompleted = s.id < step;
                     return (
-                        <div key={s.id} className="flex flex-col items-center gap-2 bg-background px-2">
+                        <div key={s.id} className="flex flex-col items-center gap-1 bg-background px-3">
                             <div className={cn(
-                                'w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 border-2',
-                                isActive ? 'border-primary-500 bg-primary-50 text-primary-600' :
-                                    isCompleted ? 'border-success-500 bg-success-500 text-white' :
+                                'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 border-2',
+                                isActive ? 'border-primary-500 bg-primary-50 text-primary-600 shadow-md shadow-primary-500/10' :
+                                    isCompleted ? 'border-success-500 bg-success-500 text-white shadow-sm' :
                                         'border-surface-200 bg-surface-50 text-surface-400'
                             )}>
-                                {isCompleted ? <Check size={20} /> : s.icon}
+                                {isCompleted ? <Check size={14} /> : s.icon}
                             </div>
                             <span className={cn(
-                                'text-xs font-semibold whitespace-nowrap',
+                                'text-[10px] font-bold uppercase tracking-wider whitespace-nowrap',
                                 isActive ? 'text-primary-600' : isCompleted ? 'text-success-600' : 'text-surface-400'
                             )}>
                                 {s.label}
@@ -355,16 +384,11 @@ export default function NewPolicyPage() {
                 })}
             </div>
 
-            {/* Error Banner */}
-            {errors && (
-                <div className="bg-danger-50 border border-danger-200 rounded-lg px-4 py-3 text-sm text-danger-700 font-medium animate-fade-in">
-                    {errors}
-                </div>
-            )}
-
-            {/* Content */}
-            <Card padding="lg" className="min-h-[400px]">
-                {/* ─── Step 1: Client Selection ────────────────────────────────── */}
+            {/* Content Container (Non-scrolling by default, fits whole page) */}
+            <div className="flex-1 mt-4 overflow-visible">
+                <Card padding="md" className="h-full border-surface-200/60 shadow-sm overflow-visible flex flex-col">
+                    <div className="flex-1 overflow-visible">
+                    {/* ─── Step 1: Client Selection ────────────────────────────────── */}
                 {step === 1 && (
                     <div className="flex flex-col items-center gap-6">
                         <div className="text-center">
@@ -426,27 +450,54 @@ export default function NewPolicyPage() {
 
                 {/* ─── Step 2: Product & Insurer ───────────────────────────────── */}
                 {step === 2 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                        <div className="lg:col-span-8 space-y-4">
                             <h2 className="text-lg font-bold text-surface-900">Coverage Type</h2>
-                            <div className="grid grid-cols-2 gap-3">
-                                {INSURANCE_TYPES.map(type => (
-                                    <button
-                                        key={type.value}
-                                        onClick={() => update('insuranceType', type.value)}
-                                        className={cn(
-                                            'p-3 rounded-[var(--radius-md)] border text-left transition-all text-sm',
-                                            form.insuranceType === type.value
-                                                ? 'border-primary-500 bg-primary-50 text-primary-700 font-medium'
-                                                : 'border-surface-200 hover:border-primary-200 text-surface-600'
-                                        )}
-                                    >
-                                        {type.label}
-                                    </button>
-                                ))}
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                {INSURANCE_TYPES.map(type => {
+                                    const isSelected = form.insuranceType === type.value;
+                                    const colorMap: Record<string, { bg: string, text: string, border: string, iconBg: string }> = {
+                                        blue: { bg: 'bg-blue-50/50', text: 'text-blue-700', border: 'border-blue-100', iconBg: 'bg-blue-100 text-blue-600' },
+                                        orange: { bg: 'bg-orange-50/50', text: 'text-orange-700', border: 'border-orange-100', iconBg: 'bg-orange-100 text-orange-600' },
+                                        cyan: { bg: 'bg-cyan-50/50', text: 'text-cyan-700', border: 'border-cyan-100', iconBg: 'bg-cyan-100 text-cyan-600' },
+                                        red: { bg: 'bg-red-50/50', text: 'text-red-700', border: 'border-red-100', iconBg: 'bg-red-100 text-red-600' },
+                                        rose: { bg: 'bg-rose-50/50', text: 'text-rose-700', border: 'border-rose-100', iconBg: 'bg-rose-100 text-rose-600' },
+                                        emerald: { bg: 'bg-emerald-50/50', text: 'text-emerald-700', border: 'border-emerald-100', iconBg: 'bg-emerald-100 text-emerald-600' },
+                                        amber: { bg: 'bg-amber-50/50', text: 'text-amber-700', border: 'border-amber-100', iconBg: 'bg-amber-100 text-amber-600' },
+                                        indigo: { bg: 'bg-indigo-50/50', text: 'text-indigo-700', border: 'border-indigo-100', iconBg: 'bg-indigo-100 text-indigo-600' },
+                                        purple: { bg: 'bg-purple-50/50', text: 'text-purple-700', border: 'border-purple-100', iconBg: 'bg-purple-100 text-purple-600' },
+                                        green: { bg: 'bg-green-50/50', text: 'text-green-700', border: 'border-green-100', iconBg: 'bg-green-100 text-green-600' },
+                                        slate: { bg: 'bg-slate-50/50', text: 'text-slate-700', border: 'border-slate-100', iconBg: 'bg-slate-100 text-slate-600' },
+                                        yellow: { bg: 'bg-yellow-50/50', text: 'text-yellow-700', border: 'border-yellow-100', iconBg: 'bg-yellow-100 text-yellow-600' },
+                                        sky: { bg: 'bg-sky-50/50', text: 'text-sky-700', border: 'border-sky-100', iconBg: 'bg-sky-100 text-sky-600' },
+                                        surface: { bg: 'bg-surface-50', text: 'text-surface-700', border: 'border-surface-200', iconBg: 'bg-surface-200 text-surface-500' }
+                                    };
+                                    const theme = colorMap[type.color] || colorMap.surface;
+
+                                    return (
+                                        <button
+                                            key={type.value}
+                                            onClick={() => update('insuranceType', type.value)}
+                                            className={cn(
+                                                'p-2.5 rounded-xl border transition-all text-xs flex items-center gap-3 group',
+                                                isSelected
+                                                    ? `${theme.bg} ${theme.border} ${theme.text} border-2 ring-2 ring-offset-1 ring-primary-500/20 scale-[1.03]`
+                                                    : `${theme.bg} ${theme.border} ${theme.text} opacity-70 hover:opacity-100 hover:scale-[1.02]`
+                                            )}
+                                        >
+                                            <div className={cn(
+                                                "w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0",
+                                                isSelected ? 'bg-white shadow-sm' : `${theme.iconBg} shadow-sm`
+                                            )}>
+                                                {type.icon}
+                                            </div>
+                                            <span className={cn("flex-1 truncate", isSelected ? 'font-bold' : 'font-semibold')}>{type.label}</span>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
-                        <div className="space-y-4">
+                        <div className="lg:col-span-4 space-y-4 sticky top-0">
                             <h2 className="text-lg font-bold text-surface-900">Insurer Details</h2>
                             <div>
                                 <label className="block text-xs font-medium text-surface-600 mb-1.5">Insurance Company</label>
@@ -482,6 +533,7 @@ export default function NewPolicyPage() {
                                         value={form.motorCoverType}
                                         onChange={(v) => update('motorCoverType', String(v || 'COMPREHENSIVE'))}
                                         className="w-full"
+                                        position="top"
                                     />
                                 </div>
                             )}
@@ -702,6 +754,7 @@ export default function NewPolicyPage() {
                                     value={form.premiumFrequency}
                                     onChange={(v) => update('premiumFrequency', (v || 'ANNUAL') as PremiumFrequency)}
                                     className="w-full"
+                                    position="top"
                                 />
                             </div>
                         </div>
@@ -817,30 +870,33 @@ export default function NewPolicyPage() {
                         </div>
                     </div>
                 )}
-            </Card>
+                    </div>
+                </Card>
+            </div>
 
-            {/* Navigation */}
-            <div className="flex items-center justify-between">
+            {/* Fixed Navigation Footer (Compact) */}
+            <div className="flex-none flex items-center justify-between pt-3 mt-1 border-t border-surface-200 bg-background/95 backdrop-blur-md pb-1">
                 <Button
                     variant="outline"
+                    size="sm"
                     onClick={() => { setErrors(null); step > 1 ? setStep(step - 1) : router.back(); }}
                     disabled={step === 1}
-                    className={step === 1 ? 'invisible' : ''}
+                    className={cn("shadow-sm bg-white h-9", step === 1 ? 'invisible' : '')}
                 >
                     Back
                 </Button>
 
                 {step < 5 ? (
-                    <Button variant="primary" onClick={handleNext}>
-                        Next Step <ArrowRight size={16} className="ml-2" />
+                    <Button variant="primary" size="sm" onClick={handleNext} className="shadow-md shadow-primary-500/10 px-8 h-9 font-bold">
+                        Next Step <ArrowRight size={14} className="ml-2" />
                     </Button>
                 ) : (
                     <div className="flex gap-3">
-                        <Button variant="outline" onClick={handleSaveAsDraft} leftIcon={<Save size={14} />}>
+                        <Button variant="outline" size="sm" onClick={handleSaveAsDraft} leftIcon={<Save size={12} />} className="shadow-sm bg-white h-9">
                             Save as Draft
                         </Button>
-                        <Button variant="primary" onClick={handleNext} className="bg-success-600 hover:bg-success-700 border-success-600" isLoading={isSubmitting} disabled={isSubmitting}>
-                            Create Policy <Check size={16} className="ml-2" />
+                        <Button variant="primary" size="sm" onClick={handleNext} className="bg-success-600 hover:bg-success-700 border-success-600 shadow-md shadow-success-600/10 px-8 h-9 font-bold" isLoading={isSubmitting} disabled={isSubmitting}>
+                            Create Policy <Check size={14} className="ml-2" />
                         </Button>
                     </div>
                 )}

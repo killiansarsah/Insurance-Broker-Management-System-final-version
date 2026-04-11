@@ -68,6 +68,7 @@ interface FormData {
     nextOfKinName: string;
     nextOfKinRelationship: string;
     nextOfKinPhone: string;
+    directorsDetails: Array<{ name: string; role: string; ghanaCard: string; phone: string }>;
 }
 
 const INITIAL_FORM: FormData = {
@@ -107,12 +108,13 @@ const INITIAL_FORM: FormData = {
     nextOfKinName: '',
     nextOfKinRelationship: '',
     nextOfKinPhone: '',
+    directorsDetails: [],
 };
 
 const REGIONS = [
-    'Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern',
-    'Northern', 'Volta', 'Bono Ahafo', 'Upper East', 'Upper West',
-    'Western North', 'Ahafo', 'Bono East', 'North East', 'Savannah', 'Oti',
+    'Ahafo', 'Ashanti', 'Bono Ahafo', 'Bono East', 'Central', 'Eastern',
+    'Greater Accra', 'North East', 'Northern', 'Oti', 'Savannah', 'Upper East',
+    'Upper West', 'Volta', 'Western', 'Western North',
 ];
 
 const INDUSTRIES = [
@@ -130,11 +132,11 @@ const EXPECTED_VOLUMES = [
 ];
 
 const BANK_NAMES = [
-    'GCB Bank', 'Ecobank Ghana', 'Absa Bank Ghana', 'Stanbic Bank Ghana',
-    'Fidelity Bank Ghana', 'Access Bank Ghana', 'Zenith Bank Ghana',
-    'CalBank', 'Republic Bank', 'First Atlantic Bank', 'GT Bank Ghana',
-    'Standard Chartered', 'Agricultural Development Bank (ADB)',
-    'National Investment Bank (NIB)', 'Prudential Bank', 'Others',
+    'Absa Bank Ghana', 'Access Bank Ghana', 'Agricultural Development Bank (ADB)',
+    'CalBank', 'Ecobank Ghana', 'Fidelity Bank Ghana', 'First Atlantic Bank',
+    'GCB Bank', 'GT Bank Ghana', 'National Investment Bank (NIB)', 
+    'Prudential Bank', 'Republic Bank', 'Stanbic Bank Ghana',
+    'Standard Chartered', 'Zenith Bank Ghana', 'Others',
 ];
 
 function InputField({
@@ -260,8 +262,8 @@ export default function NewClientPage() {
         }
     };
 
-    function update(field: keyof FormData, value: string) {
-        const val = field === 'ghanaCardNumber' ? value.toUpperCase() : value;
+    function update(field: keyof FormData, value: any) {
+        const val = field === 'ghanaCardNumber' ? (value as string).toUpperCase() : value;
         setForm((prev) => ({ ...prev, [field]: val }));
         
         // Live phone validation requested by user (10 digit standard or +233)
@@ -316,10 +318,12 @@ export default function NewClientPage() {
                 newErrors.email = 'Invalid email format';
             if (!form.region) newErrors.region = 'Required';
             if (!form.city.trim()) newErrors.city = 'Required';
-            if (!form.nextOfKinName.trim()) newErrors.nextOfKinName = 'Required';
-            if (!form.nextOfKinPhone.trim()) newErrors.nextOfKinPhone = 'Required';
-            else if (!/^(0\d{9}|\+233\d{9})$/.test(form.nextOfKinPhone.replace(/\s/g, '')))
-                newErrors.nextOfKinPhone = 'Invalid phone number';
+            if (form.type === 'INDIVIDUAL') {
+                if (!form.nextOfKinName.trim()) newErrors.nextOfKinName = 'Required';
+                if (!form.nextOfKinPhone.trim()) newErrors.nextOfKinPhone = 'Required';
+                else if (!/^(0\d{9}|\+233\d{9})$/.test(form.nextOfKinPhone.replace(/\s/g, '')))
+                    newErrors.nextOfKinPhone = 'Invalid phone number';
+            }
         }
 
         if (s === 3) {
@@ -381,9 +385,10 @@ export default function NewClientPage() {
                 isPep: form.isPep,
                 eddRequired: form.expectedVolume?.includes('Above GHS 100,000') ? true : undefined,
                 // Inline next-of-kin
-                nextOfKinName: form.nextOfKinName || undefined,
-                nextOfKinRelationship: form.nextOfKinRelationship || undefined,
-                nextOfKinPhone: form.nextOfKinPhone || undefined,
+                nextOfKinName: form.type === 'INDIVIDUAL' ? form.nextOfKinName || undefined : undefined,
+                nextOfKinRelationship: form.type === 'INDIVIDUAL' ? form.nextOfKinRelationship || undefined : undefined,
+                nextOfKinPhone: form.type === 'INDIVIDUAL' ? form.nextOfKinPhone || undefined : undefined,
+                directorsDetails: form.type === 'CORPORATE' ? form.directorsDetails : undefined,
                 // Inline bank details
                 bankName: form.bankName || undefined,
                 bankAccountName: form.bankAccountName || undefined,
@@ -525,10 +530,10 @@ export default function NewClientPage() {
                         <SelectField label="Nationality" value={form.nationality}
                             onChange={(e) => update('nationality', e.target.value)}
                             options={[
+                                { label: 'American', value: 'American' },
+                                { label: 'British', value: 'British' },
                                 { label: 'Ghanaian', value: 'Ghanaian' },
                                 { label: 'Nigerian', value: 'Nigerian' },
-                                { label: 'British', value: 'British' },
-                                { label: 'American', value: 'American' },
                                 { label: 'South African', value: 'South African' },
                                 { label: 'Other', value: 'Other' },
                             ]} />
@@ -587,17 +592,92 @@ export default function NewClientPage() {
                                 onChange={(e) => update('city', e.target.value)} placeholder="e.g. Accra" />
                         </div>
 
-                        <div className="pt-4 border-t border-surface-100">
-                            <h3 className="text-sm font-bold text-surface-900 mb-4">Next of Kin / Emergency Contact</h3>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <InputField label="Full Name" required value={form.nextOfKinName} error={errors.nextOfKinName}
-                                    onChange={(e) => update('nextOfKinName', e.target.value)} placeholder="Next of Kin Name" />
-                                <InputField label="Relationship" value={form.nextOfKinRelationship}
-                                    onChange={(e) => update('nextOfKinRelationship', e.target.value)} placeholder="e.g. Spouse, Parent" />
-                                <InputField label="Phone Number" required value={form.nextOfKinPhone} error={errors.nextOfKinPhone}
-                                    onChange={(e) => update('nextOfKinPhone', e.target.value)} placeholder="024 123 4567" />
+                        {form.type === 'INDIVIDUAL' && (
+                            <div className="pt-4 border-t border-surface-100">
+                                <h3 className="text-sm font-bold text-surface-900 mb-4">Next of Kin / Emergency Contact</h3>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <InputField label="Full Name" required value={form.nextOfKinName} error={errors.nextOfKinName}
+                                        onChange={(e) => update('nextOfKinName', e.target.value)} placeholder="Next of Kin Name" />
+                                    <InputField label="Relationship" value={form.nextOfKinRelationship}
+                                        onChange={(e) => update('nextOfKinRelationship', e.target.value)} placeholder="e.g. Spouse, Parent" />
+                                    <InputField label="Phone Number" required value={form.nextOfKinPhone} error={errors.nextOfKinPhone}
+                                        onChange={(e) => update('nextOfKinPhone', e.target.value)} placeholder="024 123 4567" />
+                                </div>
                             </div>
-                        </div>
+                        )}
+
+                        {form.type === 'CORPORATE' && (
+                            <div className="pt-4 border-t border-surface-100">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-sm font-bold text-surface-900">Directors & Key Signatories</h3>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-8 bg-white border-surface-200"
+                                        onClick={() => update('directorsDetails', [...(form.directorsDetails || []), { name: '', role: '', ghanaCard: '', phone: '' }])}
+                                    >
+                                        + Add Director
+                                    </Button>
+                                </div>
+                                {(!form.directorsDetails || form.directorsDetails.length === 0) ? (
+                                    <p className="text-xs text-surface-500 italic bg-surface-50 p-4 rounded-md border border-dashed border-surface-200">No directors added yet. Click &quot;Add Director&quot; to include UBOs or key signatories.</p>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {form.directorsDetails.map((dir, idx) => (
+                                            <div key={idx} className="p-4 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] relative group">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => update('directorsDetails', form.directorsDetails.filter((_, i) => i !== idx))}
+                                                    className="absolute top-2 right-2 px-2 py-1 text-xs font-medium text-danger-600 bg-danger-50 rounded hover:bg-danger-100 transition-colors"
+                                                >
+                                                    Remove
+                                                </button>
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                                                    <InputField
+                                                        label="Full Name"
+                                                        value={dir.name}
+                                                        onChange={(e) => {
+                                                            const newDirs = [...form.directorsDetails];
+                                                            newDirs[idx].name = e.target.value;
+                                                            update('directorsDetails', newDirs);
+                                                        }}
+                                                    />
+                                                    <InputField
+                                                        label="Role / Title"
+                                                        value={dir.role}
+                                                        placeholder="e.g. 50% Owner, MD"
+                                                        onChange={(e) => {
+                                                            const newDirs = [...form.directorsDetails];
+                                                            newDirs[idx].role = e.target.value;
+                                                            update('directorsDetails', newDirs);
+                                                        }}
+                                                    />
+                                                    <InputField
+                                                        label="Ghana Card Number"
+                                                        value={dir.ghanaCard}
+                                                        onChange={(e) => {
+                                                            const newDirs = [...form.directorsDetails];
+                                                            newDirs[idx].ghanaCard = e.target.value;
+                                                            update('directorsDetails', newDirs);
+                                                        }}
+                                                    />
+                                                    <InputField
+                                                        label="Phone Number"
+                                                        value={dir.phone}
+                                                        onChange={(e) => {
+                                                            const newDirs = [...form.directorsDetails];
+                                                            newDirs[idx].phone = e.target.value;
+                                                            update('directorsDetails', newDirs);
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -608,18 +688,18 @@ export default function NewClientPage() {
                             <SelectField label="Source of Funds" required value={form.sourceOfFunds} error={errors.sourceOfFunds}
                                 onChange={(e) => update('sourceOfFunds', e.target.value)}
                                 options={[
-                                    { label: 'Salary', value: 'salary' },
                                     { label: 'Business Income', value: 'business' },
                                     { label: 'Inheritance', value: 'inheritance' },
                                     { label: 'Investment', value: 'investment' },
+                                    { label: 'Salary', value: 'salary' },
                                     { label: 'Other', value: 'OTHER' },
                                 ]} />
                             <SelectField label="Purpose of Relationship" required value={form.purposeOfRelationship} error={errors.purposeOfRelationship}
                                 onChange={(e) => update('purposeOfRelationship', e.target.value)}
                                 options={[
-                                    { label: 'Personal Insurance', value: 'personal' },
                                     { label: 'Business Insurance', value: 'business' },
                                     { label: 'Investment', value: 'investment' },
+                                    { label: 'Personal Insurance', value: 'personal' },
                                 ]} />
                             <SelectField label="Expected Transaction Volume (Annual)" value={form.expectedVolume}
                                 onChange={(e) => update('expectedVolume', e.target.value)}
@@ -764,10 +844,33 @@ export default function NewClientPage() {
                                     <ReviewField label="Email" value={form.email || '—'} />
                                     <ReviewField label="Digital Address" value={form.digitalAddress || '—'} />
                                     <ReviewField label="Region / City" value={`${form.region}, ${form.city}`} />
-                                    <ReviewField label="Next of Kin Name" value={form.nextOfKinName || '—'} />
-                                    <ReviewField label="Next of Kin Phone" value={form.nextOfKinPhone || '—'} />
-                                    <ReviewField label="Next of Kin Relationship" value={form.nextOfKinRelationship || '—'} />
+                                    {form.type === 'INDIVIDUAL' && (
+                                        <>
+                                            <ReviewField label="Next of Kin Name" value={form.nextOfKinName || '—'} />
+                                            <ReviewField label="Next of Kin Phone" value={form.nextOfKinPhone || '—'} />
+                                            <ReviewField label="Next of Kin Relationship" value={form.nextOfKinRelationship || '—'} />
+                                        </>
+                                    )}
                                 </div>
+                                {form.type === 'CORPORATE' && form.directorsDetails && form.directorsDetails.length > 0 && (
+                                    <div className="mt-6 pt-6 border-t border-surface-200">
+                                        <h4 className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-4">Directors & Signatories</h4>
+                                        <div className="space-y-3">
+                                            {form.directorsDetails.map((dir, i) => (
+                                                <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-white border border-surface-100 rounded-md">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-surface-900">{dir.name || 'Unnamed Director'}</p>
+                                                        <p className="text-xs text-surface-500">{dir.role || 'No role specified'}</p>
+                                                    </div>
+                                                    <div className="mt-2 sm:mt-0 text-left sm:text-right">
+                                                        <p className="text-sm text-surface-700">{dir.ghanaCard || 'No ID'}</p>
+                                                        <p className="text-xs text-surface-500">{dir.phone || 'No phone'}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             {/* KYC & Banking */}
