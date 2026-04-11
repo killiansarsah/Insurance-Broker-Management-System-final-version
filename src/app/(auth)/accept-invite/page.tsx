@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api-client';
 import { AppLoader } from '@/components/ui/AppLoader';
 import { useAuthStore } from '@/stores/auth-store';
 import type { User } from '@/types';
+import { Eye, EyeOff } from 'lucide-react';
 
 type InviteStatus = 'loading' | 'valid' | 'invalid' | 'submitting' | 'success';
 
@@ -24,6 +25,8 @@ function AcceptInviteContent() {
     const [status, setStatus] = useState<InviteStatus>('loading');
     const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null);
     const [error, setError] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [form, setForm] = useState({
         firstName: '',
         lastName: '',
@@ -155,28 +158,46 @@ function AcceptInviteContent() {
                         <label className="block text-sm font-medium text-surface-600 dark:text-slate-400 mb-1">
                             Password
                         </label>
-                        <input
-                            type="password"
-                            required
-                            minLength={8}
-                            value={form.password}
-                            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                            className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-surface-900 dark:text-slate-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? 'text' : 'password'}
+                                required
+                                minLength={8}
+                                value={form.password}
+                                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                                className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-surface-900 dark:text-slate-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold pr-12"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 hover:text-primary-500 hover:bg-primary-500/5 transition-all"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-surface-600 dark:text-slate-400 mb-1">
                             Confirm Password
                         </label>
-                        <input
-                            type="password"
-                            required
-                            minLength={8}
-                            value={form.confirmPassword}
-                            onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
-                            className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-surface-900 dark:text-slate-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold"
-                        />
+                        <div className="relative">
+                            <input
+                                type={showConfirmPassword ? 'text' : 'password'}
+                                required
+                                minLength={8}
+                                value={form.confirmPassword}
+                                onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                                className="w-full px-4 py-3 rounded-xl border border-surface-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-surface-900 dark:text-slate-200 outline-none focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 transition-all font-semibold pr-12"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg text-slate-400 hover:text-primary-500 hover:bg-primary-500/5 transition-all"
+                            >
+                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
                     </div>
 
                     <button

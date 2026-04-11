@@ -44,7 +44,7 @@ interface AuditEntry {
     entityId?: string;
     ipAddress: string;
     userAgent?: string;
-    user?: { id: string; firstName: string; lastName: string; email: string };
+    user?: { id: string; firstName: string; lastName: string; email: string; role?: string };
 }
 
 const ACTION_ICONS: Record<string, React.ReactNode> = {
@@ -101,10 +101,14 @@ const MODULE_LABELS: Record<string, string> = {
     COMPLIANCE: 'Compliance',
 };
 
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+
 export default function AuditPage() {
     const [search, setSearch] = useState('');
     const [actionFilter, setActionFilter] = useState('');
     const [entityFilter, setEntityFilter] = useState('');
+    const [hidePlatformActions, setHidePlatformActions] = useState(true);
     const [page, setPage] = useState(1);
 
     const { data: auditData, isLoading } = useAuditLog({
@@ -113,6 +117,7 @@ export default function AuditPage() {
         ...(search && { search }),
         ...(actionFilter && { action: actionFilter }),
         ...(entityFilter && { entity: entityFilter }),
+        hidePlatformActions,
     });
 
     const response = auditData as { items?: AuditEntry[]; meta?: { total: number; page: number; totalPages: number } } | undefined;
@@ -202,6 +207,17 @@ export default function AuditPage() {
                             <option key={m} value={m}>{MODULE_LABELS[m]}</option>
                         ))}
                     </select>
+
+                    <div className="flex items-center gap-2 px-4 py-2 border border-surface-200 rounded-lg bg-surface-50 ml-auto">
+                        <Switch
+                            id="hide-platform"
+                            checked={hidePlatformActions}
+                            onCheckedChange={setHidePlatformActions}
+                        />
+                        <Label htmlFor="hide-platform" className="text-xs font-bold uppercase tracking-wider text-surface-600 cursor-pointer">
+                            Hide Platform Actions
+                        </Label>
+                    </div>
                 </div>
             </Card>
 
@@ -250,7 +266,12 @@ export default function AuditPage() {
                                                 {userName.split(' ').map(w => w[0]).slice(0, 2).join('')}
                                             </div>
                                             <div>
-                                                <p className="font-medium text-surface-800 text-xs">{userName}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-medium text-surface-800 text-xs">{userName}</p>
+                                                    {entry.user?.role === 'PLATFORM_SUPER_ADMIN' && (
+                                                        <span className="px-1.5 py-0.5 rounded bg-surface-900 text-[10px] font-bold text-white uppercase tracking-tighter">Platform Admin</span>
+                                                    )}
+                                                </div>
                                                 <p className="text-xs text-surface-400">{entry.user?.email}</p>
                                             </div>
                                         </div>

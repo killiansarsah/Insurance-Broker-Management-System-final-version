@@ -29,10 +29,18 @@ export class StartTrialDto {
   @IsString()
   @MinLength(8)
   @MaxLength(128)
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    {
+      message:
+        'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character.',
+    },
+  )
   password!: string;
 
-  @IsOptional()
   @IsString()
-  @Matches(/^\+?[0-9\s-]{7,20}$/)
-  phone?: string;
+  @Matches(/^\d{10}$/, {
+    message: 'Telephone number must be exactly 10 digits.',
+  })
+  phone!: string;
 }

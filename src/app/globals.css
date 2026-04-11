@@ -42,6 +42,16 @@
   --color-accent-500: var(--accent-500);
   --color-accent-600: var(--accent-600);
   --color-accent-700: var(--accent-700);
+  
+  /* Missing Warning Aliases */
+  --color-warning-50: var(--accent-50);
+  --color-warning-100: var(--accent-100);
+  --color-warning-200: var(--accent-200);
+  --color-warning-300: var(--accent-300);
+  --color-warning-400: var(--accent-400);
+  --color-warning-500: var(--accent-500);
+  --color-warning-600: var(--accent-600);
+  --color-warning-700: var(--accent-700);
 
   /* --- Error / Danger (Red) --- */
   --color-danger-50: var(--danger-50);
@@ -180,6 +190,21 @@ dialog:not([open]) {
 ::selection {
   background-color: var(--color-primary-100);
   color: var(--color-primary-900);
+}
+
+/* Hide browser-native password reveal and clear buttons */
+input::-ms-reveal,
+input::-ms-clear,
+input::-webkit-contacts-auto-fill-button,
+input::-webkit-credentials-auto-fill-button,
+input::-webkit-strong-password-auto-fill-button,
+input::-internal-autofill-selected {
+  display: none !important;
+}
+
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none !important;
 }
 
 /* ============================================================
@@ -471,6 +496,15 @@ dialog:not([open]) {
   --accent-600: #ef6c00;
   --accent-700: #e65100;
 
+  --warning-50: #fff3e0;
+  --warning-100: #ffe0b2;
+  --warning-200: #ffcc80;
+  --warning-300: #ffb74d;
+  --warning-400: #ffa726;
+  --warning-500: #f57c00;
+  --warning-600: #ef6c00;
+  --warning-700: #e65100;
+
   --danger-50: #ffebee;
   --danger-100: #ffcdd2;
   --danger-200: #ef9a9a;
@@ -553,6 +587,15 @@ dialog:not([open]) {
   --accent-500: #fb923c;
   --accent-600: #fdba74;
   --accent-700: #fed7aa;
+
+  --warning-50: #431407;
+  --warning-100: #7c2d12;
+  --warning-200: #9a3412;
+  --warning-300: #c2410c;
+  --warning-400: #ea580c;
+  --warning-500: #fb923c;
+  --warning-600: #fdba74;
+  --warning-700: #fed7aa;
 
   --danger-50: #450a0a;
   --danger-100: #7f1d1d;

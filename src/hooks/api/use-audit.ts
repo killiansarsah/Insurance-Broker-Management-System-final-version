@@ -11,6 +11,7 @@ interface AuditQuery {
   search?: string;
   dateFrom?: string;
   dateTo?: string;
+  hidePlatformActions?: boolean;
 }
 
 export function useAuditLog(params?: AuditQuery) {

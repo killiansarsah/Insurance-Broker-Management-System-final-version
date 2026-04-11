@@ -8,7 +8,14 @@ async function bootstrap() {
   
   console.log('Sending test invite email...');
   try {
-    await emailService.sendInvite('test@example.com', 'dummy-token', 'http://localhost:3000');
+    await emailService.sendInvite(
+      'test@example.com',
+      'dummy-token',
+      'http://localhost:3000',
+      'Test Organization',
+      'BROKER',
+      'Your Administrator',
+    );
     console.log('Test invite email executed successfully! Check logs above for HTML output.');
   } catch (error) {
     console.error('Failed to send email:', error);

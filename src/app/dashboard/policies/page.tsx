@@ -26,7 +26,8 @@ import { Button } from '@/components/ui/button';
 import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
-import { usePolicies, usePolicyMetrics, useCancelPolicy } from '@/hooks/api';
+import { usePolicies, usePolicyMetrics, useCancelPolicy, useBulkAssignPolicies } from '@/hooks/api';
+import { useUsers } from '@/hooks/api/use-users';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
@@ -326,16 +327,26 @@ export default function PoliciesPage() {
         );
     };
     
-    const BROKERS = useMemo(() => 
-        Array.from(new Set(policies.map((p: any) => p.brokerName).filter(Boolean))).sort().map(b => ({ label: String(b), value: String(b) })),
-        [policies]
-    );
+    const { data: usersData } = useUsers();
+    const allUsers: any[] = (usersData as any)?.items ?? (usersData as any)?.data ?? (Array.isArray(usersData) ? usersData : []);
+
+    const BROKERS = useMemo(() => {
+        return allUsers
+            .map((u: any) => ({ 
+                label: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email, 
+                value: String(u.id) 
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allUsers]);
 
     const [filterStatus, setFilterStatus] = useState<PolicyStatus | ''>('');
     const [filterType, setFilterType] = useState<InsuranceType | ''>('');
     const [filterBroker, setFilterBroker] = useState('');
+    const [bulkOfficerId, setBulkOfficerId] = useState('');
     const [filterDateFrom, setFilterDateFrom] = useState('');
     const [filterDateTo, setFilterDateTo] = useState('');
+
+    const bulkAssignMutation = useBulkAssignPolicies();
 
     // base filtering on 'type' query param
     const baseData = useMemo(() => policies.filter((p) => {
@@ -771,27 +782,45 @@ export default function PoliciesPage() {
                     <div className="bg-background rounded-2xl shadow-xl w-full max-w-sm p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
                         <h2 className="text-lg font-bold text-surface-900 mb-2">Assign Officer</h2>
                         <p className="text-sm text-surface-500 mb-4">Select an officer to reassign {selectedPolicies.length} policies to.</p>
-                        <select className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 mb-5 bg-white">
+                        <select 
+                            className="w-full border border-surface-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30 mb-5 bg-white"
+                            onChange={(e) => setBulkOfficerId(e.target.value)}
+                            value={bulkOfficerId}
+                        >
                             <option value="">Choose officer...</option>
-                            <option value="officer_1">Jane Doe (Senior Agent)</option>
-                            <option value="officer_2">John Smith (Underwriter)</option>
-                            <option value="officer_3">Alice Johnson (Agent)</option>
+                            {BROKERS.map(b => (
+                                <option key={b.value} value={b.value}>{b.label}</option>
+                            ))}
                         </select>
                         <div className="flex gap-3">
                             <Button type="button" variant="outline" className="flex-1" onClick={() => setShowBulkAssignModal(false)}>Cancel</Button>
                             <Button
                                 variant="primary"
                                 className="flex-1"
+                                disabled={!bulkOfficerId || bulkAssignMutation.isPending}
                                 onClick={() => {
+                                    if (!bulkOfficerId) return;
                                     toast.promise(
-                                        new Promise(resolve => setTimeout(resolve, 800)),
+                                        new Promise((resolve, reject) => {
+                                            bulkAssignMutation.mutate(
+                                                { 
+                                                    policyIds: selectedPolicies.map(p => p.id), 
+                                                    userId: bulkOfficerId 
+                                                },
+                                                {
+                                                    onSuccess: () => {
+                                                        setShowBulkAssignModal(false);
+                                                        setSelectedPolicies([]);
+                                                        setBulkOfficerId('');
+                                                        resolve(true);
+                                                    },
+                                                    onError: reject
+                                                }
+                                            );
+                                        }),
                                         {
                                             loading: `Assigning ${selectedPolicies.length} policies...`,
-                                            success: () => {
-                                                setShowBulkAssignModal(false);
-                                                setSelectedPolicies([]);
-                                                return `Successfully reassigned ${selectedPolicies.length} policies`;
-                                            },
+                                            success: () => `Successfully reassigned ${selectedPolicies.length} policies`,
                                             error: 'Could not assign policies',
                                         }
                                     );

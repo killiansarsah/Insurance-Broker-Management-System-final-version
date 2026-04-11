@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { motion } from 'framer-motion';
 import {
     DollarSign,
     Download,
@@ -727,44 +728,78 @@ export default function ExpensesPage() {
                         </p>
                     </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                    <Button
-                        variant={showSummary ? 'primary' : 'outline'}
-                        leftIcon={<BarChart3 size={16} />}
+                <div className="flex flex-wrap gap-2.5">
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => setShowSummary(v => !v)}
+                        className={cn(
+                            "group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden",
+                            showSummary 
+                                ? "text-primary-600 bg-primary-50 border border-primary-200" 
+                                : "text-surface-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700"
+                        )}
                     >
-                        {showSummary ? 'View List' : 'Q Summary'}
-                    </Button>
-                    <Button
-                        variant="outline"
-                        leftIcon={<Upload size={16} />}
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        Import CSV
-                    </Button>
+                        <span className="absolute inset-0 bg-primary-50/50 dark:bg-primary-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <BarChart3 size={14} className="relative z-10" />
+                        <span className="relative z-10">{showSummary ? 'View List' : 'Q Summary'}</span>
+                    </motion.button>
 
-                    <Button
-                        variant="outline"
-                        leftIcon={<FileSpreadsheet size={16} />}
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => fileInputRef.current?.click()}
+                        className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-accent-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
+                    >
+                        <span className="absolute inset-0 bg-accent-50/50 dark:bg-accent-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <Upload 
+                            size={14} 
+                            className="relative z-10 transition-transform duration-500 group-hover:-translate-y-0.5" 
+                        />
+                        <span className="relative z-10">Import CSV</span>
+                    </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => exportToXLSX(filtered, customCompany, customHeaders, allCommissions)}
+                        className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-success-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
                     >
-                        Export Excel
-                    </Button>
-                    <Button
-                        variant="outline"
-                        leftIcon={<Settings2 size={16} />}
+                        <span className="absolute inset-0 bg-success-50/50 dark:bg-success-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <FileSpreadsheet 
+                            size={14} 
+                            className="relative z-10 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3" 
+                        />
+                        <span className="relative z-10">Export Excel</span>
+                    </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={openCustomize}
-                        title="Customize export column headers & company name"
+                        className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-primary-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
                     >
-                        Customize
-                    </Button>
-                    <Button
-                        variant="primary"
-                        leftIcon={<Plus size={16} />}
+                        <span className="absolute inset-0 bg-primary-50/50 dark:bg-primary-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <Settings2 
+                            size={14} 
+                            className="relative z-10 transition-transform duration-700 group-hover:rotate-180" 
+                        />
+                        <span className="relative z-10">Customize</span>
+                    </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={addNewRow}
+                        className="group relative flex items-center gap-2 px-6 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-white bg-primary-600 hover:bg-primary-700 rounded-full cursor-pointer shadow-md hover:shadow-primary-600/20 transition-all duration-300 overflow-hidden"
                     >
-                        Add Expense
-                    </Button>
+                        <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                        <Plus 
+                            size={14} 
+                            className="relative z-10 stroke-[3px] transition-transform duration-500 group-hover:rotate-90" 
+                        />
+                        <span className="relative z-10">Add Expense</span>
+                    </motion.button>
                 </div>
             </div>
 

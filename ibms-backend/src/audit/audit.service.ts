@@ -1,17 +1,53 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
+import { IsOptional, IsString, IsNumber, IsDateString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class AuditQueryDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   page?: number = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   limit?: number = 20;
+
+  @IsOptional()
+  @IsString()
   action?: string;
+
+  @IsOptional()
+  @IsString()
   userId?: string;
+
+  @IsOptional()
+  @IsString()
   entity?: string;
+
+  @IsOptional()
+  @IsString()
   entityId?: string;
+
+  @IsOptional()
+  @IsDateString()
   dateFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
   dateTo?: string;
+
+  @IsOptional()
+  @IsString()
   search?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  hidePlatformActions?: boolean;
 }
 
 @Injectable()
@@ -27,6 +63,7 @@ export class AuditService {
       dateFrom,
       dateTo,
       search,
+      hidePlatformActions,
     } = query;
 
     const page = Number(query.page || 1);
@@ -52,6 +89,12 @@ export class AuditService {
           { entity: { contains: search, mode: 'insensitive' as const } },
         ],
       }),
+      ...(hidePlatformActions && {
+        OR: [
+          { user: null }, // Include system actions
+          { user: { role: { not: 'PLATFORM_SUPER_ADMIN' } } }, // Exclude platform admins
+        ],
+      }),
     };
 
     const [total, items] = await Promise.all([
@@ -63,7 +106,7 @@ export class AuditService {
         orderBy: { createdAt: 'desc' },
         include: {
           user: {
-            select: { id: true, firstName: true, lastName: true, email: true },
+            select: { id: true, firstName: true, lastName: true, email: true, role: true },
           },
         },
       }),

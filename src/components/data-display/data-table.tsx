@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useRef, useEffect, useCallback, memo } from 'react';
+import { motion } from 'framer-motion';
 import {
     ChevronUp,
     ChevronDown,
@@ -372,20 +373,24 @@ export function DataTable<T>({
                 )}
                 <div className="flex items-center gap-2 shrink-0 ml-auto">
                     {exportable && (
-                        <button
+                        <motion.button
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={handleExportCSV}
-                            className="group relative inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-success-700 dark:text-success-400 bg-success-50/50 dark:bg-success-900/10 border border-success-200/50 dark:border-success-800/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_6px_16px_-4px_rgba(34,197,94,0.3)] dark:hover:shadow-[0_6px_16px_-4px_rgba(34,197,94,0.15)] hover:-translate-y-0.5 hover:bg-success-50 dark:hover:bg-success-900/30 hover:border-success-300/60 dark:hover:border-success-700/50 whitespace-nowrap"
+                            className="group relative inline-flex items-center gap-2.5 px-4.5 py-2.5 text-[10px] font-black uppercase tracking-widest text-success-700 dark:text-success-400 bg-success-50/50 dark:bg-success-900/10 border border-success-200/50 dark:border-success-800/30 rounded-lg overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-[0_8px_20px_-6px_rgba(34,197,94,0.35)] dark:hover:shadow-[0_8px_20px_-6px_rgba(34,197,94,0.15)] hover:border-success-300 dark:hover:border-success-700 whitespace-nowrap"
                         >
-                            <span className="absolute inset-0 w-full h-full bg-gradient-to-tr from-success-400/0 via-success-400/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+                            <span className="absolute inset-0 w-full h-full bg-gradient-to-tr from-success-400/0 via-success-400/10 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out pointer-events-none" />
                             
-                            <div className="relative flex items-center justify-center z-10 p-0.5 rounded-md text-success-600 dark:text-success-500 transition-colors duration-300">
+                            <div className="relative z-10 p-0.5 text-success-600 dark:text-success-500">
                                 <FileSpreadsheet 
-                                    size={15} 
-                                    className="transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-[1.15] group-hover:-rotate-6 group-active:scale-95" 
+                                    size={14} 
+                                    className="transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-[360deg] group-hover:scale-110" 
                                 />
                             </div>
-                            <span className="relative z-10 tracking-wide">Export</span>
-                        </button>
+                            <span className="relative z-10">Export</span>
+                        </motion.button>
                     )}
                     {headerActions}
                 </div>

@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { motion } from 'framer-motion';
 import {
     Clock,
     AlertTriangle,
@@ -708,24 +709,31 @@ export default function RenewalsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-6 bg-warning-500 rounded-full" />
+                        <div className="w-1.5 h-6 bg-accent-500 rounded-full" />
                         <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Renewals Pipeline</h1>
                     </div>
                     <p className="text-sm text-surface-500 mt-1 ml-3.5">
                         Track and manage policy renewals across all stages.
                     </p>
                 </div>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        leftIcon={<Download size={16} />}
+                <div className="flex gap-2.5">
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={handleExportExcel}
+                        className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-teal-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
                     >
-                        Export Excel
-                    </Button>
-                    <Button
-                        variant="outline"
-                        leftIcon={<Mail size={16} />}
+                        <span className="absolute inset-0 bg-teal-50/50 dark:bg-teal-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <Download 
+                            size={14} 
+                            className="relative z-10 transition-transform duration-500 group-hover:translate-y-0.5 group-hover:scale-110" 
+                        />
+                        <span className="relative z-10">Export Excel</span>
+                    </motion.button>
+                    
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={async () => {
                             try {
                                 const { apiClient } = await import('@/lib/api-client');
@@ -740,18 +748,35 @@ export default function RenewalsPage() {
                                 toast.error('Error', { description: 'Failed to trigger test reminder' });
                             }
                         }}
+                        className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-primary-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
                     >
-                        Test Email Reminder
-                    </Button>
+                        <span className="absolute inset-0 bg-primary-50/50 dark:bg-primary-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <Mail 
+                            size={14} 
+                            className="relative z-10 transition-transform duration-500 group-hover:-rotate-12 group-hover:scale-110" 
+                        />
+                        <span className="relative z-10">Test Reminder</span>
+                    </motion.button>
+
                     <Link href="/dashboard/renewals/reports">
-                        <Button variant="outline" leftIcon={<BarChart3 size={16} />}>
-                            Reports
-                        </Button>
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-violet-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
+                        >
+                            <span className="absolute inset-0 bg-violet-50/50 dark:bg-violet-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                            <BarChart3 
+                                size={14} 
+                                className="relative z-10 transition-transform duration-500 group-hover:scale-110" 
+                            />
+                            <span className="relative z-10">Reports</span>
+                        </motion.button>
                     </Link>
+
                     {canNotifyAll && (
-                        <Button
-                            variant="primary"
-                            leftIcon={<Send size={16} />}
+                        <motion.button
+                            whileHover={{ scale: 1.02, y: -2 }}
+                            whileTap={{ scale: 0.98 }}
                             disabled={notifyingAll}
                             onClick={async () => {
                                 setNotifyingAll(true);
@@ -769,9 +794,15 @@ export default function RenewalsPage() {
                                     setNotifyingAll(false);
                                 }
                             }}
+                            className="group relative flex items-center gap-2 px-6 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-white bg-accent-600 hover:bg-accent-700 rounded-full cursor-pointer shadow-md hover:shadow-accent-600/20 transition-all duration-300 overflow-hidden disabled:opacity-50"
                         >
-                            {notifyingAll ? 'Sending...' : 'Notify All'}
-                        </Button>
+                            <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                            <Send 
+                                size={14} 
+                                className="relative z-10 stroke-[3px] transition-transform duration-500 group-hover:-rotate-45 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" 
+                            />
+                            <span className="relative z-10">{notifyingAll ? 'Sending...' : 'Notify All'}</span>
+                        </motion.button>
                     )}
                 </div>
             </div>

@@ -176,8 +176,27 @@ const normalizePath = (p: string) => p.replace(/\/$/, "") || "/";
 function SidebarCompanyHeader() {
     const { companyName } = useProfileStore();
     return (
-        <div className="min-w-0">
-            <h2 className="text-surface-900 dark:text-white font-bold text-base tracking-tight truncate">{companyName || 'Organization'}</h2>
+        <div className="min-w-0 w-full group flex flex-col items-start cursor-pointer p-2.5 rounded-[var(--radius-lg)] hover:bg-surface-50 dark:hover:bg-slate-800/40 transition-all duration-300 border border-transparent hover:border-surface-200 dark:hover:border-slate-700 -ml-2.5 mt-[-10px]">
+            <div className="flex items-start gap-3 w-full transition-transform duration-300 ease-out">
+                {/* Active Heartbeat Dot */}
+                <div className="relative mt-[5px] shrink-0 flex items-center justify-center">
+                    <div className="absolute w-2.5 h-2.5 rounded-full bg-primary-400 animate-ping opacity-60" />
+                    <div className="relative w-1.5 h-1.5 rounded-full bg-primary-600 shadow-[0_0_8px_rgba(37,99,235,0.8)]" />
+                </div>
+                
+                {/* Company Name */}
+                <h2 
+                    title={companyName || 'Organization'}
+                    className="flex-1 font-black text-sm leading-[1.25] tracking-tight line-clamp-2 text-transparent bg-clip-text bg-gradient-to-r from-surface-900 to-surface-700 dark:from-white dark:to-slate-300 group-hover:from-primary-600 group-hover:to-accent-500 transition-all duration-500"
+                >
+                    {companyName || 'Organization'}
+                </h2>
+            </div>
+            
+            {/* Micro Badge (Slides down cleanly without pushing things crazily) */}
+            <div className="flex items-center gap-1.5 pl-[20px] transition-all duration-300 overflow-hidden h-0 opacity-0 group-hover:h-3 group-hover:mt-1 group-hover:opacity-100">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400">Active Workspace</span>
+            </div>
         </div>
     );
 }

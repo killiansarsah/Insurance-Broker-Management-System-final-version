@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
     Users,
@@ -29,6 +29,7 @@ import { DataTable } from '@/components/data-display/data-table';
 import { StatusBadge } from '@/components/data-display/status-badge';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { useClients, useClientMetrics } from '@/hooks/api';
+import { useUsers } from '@/hooks/api/use-users';
 import { formatCurrency, formatPhone, formatDate, cn, getClientDisplayName } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { Client, ClientStatus, KycStatus, AmlRiskLevel, ClientType } from '@/types';
@@ -57,7 +58,17 @@ export default function ClientsPage() {
     const kycVerified = metricsData?.kycVerified ?? 0;
     const highRisk = metricsData?.highRisk ?? 0;
     const newThisMonth = metricsData?.newThisMonth ?? 0;
-    const uniqueBrokers = [...new Set(clients.map(c => c.assignedBrokerName).filter(Boolean))] as string[];
+    const { data: usersData } = useUsers();
+    const allUsers: any[] = (usersData as any)?.items ?? (usersData as any)?.data ?? (Array.isArray(usersData) ? usersData : []);
+
+    const BROKER_OPTIONS = useMemo(() => {
+        return allUsers
+            .map((u: any) => ({ 
+                label: `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email, 
+                value: String(u.id) 
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label));
+    }, [allUsers]);
     const [showFilters, setShowFilters] = useState(false);
     const [filterStatus, setFilterStatus] = useState<ClientStatus | ''>('');
     const [filterKyc, setFilterKyc] = useState<KycStatus | ''>('');
@@ -73,7 +84,7 @@ export default function ClientsPage() {
         if (filterKyc && c.kycStatus !== filterKyc) return false;
         if (filterRisk && c.amlRiskLevel !== filterRisk) return false;
         if (filterType && c.type !== filterType) return false;
-        if (filterBroker && c.assignedBrokerName !== filterBroker) return false;
+        if (filterBroker && c.assignedBrokerId !== filterBroker) return false;
         if (filterDateFrom) {
             const from = new Date(filterDateFrom);
             if (new Date(c.createdAt as string) < from) return false;
@@ -552,7 +563,7 @@ export default function ClientsPage() {
                         />
                         <CustomSelect
                             label="Broker"
-                            options={uniqueBrokers.map(b => ({ label: b, value: b }))}
+                            options={BROKER_OPTIONS}
                             value={filterBroker}
                             onChange={(v) => setFilterBroker(String(v || ''))}
                             clearable

@@ -103,7 +103,10 @@ export function Header() {
                     <Calculator size={20} />
                 </button>
                 <button
-                    onClick={() => toast.info('Contact Support', { description: 'Email comp@theelira.com or call +233-302-123-456 for assistance.' })}
+                    onClick={() => {
+                        const contactMsg = user ? 'Please contact your administrator for system support.' : 'Please contact the system administrator.';
+                        toast.info('Support Information', { description: contactMsg });
+                    }}
                     className="p-2 text-surface-600 hover:bg-surface-100 rounded-[var(--radius-md)] cursor-pointer transition-colors"
                     title="Contact Support"
                 >
@@ -119,19 +122,31 @@ export function Header() {
                         onClick={() => {
                             setProfileOpen(!profileOpen);
                         }}
-                        className="flex items-center gap-2.5 p-1.5 pr-3 hover:bg-surface-100 rounded-[var(--radius-full)] cursor-pointer transition-colors"
+                        className="group flex items-center gap-3 p-1.5 pr-4 rounded-full cursor-pointer hover:bg-surface-50 dark:hover:bg-slate-800/50 transition-all duration-300 border border-transparent hover:border-surface-200 dark:hover:border-slate-700"
                     >
-                        <Avatar
-                            name={user ? `${user.firstName} ${user.lastName}` : 'User'}
-                            src={user?.avatarUrl || avatarUrl || undefined}
-                            size="sm"
-                        />
-                        <div className="hidden md:block text-left">
-                            <p className="text-sm font-bold text-surface-900 dark:text-white leading-tight">
+                        {/* Avatar with Animated Ring */}
+                        <div className="relative flex items-center justify-center">
+                            {/* Spinning Gradient Ring */}
+                            <div className="absolute -inset-[3px] rounded-full bg-gradient-to-tr from-primary-600 via-accent-400 to-primary-400 opacity-75 group-hover:opacity-100 animate-[spin_4s_linear_infinite] group-hover:animate-[spin_2s_linear_infinite]" />
+                            {/* Inner cut-out to separate avatar from ring */}
+                            <div className="absolute -inset-[1.5px] rounded-full bg-white dark:bg-slate-950 z-10" />
+                            {/* Actual Avatar */}
+                            <div className="relative z-20 shadow-sm rounded-full overflow-hidden">
+                                <Avatar
+                                    name={user ? `${user.firstName} ${user.lastName}` : 'User'}
+                                    src={user?.avatarUrl || avatarUrl || undefined}
+                                    size="sm"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Text Container */}
+                        <div className="hidden md:flex flex-col items-start translate-y-[1px] transform group-hover:translate-x-1 transition-transform duration-300 ease-out">
+                            <p className="text-[14px] font-black text-transparent bg-clip-text bg-gradient-to-r from-surface-900 to-surface-700 dark:from-white dark:to-slate-300 group-hover:from-primary-600 group-hover:to-accent-500 leading-tight tracking-tight transition-all duration-500">
                                 {user ? `${user.firstName} ${user.lastName}` : 'User'}
                             </p>
-                            <p className="text-[10px] text-surface-500 font-semibold uppercase leading-tight tracking-wider">
-                                {user?.role.replace('_', ' ')}
+                            <p className="text-[10.5px] text-primary-600 dark:text-primary-400 font-bold uppercase leading-none tracking-[0.06em] group-hover:tracking-[0.15em] transition-all duration-500 ease-out mt-[3px]">
+                                {user?.role ? user?.role.replace(/_/g, ' ') : 'Workspace Owner'}
                             </p>
                         </div>
                     </button>

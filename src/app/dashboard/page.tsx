@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -22,13 +23,14 @@ import {
     XCircle,
     PieChart,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import dynamic from 'next/dynamic';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatCurrency } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
 import Link from 'next/link';
+import { useUsers } from '@/hooks/api/use-users';
+import { useCarriers } from '@/hooks/api/use-carriers';
 import { useAuthStore } from '@/stores/auth-store';
 import { useDashboardData } from '@/hooks/api/use-dashboard-data';
 import { toast } from 'sonner';
@@ -85,11 +87,9 @@ interface Filters {
 // =====================================================================
 // FILTER OPTIONS
 // =====================================================================
-const filterOptions = {
-    insurer: ['SIC Insurance', 'Enterprise Insurance', 'Hollard Insurance', 'Star Assurance', 'Glico General'],
+const STATIC_FILTER_OPTIONS = {
     product: ['Motor', 'Health', 'Fire / Property', 'Marine', 'Professional Indemnity', 'Travel'],
     clientType: ['Corporate', 'SME', 'Retail / Individual'],
-    accountOfficer: ['A. Boateng', 'K. Mensah', 'E. Asante', 'F. Darko', 'M. Owusu'],
     region: ['Greater Accra', 'Ashanti', 'Western', 'Eastern', 'Northern'],
 };
 
@@ -147,6 +147,24 @@ export default function DashboardPage() {
         accountOfficer: null,
         region: null,
     });
+
+    const { data: usersData } = useUsers({ limit: 100 });
+    const { data: carriersData } = useCarriers({ limit: 100 });
+
+    const filterOptions = useMemo(() => {
+        const users = (usersData as any)?.data || [];
+        const carriers = (carriersData as any)?.data || [];
+
+        return {
+            ...STATIC_FILTER_OPTIONS,
+            accountOfficer: users.length > 0 
+                ? users.map((u: any) => `${u.firstName.charAt(0)}. ${u.lastName}`)
+                : [],
+            insurer: carriers.length > 0
+                ? carriers.map((c: any) => c.name)
+                : [],
+        };
+    }, [usersData, carriersData]);
 
     const {
         policies: policiesData,
@@ -510,20 +528,35 @@ export default function DashboardPage() {
                                 <span>Clear Filters</span>
                             </button>
                         )}
-                        <button
+                        {/* Export Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={handleExportExcel}
-                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-background/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-background hover:text-success-600 hover:border-success-300 transition-all cursor-pointer shadow-sm group active:scale-95"
+                            className="relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-success-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-colors duration-300 group overflow-hidden"
                         >
-                            <Download size={12} className="group-hover:translate-y-0.5 transition-transform" />
-                            <span>Export</span>
-                        </button>
-                        <button
+                            <span className="absolute inset-0 bg-success-50/50 dark:bg-success-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                            <Download 
+                                size={13} 
+                                className="relative z-10 transition-transform duration-500 group-hover:translate-y-0.5 group-hover:scale-110" 
+                            />
+                            <span className="relative z-10">Export</span>
+                        </motion.button>
+
+                        {/* Refresh Button */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => toast.info('Dashboard refreshed', { description: 'All metrics recalculated with latest data.' })}
-                            className="flex items-center gap-2 px-4 py-2 text-[10px] font-black uppercase tracking-widest text-surface-600 bg-background/60 backdrop-blur-md border border-surface-200/50 rounded-full hover:bg-background hover:text-primary-600 hover:border-primary-300 transition-all cursor-pointer shadow-sm group active:scale-95"
+                            className="relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-primary-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-colors duration-300 group overflow-hidden"
                         >
-                            <RefreshCw size={12} className="group-hover:rotate-180 transition-transform duration-700 ease-in-out" />
-                            <span>Refresh</span>
-                        </button>
+                            <span className="absolute inset-0 bg-primary-50/50 dark:bg-primary-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                            <RefreshCw 
+                                size={13} 
+                                className="relative z-10 transition-all duration-700 ease-in-out group-hover:rotate-[360deg] group-hover:scale-110" 
+                            />
+                            <span className="relative z-10">Refresh</span>
+                        </motion.button>
                     </div>
                 </div>
 

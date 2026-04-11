@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
     TrendingUp,
     CheckCircle2,
@@ -178,7 +179,19 @@ export default function CommissionsPage() {
                         <p className="text-sm text-surface-500 mt-1">Broker earnings, payouts, and clawbacks.</p>
                     </div>
                 </div>
-                <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>Export Statement</Button>
+                <motion.button
+                    whileHover={{ scale: 1.02, y: -2 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleExportExcel}
+                    className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-success-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
+                >
+                    <span className="absolute inset-0 bg-success-50/50 dark:bg-success-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                    <Download 
+                        size={14} 
+                        className="relative z-10 transition-transform duration-500 group-hover:translate-y-0.5 group-hover:scale-110" 
+                    />
+                    <span className="relative z-10">Export Statement</span>
+                </motion.button>
             </div>
 
             {/* KPI Strip */}

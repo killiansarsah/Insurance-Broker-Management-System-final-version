@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
     DollarSign,
     CheckCircle2,
@@ -200,9 +201,34 @@ export default function FinanceOverviewPage() {
                     <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Finance</h1>
                     <p className="text-sm text-surface-500 mt-1">Premium collection, commissions & financial reporting.</p>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>Export Excel</Button>
-                    <Button variant="primary" leftIcon={<Plus size={16} />} onClick={() => router.push('/dashboard/finance/invoices?new=1')}>New Invoice</Button>
+                <div className="flex gap-3">
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleExportExcel}
+                        className="group relative flex items-center gap-2 px-5 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-surface-600 hover:text-success-600 bg-white dark:bg-slate-900 border border-surface-200 dark:border-slate-700 rounded-full cursor-pointer shadow-sm transition-all duration-300 overflow-hidden"
+                    >
+                        <span className="absolute inset-0 bg-success-50/50 dark:bg-success-950/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out" />
+                        <Download 
+                            size={14} 
+                            className="relative z-10 transition-transform duration-500 group-hover:translate-y-0.5 group-hover:scale-110" 
+                        />
+                        <span className="relative z-10">Export Excel</span>
+                    </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02, y: -2 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => router.push('/dashboard/finance/invoices?new=1')}
+                        className="group relative flex items-center gap-2 px-6 py-2.5 text-[10.5px] font-black uppercase tracking-[0.1em] text-white bg-primary-600 hover:bg-primary-700 rounded-full cursor-pointer shadow-md hover:shadow-primary-600/20 transition-all duration-300 overflow-hidden"
+                    >
+                        <span className="absolute inset-0 bg-white/10 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out" />
+                        <Plus 
+                            size={14} 
+                            className="relative z-10 stroke-[3px] transition-transform duration-500 group-hover:rotate-90" 
+                        />
+                        <span className="relative z-10">New Invoice</span>
+                    </motion.button>
                 </div>
             </div>
 

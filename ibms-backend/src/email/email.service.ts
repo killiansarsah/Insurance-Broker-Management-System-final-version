@@ -42,13 +42,16 @@ export class EmailService {
     email: string,
     rawToken: string,
     frontendUrl: string,
+    organizationName: string,
+    roleName: string,
+    inviterName: string,
   ): Promise<void> {
     const inviteUrl = `${frontendUrl}/accept-invite?token=${rawToken}`;
-    const subject = 'You have been invited to Brokerium';
+    const subject = `Invitation to join ${organizationName} on Brokerium`;
     const content = `
       <div class="greeting" style="font-size: 15px; text-align: center; margin-bottom: 12px; color: #4B5563;">
-        <span style="font-weight: 600; color: #1F2937;">Admin User</span> has invited you to join the
-        <span style="font-weight: 600; color: #1F2937;">Insurance Broker Management System</span> as a team member.
+        <span style="font-weight: 600; color: #1F2937;">${inviterName}</span> has invited you to join 
+        <span style="font-weight: 600; color: #1F2937;">${organizationName}</span> on the Brokerium platform.
       </div>
       <div class="body-text" style="font-size: 14.5px; text-align: center; color: #6B7280; margin-bottom: 24px; line-height: 1.6;">
         Brokerium helps your team manage policies, clients, premiums, and renewals — all in one place.
@@ -65,15 +68,15 @@ export class EmailService {
         <div class="info-card-hdr blue" style="background:#EFF6FF; color:#1E40AF; padding: 14px 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">YOUR ACCOUNT DETAILS</div>
         <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
           <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Organisation</div>
-          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">SIC Insurance GH</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">${organizationName}</div>
         </div>
         <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F3F4F6;">
           <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Role Assigned</div>
-          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">Broker Agent</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">${roleName.replace(/_/g, ' ')}</div>
         </div>
         <div class="info-row" style="padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;">
           <div class="info-lbl" style="color: #6B7280; font-size: 13.5px;">Invited By</div>
-          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">Admin User</div>
+          <div class="info-val" style="font-weight: 500; font-size: 13.5px; color: #1F2937;">${inviterName}</div>
         </div>
       </div>
 
@@ -85,7 +88,7 @@ export class EmailService {
       content,
       'blue',
       `You're invited!`,
-      'Join your team on Brokerium',
+      `Join ${organizationName} on Brokerium`,
     );
 
     await this.send(email, subject, html);

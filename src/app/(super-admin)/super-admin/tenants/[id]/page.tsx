@@ -45,6 +45,8 @@ interface TenantDetail {
   };
 }
 
+import { TenantAuditLogs } from '@/components/super-admin/TenantAuditLogs';
+
 export default function TenantDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const unwrappedParams = use(params);
   const [activeTab, setActiveTab] = useState('overview');
@@ -238,8 +240,10 @@ export default function TenantDetailPage({ params }: { params: Promise<{ id: str
           </div>
         )}
 
+        {activeTab === 'logs' && <TenantAuditLogs tenantId={tenant.id} />}
+
         {/* Other Tabs Placeholder */}
-        {activeTab !== 'overview' && (
+        {activeTab !== 'overview' && activeTab !== 'logs' && (
           <div className="flex flex-col items-center justify-center p-12 bg-[var(--sa-bg-card)] border border-dashed border-[var(--sa-border)] rounded-[var(--sa-radius-md)] sa-reveal h-[400px]">
             {getTabIcon(TABS.find(t => t.id === activeTab)?.icon, false)}
             <h3 className="mt-4 text-sm font-bold font-serif text-[var(--sa-text-muted)] uppercase tracking-widest">

@@ -107,6 +107,7 @@ export class InvitationsService {
         invitedById: inviterId,
       },
       include: {
+        tenant: { select: { name: true } },
         invitedBy: { select: { firstName: true, lastName: true } },
       },
     });
@@ -117,7 +118,18 @@ export class InvitationsService {
     );
     this.logger.log(`Invitation sent to ${dto.email}`);
 
-    await this.email.sendInvite(dto.email, rawToken, frontendUrl);
+    const inviterName = invitation.invitedBy 
+      ? `${invitation.invitedBy.firstName} ${invitation.invitedBy.lastName}`
+      : 'Your Administrator';
+    
+    await this.email.sendInvite(
+      dto.email, 
+      rawToken, 
+      frontendUrl,
+      invitation.tenant.name,
+      targetRole,
+      inviterName
+    );
 
     await this.prisma.auditLog.create({
       data: {
