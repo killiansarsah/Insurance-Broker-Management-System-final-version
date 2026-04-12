@@ -46,12 +46,6 @@ export class ClientsController {
     );
   }
 
-  @Get('metrics')
-  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
-  getMetrics(@Request() req: RequestWithUser) {
-    return this.clientsService.getMetrics(req.user.tenantId, req.user.sub);
-  }
-
   @Get()
   @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   findAll(@Request() req: RequestWithUser, @Query() query: ClientQueryDto) {

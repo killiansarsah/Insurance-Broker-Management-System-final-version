@@ -51,12 +51,12 @@ const TYPE_LABEL: Record<CarrierType, string> = {
 
 function CarrierLogo({ carrier }: { carrier: Carrier }) {
     const [imgError, setImgError] = useState(false);
-    
-    // Fix: If the logo URL is an upload (e.g., starts with /uploads), point it to the backend API.
-    // If it's a static frontend asset (e.g., /images/carriers/...), keep it as is.
+
+    // If logo URL is from backend dynamic uploads, prepend API
+    // If it's a natively seeded public image (like /images/carriers/...), use it directly
     const fullLogoUrl = carrier.logoUrl?.startsWith('/uploads')
         ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000'}${carrier.logoUrl}`
-        : carrier.logoUrl;
+        : carrier.logoUrl || null;
 
     const fallbackColor = carrier.brandColor || '#3b82f6';
 
@@ -76,13 +76,12 @@ function CarrierLogo({ carrier }: { carrier: Carrier }) {
             {/* Logo Container - Pedestal */}
             <div className="relative w-20 h-20 rounded-xl flex items-center justify-center bg-white dark:bg-slate-900 shadow-md border border-white/40 ring-1 ring-black/5 group-hover/card:scale-110 transition-transform duration-500 ease-out z-10">
                 {fullLogoUrl && !imgError ? (
-                    <Image
+                    <img
                         src={fullLogoUrl}
                         alt={`${carrier.name} logo`}
-                        width={64}
-                        height={64}
-                        className="w-16 h-16 object-contain p-1"
+                        className="object-contain p-2 w-full h-full"
                         onError={() => setImgError(true)}
+                        loading="lazy"
                     />
                 ) : (
                     <div
@@ -309,7 +308,7 @@ export default function CarriersPage() {
                                                 </div>
                                                 <div className="flex items-center justify-center gap-1.5 opacity-80">
                                                     <Building2 size={11} />
-                                                    <span>{carrier.productCategories?.length || 0} Products</span>
+                                                    <span>{carrier._count?.products ?? carrier.products?.length ?? 0} Product{((carrier._count?.products ?? carrier.products?.length ?? 0) !== 1) ? 's' : ''}</span>
                                                 </div>
                                             </div>
 

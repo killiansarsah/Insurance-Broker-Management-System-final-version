@@ -240,16 +240,23 @@ export default function NewPolicyPage() {
                     }
                 }
             });
+            
         return Array.from(unique.values())
-            .map((c: any) => ({ 
-                label: c.shortName || c.name, 
-                value: c.id, 
-                avatar: {
-                    fallback: (c.shortName || c.name || 'CR').toString().substring(0, 2).toUpperCase(),
-                    url: c.logoUrl,
-                    color: c.brandColor || '#3b82f6'
-                }
-            }))
+            .map((c: any) => {
+                const finalUrl = c.logoUrl?.startsWith('/uploads')
+                    ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, '') || 'http://localhost:5000'}${c.logoUrl}`
+                    : c.logoUrl || null;
+
+                return { 
+                    label: c.shortName || c.name, 
+                    value: c.id, 
+                    avatar: {
+                        fallback: (c.shortName || c.name || 'CR').toString().substring(0, 2).toUpperCase(),
+                        url: finalUrl,
+                        color: c.brandColor || '#3b82f6'
+                    }
+                };
+            })
             .sort((a: any, b: any) => (a.label as string).localeCompare(b.label as string));
     }, [allCarriers]);
 

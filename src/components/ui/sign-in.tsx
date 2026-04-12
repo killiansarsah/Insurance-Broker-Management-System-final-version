@@ -170,7 +170,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                 <div className="w-20 h-20 relative mx-auto mb-6 p-2 rounded-2xl bg-gradient-to-br from-primary-50 to-primary-100 shadow-lg">
                                     <Image
                                         src="/logo-icon.png"
-                                        alt="Brokerium Logo"
+                                        alt="IBMS Logo"
                                         fill
                                         sizes="80px"
                                         className="object-contain p-2"
@@ -178,7 +178,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                                     />
                                 </div>
                                 <h1 className="text-2xl font-bold text-surface-900 mb-2 bg-gradient-to-r from-surface-900 to-primary-600 bg-clip-text text-transparent">
-                                    Sign in to <span className="text-primary-500">Brokerium</span>
+                                    Sign in to <span className="text-primary-500">IBMS</span>
                                 </h1>
                                 <p className="text-sm text-surface-500 leading-relaxed">
                                     Welcome back — enter your credentials to access the portal.
@@ -354,7 +354,7 @@ const AnimatedSignIn: React.FC<AnimatedSignInProps> = ({
                             {/* Footer */}
                             <div className="mt-8 text-center">
                                 <p className="text-xs text-surface-400 font-medium tracking-wide">
-                                    &copy; {new Date().getFullYear()} Brokerium &middot; Platform v1.0
+                                    &copy; {new Date().getFullYear()} IBMS Ghana &middot; Platform v1.0
                                 </p>
                             </div>
                         </div>

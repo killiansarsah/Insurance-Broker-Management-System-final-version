@@ -182,7 +182,6 @@ export default function PoliciesPage() {
     const [ssPage, setSsPage] = useState(1);
     const [ssPageSize, setSsPageSize] = useState(10);
     const [ssSearch, setSsSearch] = useState('');
-    
     const { data: policiesData, isLoading } = usePolicies({
         page: ssPage,
         limit: ssPageSize,
@@ -568,8 +567,6 @@ export default function PoliciesPage() {
     ];
 
     const getPageTitle = () => {
-        if (typeParam === 'MOTOR') return 'Motor Policies';
-        if (typeParam === 'non-motor') return 'Non-Motor Policies';
         return 'All Policies';
     };
 
@@ -582,19 +579,12 @@ export default function PoliciesPage() {
             {/* Header */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-surface-900 tracking-tight">{getPageTitle()}</h1>
+                    <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Policies Repository</h1>
                     <p className="text-sm text-surface-500 mt-1">
-                        Manage {typeParam ? (typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor') : 'insurance'} policies and renewals.
+                        Manage your insurance policies across all categories inline.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {typeParam && (
-                        <Link href="/dashboard/policies">
-                            <Button variant="outline" size="sm" className="bg-white hover:bg-surface-50 text-surface-700 shadow-sm font-semibold rounded-full px-4 hover:-translate-y-0.5 transition-all duration-300">
-                                View All
-                            </Button>
-                        </Link>
-                    )}
                     <Link href="/dashboard/policies/new">
                         <Button 
                             variant="primary" 
@@ -659,15 +649,13 @@ export default function PoliciesPage() {
                     onChange={(v) => setFilterStatus(String(v || '') as PolicyStatus | '')}
                     clearable
                 />
-                {!typeParam && (
-                    <CustomSelect
-                        label="Type"
-                        options={INSURANCE_TYPES.map(t => ({ label: t.label, value: t.value }))}
-                        value={filterType}
-                        onChange={(v) => setFilterType(String(v || '') as InsuranceType | '')}
-                        clearable
-                    />
-                )}
+                <CustomSelect
+                    label="Type"
+                    options={INSURANCE_TYPES.map(t => ({ label: t.label, value: t.value }))}
+                    value={filterType}
+                    onChange={(v) => setFilterType(String(v || '') as InsuranceType | '')}
+                    clearable
+                />
                 <CustomSelect
                     label="Broker"
                     options={BROKERS}
@@ -712,7 +700,7 @@ export default function PoliciesPage() {
                 onRowClick={(row) => router.push(`/dashboard/policies/${row.id}`)}
                 emptyMessage={
                     typeParam
-                        ? `No ${typeParam === 'MOTOR' ? 'MOTOR' : 'non-motor'} policies found.`
+                        ? `No ${typeParam === 'MOTOR' ? 'Motor' : 'Non-Motor'} policies found.`
                         : 'No policies found.'
                 }
                 exportable={true}
