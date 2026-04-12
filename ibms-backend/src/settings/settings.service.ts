@@ -20,6 +20,49 @@ import { ROLE_LEVEL } from '../common/constants/role-hierarchy.js';
 export class SettingsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Fetch active global tax rules for a given insurance type.
+   * Used by the frontend policy wizard for premium calculation.
+   */
+  async getTaxConfig(insuranceType?: string) {
+    const now = new Date();
+
+    const where: any = {
+      tenantId: null,
+      effectiveFrom: { lte: now },
+      OR: [
+        { effectiveTo: null },
+        { effectiveTo: { gte: now } },
+      ],
+    };
+
+    if (insuranceType) {
+      where.applicableTo = { has: insuranceType };
+    }
+
+    const rules = await this.prisma.systemTaxRule.findMany({
+      where,
+      orderBy: [
+        { calculationOrder: 'asc' },
+        { code: 'asc' },
+      ],
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        rate: true,
+        type: true,
+        isCascading: true,
+        calculationOrder: true,
+        applicableTo: true,
+        effectiveFrom: true,
+        effectiveTo: true,
+      },
+    });
+
+    return rules;
+  }
+
   private async logAudit(
     tenantId: string,
     userId: string,

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     ArrowLeft,
     ArrowRight,
@@ -24,17 +25,20 @@ import {
     HardHat,
     Plane,
     Leaf,
-    HelpCircle
+    HelpCircle,
+    ChevronDown
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn, formatCurrency } from '@/lib/utils';
 import { useCreatePolicy } from '@/hooks/api/use-policies';
 import { useClients } from '@/hooks/api/use-clients';
-import { useCarriers } from '@/hooks/api/use-carriers';
+import { useAllCarriers } from '@/hooks/api/use-carriers';
+import { useTaxConfig, calculateTaxBreakdown } from '@/hooks/api/use-settings';
 import type { InsuranceType, PremiumFrequency } from '@/types';
 import { CustomSelect } from '@/components/ui/select-custom';
 import { BackButton } from '@/components/ui/back-button';
+import { Modal } from '@/components/ui/modal';
 import { toast } from 'sonner';
 
 const STEPS = [
@@ -81,7 +85,9 @@ interface FormData {
     clientId: string;
     clientName: string;
     insuranceType: InsuranceType | '';
-    insurerName: string;
+    carrierId: string;         // stores the actual carrier UUID
+    carrierDisplayName: string; // display name for review panel & toasts
+    productId: string;
     inceptionDate: string;
     expiryDate: string;
     policyNumber: string;
@@ -119,7 +125,9 @@ const INITIAL_FORM: FormData = {
     clientId: '',
     clientName: '',
     insuranceType: '',
-    insurerName: '',
+    carrierId: '',
+    carrierDisplayName: '',
+    productId: '',
     inceptionDate: todayStr,
     expiryDate: oneYearLater,
     policyNumber: '',
@@ -137,7 +145,7 @@ const INITIAL_FORM: FormData = {
     vehicleYear: '',
     vehicleChassisNumber: '',
     vehicleEngineNumber: '',
-    vehicleUsageType: 'private',
+    vehicleUsageType: 'PRIVATE',
     vehicleEstimatedValue: 0,
     propertyAddress: '',
     propertyType: '',
@@ -147,14 +155,7 @@ const INITIAL_FORM: FormData = {
     cargoDescription: '',
 };
 
-// Ghana tax calc
-function ghTaxBreakdown(premiumAmount: number) {
-    const base = Math.round(premiumAmount / 1.20);
-    const nhil = Math.round(base * 0.025);
-    const getFund = Math.round(base * 0.025);
-    const vat = Math.round(base * 0.15);
-    return { base, vat, nhil, getFund, total: premiumAmount };
-}
+// Ghana tax calc — now uses dynamic rules from database
 
 // Validation per step
 function validateStep(step: number, form: FormData): string | null {
@@ -162,7 +163,8 @@ function validateStep(step: number, form: FormData): string | null {
         case 1: return form.clientId ? null : 'Please select a client';
         case 2:
             if (!form.insuranceType) return 'Please select an insurance type';
-            if (!form.insurerName) return 'Please select an insurer';
+            if (!form.carrierId) return 'Please select an insurer';
+            if (!form.productId) return 'Please select a specific product/plan for this insurer';
             return null;
         case 3:
             if (!form.inceptionDate) return 'Please set inception date';
@@ -186,15 +188,21 @@ function validateStep(step: number, form: FormData): string | null {
 export default function NewPolicyPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
+    const [userSetExpiry, setUserSetExpiry] = useState(false);
     const [form, setForm] = useState<FormData>(INITIAL_FORM);
     const [clientSearch, setClientSearch] = useState('');
+    const [carrierSearch, setCarrierSearch] = useState('');
+    const [productSearch, setProductSearch] = useState('');
+    const [isCarrierModalOpen, setIsCarrierModalOpen] = useState(false);
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+    
     const [errors, setErrors] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const createPolicyMutation = useCreatePolicy();
 
     const { data: clientsData } = useClients();
     const allClients: any[] = (clientsData as any)?.items ?? (clientsData as any)?.data ?? (Array.isArray(clientsData) ? clientsData : []);
-    const { data: carriersData } = useCarriers();
+    const { data: carriersData } = useAllCarriers();
     const allCarriers: any[] = Array.isArray(carriersData) ? carriersData : (carriersData as any)?.items ?? (carriersData as any)?.data ?? [];
 
     // Auto-populate client from URL if 'clientId' is present and we've loaded clients
@@ -217,13 +225,33 @@ export default function NewPolicyPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [allClients]);
 
-    const INSURER_OPTIONS = useMemo(() =>
+    const INSURER_OPTIONS = useMemo(() => {
+        const unique = new Map();
         allCarriers
-            .filter((c: any) => c.status !== 'INACTIVE') // Just don't include explicit inactive ones, in case they exist
-            .map((c: any) => ({ label: c.shortName || c.name, value: c.id }))
-            .sort((a: any, b: any) => a.label.localeCompare(b.label)),
-        [allCarriers]
-    );
+            .filter((c: any) => c.status !== 'INACTIVE')
+            .forEach((c: any) => {
+                const key = c.slug || c.id;
+                if (!unique.has(key)) {
+                    unique.set(key, c);
+                } else {
+                    const existing = unique.get(key);
+                    if ((!existing.products || existing.products.length === 0) && (c.products && c.products.length > 0)) {
+                        unique.set(key, c);
+                    }
+                }
+            });
+        return Array.from(unique.values())
+            .map((c: any) => ({ 
+                label: c.shortName || c.name, 
+                value: c.id, 
+                avatar: {
+                    fallback: (c.shortName || c.name || 'CR').toString().substring(0, 2).toUpperCase(),
+                    url: c.logoUrl,
+                    color: c.brandColor || '#3b82f6'
+                }
+            }))
+            .sort((a: any, b: any) => (a.label as string).localeCompare(b.label as string));
+    }, [allCarriers]);
 
     const filteredClients = clientSearch
         ? allClients.filter((c: any) =>
@@ -234,7 +262,40 @@ export default function NewPolicyPage() {
         ).slice(0, 6)
         : [];
 
-    const taxes = useMemo(() => ghTaxBreakdown(form.premiumAmount), [form.premiumAmount]);
+    const AVAILABLE_PRODUCTS = useMemo(() => {
+        if (!form.carrierId) return [];
+        
+        const selectedCarrier = allCarriers.find(c => c.id === form.carrierId);
+        if (!selectedCarrier) return [];
+        
+        const matchingCarriers = allCarriers.filter(c => (selectedCarrier.slug && c.slug === selectedCarrier.slug) || c.id === form.carrierId);
+        
+        const uniqueProducts = new Map();
+        matchingCarriers.forEach(c => {
+            if (c.products && Array.isArray(c.products)) {
+                c.products.forEach((p: any) => {
+                    const pKey = p.code || p.name;
+                    if (!uniqueProducts.has(pKey)) uniqueProducts.set(pKey, p);
+                });
+            }
+        });
+
+        return Array.from(uniqueProducts.values())
+            .filter((p: any) => !form.insuranceType || p.insuranceType === form.insuranceType)
+            .map((p: any) => ({
+                label: `${p.name} (${p.commissionRate}%)`,
+                value: p.id,
+                name: p.name,
+                rate: p.commissionRate
+            }));
+    }, [allCarriers, form.carrierId, form.insuranceType]);
+
+    // Dynamic Tax Engine: fetch rules based on selected insurance type
+    const { data: taxRules = [] } = useTaxConfig(form.insuranceType || undefined);
+    const taxes = useMemo(
+        () => calculateTaxBreakdown(form.premiumAmount, taxRules),
+        [form.premiumAmount, taxRules]
+    );
 
     function update<K extends keyof FormData>(field: K, value: FormData[K]) {
         setErrors(null);
@@ -245,8 +306,8 @@ export default function NewPolicyPage() {
                 const rate = field === 'premiumRate' ? (value as number) : prev.premiumRate;
                 next.premiumAmount = Math.round((sum * rate) / 100);
             }
-            // Auto-set expiry to 1 year from inception (always recalculate)
-            if (field === 'inceptionDate' && value) {
+            // Auto-set expiry to 1 year from inception (only if user hasn't manually overridden it)
+            if (field === 'inceptionDate' && value && !userSetExpiry) {
                 const d = new Date(value as string);
                 d.setFullYear(d.getFullYear() + 1);
                 next.expiryDate = d.toISOString().split('T')[0];
@@ -254,6 +315,53 @@ export default function NewPolicyPage() {
             return next;
         });
     }
+
+    const createPayload = (status?: string) => {
+        const payload: any = {
+            clientId: form.clientId,
+            carrierId: form.carrierId,
+            insuranceType: form.insuranceType,
+            productId: form.productId || undefined,
+            startDate: new Date(form.inceptionDate).toISOString(),
+            endDate: form.expiryDate,
+            premiumAmount: form.premiumAmount,
+            sumInsured: form.sumInsured,
+            premiumFrequency: form.premiumFrequency,
+            currency: form.currency,
+            commission: form.commissionRate ? (form.premiumAmount * form.commissionRate / 100) : undefined,
+            policyNumber: form.policyNumber || undefined,
+            coverageDetails: form.coverageDetails || undefined,
+            status: status || undefined,
+        };
+
+        if (form.insuranceType === 'MOTOR') {
+            payload.vehicleDetails = {
+                registrationNumber: form.vehicleRegNumber,
+                make: form.vehicleMake,
+                model: form.vehicleModel,
+                year: parseInt(form.vehicleYear) || new Date().getFullYear(),
+                chassisNumber: form.vehicleChassisNumber || undefined,
+                engineNumber: form.vehicleEngineNumber || undefined,
+                usageType: form.vehicleUsageType || undefined,
+                motorCoverType: form.motorCoverType || undefined,
+            };
+        }
+        if (form.insuranceType === 'FIRE') {
+            payload.propertyDetails = {
+                address: form.propertyAddress,
+                propertyType: form.propertyType || undefined,
+            };
+        }
+        if (form.insuranceType === 'MARINE') {
+            payload.marineDetails = {
+                vesselName: form.vesselName,
+                voyageFrom: form.voyageFrom || undefined,
+                voyageTo: form.voyageTo || undefined,
+                cargoDescription: form.cargoDescription || undefined,
+            };
+        }
+        return payload;
+    };
 
     function handleNext() {
         if (step < 5) {
@@ -270,52 +378,10 @@ export default function NewPolicyPage() {
             if (err) { setErrors(err); toast.error(err); return; }
             setIsSubmitting(true);
 
-            const payload: Record<string, unknown> = {
-                clientId: form.clientId,
-                carrierId: form.insurerName, // now stores carrier UUID
-                insuranceType: form.insuranceType,
-                startDate: form.inceptionDate,
-                endDate: form.expiryDate,
-                premiumAmount: form.premiumAmount,
-                sumInsured: form.sumInsured,
-                premiumFrequency: form.premiumFrequency,
-                currency: form.currency,
-                commission: form.commissionRate ? (form.premiumAmount * form.commissionRate / 100) : undefined,
-                policyNumber: form.policyNumber || undefined,
-                coverageDetails: form.coverageDetails || undefined,
-            };
-
-            if (form.insuranceType === 'MOTOR') {
-                payload.vehicleDetails = {
-                    registrationNumber: form.vehicleRegNumber,
-                    make: form.vehicleMake,
-                    model: form.vehicleModel,
-                    year: parseInt(form.vehicleYear) || new Date().getFullYear(),
-                    chassisNumber: form.vehicleChassisNumber || undefined,
-                    engineNumber: form.vehicleEngineNumber || undefined,
-                    usageType: form.vehicleUsageType || undefined,
-                    motorCoverType: form.motorCoverType || undefined,
-                };
-            }
-            if (form.insuranceType === 'FIRE') {
-                payload.propertyDetails = {
-                    address: form.propertyAddress,
-                    propertyType: form.propertyType || undefined,
-                };
-            }
-            if (form.insuranceType === 'MARINE') {
-                payload.marineDetails = {
-                    vesselName: form.vesselName,
-                    voyageFrom: form.voyageFrom || undefined,
-                    voyageTo: form.voyageTo || undefined,
-                    cargoDescription: form.cargoDescription || undefined,
-                };
-            }
-
-            createPolicyMutation.mutate(payload, {
+            createPolicyMutation.mutate(createPayload('ACTIVE'), {
                 onSuccess: () => {
                     setIsSubmitting(false);
-                    toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.insurerName}` });
+                    toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.carrierDisplayName}` });
                     router.push('/dashboard/policies');
                 },
                 onError: (error: any) => {
@@ -327,15 +393,46 @@ export default function NewPolicyPage() {
     }
 
     function handleSaveAsDraft() {
-        toast.success('Policy saved as draft', { description: `You can resume editing later` });
-        router.push('/dashboard/policies');
+        if (!form.clientId) {
+            toast.error('Please select a client before saving a draft.');
+            return;
+        }
+        // Build a partial payload — only include non-empty fields so we don't
+        // send empty carrierId/insuranceType to the API (which would throw 400/404)
+        const draftPayload: any = {
+            clientId: form.clientId,
+            status: 'DRAFT',
+            ...(form.carrierId && { carrierId: form.carrierId }),
+            ...(form.insuranceType && { insuranceType: form.insuranceType }),
+            ...(form.productId && { productId: form.productId }),
+            startDate: form.inceptionDate ? new Date(form.inceptionDate).toISOString() : new Date().toISOString(),
+            ...(form.expiryDate && { endDate: form.expiryDate }),
+            premiumAmount: form.premiumAmount || 0,
+            sumInsured: form.sumInsured || 0,
+            premiumFrequency: form.premiumFrequency,
+            currency: form.currency,
+            ...(form.policyNumber && { policyNumber: form.policyNumber }),
+            ...(form.coverageDetails && { coverageDetails: form.coverageDetails }),
+        };
+        setIsSubmitting(true);
+        createPolicyMutation.mutate(draftPayload, {
+            onSuccess: () => {
+                setIsSubmitting(false);
+                toast.success('Policy saved as draft', { description: 'You can resume editing later.' });
+                router.push('/dashboard/policies');
+            },
+            onError: (error: any) => {
+                setIsSubmitting(false);
+                toast.error('Draft Save Failed', { description: error?.response?.data?.message || 'Could not save draft.' });
+            },
+        });
     }
 
     const isMotor = form.insuranceType === 'MOTOR';
     const isProperty = form.insuranceType === 'FIRE';
     const isMarine = form.insuranceType === 'MARINE';
     return (
-        <div className="w-full flex flex-col h-[calc(100vh-6.5rem)] animate-fade-in max-w-6xl mx-auto overflow-hidden">
+        <div className="w-full flex-col flex h-[calc(100vh-8rem)] animate-fade-in max-w-[1400px] mx-auto overflow-hidden px-2 lg:px-4">
             {/* Header */}
             <div className="flex-none flex items-center justify-between pb-3">
                 <div className="flex items-center gap-2">
@@ -384,10 +481,10 @@ export default function NewPolicyPage() {
                 })}
             </div>
 
-            {/* Content Container (Non-scrolling by default, fits whole page) */}
-            <div className="flex-1 mt-4 overflow-visible">
-                <Card padding="md" className="h-full border-surface-200/60 shadow-sm overflow-visible flex flex-col">
-                    <div className="flex-1 overflow-visible">
+            {/* Content Container (Internal scrolling enabled) */}
+            <div className="flex-1 mt-4 overflow-hidden">
+                <Card padding="md" className="h-full border-surface-200/60 shadow-sm flex flex-col overflow-hidden">
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden pr-2 scrollbar-thin scrollbar-thumb-surface-200 hover:scrollbar-thumb-surface-300 scrollbar-track-transparent">
                     {/* ─── Step 1: Client Selection ────────────────────────────────── */}
                 {step === 1 && (
                     <div className="flex flex-col items-center gap-6">
@@ -501,14 +598,162 @@ export default function NewPolicyPage() {
                             <h2 className="text-lg font-bold text-surface-900">Insurer Details</h2>
                             <div>
                                 <label className="block text-xs font-medium text-surface-600 mb-1.5">Insurance Company</label>
-                                <CustomSelect
-                                    placeholder="Select Insurer..."
-                                    options={INSURER_OPTIONS}
-                                    value={form.insurerName}
-                                    onChange={(v) => update('insurerName', String(v || ''))}
-                                    className="w-full"
-                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setIsCarrierModalOpen(true)}
+                                    className="w-full text-left px-4 py-3.5 bg-surface-50 border border-surface-200 rounded-xl flex items-center justify-between hover:bg-surface-100 transition-colors group focus:ring-2 focus:ring-primary-500/20"
+                                >
+                                    {(() => {
+                                        const selected = INSURER_OPTIONS.find(o => o.value === form.carrierId);
+                                        if (!selected) return <span className="text-surface-400 font-medium tracking-tight">Select Insurance Company...</span>;
+                                        return (
+                                            <div className="flex items-center gap-3">
+                                                <div 
+                                                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs text-white font-bold overflow-hidden shadow-sm" 
+                                                    style={{ backgroundColor: selected.avatar?.color || '#94a3b8' }}
+                                                >
+                                                    {selected.avatar?.url ? (
+                                                        <img src={selected.avatar.url} alt={String(selected.label)} className="w-full h-full object-contain p-0.5 bg-white" />
+                                                    ) : selected.avatar?.fallback}
+                                                </div>
+                                                <span className="font-bold text-surface-900 uppercase tracking-tight">{selected.label}</span>
+                                            </div>
+                                        );
+                                    })()}
+                                    <ChevronDown className="text-surface-400 group-hover:text-surface-600 transition-colors" size={16} />
+                                </button>
                             </div>
+
+                            <AnimatePresence mode="popLayout">
+                                {form.carrierId && (
+                                    <motion.div
+                                        key="product-selector"
+                                        initial={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                                        animate={{ opacity: 1, height: 'auto', overflow: 'visible' }}
+                                        exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                                        transition={{ duration: 0.25, ease: 'easeOut' }}
+                                    >
+                                        <label className="block text-xs font-medium text-surface-600 mb-1.5 border-t border-surface-100 pt-3 mt-1">Specific Product / Plan</label>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsProductModalOpen(true)}
+                                            className="w-full text-left px-4 py-3.5 bg-surface-50 border border-surface-200 rounded-xl flex items-center justify-between hover:bg-surface-100 transition-colors group focus:ring-2 focus:ring-primary-500/20"
+                                        >
+                                            {(() => {
+                                                const selected = AVAILABLE_PRODUCTS.find((p: any) => p.value === form.productId);
+                                                if (!selected) return <span className="text-surface-400 font-medium tracking-tight">Select a product...</span>;
+                                                return <span className="font-bold text-surface-900 tracking-tight">{selected.label}</span>;
+                                            })()}
+                                            <ChevronDown className="text-surface-400 group-hover:text-surface-600 transition-colors" size={16} />
+                                        </button>
+                                        <p className="text-[10px] text-surface-400 mt-2 mb-2">Leave empty to auto-assign the best matching product, or automatically create a fallback.</p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            
+                            {/* Modals for Selectors */}
+                            <Modal isOpen={isCarrierModalOpen} onClose={() => setIsCarrierModalOpen(false)} title="Select Insurance Carrier" size="md">
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" size={16} />
+                                        <input
+                                            type="text"
+                                            autoFocus
+                                            placeholder="Search carriers by name..."
+                                            value={carrierSearch}
+                                            onChange={(e) => setCarrierSearch(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-surface-200 bg-surface-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
+                                        />
+                                    </div>
+                                    <div className="max-h-[400px] overflow-y-auto grid grid-cols-2 sm:grid-cols-3 gap-3 pr-1 -mr-1 custom-scrollbar p-1">
+                                        {INSURER_OPTIONS.filter(o => String(o.label).toLowerCase().includes(carrierSearch.toLowerCase())).map((insurer: any) => (
+                                            <button
+                                                key={insurer.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    update('carrierId', String(insurer.value));
+                                                    update('carrierDisplayName', String(insurer.label));
+                                                    update('productId', '');
+                                                    setIsCarrierModalOpen(false);
+                                                }}
+                                                className={cn(
+                                                    "relative w-full flex flex-col items-center justify-center p-4 rounded-xl border transition-all h-28",
+                                                    form.carrierId === insurer.value
+                                                        ? "border-primary-500 bg-primary-50 ring-1 ring-primary-500/20 shadow-sm"
+                                                        : "border-surface-200 bg-white hover:border-primary-300 hover:bg-surface-50 hover:shadow-sm"
+                                                )}
+                                            >
+                                                <div 
+                                                    className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-sm text-white font-bold overflow-hidden shadow-sm mb-3" 
+                                                    style={{ backgroundColor: insurer.avatar?.color || '#94a3b8' }}
+                                                >
+                                                    {insurer.avatar?.url ? (
+                                                        <img src={insurer.avatar.url} alt={String(insurer.label)} className="w-full h-full object-contain p-1.5 bg-white" />
+                                                    ) : insurer.avatar?.fallback}
+                                                </div>
+                                                <span className="font-bold text-surface-900 tracking-tight uppercase text-xs w-full text-center truncate px-1">
+                                                    {insurer.label}
+                                                </span>
+                                                {form.carrierId === insurer.value && (
+                                                    <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center text-white shadow-sm">
+                                                        <Check size={12} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </Modal>
+
+                            <Modal isOpen={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} title="Select Insurance Product" size="sm">
+                                <div className="space-y-4">
+                                    <div className="relative">
+                                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-400" size={16} />
+                                        <input
+                                            type="text"
+                                            autoFocus
+                                            placeholder="Search products..."
+                                            value={productSearch}
+                                            onChange={(e) => setProductSearch(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 rounded-xl border border-surface-200 bg-surface-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-colors"
+                                        />
+                                    </div>
+                                    <div className="max-h-[400px] overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3 pr-1 -mr-1 custom-scrollbar p-1">
+                                        {AVAILABLE_PRODUCTS.length === 0 ? (
+                                            <p className="text-center text-sm text-surface-500 py-8 italic sm:col-span-2">No products matched the selected Insurance Type for this Carrier.</p>
+                                        ) : AVAILABLE_PRODUCTS.filter((p: any) => p.name.toLowerCase().includes(productSearch.toLowerCase())).map((prod: any) => (
+                                            <button
+                                                key={prod.value}
+                                                type="button"
+                                                onClick={() => {
+                                                    update('productId', String(prod.value));
+                                                    setIsProductModalOpen(false);
+                                                }}
+                                                className={cn(
+                                                    "relative w-full flex items-start p-4 rounded-xl border transition-all text-left",
+                                                    form.productId === prod.value
+                                                        ? "border-primary-500 bg-primary-50 ring-1 ring-primary-500/20 shadow-sm"
+                                                        : "border-surface-200 bg-white hover:border-primary-300 hover:bg-surface-50 hover:shadow-sm"
+                                                )}
+                                            >
+                                                <div className="pr-6">
+                                                    <span className="font-bold text-surface-900 block leading-tight">{prod.name}</span>
+                                                    <div className="mt-2 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-surface-100 text-[10px] uppercase font-bold tracking-wider text-surface-600">
+                                                        <Activity size={12} className="text-primary-500" />
+                                                        {prod.rate}% Commission
+                                                    </div>
+                                                </div>
+                                                {form.productId === prod.value && (
+                                                    <div className="absolute top-4 right-4 w-5 h-5 rounded-full bg-primary-500 flex items-center justify-center text-white shadow-sm shrink-0">
+                                                        <Check size={12} strokeWidth={3} />
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </Modal>
+
                             <div>
                                 <label className="block text-xs font-medium text-surface-600 mb-1.5">Policy Currency</label>
                                 <CustomSelect
@@ -573,7 +818,10 @@ export default function NewPolicyPage() {
                                     type="date"
                                     className="w-full p-2.5 bg-surface-50 border border-surface-200 rounded-[var(--radius-md)] outline-none focus:border-primary-500"
                                     value={form.expiryDate}
-                                    onChange={(e) => update('expiryDate', e.target.value)}
+                                    onChange={(e) => {
+                                        setUserSetExpiry(true);
+                                        update('expiryDate', e.target.value);
+                                    }}
                                 />
                             </div>
                         </div>
@@ -613,12 +861,14 @@ export default function NewPolicyPage() {
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Usage Type</label>
                                         <CustomSelect
                                             options={[
-                                                { label: 'Private', value: 'private' },
+                                                { label: 'Private', value: 'PRIVATE' },
                                                 { label: 'Commercial', value: 'COMMERCIAL' },
-                                                { label: 'Hiring', value: 'hiring' },
+                                                { label: 'Hiring / Taxi', value: 'COMMERCIAL' },
+                                                { label: 'Government', value: 'GOVERNMENT' },
+                                                { label: 'Diplomatic', value: 'DIPLOMATIC' },
                                             ]}
                                             value={form.vehicleUsageType}
-                                            onChange={(v) => update('vehicleUsageType', String(v || 'private'))}
+                                            onChange={(v) => update('vehicleUsageType', String(v || 'PRIVATE'))}
                                             className="w-full"
                                         />
                                     </div>
@@ -645,10 +895,10 @@ export default function NewPolicyPage() {
                                         <label className="block text-xs font-medium text-surface-600 mb-1">Property Type</label>
                                         <CustomSelect
                                             options={[
-                                                { label: 'Residential', value: 'residential' },
+                                                { label: 'Residential', value: 'RESIDENTIAL' },
                                                 { label: 'Commercial', value: 'COMMERCIAL' },
-                                                { label: 'Industrial', value: 'industrial' },
-                                                { label: 'Warehouse', value: 'warehouse' },
+                                                { label: 'Industrial', value: 'INDUSTRIAL' },
+                                                { label: 'Warehouse', value: 'WAREHOUSE' },
                                             ]}
                                             value={form.propertyType}
                                             onChange={(v) => update('propertyType', String(v || ''))}
@@ -759,30 +1009,35 @@ export default function NewPolicyPage() {
                             </div>
                         </div>
                         <div className="space-y-4">
-                            {/* Ghana Tax Breakdown */}
+                            {/* Dynamic Tax Breakdown */}
                             <div className="bg-surface-50 p-6 rounded-[var(--radius-lg)] space-y-4 border border-surface-200">
-                                <h3 className="text-sm font-bold text-surface-900 uppercase tracking-wide">Ghana Tax Breakdown</h3>
+                                <h3 className="text-sm font-bold text-surface-900 uppercase tracking-wide">Tax & Levy Breakdown</h3>
                                 <div className="space-y-2">
                                     <div className="flex justify-between text-sm">
                                         <span className="text-surface-500">Base Premium</span>
-                                        <span className="font-medium text-surface-900 tabular-nums">{formatCurrency(taxes.base, form.currency)}</span>
+                                        <span className="font-medium text-surface-900 tabular-nums">{formatCurrency(taxes.basePremium, form.currency)}</span>
                                     </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-surface-500">VAT (15%)</span>
-                                        <span className="tabular-nums">{formatCurrency(taxes.vat, form.currency)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-surface-500">NHIL (2.5%)</span>
-                                        <span className="tabular-nums">{formatCurrency(taxes.nhil, form.currency)}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-surface-500">GETFund (2.5%)</span>
-                                        <span className="tabular-nums">{formatCurrency(taxes.getFund, form.currency)}</span>
-                                    </div>
+                                    {/* Levies (Non-cascading) */}
+                                    {taxes.levies.map((levy) => (
+                                        <div key={levy.code} className="flex justify-between text-sm">
+                                            <span className="text-surface-500">{levy.name} ({(levy.rate * 100).toFixed(1)}%)</span>
+                                            <span className="tabular-nums">{formatCurrency(levy.amount, form.currency)}</span>
+                                        </div>
+                                    ))}
+                                    {/* Cascading Taxes (e.g. VAT on base+levies) */}
+                                    {taxes.cascading.map((tax) => (
+                                        <div key={tax.code} className="flex justify-between text-sm">
+                                            <span className="text-surface-500">{tax.name} ({(tax.rate * 100).toFixed(1)}%)</span>
+                                            <span className="tabular-nums">{formatCurrency(tax.amount, form.currency)}</span>
+                                        </div>
+                                    ))}
+                                    {taxRules.length === 0 && (
+                                        <p className="text-xs text-surface-400 italic">No tax rules apply to this product type</p>
+                                    )}
                                 </div>
                                 <div className="pt-3 border-t border-surface-200 text-center">
-                                    <p className="text-xs text-surface-500">Total Premium</p>
-                                    <p className="text-2xl font-bold text-primary-600 mt-1 tabular-nums">{formatCurrency(taxes.total, form.currency)}</p>
+                                    <p className="text-xs text-surface-500">Gross Premium (incl. taxes)</p>
+                                    <p className="text-2xl font-bold text-primary-600 mt-1 tabular-nums">{formatCurrency(taxes.grossPremium, form.currency)}</p>
                                 </div>
                             </div>
 
@@ -824,7 +1079,7 @@ export default function NewPolicyPage() {
                         <h2 className="text-xl font-bold text-surface-900">Ready to Create Policy?</h2>
                         <div className="bg-surface-50 rounded-[var(--radius-md)] p-6 text-left space-y-3 border border-surface-200 w-full">
                             <ReviewRow label="Client" value={form.clientName} />
-                            <ReviewRow label="Insurer" value={form.insurerName} />
+                            <ReviewRow label="Insurer" value={form.carrierDisplayName || '(not selected)'} />
                             <ReviewRow label="Type" value={form.insuranceType.replace(/_/g, ' ')} />
                             <ReviewRow label="Period" value={`${form.inceptionDate} → ${form.expiryDate}`} />
                             <ReviewRow label="Sum Insured" value={formatCurrency(form.sumInsured, form.currency)} />
@@ -858,14 +1113,17 @@ export default function NewPolicyPage() {
                             )}
                         </div>
 
-                        {/* Ghana Tax Summary */}
+                        {/* Dynamic Tax Summary */}
                         <div className="w-full bg-primary-50/50 rounded-lg border border-primary-100 p-4 text-left space-y-1">
-                            <p className="text-xs text-primary-700 font-bold uppercase">Ghana Tax Breakdown</p>
-                            <div className="grid grid-cols-4 gap-2 text-xs text-primary-600">
-                                <span>Base: {formatCurrency(taxes.base)}</span>
-                                <span>VAT: {formatCurrency(taxes.vat)}</span>
-                                <span>NHIL: {formatCurrency(taxes.nhil)}</span>
-                                <span>GETFund: {formatCurrency(taxes.getFund)}</span>
+                            <p className="text-xs text-primary-700 font-bold uppercase">Tax Breakdown Summary</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-primary-600">
+                                <span>Base: {formatCurrency(taxes.basePremium, form.currency)}</span>
+                                {taxes.levies.map(l => (
+                                    <span key={l.code}>{l.name}: {formatCurrency(l.amount, form.currency)}</span>
+                                ))}
+                                {taxes.cascading.map(t => (
+                                    <span key={t.code}>{t.name}: {formatCurrency(t.amount, form.currency)}</span>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -875,31 +1133,69 @@ export default function NewPolicyPage() {
             </div>
 
             {/* Fixed Navigation Footer (Compact) */}
-            <div className="flex-none flex items-center justify-between pt-3 mt-1 border-t border-surface-200 bg-background/95 backdrop-blur-md pb-1">
+            <div className="flex-none flex items-center justify-between pt-3 mt-1 border-t border-surface-200 bg-background/95 backdrop-blur-md pb-1 relative z-10">
                 <Button
                     variant="outline"
                     size="sm"
                     onClick={() => { setErrors(null); step > 1 ? setStep(step - 1) : router.back(); }}
                     disabled={step === 1}
-                    className={cn("shadow-sm bg-white h-9", step === 1 ? 'invisible' : '')}
+                    className={cn(
+                        "transition-all duration-300 shadow-sm bg-white hover:-translate-x-1 hover:shadow-md active:scale-95 h-9",
+                        step === 1 ? 'opacity-0 -translate-x-4 pointer-events-none' : 'opacity-100 translate-x-0'
+                    )}
                 >
                     Back
                 </Button>
 
-                {step < 5 ? (
-                    <Button variant="primary" size="sm" onClick={handleNext} className="shadow-md shadow-primary-500/10 px-8 h-9 font-bold">
-                        Next Step <ArrowRight size={14} className="ml-2" />
-                    </Button>
-                ) : (
-                    <div className="flex gap-3">
-                        <Button variant="outline" size="sm" onClick={handleSaveAsDraft} leftIcon={<Save size={12} />} className="shadow-sm bg-white h-9">
-                            Save as Draft
-                        </Button>
-                        <Button variant="primary" size="sm" onClick={handleNext} className="bg-success-600 hover:bg-success-700 border-success-600 shadow-md shadow-success-600/10 px-8 h-9 font-bold" isLoading={isSubmitting} disabled={isSubmitting}>
-                            Create Policy <Check size={14} className="ml-2" />
-                        </Button>
-                    </div>
-                )}
+                <AnimatePresence mode="popLayout">
+                    {step < 5 ? (
+                        <motion.div
+                            key="next"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                        >
+                            <Button 
+                                variant="primary" 
+                                size="sm" 
+                                onClick={handleNext} 
+                                className="shadow-md shadow-primary-500/10 px-8 h-9 font-bold transition-all hover:translate-x-1 active:scale-95 hover:shadow-lg hover:shadow-primary-500/20"
+                            >
+                                Next Step <ArrowRight size={14} className="ml-2" />
+                            </Button>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="submit"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.05 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+                            className="flex gap-3"
+                        >
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={handleSaveAsDraft} 
+                                leftIcon={<Save size={12} />} 
+                                className="shadow-sm bg-white h-9 transition-all hover:-translate-y-0.5 active:scale-95"
+                            >
+                                Save as Draft
+                            </Button>
+                            <Button 
+                                variant="primary" 
+                                size="sm" 
+                                onClick={handleNext} 
+                                className="bg-success-600 hover:bg-success-700 border-success-600 shadow-md shadow-success-600/20 px-8 h-9 font-bold transition-all hover:-translate-y-0.5 active:scale-95" 
+                                isLoading={isSubmitting} 
+                                disabled={isSubmitting}
+                            >
+                                Create Policy <Check size={14} className="ml-2" />
+                            </Button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </div>
         </div>
     );

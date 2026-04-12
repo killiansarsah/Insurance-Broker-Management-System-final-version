@@ -54,15 +54,20 @@ function mapApiTask(raw: Record<string, any>): Task {
     const priorityMap: Record<string, 'HOT' | 'WARM' | 'COLD'> = { HOT: 'HOT', WARM: 'WARM', COLD: 'COLD' };
     const statusMap: Record<string, 'PENDING' | 'UNDER_REVIEW' | 'REGISTERED'> = { PENDING: 'PENDING', UNDER_REVIEW: 'UNDER_REVIEW', REGISTERED: 'REGISTERED' };
 
-    let due = '';
+    let due = 'No date';
     if (raw.dueDate) {
         const d = new Date(raw.dueDate);
         const now = new Date();
         const todayStr = now.toDateString();
         const tomorrowStr = new Date(now.getTime() + 86400000).toDateString();
-        if (d.toDateString() === todayStr) due = 'Today';
-        else if (d.toDateString() === tomorrowStr) due = 'Tomorrow';
-        else due = d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' });
+        
+        // Determine if time should be shown (if it's not midnight)
+        const hasTime = d.getHours() !== 0 || d.getMinutes() !== 0;
+        const timeStr = hasTime ? ` @ ${d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : '';
+
+        if (d.toDateString() === todayStr) due = 'Today' + timeStr;
+        else if (d.toDateString() === tomorrowStr) due = 'Tomorrow' + timeStr;
+        else due = d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' }) + timeStr;
     }
 
     return {
@@ -144,12 +149,14 @@ export default function TasksPage() {
         type: string;
         description: string;
         due: string;
+        dueTime: string;
     }>({
         title: '',
         priority: 'WARM',
         type: '',
         description: '',
-        due: ''
+        due: new Date().toISOString().split('T')[0],
+        dueTime: '09:00'
     });
 
     const filteredTasks = taskList.filter(task => {
@@ -386,7 +393,9 @@ export default function TasksPage() {
         // Build dueDate only if a valid date string is provided
         let dueDate: string | undefined;
         if (newTask.due) {
-            const parsed = new Date(newTask.due);
+            // Combine date and time strings correctly
+            const dateTimeStr = newTask.dueTime ? `${newTask.due}T${newTask.dueTime}:00` : newTask.due;
+            const parsed = new Date(dateTimeStr);
             if (!isNaN(parsed.getTime())) {
                 dueDate = parsed.toISOString();
             }
@@ -402,7 +411,7 @@ export default function TasksPage() {
             {
                 onSuccess: () => {
                     setIsCreateModalOpen(false);
-                    setNewTask({ title: '', priority: 'WARM', type: '', description: '', due: '' });
+                    setNewTask({ title: '', priority: 'WARM', type: '', description: '', due: '', dueTime: '09:00' });
                     toast.success('New task created', { description: newTask.title });
                 },
                 onError: () => {
@@ -884,17 +893,31 @@ export default function TasksPage() {
                                 onChange={(v) => setNewTask({ ...newTask, priority: v as 'HOT' | 'WARM' | 'COLD' })}
                             />
                         </div>
-                        <div className="space-y-2">
-                            <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                <Calendar size={12} className="text-accent-500" />
-                                Due Date
-                            </label>
-                            <input
-                                type="date"
-                                value={newTask.due}
-                                onChange={(e) => setNewTask({ ...newTask, due: e.target.value })}
-                                className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
-                            />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                    <Calendar size={12} className="text-accent-500" />
+                                    Due Date
+                                </label>
+                                <input
+                                    type="date"
+                                    value={newTask.due}
+                                    onChange={(e) => setNewTask({ ...newTask, due: e.target.value })}
+                                    className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-xs font-black text-surface-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                    <Clock size={12} className="text-primary-500" />
+                                    Due Time
+                                </label>
+                                <input
+                                    type="time"
+                                    value={newTask.dueTime}
+                                    onChange={(e) => setNewTask({ ...newTask, dueTime: e.target.value })}
+                                    className="w-full px-4 py-3.5 rounded-[var(--radius-lg)] border border-surface-200 focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all font-bold text-surface-900 bg-white/50 dark:bg-slate-800/50 shadow-sm placeholder:text-surface-400"
+                                />
+                            </div>
                         </div>
                     </div>
 

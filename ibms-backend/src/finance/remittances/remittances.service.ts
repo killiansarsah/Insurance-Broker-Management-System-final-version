@@ -76,7 +76,7 @@ export class RemittancesService {
 
     // Validate carrier exists and belongs to tenant
     const carrier = await this.prisma.carrier.findFirst({
-      where: { id: dto.carrierId, tenantId },
+      where: { id: dto.carrierId },
     });
     if (!carrier) throw new NotFoundException('Carrier not found');
 

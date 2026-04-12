@@ -189,7 +189,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         </div>
                         <div>
                             <p className="text-xs text-surface-500">Insurer</p>
-                            <p className="font-medium text-surface-900">{policy.insurerName}</p>
+                            <p className="font-medium text-surface-900">{carrier?.name || carrier?.shortName || policy.insurerName}</p>
                         </div>
                         <div>
                             <p className="text-xs text-surface-500">Inception</p>
@@ -266,8 +266,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                             )}
                         </div>
                         <div>
-                            <p className="font-semibold text-surface-900">{policy.insurerName}</p>
-                            <p className="text-xs text-surface-500">{policy.nicClassOfBusiness} Dept</p>
+                            <p className="font-semibold text-surface-900">{carrier?.name || carrier?.shortName || policy.insurerName}</p>
+                            <p className="text-xs text-surface-500">{policy.nicClassOfBusiness || 'General'} Dept</p>
                         </div>
                     </div>
                     {carrier && (
@@ -357,7 +357,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                         ['NIC Class of Business', policy.nicClassOfBusiness || '—'],
                         ['Product', policy.productName || '—'],
                         ['Client', clientName],
-                        ['Insurer', policy.insurerName],
+                        ['Insurer', carrier?.name || carrier?.shortName || policy.insurerName],
                         ['Broker', policy.brokerName],
                         ['Sum Insured', formatCurrency(policy.sumInsured)],
                         ['Premium', formatCurrency(policy.premiumAmount)],

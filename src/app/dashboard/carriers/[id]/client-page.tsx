@@ -71,7 +71,7 @@ function CarrierHeroLogo({ carrier, size = 'large' }: { carrier: Carrier, size?:
 import { BackButton } from '@/components/ui/back-button';
 
 interface Carrier { id: string; name: string; shortName: string; logoUrl?: string; brandColor: string; slug: string; type?: string; revenueRank?: number; [key: string]: string | number | boolean | string[] | undefined; }
-interface CarrierProduct { id: string; name: string; category: string; carrierId: string; commissionRate?: number; description?: string; coverageSummary?: string[]; [key: string]: unknown; }
+interface CarrierProduct { id: string; name: string; insuranceType: string; carrierId: string; commissionRate?: number; description?: string; coverageSummary?: string[]; [key: string]: unknown; }
 
 export default function CarrierClientPage({ carrierId }: { carrierId: string }) {
     const router = useRouter();
@@ -82,22 +82,23 @@ export default function CarrierClientPage({ carrierId }: { carrierId: string }) 
 
     const groupedProducts = useMemo(() => {
         return (products || []).reduce((acc: Record<string, CarrierProduct[]>, product: CarrierProduct) => {
-            if (!acc[product.category]) acc[product.category] = [];
-            acc[product.category].push(product);
+            const key = product.insuranceType || 'OTHER';
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(product);
             return acc;
         }, {} as Record<string, CarrierProduct[]>);
     }, [products]);
 
     const motorProducts = useMemo(
         () => Object.entries(groupedProducts)
-            .filter(([category]) => category.toUpperCase().includes('MOTOR'))
+            .filter(([type]) => type.toUpperCase().includes('MOTOR'))
             .flatMap(([, items]) => items),
         [groupedProducts],
     );
 
     const otherProducts = useMemo(
         () => Object.entries(groupedProducts)
-            .filter(([category]) => !category.toUpperCase().includes('MOTOR'))
+            .filter(([type]) => !type.toUpperCase().includes('MOTOR'))
             .flatMap(([, items]) => items),
         [groupedProducts],
     );

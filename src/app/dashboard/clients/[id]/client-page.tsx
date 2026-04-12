@@ -32,6 +32,7 @@ import {
     Landmark,
     User,
     ChevronDown,
+    Plus,
 } from 'lucide-react';
 import { useClient, useUpdateKyc, useUpdateClient, usePolicies, useClaims, useInvoices, useCommissions, useDocuments, useCreateDocument } from '@/hooks/api';
 import { getClientDisplayName } from '@/lib/utils';
@@ -744,18 +745,22 @@ function PoliciesTab({ policies, router, clientId }: { policies: any[]; router: 
                     <p className="text-sm font-medium text-surface-800">No policies associated with this client.</p>
                     <p className="text-xs text-surface-500 mt-1 mb-6 max-w-sm">Create an insurance policy for this client to start tracking their premiums and coverages.</p>
                     <Link href={`/dashboard/policies/new?clientId=${clientId}`}>
-                        <Button variant="primary" className="shadow-lg shadow-primary-500/20" leftIcon={<FileText size={16} />}>
-                            Create Policy
-                        </Button>
+                        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                            <Button className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-xl shadow-primary-500/30 border-0 h-11 px-6 rounded-xl font-bold" leftIcon={<Shield className="animate-pulse" size={18} />}>
+                                Create Policy
+                            </Button>
+                        </motion.div>
                     </Link>
                 </div>
             ) : (
                 <div className="space-y-4">
                     <div className="flex justify-end">
                         <Link href={`/dashboard/policies/new?clientId=${clientId}`}>
-                            <Button variant="primary" size="sm" className="shadow-md shadow-primary-500/20" leftIcon={<FileText size={14} />}>
-                                Create Policy
-                            </Button>
+                            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                <Button size="sm" className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md shadow-primary-500/20 border-0 font-bold" leftIcon={<Shield className="animate-pulse" size={14} />}>
+                                    Create Policy
+                                </Button>
+                            </motion.div>
                         </Link>
                     </div>
                     <div className="overflow-x-auto">

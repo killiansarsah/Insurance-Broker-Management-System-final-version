@@ -41,14 +41,14 @@ export class CarrierProductsService {
     dto: CreateProductDto,
   ) {
     const carrier = await this.prisma.carrier.findFirst({
-      where: { id: carrierId, tenantId, deletedAt: null },
+      where: { id: carrierId, deletedAt: null },
     });
     if (!carrier) throw new NotFoundException('Carrier not found');
 
     const existing = await this.prisma.product.findUnique({
       where: {
-        tenantId_code: {
-          tenantId,
+        carrierId_code: {
+          carrierId,
           code: dto.code,
         },
       },
@@ -56,7 +56,7 @@ export class CarrierProductsService {
 
     if (existing) {
       throw new BadRequestException(
-        `Product with code ${dto.code} already exists for this tenant`,
+        `Product with code ${dto.code} already exists for this carrier`,
       );
     }
 
@@ -95,7 +95,7 @@ export class CarrierProductsService {
     let actualCarrierId = carrierIdOrSlug;
     if (!isUuid) {
       const c = await this.prisma.carrier.findFirst({
-        where: { tenantId, slug: carrierIdOrSlug, deletedAt: null },
+        where: { slug: carrierIdOrSlug, deletedAt: null },
       });
       if (!c) throw new NotFoundException('Carrier not found');
       actualCarrierId = c.id;
@@ -105,7 +105,6 @@ export class CarrierProductsService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.ProductWhereInput = {
-      tenantId,
       carrierId: actualCarrierId,
     };
 
@@ -154,11 +153,11 @@ export class CarrierProductsService {
 
     if (dto.code && dto.code !== product.code) {
       const existing = await this.prisma.product.findUnique({
-        where: { tenantId_code: { tenantId, code: dto.code } },
+        where: { carrierId_code: { carrierId, code: dto.code } },
       });
       if (existing)
         throw new BadRequestException(
-          `Product with code ${dto.code} already exists for this tenant`,
+          `Product with code ${dto.code} already exists for this carrier`,
         );
     }
 

@@ -351,7 +351,7 @@ async function main(): Promise<void> {
           website: carrier.website,
           licenseNumber: carrier.licenseNumber,
           logoUrl: carrier.logoUrl,
-          status: 'active',
+          status: 'ACTIVE',
           phone: `+23330${rand(1000000, 9999999)}`,
           email: `info@${carrier.slug}.com`,
           contactPerson: `${pick(ghanaFirstNames)} ${pick(ghanaLastNames)}`,
@@ -365,7 +365,7 @@ async function main(): Promise<void> {
       for (const pt of templates) {
         const code = `${carrier.shortName}-${pt.codeSuffix}`;
         const p = await prisma.product.upsert({
-          where: { tenantId_code: { tenantId: tenant.id, code } },
+          where: { carrierId_code: { carrierId: c.id, code } },
           update: {},
           create: {
             tenantId: tenant.id,

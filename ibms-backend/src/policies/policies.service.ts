@@ -19,6 +19,24 @@ import {
   ROLE_LEVEL,
 } from '../common/constants/role-hierarchy.js';
 
+// NIC Ghana Class of Business mapping (Act 1061 regulatory classification)
+const NIC_CLASS_MAP: Record<string, string> = {
+  MOTOR:                  'Motor Insurance',
+  FIRE:                   'Fire & Allied Perils',
+  MARINE:                 'Marine, Aviation & Transit',
+  AVIATION:               'Marine, Aviation & Transit',
+  LIABILITY:              'General Accident',
+  ENGINEERING:            'General Accident',
+  BONDS:                  'General Accident',
+  AGRICULTURE:            'General Accident',
+  PROFESSIONAL_INDEMNITY: 'General Accident',
+  OIL_GAS:               'General Accident',
+  TRAVEL:                 'Miscellaneous',
+  HEALTH:                 'Health Insurance',
+  LIFE:                   'Ordinary Life',
+  OTHER:                  'Miscellaneous',
+};
+
 @Injectable()
 export class PoliciesService {
   constructor(private readonly prisma: PrismaService) {}
@@ -147,7 +165,7 @@ export class PoliciesService {
     await this.assertClientWritableByActor(tenantId, userId, client);
 
     const carrier = await this.prisma.carrier.findUnique({
-      where: { id: dto.carrierId, tenantId },
+      where: { id: dto.carrierId },
     });
     if (!carrier) throw new NotFoundException('Carrier not found');
 
@@ -162,11 +180,23 @@ export class PoliciesService {
         const fallback = await this.prisma.product.findFirst({
           where: { carrierId: dto.carrierId },
         });
-        if (!fallback)
-          throw new NotFoundException(
-            'No products found for this carrier. Please add a product first.',
-          );
-        productId = fallback.id;
+        if (!fallback) {
+          // Auto-create a default product to prevent blocking
+          const createdProduct = await this.prisma.product.create({
+            data: {
+              tenantId,
+              carrierId: dto.carrierId,
+              name: `Default ${dto.insuranceType} Product`,
+              code: `DEF-${dto.insuranceType}-${Date.now().toString().slice(-4)}`,
+              insuranceType: dto.insuranceType,
+              commissionRate: 10.0,
+              isActive: true,
+            }
+          });
+          productId = createdProduct.id;
+        } else {
+          productId = fallback.id;
+        }
       } else {
         productId = autoProduct.id;
       }
@@ -199,7 +229,8 @@ export class PoliciesService {
           product: { connect: { id: productId } },
           broker: { connect: { id: userId } },
           insuranceType: dto.insuranceType,
-          policyType: 'NON_LIFE',
+          policyType: (['LIFE', 'HEALTH'].includes(dto.insuranceType) ? 'LIFE' : 'NON_LIFE'),
+          nicClassOfBusiness: NIC_CLASS_MAP[dto.insuranceType] ?? 'Miscellaneous',
           policyNumber,
           inceptionDate: new Date(dto.startDate),
           expiryDate: new Date(dto.endDate),
@@ -208,7 +239,7 @@ export class PoliciesService {
           premiumFrequency: dto.premiumFrequency,
           commissionRate: product.commissionRate,
           commissionAmount: commission,
-          status: 'DRAFT',
+          status: dto.status || 'ACTIVE',
           currency,
           coverageDetails: dto.coverageDetails,
           vehicleDetails: dto.vehicleDetails
@@ -632,6 +663,7 @@ export class PoliciesService {
         where: { id },
         data: {
           status: 'ACTIVE',
+          issueDate: new Date(), // G7: record the date the policy was formally bound
         },
       });
 
@@ -818,6 +850,8 @@ export class PoliciesService {
         data: {
           status: 'CANCELLED',
           expiryDate: effectiveDate,
+          cancellationDate: effectiveDate,         // G6: persist effective cancellation date
+          cancellationReason: (dto.reason as any) ?? 'OTHER', // G6: persist reason from DTO
         },
       });
 
@@ -917,6 +951,79 @@ export class PoliciesService {
       });
 
       return reinstated;
+    });
+  }
+
+  // ─── SUSPEND (ACTIVE → SUSPENDED) ──────────────────
+  async suspend(
+    id: string,
+    tenantId: string,
+    userId: string,
+    reason: string,
+  ) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id, tenantId },
+      include: { client: { select: { assignedBrokerId: true } } },
+    });
+    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
+    if (policy.status !== 'ACTIVE')
+      throw new BadRequestException('Only ACTIVE policies can be suspended');
+
+    return await this.prisma.$transaction(async (tx) => {
+      const suspended = await tx.policy.update({
+        where: { id },
+        data: { status: 'SUSPENDED' },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'policy.suspended',
+          entity: 'Policy',
+          entityId: id,
+          before: policy as unknown as Prisma.InputJsonObject,
+          after: { status: 'SUSPENDED', reason } as Prisma.InputJsonObject,
+        },
+      });
+
+      return suspended;
+    });
+  }
+
+  // ─── UNSUSPEND (SUSPENDED → ACTIVE) ────────────────
+  async unsuspend(id: string, tenantId: string, userId: string) {
+    const policy = await this.prisma.policy.findUnique({
+      where: { id, tenantId },
+      include: { client: { select: { assignedBrokerId: true } } },
+    });
+    if (!policy) throw new NotFoundException(`Policy with ID ${id} not found`);
+    await this.assertPolicyWritableByActor(tenantId, userId, policy);
+
+    if (policy.status !== 'SUSPENDED')
+      throw new BadRequestException('Only SUSPENDED policies can be unsuspended');
+
+    return await this.prisma.$transaction(async (tx) => {
+      const unsuspended = await tx.policy.update({
+        where: { id },
+        data: { status: 'ACTIVE' },
+      });
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'policy.unsuspended',
+          entity: 'Policy',
+          entityId: id,
+          before: policy as unknown as Prisma.InputJsonObject,
+          after: { status: 'ACTIVE' } as Prisma.InputJsonObject,
+        },
+      });
+
+      return unsuspended;
     });
   }
 

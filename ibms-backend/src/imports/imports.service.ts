@@ -1362,7 +1362,6 @@ export class ImportsService {
     if (carrierRef) {
       const carrier = await this.prisma.carrier.findFirst({
         where: {
-          tenantId,
           OR: [
             { id: carrierRef },
             { name: { contains: carrierRef, mode: 'insensitive' } },
@@ -1374,9 +1373,7 @@ export class ImportsService {
 
     // If no carrier found, try to use any existing carrier
     if (!carrierId) {
-      const defaultCarrier = await this.prisma.carrier.findFirst({
-        where: { tenantId },
-      });
+      const defaultCarrier = await this.prisma.carrier.findFirst();
       if (!defaultCarrier)
         throw new Error(`Row ${rowNum}: No carrier found in system`);
       carrierId = defaultCarrier.id;
@@ -1401,7 +1398,7 @@ export class ImportsService {
     let commRate = importedRate ?? 10;
     if (carrierId) {
       const product = await this.prisma.product.findFirst({
-        where: { tenantId, carrierId, insuranceType: insType },
+        where: { carrierId, insuranceType: insType },
         select: { commissionRate: true },
       });
       if (product) {
@@ -1414,6 +1411,7 @@ export class ImportsService {
       data: {
         tenantId,
         policyNumber,
+        status: 'ACTIVE',
         clientId: client.id,
         carrierId,
         brokerId: userId,

@@ -13,6 +13,7 @@ import {
   PremiumFrequency,
   RenewalStatus,
   LapseReason,
+  PolicyStatus,
 } from '@prisma/client';
 import { CreateVehicleDetailsDto } from './details/create-vehicle-details.dto';
 import { CreatePropertyDetailsDto } from './details/create-property-details.dto';
@@ -88,4 +89,8 @@ export class CreatePolicyDto {
   @IsEnum(LapseReason)
   @IsOptional()
   lapseReason?: LapseReason;
+
+  @IsEnum(PolicyStatus)
+  @IsOptional()
+  status?: PolicyStatus;
 }

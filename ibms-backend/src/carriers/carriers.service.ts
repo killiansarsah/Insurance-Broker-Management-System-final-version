@@ -74,8 +74,29 @@ export class CarriersService {
       'carrier.created',
       carrier.id,
       null,
-      carrier,
+      carrier as any,
     );
+
+    // Auto-create default products
+    const defaultProducts = [
+      { name: 'Motor (Comprehensive)', code: 'MOTOR-COMP', insuranceType: 'MOTOR', commissionRate: 10 },
+      { name: 'Motor (Third Party)', code: 'MOTOR-TP', insuranceType: 'MOTOR', commissionRate: 10 },
+      { name: 'Fire & Property', code: 'FIRE-STD', insuranceType: 'FIRE', commissionRate: 10 },
+    ];
+
+    await this.prisma.product.createMany({
+      data: defaultProducts.map((p) => ({
+        carrierId: carrier.id,
+        tenantId,
+        name: p.name,
+        code: p.code,
+        insuranceType: p.insuranceType as any,
+        commissionRate: p.commissionRate,
+        isActive: true,
+      })),
+      skipDuplicates: true,
+    });
+
     return carrier;
   }
 
@@ -84,7 +105,6 @@ export class CarriersService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.CarrierWhereInput = {
-      tenantId,
       deletedAt: null,
     };
 
@@ -129,7 +149,7 @@ export class CarriersService {
 
   async findOne(tenantId: string, idOrSlug: string) {
     const isUuid = idOrSlug.length === 36 && idOrSlug.includes('-');
-    const whereClause: any = { tenantId, deletedAt: null };
+    const whereClause: any = { deletedAt: null };
     if (isUuid) {
       whereClause.id = idOrSlug;
     } else {
@@ -200,5 +220,27 @@ export class CarriersService {
       updated,
     );
     return updated;
+  }
+
+  async remove(tenantId: string, userId: string, id: string) {
+    const carrier = await this.prisma.carrier.findFirst({
+      where: { id, tenantId, deletedAt: null },
+    });
+    if (!carrier) throw new NotFoundException('Carrier not found');
+
+    const updated = await this.prisma.carrier.update({
+      where: { id },
+      data: { deletedAt: new Date(), status: 'INACTIVE' },
+    });
+
+    await this.logAudit(
+      tenantId,
+      userId,
+      'carrier.deleted',
+      id,
+      carrier,
+      updated as any,
+    );
+    return { success: true };
   }
 }

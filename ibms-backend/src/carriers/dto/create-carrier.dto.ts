@@ -4,22 +4,26 @@ import {
   IsOptional,
   IsEmail,
   MinLength,
+  MaxLength,
   IsEnum,
 } from 'class-validator';
-import { CarrierType } from '@prisma/client';
+import { CarrierType, CarrierStatus } from '@prisma/client';
 
 export class CreateCarrierDto {
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
+  @MaxLength(100)
   name!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(50)
   shortName!: string;
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(100)
   slug!: string;
 
   @IsEnum(CarrierType)
@@ -30,9 +34,9 @@ export class CreateCarrierDto {
   @IsOptional()
   licenseNumber?: string;
 
-  @IsString()
+  @IsEnum(CarrierStatus)
   @IsOptional()
-  status?: string;
+  status?: CarrierStatus;
 
   @IsString()
   @IsOptional()

@@ -137,7 +137,7 @@ export function useBulkAssignPolicies() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: ({ policyIds, userId }: { policyIds: string[]; userId: string }) =>
-            apiClient.patch('/policies/bulk-assign', { policyIds, userId }),
+            apiClient.post('/renewals/bulk-assign', { policyIds, brokerId: userId }),
         onSuccess: () => qc.invalidateQueries({ queryKey: ['policies'] }),
     });
 }

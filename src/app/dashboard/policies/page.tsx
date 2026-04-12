@@ -33,6 +33,7 @@ import type { Policy, PolicyStatus, InsuranceType } from '@/types';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { AppLoader } from '@/components/ui/AppLoader';
+import { useAuthStore } from '@/stores/auth-store';
 
 const INSURANCE_TYPES: { label: string; value: InsuranceType }[] = [
     { label: 'Motor', value: 'MOTOR' },
@@ -196,6 +197,10 @@ export default function PoliciesPage() {
 
     const policies: any[] = (policiesData as any)?.items ?? (policiesData as any)?.data ?? (Array.isArray(policiesData) ? policiesData : []);
     
+    // Auth and permissions
+    const { hasPermission, hasRole } = useAuthStore();
+    const canBulkManagePolicies = hasPermission('policies.bulk') || hasRole(['WORKSPACE_OWNER', 'ADMINISTRATOR']);
+
     const [selectedPolicies, setSelectedPolicies] = useState<any[]>([]);
     const [showBulkAssignModal, setShowBulkAssignModal] = useState(false);
     const [showBulkRenewModal, setShowBulkRenewModal] = useState(false);
@@ -758,12 +763,16 @@ export default function PoliciesPage() {
                     <span className="text-sm font-semibold text-surface-700 dark:text-slate-300">Selected</span>
                 </div>
                 
-                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkAssignModal(true)}>
-                    Assign Officer
-                </Button>
-                <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkRenewModal(true)}>
-                    Send Renewals
-                </Button>
+                {canBulkManagePolicies && (
+                    <>
+                        <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkAssignModal(true)}>
+                            Assign Officer
+                        </Button>
+                        <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-surface-100 hover:text-primary-600 font-semibold text-xs h-9" onClick={() => setShowBulkRenewModal(true)}>
+                            Send Renewals
+                        </Button>
+                    </>
+                )}
                 <Button variant="ghost" size="sm" className="rounded-full text-surface-600 hover:bg-success-50 hover:text-success-600 font-semibold text-xs h-9" onClick={() => exportToExcel(selectedPolicies)}>
                     <Download size={14} className="mr-1.5" /> Export {selectedPolicies.length}
                 </Button>

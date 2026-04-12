@@ -111,10 +111,12 @@ export type CommissionStatus = 'PENDING' | 'PAID' | 'CLAWED_BACK';
 
 export type EndorsementType =
     | 'COVERAGE_CHANGE'
-    | 'COVERAGE_CHANGE'
     | 'SUM_INSURED_CHANGE'
-    | 'COVERAGE_CHANGE'
-    | 'cancellation';
+    | 'ENDORSEMENT_ADDITION'
+    | 'ENDORSEMENT_DELETION'
+    | 'CANCELLATION'
+    | 'REINSTATEMENT'
+    | 'OTHER';
 
 export type EndorsementStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
@@ -533,7 +535,7 @@ export interface ChatConversation {
     isOnline: boolean;
     type: 'direct' | 'group' | 'ai';
     linkedResourceId?: string;
-    linkedResourceType?: 'POLICY' | 'CLAIM' | 'complaint' | 'CLIENT';
+    linkedResourceType?: 'POLICY' | 'CLAIM' | 'COMPLAINT' | 'CLIENT';
 }
 
 export interface Document {

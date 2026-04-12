@@ -4,6 +4,7 @@ import {
   Patch,
   Post,
   Body,
+  Query,
   UseGuards,
   Request,
   UseInterceptors,
@@ -61,6 +62,13 @@ function imageFileFilter(
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
+
+  /** Public tax config endpoint for premium calculation */
+  @Get('tax-config')
+  @Roles('ADMINISTRATOR', 'AGENT')
+  getTaxConfig(@Query('insuranceType') insuranceType?: string) {
+    return this.settingsService.getTaxConfig(insuranceType);
+  }
 
   @Get()
   @Roles('ADMINISTRATOR', 'AGENT')

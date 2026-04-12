@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { CarriersService } from './carriers.service';
 import { CreateCarrierDto } from './dto/create-carrier.dto';
@@ -62,5 +63,11 @@ export class CarriersController {
       id,
       updateCarrierDto,
     );
+  }
+
+  @Delete(':id')
+  @Roles('ADMINISTRATOR')
+  remove(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.carriersService.remove(req.user.tenantId, req.user.sub, id);
   }
 }

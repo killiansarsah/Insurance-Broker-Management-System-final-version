@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   Moon,
   Sun,
+  Calculator,
 } from 'lucide-react';
 import { useUiStore } from '@/stores/ui-store';
 import { useAuthStore } from '@/stores/auth-store';
@@ -47,6 +48,7 @@ export function SuperAdminSidebar() {
       label: 'Revenue & Compliance',
       items: [
         { label: 'Subscriptions', href: '/super-admin/subscriptions', icon: CreditCard },
+        { label: 'Tax & Levy Engine', href: '/super-admin/tax-rules', icon: Calculator },
         { label: 'NIC DB Sync', href: '/super-admin/nic-monitoring', icon: ShieldAlert },
       ],
     },

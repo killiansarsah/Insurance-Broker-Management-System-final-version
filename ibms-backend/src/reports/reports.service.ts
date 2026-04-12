@@ -29,7 +29,6 @@ export class ReportsService {
     if (filters?.insurer) {
       const carrier = await this.prisma.carrier.findFirst({
         where: {
-          tenantId,
           name: { contains: filters.insurer, mode: 'insensitive' },
         },
       });

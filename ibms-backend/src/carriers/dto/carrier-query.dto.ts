@@ -1,8 +1,9 @@
-import { IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional, IsEnum } from 'class-validator';
 import { PaginationDto } from '../../common/dto/pagination.dto';
+import { CarrierStatus } from '@prisma/client';
 
 export class CarrierQueryDto extends PaginationDto {
-  @IsString()
+  @IsEnum(CarrierStatus)
   @IsOptional()
-  status?: string;
+  status?: CarrierStatus;
 }

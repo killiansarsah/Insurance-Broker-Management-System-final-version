@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 interface SelectOption {
     label: string | number;
     value: string | number;
+    icon?: React.ReactNode;
+    avatar?: { fallback: string, url?: string | null, color?: string | null };
 }
 
 interface CustomSelectProps {
@@ -69,24 +71,37 @@ export function CustomSelect({
                 )}
             >
                 <div className="flex items-center gap-2 truncate">
-                    {icon && <span className="shrink-0 opacity-60">{icon}</span>}
-                    {selectedOption ? (
-                        <>
-                            <span className="truncate">{selectedOption.label}</span>
-                        {clearable && (
-                            <X
-                                size={10}
-                                className="text-surface-400 hover:text-danger-500 shrink-0 ml-0.5"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onChange(null);
-                                    setOpen(false);
-                                }}
-                            />
-                        )}
-                        </>
-                    ) : (
-                        <span>{label || placeholder}</span>
+                    <div className="flex-1 text-left flex items-center gap-2 truncate">
+                        {icon && <span className="text-surface-400 group-hover:text-primary-500 transition-colors shrink-0">{icon}</span>}
+                        {selectedOption?.avatar ? (
+                            <div 
+                                className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[9px] text-white font-bold overflow-hidden" 
+                                style={{ backgroundColor: selectedOption.avatar.color || '#94a3b8' }}
+                            >
+                                {selectedOption.avatar.url ? (
+                                    <img src={selectedOption.avatar.url} alt={String(selectedOption.label)} className="w-full h-full object-cover" />
+                                ) : selectedOption.avatar.fallback}
+                            </div>
+                        ) : selectedOption?.icon ? (
+                            <span className="shrink-0">{selectedOption.icon}</span>
+                        ) : null}
+                        <span className={cn(
+                            "truncate transition-colors uppercase tracking-tight",
+                            !value ? "text-surface-400 font-medium" : "text-surface-700 dark:text-slate-300 font-bold"
+                        )}>
+                            {selectedOption ? selectedOption.label : (label || placeholder)}
+                        </span>
+                    </div>
+                    {selectedOption && clearable && (
+                        <X
+                            size={10}
+                            className="text-surface-400 hover:text-danger-500 shrink-0 ml-0.5"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onChange(null);
+                                setOpen(false);
+                            }}
+                        />
                     )}
                 </div>
                 <ChevronDown
@@ -130,7 +145,21 @@ export function CustomSelect({
                                                 : 'text-surface-600 dark:text-slate-400'
                                         )}
                                     >
-                                        <span>{opt.label}</span>
+                                        <div className="flex items-center gap-2.5 truncate">
+                                            {opt.avatar ? (
+                                                <div 
+                                                    className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-[9px] text-white font-bold overflow-hidden" 
+                                                    style={{ backgroundColor: opt.avatar.color || '#94a3b8' }}
+                                                >
+                                                    {opt.avatar.url ? (
+                                                        <img src={opt.avatar.url} alt={String(opt.label)} className="w-full h-full object-cover" />
+                                                    ) : opt.avatar.fallback}
+                                                </div>
+                                            ) : opt.icon ? (
+                                                <span className="shrink-0">{opt.icon}</span>
+                                            ) : null}
+                                            <span className="truncate">{opt.label}</span>
+                                        </div>
                                         {value === opt.value && <Check size={12} className="text-primary-500" />}
                                     </button>
                                 ))

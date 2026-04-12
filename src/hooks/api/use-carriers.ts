@@ -25,6 +25,15 @@ export function useCarriers(params?: Record<string, unknown>) {
     });
 }
 
+// Fetches all carriers (up to 200) for use in dropdowns — bypasses default pagination
+export function useAllCarriers() {
+    return useQuery({
+        queryKey: ['carriers', 'all'],
+        queryFn: () => apiClient.get<PaginatedResponse<CarrierData>>('/carriers', { limit: 200 }),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    });
+}
+
 export function useCarrier(id: string) {
     return useQuery({
         queryKey: ['carriers', id],

@@ -13,6 +13,75 @@ export function useTenantSettings() {
     });
 }
 
+// ─── TAX CONFIG (Dynamic Tax Engine) ────────────────
+export interface TaxRule {
+    id: string;
+    name: string;
+    code: string;
+    rate: string; // Decimal comes as string from API
+    type: string;
+    isCascading: boolean;
+    calculationOrder: number;
+    applicableTo: string[];
+    effectiveFrom: string;
+    effectiveTo: string | null;
+}
+
+export function useTaxConfig(insuranceType?: string) {
+    return useQuery({
+        queryKey: ['settings', 'tax-config', insuranceType],
+        queryFn: () => apiClient.get<TaxRule[]>(
+            `/settings/tax-config${insuranceType ? `?insuranceType=${insuranceType}` : ''}`
+        ),
+        staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    });
+}
+
+/**
+ * Calculate tax breakdown on the client side using fetched rules.
+ * Mirrors the backend TaxEngineService logic.
+ */
+export function calculateTaxBreakdown(basePremium: number, rules: TaxRule[]) {
+    const levies: { code: string; name: string; rate: number; amount: number }[] = [];
+    const cascading: { code: string; name: string; rate: number; amount: number }[] = [];
+
+    // Step 1: Non-cascading levies on base
+    for (const rule of rules) {
+        if (rule.isCascading) continue;
+        const rate = parseFloat(rule.rate);
+        const amount = rule.type === 'FLAT_FEE'
+            ? rate
+            : Math.round(basePremium * rate * 100) / 100;
+        levies.push({ code: rule.code, name: rule.name, rate, amount });
+    }
+
+    const totalLevies = levies.reduce((sum, l) => sum + l.amount, 0);
+
+    // Step 2: Cascading taxes on (base + levies)
+    const cascadingBase = basePremium + totalLevies;
+    for (const rule of rules) {
+        if (!rule.isCascading) continue;
+        const rate = parseFloat(rule.rate);
+        const amount = rule.type === 'FLAT_FEE'
+            ? rate
+            : Math.round(cascadingBase * rate * 100) / 100;
+        cascading.push({ code: rule.code, name: rule.name, rate, amount });
+    }
+
+    const totalCascading = cascading.reduce((sum, t) => sum + t.amount, 0);
+    const totalTax = totalLevies + totalCascading;
+
+    return {
+        basePremium,
+        levies,
+        totalLevies,
+        cascading,
+        totalCascading,
+        totalTax,
+        grossPremium: basePremium + totalTax,
+    };
+}
+
 export function useUpdateTenantSettings() {
     const qc = useQueryClient();
     return useMutation({

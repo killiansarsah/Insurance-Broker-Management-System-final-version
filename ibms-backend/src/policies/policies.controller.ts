@@ -129,6 +129,27 @@ export class PoliciesController {
     );
   }
 
+  @Post(':id/suspend')
+  @Roles('ADMINISTRATOR', 'MANAGER')
+  suspend(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+  ) {
+    return this.policiesService.suspend(
+      id,
+      req.user.tenantId,
+      req.user.sub,
+      reason ?? 'Administrative suspension',
+    );
+  }
+
+  @Post(':id/unsuspend')
+  @Roles('ADMINISTRATOR', 'MANAGER')
+  unsuspend(@Request() req: RequestWithUser, @Param('id') id: string) {
+    return this.policiesService.unsuspend(id, req.user.tenantId, req.user.sub);
+  }
+
   // ─── ENDORSEMENTS ─────────────────────────────────
 
   @Post(':policyId/endorsements')

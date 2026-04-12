@@ -84,11 +84,17 @@ CREATE POLICY tenant_isolation ON password_resets
 CREATE POLICY tenant_isolation ON audit_logs
   USING ("tenantId" = current_setting('app.current_tenant_id')::uuid);
 
-CREATE POLICY tenant_isolation ON carriers
-  USING ("tenantId" = current_setting('app.current_tenant_id')::uuid);
+-- Carriers: Publicly readable, but only owner can modify
+CREATE POLICY carrier_read_public ON carriers FOR SELECT USING (true);
+CREATE POLICY carrier_modify_own ON carriers FOR ALL 
+  USING ("tenantId" = current_setting('app.current_tenant_id')::uuid)
+  WITH CHECK ("tenantId" = current_setting('app.current_tenant_id')::uuid);
 
-CREATE POLICY tenant_isolation ON products
-  USING ("tenantId" = current_setting('app.current_tenant_id')::uuid);
+-- Products: Publicly readable, but only owner can modify
+CREATE POLICY product_read_public ON products FOR SELECT USING (true);
+CREATE POLICY product_modify_own ON products FOR ALL 
+  USING ("tenantId" = current_setting('app.current_tenant_id')::uuid)
+  WITH CHECK ("tenantId" = current_setting('app.current_tenant_id')::uuid);
 
 CREATE POLICY tenant_isolation ON clients
   USING ("tenantId" = current_setting('app.current_tenant_id')::uuid);

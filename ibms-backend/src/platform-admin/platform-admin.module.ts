@@ -6,9 +6,11 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
 // Services
 import { PlatformAuditService } from './services/platform-audit.service.js';
 import { SystemHealthService } from './services/system-health.service.js';
+import { TaxEngineService } from './services/tax-engine.service.js';
 
 // Controllers
 import { OverviewController } from './controllers/overview.controller.js';
+import { TaxRulesController } from './controllers/tax-rules.controller.js';
 import { SystemHealthController } from './controllers/system-health.controller.js';
 import { TenantManagementController } from './controllers/tenant-management.controller.js';
 import { UserManagementController } from './controllers/user-management.controller.js';
@@ -25,7 +27,7 @@ import { SettingsController } from './controllers/settings.controller.js';
 
 @Module({
   imports: [PrismaModule, AuthModule, NotificationsModule],
-  providers: [PlatformAuditService, SystemHealthService],
+  providers: [PlatformAuditService, SystemHealthService, TaxEngineService],
   controllers: [
     OverviewController,
     SystemHealthController,
@@ -41,7 +43,8 @@ import { SettingsController } from './controllers/settings.controller.js';
     AnnouncementsController,
     FeatureFlagsController,
     SettingsController,
+    TaxRulesController,
   ],
-  exports: [PlatformAuditService, SystemHealthService],
+  exports: [PlatformAuditService, SystemHealthService, TaxEngineService],
 })
 export class PlatformAdminModule {}

@@ -514,14 +514,17 @@ export default function RenewalsPage() {
     const { data: reportApiData } = useRenewalReport(90);
     const currentUserEmail = useAuthStore((s) => s.user?.email);
     const currentUserRole = useAuthStore((s) => s.user?.role) || '';
-    const canNotifyAll = ['WORKSPACE_OWNER', 'ADMINISTRATOR'].includes(currentUserRole);
+    const hasPermission = useAuthStore((s) => s.hasPermission);
+    const hasRole = useAuthStore((s) => s.hasRole);
+    // Use proper RBAC permission instead of checking role strings
+    const canNotifyAll = hasPermission('renewals.bulk') || hasRole(['WORKSPACE_OWNER', 'ADMINISTRATOR']);
 
     // Dynamic broker list for bulk assign
     const { data: usersData } = useUsers();
     const brokerOptions = useMemo(() => {
         const users = Array.isArray(usersData) ? usersData : (usersData as any)?.data ?? [];
         return users
-            .filter((u: any) => ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'MANAGER', 'SUPERVISOR', 'AGENT'].includes(u.role))
+            .filter((u: any) => u.role && ['WORKSPACE_OWNER', 'ADMINISTRATOR', 'MANAGER', 'SUPERVISOR', 'AGENT'].includes(u.role))
             .map((u: any) => ({ value: u.id, label: `${u.firstName} ${u.lastName}` }));
     }, [usersData]);
 
