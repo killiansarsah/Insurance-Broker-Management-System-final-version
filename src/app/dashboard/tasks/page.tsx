@@ -155,9 +155,24 @@ export default function TasksPage() {
         priority: 'WARM',
         type: '',
         description: '',
-        due: new Date().toISOString().split('T')[0],
-        dueTime: '09:00'
+        due: '',
+        dueTime: ''
     });
+
+    const handleOpenCreateModal = () => {
+        const now = new Date();
+        const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+        const localTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' });
+        setNewTask({
+            title: '',
+            priority: 'WARM',
+            type: '',
+            description: '',
+            due: localDate,
+            dueTime: localTime
+        });
+        setIsCreateModalOpen(true);
+    };
 
     const filteredTasks = taskList.filter(task => {
         if (activeFilters.priority !== 'all' && task.priority !== activeFilters.priority) return false;
@@ -411,7 +426,7 @@ export default function TasksPage() {
             {
                 onSuccess: () => {
                     setIsCreateModalOpen(false);
-                    setNewTask({ title: '', priority: 'WARM', type: '', description: '', due: '', dueTime: '09:00' });
+                    setNewTask(prev => ({ ...prev, title: '', description: '' })); // Reset just inputs, due/dueTime will reset on next open
                     toast.success('New task created', { description: newTask.title });
                 },
                 onError: () => {
@@ -480,7 +495,7 @@ export default function TasksPage() {
                         >
                             Filter {Object.values(activeFilters).some(v => v !== 'all') && '•'}
                         </Button>
-                        <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={() => setIsCreateModalOpen(true)}>Create Task</Button>
+                        <Button variant="primary" size="sm" leftIcon={<Plus size={16} />} onClick={handleOpenCreateModal}>Create Task</Button>
                     </div>
                 </div>
             </div>

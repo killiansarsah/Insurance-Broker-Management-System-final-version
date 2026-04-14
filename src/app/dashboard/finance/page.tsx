@@ -16,11 +16,13 @@ import {
     ArrowRight,
     TrendingUp,
     Wallet,
+    ShieldCheck,
+    X,
 } from 'lucide-react';
 import { Card, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/data-display/status-badge';
-import { useFinanceDashboard, useInvoices, useTransactions } from '@/hooks/api/use-finance';
+import { useFinanceDashboard, useInvoices, useTransactions, useApproveTransaction, useRejectTransaction } from '@/hooks/api/use-finance';
 import { useCommissions } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -113,6 +115,34 @@ export default function FinanceOverviewPage() {
     const recentInvoices = allInvoices.slice(-5).reverse();
     const recentPayments = allPayments.slice(-5).reverse();
     const overdueInvoices = allInvoices.filter((i: any) => i.status === 'OVERDUE');
+    const pendingTransactions = allPayments.filter((t: any) => t.paymentStatus === 'PENDING');
+
+    const approveMutation = useApproveTransaction();
+    const rejectMutation = useRejectTransaction();
+
+    const handleApprove = async (id: string) => {
+        try {
+            await approveMutation.mutateAsync(id);
+            toast.success('Transaction approved and payment confirmed.');
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to approve transaction');
+        }
+    };
+
+    const handleReject = async (id: string) => {
+        const reason = prompt('Reason for rejecting this transaction:');
+        if (reason === null) return;
+        if (reason.trim().length < 5) {
+            toast.error('Please provide a reason (at least 5 characters).');
+            return;
+        }
+        try {
+            await rejectMutation.mutateAsync({ id, reason });
+            toast.success('Transaction rejected.');
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to reject transaction');
+        }
+    };
 
     const KPI_STATS = [
         { label: 'Total Revenue', value: formatCurrency(totalRevenue), icon: TrendingUp, color: 'text-primary-600', bg: 'bg-primary-50' },
@@ -246,6 +276,20 @@ export default function FinanceOverviewPage() {
                 </div>
             )}
 
+            {/* Pending Transactions Alert */}
+            {pendingTransactions.length > 0 && (
+                <div className="bg-amber-50 border border-amber-200 rounded-[var(--radius-lg)] p-4 flex items-center gap-3">
+                    <Clock className="text-amber-600 shrink-0" size={18} />
+                    <div className="flex-1">
+                        <p className="text-sm font-bold text-amber-800">{pendingTransactions.length} transaction{pendingTransactions.length > 1 ? 's' : ''} awaiting approval</p>
+                        <p className="text-xs text-amber-700 mt-0.5">Total pending: {formatCurrency(pendingTransactions.reduce((s: number, t: any) => s + (Number(t.amount) || 0), 0))}</p>
+                    </div>
+                    <Link href="/dashboard/finance/payments">
+                        <Button variant="outline" size="sm" className="text-amber-700 border-amber-200 hover:bg-amber-100">Review</Button>
+                    </Link>
+                </div>
+            )}
+
             {/* KPI Strip */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 {KPI_STATS.map((stat, i) => (
@@ -323,12 +367,49 @@ export default function FinanceOverviewPage() {
                         {recentPayments.map((rec) => (
                             <div key={rec.id} className="flex items-center justify-between py-2.5 border-b border-surface-100 last:border-0">
                                 <div>
-                                    <span className="text-xs font-mono font-bold text-success-600">{rec.transactionNumber}</span>
-                                    <p className="text-xs text-surface-500 mt-0.5">{rec.clientName}</p>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-mono font-bold text-success-600">{rec.transactionNumber}</span>
+                                        {rec.paymentStatus === 'PENDING' ? (
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                                <Clock size={10} /> Pending
+                                            </span>
+                                        ) : rec.paymentStatus === 'PAID' ? (
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-success-100 text-success-700">
+                                                <CheckCircle2 size={10} /> Confirmed
+                                            </span>
+                                        ) : rec.paymentStatus === 'REFUNDED' ? (
+                                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-danger-100 text-danger-700">
+                                                <X size={10} /> Rejected
+                                            </span>
+                                        ) : null}
+                                    </div>
+                                    <p className="text-xs text-surface-500 mt-0.5">{rec.client?.firstName ? `${rec.client.firstName} ${rec.client.lastName}` : rec.clientName}</p>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-bold text-surface-900 tabular-nums">+{formatCurrency(rec.amount)}</p>
-                                    <p className="text-[10px] text-surface-400">{formatDate(rec.processedAt ?? rec.createdAt)}</p>
+                                <div className="flex items-center gap-2">
+                                    {rec.paymentStatus === 'PENDING' && (
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={() => handleApprove(rec.id)}
+                                                disabled={approveMutation.isPending}
+                                                className="p-1 rounded-md bg-success-50 text-success-600 hover:bg-success-100 transition-colors disabled:opacity-50"
+                                                title="Approve"
+                                            >
+                                                <ShieldCheck size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleReject(rec.id)}
+                                                disabled={rejectMutation.isPending}
+                                                className="p-1 rounded-md bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors disabled:opacity-50"
+                                                title="Reject"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        </div>
+                                    )}
+                                    <div className="text-right">
+                                        <p className="text-sm font-bold text-surface-900 tabular-nums">+{formatCurrency(rec.amount)}</p>
+                                        <p className="text-[10px] text-surface-400">{formatDate(rec.processedAt ?? rec.createdAt)}</p>
+                                    </div>
                                 </div>
                             </div>
                         ))}

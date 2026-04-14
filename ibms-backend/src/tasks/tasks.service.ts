@@ -266,8 +266,15 @@ export class TasksService {
           isCompleted: dto.isCompleted,
           completedAt: dto.isCompleted ? new Date() : null,
           status: dto.isCompleted ? 'REGISTERED' : 'PENDING',
+          // If moving from completed back to pending, reset reminder
+          ...(!dto.isCompleted && { reminderSent: false }),
         }),
-        ...(dto.status !== undefined && { status: dto.status }),
+        ...(dto.status !== undefined && { 
+          status: dto.status,
+          // If status moved away from REGISTERED, allow reminders again
+          ...(dto.status !== 'REGISTERED' && { reminderSent: false })
+        }),
+        ...(dto.dueDate !== undefined && { reminderSent: false }),
       },
       include: {
         assignedTo: {
@@ -322,6 +329,7 @@ export class TasksService {
         status: dto.status,
         isCompleted,
         completedAt: isCompleted ? new Date() : undefined,
+        ...(dto.status !== 'REGISTERED' && { reminderSent: false }),
       },
     });
 

@@ -385,10 +385,10 @@ export default function NewPolicyPage() {
             if (err) { setErrors(err); toast.error(err); return; }
             setIsSubmitting(true);
 
-            createPolicyMutation.mutate(createPayload('ACTIVE'), {
+            createPolicyMutation.mutate(createPayload('DRAFT'), {
                 onSuccess: () => {
                     setIsSubmitting(false);
-                    toast.success(`Policy created for ${form.clientName}`, { description: `${form.insuranceType} / ${form.carrierDisplayName}` });
+                    toast.success(`Policy created as Draft for ${form.clientName}`, { description: `Record a premium payment to activate this policy.` });
                     router.push('/dashboard/policies');
                 },
                 onError: (error: any) => {

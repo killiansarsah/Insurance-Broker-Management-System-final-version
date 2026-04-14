@@ -3,8 +3,11 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { InvoicesService } from '../finance/invoices/invoices.service';
 import { CreatePolicyDto } from './dto/create-policy.dto';
 import { UpdatePolicyDto } from './dto/update-policy.dto';
 import { PolicyQueryDto } from './dto/policy-query.dto';
@@ -39,7 +42,11 @@ const NIC_CLASS_MAP: Record<string, string> = {
 
 @Injectable()
 export class PoliciesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => InvoicesService))
+    private readonly invoicesService: InvoicesService,
+  ) {}
 
   private async assertClientWritableByActor(
     tenantId: string,
@@ -239,7 +246,7 @@ export class PoliciesService {
           premiumFrequency: dto.premiumFrequency,
           commissionRate: product.commissionRate,
           commissionAmount: commission,
-          status: dto.status || 'ACTIVE',
+          status: dto.status || 'DRAFT',
           currency,
           coverageDetails: dto.coverageDetails,
           vehicleDetails: dto.vehicleDetails
@@ -262,6 +269,20 @@ export class PoliciesService {
             : undefined,
         },
       });
+
+      // Auto-create Invoice for the premium amount (Spec compliance)
+      await this.invoicesService.create(tenantId, userId, {
+        clientId: dto.clientId,
+        policyId: createdPolicy.id,
+        amount: Number(dto.premiumAmount),
+        description: `Premium invoice for ${dto.insuranceType} insurance - Policy #${policyNumber}`,
+        dueDate: dto.startDate, // Due on inception by default
+      });
+
+      // If created as ACTIVE (Bypassing Draft), trigger bind logic 
+      if (createdPolicy.status === 'ACTIVE') {
+        await this.bind(createdPolicy.id, tenantId, userId, tx);
+      }
 
       await tx.auditLog.create({
         data: {
@@ -641,8 +662,15 @@ export class PoliciesService {
   }
 
   // ─── BIND (DRAFT → ACTIVE) ─────────────────────────
-  async bind(id: string, tenantId: string, userId: string) {
-    const policy = await this.prisma.policy.findUnique({
+  async bind(
+    id: string,
+    tenantId: string,
+    userId: string,
+    externalTx?: Prisma.TransactionClient,
+  ) {
+    const db = externalTx ?? this.prisma;
+
+    const policy = await db.policy.findUnique({
       where: { id, tenantId },
       include: {
         carrier: { select: { name: true } },
@@ -658,12 +686,12 @@ export class PoliciesService {
         'Only DRAFT or COVER_NOTE policies can be bound',
       );
 
-    return await this.prisma.$transaction(async (tx) => {
+    const executeBind = async (tx: Prisma.TransactionClient) => {
       const bound = await tx.policy.update({
         where: { id },
         data: {
           status: 'ACTIVE',
-          issueDate: new Date(), // G7: record the date the policy was formally bound
+          issueDate: new Date(),
         },
       });
 
@@ -697,7 +725,7 @@ export class PoliciesService {
         });
       }
 
-      await (tx as Prisma.TransactionClient).premiumInstallment.createMany({
+      await tx.premiumInstallment.createMany({
         data: installmentsData,
       });
 
@@ -708,7 +736,7 @@ export class PoliciesService {
       const nicLevy = commissionAmount * NIC_LEVY_RATE;
       const netCommission = commissionAmount - nicLevy;
 
-      await (tx as Prisma.TransactionClient).commission.create({
+      await tx.commission.create({
         data: {
           tenantId,
           policyId: id,
@@ -735,7 +763,7 @@ export class PoliciesService {
             expiryMs - daysBefore * 24 * 60 * 60 * 1000,
           );
           if (reminderDate > new Date()) {
-            await (tx as Prisma.TransactionClient).calendarEvent.create({
+            await tx.calendarEvent.create({
               data: {
                 tenantId,
                 title: `Renewal Reminder: ${policyNum} (${daysBefore}d)`,
@@ -754,7 +782,7 @@ export class PoliciesService {
       for (const inst of installmentsData) {
         const dueDate = new Date(inst.dueDate);
         if (dueDate > new Date()) {
-          await (tx as Prisma.TransactionClient).calendarEvent.create({
+          await tx.calendarEvent.create({
             data: {
               tenantId,
               title: `Premium Due: ${policy.policyNumber} #${inst.installmentNumber}`,
@@ -779,7 +807,13 @@ export class PoliciesService {
       });
 
       return bound;
-    });
+    };
+
+    if (externalTx) {
+      return executeBind(externalTx);
+    } else {
+      return this.prisma.$transaction(executeBind);
+    }
   }
 
   // ─── ISSUE COVER NOTE (DRAFT → COVER_NOTE) ─────────
@@ -1106,6 +1140,8 @@ export class PoliciesService {
             where: { id: policyId },
             data: { premiumAmount: newPremium },
           });
+          // Re-sync payment status as the total balance has changed
+          await this.syncPaymentStatus(policyId, tx);
         }
       }
 
@@ -1215,5 +1251,67 @@ export class PoliciesService {
     );
 
     return paid;
+  }
+
+  /**
+   * Centralized method to synchronize a policy's payment status based on recorded transactions.
+   * This is called by various services (Transactions, Invoices, Premium Financing) to ensure 
+   * the policy's paymentStatus (PAID, PARTIAL, PENDING) remains consistent with the ledger.
+   */
+  async syncPaymentStatus(policyId: string, tx?: Prisma.TransactionClient) {
+    const prisma = tx || this.prisma;
+
+    // Aggregate all successful PREMIUM transactions for this policy
+    const txns = await prisma.transaction.aggregate({
+      where: {
+        policyId: policyId,
+        paymentStatus: 'PAID',
+        type: 'PREMIUM',
+      },
+      _sum: { amount: true },
+    });
+
+    const totalPaid = Number(txns._sum.amount || 0);
+
+    // Fetch the policy to get the target premium amount
+    const policy = await prisma.policy.findUnique({
+      where: { id: policyId },
+      select: { premiumAmount: true, paymentStatus: true },
+    });
+
+    if (policy) {
+      const premium = Number(policy.premiumAmount || 0);
+      let newStatus: 'PAID' | 'PARTIAL' | 'PENDING' = 'PENDING';
+
+      if (totalPaid >= premium && premium > 0) {
+        newStatus = 'PAID';
+      } else if (totalPaid > 0) {
+        newStatus = 'PARTIAL';
+      }
+
+      // ─── AUTO-BINDING LOGIC ─────────────────────────────
+      // If we have any successful payment and policy is still DRAFT, activate it.
+      // This enforces the "Payment -> Active" workflow.
+      const fullPolicy = await prisma.policy.findUnique({
+        where: { id: policyId },
+        select: { status: true, tenantId: true, brokerId: true }
+      });
+
+      if (totalPaid > 0 && fullPolicy && (fullPolicy.status === 'DRAFT' || fullPolicy.status === 'COVER_NOTE')) {
+        // We use the internal bind logic. 
+        // Note: In a production system, we'd ensure 'userId' is passed correctly 
+        // to syncPaymentStatus or derived from the transaction. 
+        // For now, we use the brokerId from the policy.
+        await this.bind(policyId, fullPolicy.tenantId, fullPolicy.brokerId, prisma);
+      }
+
+      // Only update if the status has actually changed to save on db writes
+      if (policy.paymentStatus !== newStatus) {
+        await prisma.policy.update({
+          where: { id: policyId },
+          data: { paymentStatus: newStatus },
+        });
+      }
+    }
   }
 }

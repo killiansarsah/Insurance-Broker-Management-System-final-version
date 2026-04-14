@@ -409,7 +409,7 @@ export default function ClientProfilePage({ id }: { id: string }) {
                     )}
                     {activeTab === 'personal' && <PersonalInfoTab client={client} />}
                     {activeTab === 'policies' && <PoliciesTab policies={clientPolicies} router={router} clientId={client.id} />}
-                    {activeTab === 'claims' && <ClaimsTab claims={clientClaims} router={router} />}
+                    {activeTab === 'claims' && <ClaimsTab claims={clientClaims} router={router} clientId={client.id} />}
                     {activeTab === 'documents' && <DocumentsTab documents={clientDocuments} client={client} />}
                     {activeTab === 'communication' && <CommunicationTab client={client} />}
                     {activeTab === 'beneficiaries' && <BeneficiariesTab client={client} />}
@@ -805,7 +805,7 @@ function PoliciesTab({ policies, router, clientId }: { policies: any[]; router: 
 // ===========================================================
 // Claims Tab
 // ===========================================================
-function ClaimsTab({ claims: clientClaims, router }: { claims: any[]; router: any }) {
+function ClaimsTab({ claims: clientClaims, router, clientId }: { claims: any[]; router: any; clientId: string }) {
     const totalAmount = clientClaims.reduce((s: number, c: any) => s + c.claimAmount, 0);
     const settled = clientClaims.filter((c: any) => c.status === 'SETTLED' || c.status === 'CLOSED');
     const settledAmount = settled.reduce((s: number, c: any) => s + (c.settledAmount || c.claimAmount), 0);
@@ -825,13 +825,33 @@ function ClaimsTab({ claims: clientClaims, router }: { claims: any[]; router: an
 
             <GlassCard title={`Claims History (${clientClaims.length})`} icon={<Shield size={16} />}>
                 {clientClaims.length === 0 ? (
-                    <div className="text-center py-12 text-surface-400">
-                        <Shield size={32} className="mx-auto mb-3 opacity-40" />
-                        <p className="text-sm">No claims history for this client.</p>
+                    <div className="text-center py-12 flex flex-col items-center">
+                        <div className="w-16 h-16 bg-surface-100/50 rounded-full flex items-center justify-center mb-4">
+                            <Shield size={32} className="text-surface-300 mx-auto opacity-40" />
+                        </div>
+                        <p className="text-sm font-medium text-surface-800">No claims history for this client.</p>
+                        <p className="text-xs text-surface-500 mt-1 mb-6 max-w-sm">File an insurance claim for this client to start tracking progress.</p>
+                        <Link href={`/dashboard/claims/new?clientId=${clientId}`}>
+                            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                <Button className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-xl shadow-primary-500/30 border-0 h-11 px-6 rounded-xl font-bold" leftIcon={<Shield className="animate-pulse" size={18} />}>
+                                    Create Claim
+                                </Button>
+                            </motion.div>
+                        </Link>
                     </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left">
+                    <div className="space-y-4">
+                        <div className="flex justify-end">
+                            <Link href={`/dashboard/claims/new?clientId=${clientId}`}>
+                                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                                    <Button size="sm" className="bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white shadow-md shadow-primary-500/20 border-0 font-bold" leftIcon={<Shield className="animate-pulse" size={14} />}>
+                                        Create Claim
+                                    </Button>
+                                </motion.div>
+                            </Link>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
                             <thead>
                                 <tr className="border-b border-surface-200/50">
                                     <th className="px-4 py-3 text-xs font-semibold text-surface-500 uppercase tracking-wider">Claim #</th>
@@ -863,6 +883,7 @@ function ClaimsTab({ claims: clientClaims, router }: { claims: any[]; router: an
                                 ))}
                             </tbody>
                         </table>
+                    </div>
                     </div>
                 )}
             </GlassCard>

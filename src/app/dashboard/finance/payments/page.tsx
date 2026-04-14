@@ -16,15 +16,18 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/data-display/data-table';
 import { BackButton } from '@/components/ui/back-button';
-import { useTransactions } from '@/hooks/api/use-finance';
+import { useTransactions, useApproveTransaction, useRejectTransaction } from '@/hooks/api/use-finance';
 import { formatCurrency, formatDate, cn } from '@/lib/utils';
 import { CustomSelect } from '@/components/ui/select-custom';
+import { StatusBadge } from '@/components/data-display/status-badge';
 import Link from 'next/link';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
+import { X, ShieldCheck, Clock } from 'lucide-react';
 
 type Method = 'all' | 'BANK_TRANSFER' | 'MOBILE_MONEY' | 'CASH' | 'CHEQUE' | 'CARD';
+type Status = 'all' | 'PENDING' | 'PAID' | 'REFUNDED';
 
 const METHOD_LABELS: Record<string, string> = {
     BANK_TRANSFER: 'Bank Transfer',
@@ -52,36 +55,72 @@ const METHOD_COLORS: Record<string, string> = {
 
 export default function PaymentsPage() {
     const [methodFilter, setMethodFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
     const { data: transactionsData } = useTransactions();
     const allReceipts: any[] = ((transactionsData as any)?.items ?? (transactionsData as any)?.data ?? (Array.isArray(transactionsData) ? transactionsData : []));
 
-    const totalCollected = allReceipts.reduce((s: number, r: any) => s + (r.amount || 0), 0);
+    const totalCollected = allReceipts.filter(r => (r.paymentStatus || r.status) === 'PAID').reduce((s: number, r: any) => s + (r.amount || 0), 0);
+    const totalPending = allReceipts.filter(r => (r.paymentStatus || r.status) === 'PENDING').reduce((s: number, r: any) => s + (r.amount || 0), 0);
+    
     const currentMonthStart = (() => {
         const now = new Date();
         return new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
     })();
     const thisMonth = allReceipts
-        .filter((r: any) => r.dateReceived >= currentMonthStart)
+        .filter((r: any) => (r.processedAt || r.createdAt || '').startsWith(currentMonthStart.slice(0, 7)) && (r.paymentStatus || r.status) === 'PAID')
         .reduce((s: number, r: any) => s + (r.amount || 0), 0);
-    const avgPayment = allReceipts.length > 0 ? totalCollected / allReceipts.length : 0;
+    
+    const avgPayment = allReceipts.filter(r => (r.paymentStatus || r.status) === 'PAID').length > 0 
+        ? totalCollected / allReceipts.filter(r => (r.paymentStatus || r.status) === 'PAID').length 
+        : 0;
 
     const methodBreakdown = allReceipts.reduce((acc: Record<string, number>, r: any) => {
-        if (!acc[r.paymentMethod]) acc[r.paymentMethod] = 0;
-        acc[r.paymentMethod] += (r.amount || 0);
+        const m = r.paymentMethod || 'OTHER';
+        if (!acc[m]) acc[m] = 0;
+        acc[m] += (r.amount || 0);
         return acc;
     }, {} as Record<string, number>);
 
     const KPIS = [
         { label: 'Total Collected', value: formatCurrency(totalCollected), icon: CheckCircle2, color: 'text-success-600', bg: 'bg-success-50' },
+        { label: 'Pending Approval', value: formatCurrency(totalPending), icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
         { label: 'This Month', value: formatCurrency(thisMonth), icon: Calendar, color: 'text-primary-600', bg: 'bg-primary-50' },
-        { label: 'Avg. Payment', value: formatCurrency(avgPayment), icon: CreditCard, color: 'text-amber-600', bg: 'bg-amber-50' },
-        { label: 'Total Receipts', value: `${allReceipts.length} receipts`, icon: FileCheck, color: 'text-violet-600', bg: 'bg-violet-50' },
+        { label: 'Avg. Payment', value: formatCurrency(avgPayment), icon: CreditCard, color: 'text-violet-600', bg: 'bg-violet-50' },
     ];
 
-    const filtered = methodFilter === 'all'
-        ? allReceipts
-        : allReceipts.filter((r: any) => r.paymentMethod === methodFilter);
+    const filtered = allReceipts.filter((r: any) => {
+        const matchesMethod = methodFilter === 'all' || r.paymentMethod === methodFilter;
+        const matchesStatus = statusFilter === 'all' || (r.paymentStatus || r.status) === statusFilter;
+        return matchesMethod && matchesStatus;
+    });
+
+    const approveMutation = useApproveTransaction();
+    const rejectMutation = useRejectTransaction();
+
+    const handleApprove = async (id: string, ref: string) => {
+        try {
+            await approveMutation.mutateAsync(id);
+            toast.success(`Transaction ${ref} approved.`);
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to approve transaction');
+        }
+    };
+
+    const handleReject = async (id: string, ref: string) => {
+        const reason = prompt(`Reason for rejecting transaction ${ref}:`);
+        if (reason === null) return;
+        if (reason.trim().length < 5) {
+            toast.error('Please provide a valid reason.');
+            return;
+        }
+        try {
+            await rejectMutation.mutateAsync({ id, reason });
+            toast.success(`Transaction ${ref} rejected.`);
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to reject transaction');
+        }
+    };
 
     // --- Excel Export ---
     const handleExportExcel = async () => {
@@ -92,70 +131,36 @@ export default function PaymentsPage() {
 
             const sheet = workbook.addWorksheet('Payments Statement');
 
-            // Columns setup
             sheet.columns = [
-                { header: 'Receipt #', key: 'receiptNumber', width: 20 },
+                { header: 'TXN #', key: 'transactionNumber', width: 20 },
                 { header: 'Client', key: 'clientName', width: 25 },
                 { header: 'Policy #', key: 'policyNumber', width: 20 },
-                { header: 'Invoice #', key: 'invoiceNumber', width: 20 },
                 { header: 'Amount', key: 'amount', width: 15 },
                 { header: 'Method', key: 'paymentMethod', width: 20 },
+                { header: 'Status', key: 'status', width: 15 },
                 { header: 'Reference', key: 'reference', width: 20 },
-                { header: 'Date', key: 'dateReceived', width: 15 },
+                { header: 'Processed Date', key: 'date', width: 15 },
             ];
 
-            // Header formatting
             const headerRow = sheet.getRow(1);
-            headerRow.eachCell((cell, colNumber) => {
+            headerRow.eachCell((cell) => {
                 cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
-                // Using Emerald/Green for finances
-                let fillColor = 'FF10B981'; // Default Emerald
-                if (colNumber === 1 || colNumber === 6) fillColor = 'FFF97316'; // Orange for Ref/Method
-                if (colNumber === 2 || colNumber === 3) fillColor = 'FF3B82F6'; // Blue for Client/Policy
-
-                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: fillColor } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF10B981' } };
                 cell.alignment = { vertical: 'middle', horizontal: 'center' };
-                cell.border = {
-                    top: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                    left: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                    bottom: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                    right: { style: 'thin', color: { argb: 'FFCBD5E1' } },
-                };
             });
-            headerRow.height = 30;
 
-            // Rows
-            filtered.forEach((r, index) => {
-                const row = sheet.addRow({
-                    receiptNumber: r.receiptNumber,
-                    clientName: r.clientName,
-                    policyNumber: r.policyNumber || '—',
-                    invoiceNumber: r.invoiceNumber || '—',
+            filtered.forEach((r) => {
+                sheet.addRow({
+                    transactionNumber: r.transactionNumber || r.receiptNumber,
+                    clientName: r.client?.firstName ? `${r.client.firstName} ${r.client.lastName}` : r.clientName,
+                    policyNumber: r.policy?.policyNumber || r.policyNumber || '—',
                     amount: r.amount ?? 0,
                     paymentMethod: METHOD_LABELS[r.paymentMethod] || r.paymentMethod,
+                    status: r.paymentStatus || r.status,
                     reference: r.reference || '—',
-                    dateReceived: formatDate(r.dateReceived),
-                });
-
-                row.getCell('amount').numFmt = '#,##0.00';
-
-                if (index % 2 === 1) {
-                    row.eachCell((cell) => {
-                        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
-                    });
-                }
-
-                row.eachCell((cell) => {
-                    cell.border = {
-                        top: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-                        left: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-                        bottom: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-                        right: { style: 'thin', color: { argb: 'FFE2E8F0' } },
-                    };
+                    date: formatDate(r.processedAt || r.createdAt),
                 });
             });
-
-            sheet.views = [{ state: 'frozen', xSplit: 0, ySplit: 1 }];
 
             const buffer = await workbook.xlsx.writeBuffer();
             const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -176,7 +181,7 @@ export default function PaymentsPage() {
                     <BackButton href="/dashboard/finance" />
                     <div>
                         <h1 className="text-2xl font-bold text-surface-900 tracking-tight">Payments</h1>
-                        <p className="text-sm text-surface-500 mt-1">Complete record of all premium payments received.</p>
+                        <p className="text-sm text-surface-500 mt-1">Manage and approve premium collection transactions.</p>
                     </div>
                 </div>
                 <Button variant="outline" leftIcon={<Download size={16} />} onClick={handleExportExcel}>Export Statement</Button>
@@ -197,39 +202,15 @@ export default function PaymentsPage() {
                 ))}
             </div>
 
-            {/* Method Breakdown */}
-            <Card padding="lg">
-                <p className="text-xs font-bold text-surface-500 uppercase tracking-widest mb-4">Payment Method Breakdown</p>
-                <div className="flex flex-wrap gap-3">
-                    {Object.entries(methodBreakdown).map(([method, total]: [string, any]) => {
-                        const pct = Math.round((total / totalCollected) * 100);
-                        return (
-                            <div
-                                key={method}
-                                className="flex items-center gap-2 px-3 py-2 rounded-full bg-surface-50 border border-surface-100 cursor-pointer hover:shadow-sm transition-all"
-                                onClick={() => setMethodFilter(methodFilter === method ? 'all' : method)}
-                            >
-                                <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold', METHOD_COLORS[method])}>
-                                    {METHOD_ICONS[method]}
-                                    {METHOD_LABELS[method]}
-                                </span>
-                                <span className="text-sm font-bold text-surface-900 tabular-nums">{formatCurrency(total as number)}</span>
-                                <span className="text-xs text-surface-400">{pct}%</span>
-                            </div>
-                        );
-                    })}
-                </div>
-            </Card>
-
             {/* Payments Table */}
             <DataTable
                 data={filtered}
                 columns={[
                     {
-                        key: 'receiptNumber',
-                        label: 'Receipt #',
+                        key: 'transactionNumber',
+                        label: 'TXN #',
                         sortable: true,
-                        render: (r) => <span className="font-mono font-bold text-success-600 text-xs">{r.receiptNumber}</span>,
+                        render: (r) => <span className="font-mono font-bold text-primary-600 text-xs">{r.transactionNumber || r.receiptNumber}</span>,
                     },
                     {
                         key: 'clientName',
@@ -241,35 +222,20 @@ export default function PaymentsPage() {
                                 className="text-sm font-medium text-surface-900 hover:text-primary-600 transition-colors hover:underline underline-offset-2"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {r.clientName}
+                                {r.client?.firstName ? `${r.client.firstName} ${r.client.lastName}` : r.clientName}
                             </Link>
                         ),
                     },
                     {
                         key: 'policyNumber',
-                        label: 'Policy #',
-                        sortable: true,
-                        render: (r) => r.policyNumber ? (
+                        label: 'Policy',
+                        render: (r) => (r.policy?.policyNumber || r.policyNumber) ? (
                             <Link
                                 href={`/dashboard/policies/${r.policyId}`}
                                 className="text-xs font-mono text-primary-600 hover:underline underline-offset-2"
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {r.policyNumber}
-                            </Link>
-                        ) : <span className="text-surface-400 text-xs">—</span>,
-                    },
-                    {
-                        key: 'invoiceNumber',
-                        label: 'Invoice #',
-                        sortable: true,
-                        render: (r) => r.invoiceNumber ? (
-                            <Link
-                                href="/dashboard/finance/invoices"
-                                className="text-xs font-mono text-surface-600 hover:underline underline-offset-2"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                {r.invoiceNumber}
+                                {r.policy?.policyNumber || r.policyNumber}
                             </Link>
                         ) : <span className="text-surface-400 text-xs">—</span>,
                     },
@@ -282,43 +248,76 @@ export default function PaymentsPage() {
                     {
                         key: 'paymentMethod',
                         label: 'Method',
-                        sortable: true,
                         render: (r) => (
-                            <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold', METHOD_COLORS[r.paymentMethod])}>
+                            <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold', METHOD_COLORS[r.paymentMethod])}>
                                 {METHOD_ICONS[r.paymentMethod]}
                                 {METHOD_LABELS[r.paymentMethod]}
                             </span>
                         ),
                     },
                     {
-                        key: 'reference',
-                        label: 'Reference',
-                        sortable: true,
-                        render: (r) => <span className="text-xs font-mono text-surface-500">{r.reference}</span>,
+                        key: 'paymentStatus',
+                        label: 'Status',
+                        render: (r) => <StatusBadge status={r.paymentStatus || r.status} />,
                     },
                     {
-                        key: 'dateReceived',
+                        key: 'processedAt',
                         label: 'Date',
                         sortable: true,
-                        render: (r) => <span className="text-xs text-surface-500">{formatDate(r.dateReceived)}</span>,
+                        render: (r) => <span className="text-xs text-surface-500">{formatDate(r.processedAt || r.createdAt)}</span>,
+                    },
+                    {
+                        key: 'actions',
+                        label: '',
+                        render: (r) => (r.paymentStatus || r.status) === 'PENDING' && (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleApprove(r.id, r.transactionNumber || r.receiptNumber); }}
+                                    className="p-1.5 rounded-lg bg-success-50 text-success-600 hover:bg-success-100 transition-colors"
+                                    title="Approve Transaction"
+                                >
+                                    <ShieldCheck size={16} />
+                                </button>
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); handleReject(r.id, r.transactionNumber || r.receiptNumber); }}
+                                    className="p-1.5 rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                                    title="Reject Transaction"
+                                >
+                                    <X size={16} />
+                                </button>
+                            </div>
+                        ),
                     },
                 ]}
-                searchKeys={['receiptNumber', 'clientName', 'reference', 'policyNumber', 'invoiceNumber', 'amount', 'paymentMethod']}
+                searchKeys={['transactionNumber', 'receiptNumber', 'clientName', 'reference', 'policyNumber']}
                 emptyMessage="No payment records found."
                 headerActions={
-                    <CustomSelect
-                        label="Payment Method"
-                        options={[
-                            { label: 'All Methods', value: 'all' },
-                            { label: 'Bank Transfer', value: 'BANK_TRANSFER' },
-                            { label: 'Mobile Money', value: 'MOBILE_MONEY' },
-                            { label: 'Cash', value: 'CASH' },
-                            { label: 'Cheque', value: 'CHEQUE' },
-                            { label: 'Card', value: 'CARD' },
-                        ]}
-                        value={methodFilter}
-                        onChange={(v) => setMethodFilter(v as string)}
-                    />
+                    <div className="flex gap-3">
+                        <CustomSelect
+                            label="Method"
+                            options={[
+                                { label: 'All Methods', value: 'all' },
+                                { label: 'Bank Transfer', value: 'BANK_TRANSFER' },
+                                { label: 'Mobile Money', value: 'MOBILE_MONEY' },
+                                { label: 'Cash', value: 'CASH' },
+                                { label: 'Cheque', value: 'CHEQUE' },
+                                { label: 'Card', value: 'CARD' },
+                            ]}
+                            value={methodFilter}
+                            onChange={(v) => setMethodFilter(v as string)}
+                        />
+                        <CustomSelect
+                            label="Status"
+                            options={[
+                                { label: 'All Status', value: 'all' },
+                                { label: 'Pending', value: 'PENDING' },
+                                { label: 'Paid', value: 'PAID' },
+                                { label: 'Refunded', value: 'REFUNDED' },
+                            ]}
+                            value={statusFilter}
+                            onChange={(v) => setStatusFilter(v as string)}
+                        />
+                    </div>
                 }
             />
         </div>

@@ -952,23 +952,39 @@ async function main(): Promise<void> {
   // ════════════════════════════════════════════════════
   // ─── NOTIFICATIONS ─────────────────────────────────
   // ════════════════════════════════════════════════════
-  const notifTemplates = [
-    { title: 'Policy Renewal Due', message: 'Motor policy POL-2026-00012 expires in 7 days', type: NotificationType.RENEWAL },
-    { title: 'Claim Update', message: 'Claim CLM-2026-00003 has been assessed and approved', type: NotificationType.CLAIM },
-    { title: 'Commission Paid', message: 'Commission of GHS 2,450.00 has been credited', type: NotificationType.COMMISSION },
-    { title: 'New Lead Assigned', message: 'A new hot lead has been assigned to you', type: NotificationType.LEAD },
-    { title: 'Follow-up Reminder', message: 'Follow up with Kwame Mensah regarding fire insurance quote', type: NotificationType.FOLLOWUP },
-    { title: 'Compliance Alert', message: 'Annual NIC compliance report due in 5 days', type: NotificationType.COMPLIANCE },
-    { title: 'Payment Received', message: 'Premium payment of GHS 5,000.00 received', type: NotificationType.FINANCE },
-    { title: 'System Update', message: 'IBMS system maintenance scheduled for this weekend', type: NotificationType.SYSTEM },
-    { title: 'Document Expired', message: 'KYC document for client CLI-IND-0005 has expired', type: NotificationType.DOCUMENT },
-    { title: 'Approval Required', message: 'Policy endorsement requires your approval', type: NotificationType.APPROVAL },
-  ];
-
   for (const tenant of [sicTenant, enterpriseTenant]) {
+    // Fetch a sample of actual generated data for this tenant
+    const tenantClients = await prisma.client.findMany({ where: { tenantId: tenant.id }, take: 10 });
+    const tenantPolicies = await prisma.policy.findMany({ where: { tenantId: tenant.id }, take: 10 });
+    const tenantClaims = await prisma.claim.findMany({ where: { tenantId: tenant.id }, take: 10 });
+
     for (const userId of userMap[tenant.id]) {
-      const notifs = pickN(notifTemplates, rand(3, 7));
-      for (const n of notifs) {
+      const numNotifs = rand(3, 7);
+      for (let i = 0; i < numNotifs; i++) {
+        // Pick random real data
+        const c = pick(tenantClients);
+        const p = pick(tenantPolicies);
+        const cl = pick(tenantClaims);
+        
+        const cName = c?.type === 'INDIVIDUAL' ? `${c.firstName} ${c.lastName}` : c?.companyName || 'Unknown Client';
+        const pNum = p?.policyNumber || 'POL-N/A';
+        const clNum = cl?.claimNumber || 'CLM-N/A';
+
+        const dynamicTemplates = [
+          { title: 'Policy Renewal Due', message: `Motor policy ${pNum} expires in 7 days`, type: NotificationType.RENEWAL },
+          { title: 'Claim Update', message: `Claim ${clNum} has been assessed and approved`, type: NotificationType.CLAIM },
+          { title: 'Commission Paid', message: `Commission of GHS ${randDec(100, 5000)} has been credited`, type: NotificationType.COMMISSION },
+          { title: 'New Lead Assigned', message: `A new hot lead has been assigned to you`, type: NotificationType.LEAD },
+          { title: 'Follow-up Reminder', message: `Follow up with ${cName} regarding their insurance quote`, type: NotificationType.FOLLOWUP },
+          { title: 'Compliance Alert', message: 'Annual NIC compliance report due in 5 days', type: NotificationType.COMPLIANCE },
+          { title: 'Payment Received', message: `Premium payment of GHS ${randDec(1000, 10000)} received from ${cName}`, type: NotificationType.FINANCE },
+          { title: 'System Update', message: 'IBMS system maintenance scheduled for this weekend', type: NotificationType.SYSTEM },
+          { title: 'Document Expired', message: `KYC document for client ${cName} has expired`, type: NotificationType.DOCUMENT },
+          { title: 'Approval Required', message: `Policy endorsement for ${pNum} requires your approval`, type: NotificationType.APPROVAL },
+        ];
+
+        const n = pick(dynamicTemplates);
+
         await prisma.notification.create({
           data: {
             tenantId: tenant.id,

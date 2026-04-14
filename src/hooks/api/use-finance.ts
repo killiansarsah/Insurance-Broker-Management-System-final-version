@@ -66,7 +66,34 @@ export function useCreateTransaction() {
     const qc = useQueryClient();
     return useMutation({
         mutationFn: (data: Record<string, unknown>) => apiClient.post<TransactionData>('/transactions', data),
-        onSuccess: () => qc.invalidateQueries({ queryKey: ['transactions'] }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['transactions'] });
+            qc.invalidateQueries({ queryKey: ['policies'] });
+            qc.invalidateQueries({ queryKey: ['finance-dashboard'] });
+        },
+    });
+}
+export function useApproveTransaction() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: (id: string) => apiClient.post(`/transactions/${id}/approve`),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['transactions'] });
+            qc.invalidateQueries({ queryKey: ['finance-dashboard'] });
+            qc.invalidateQueries({ queryKey: ['invoices'] });
+            qc.invalidateQueries({ queryKey: ['policies'] });
+        },
+    });
+}
+export function useRejectTransaction() {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ id, reason }: { id: string; reason: string }) =>
+            apiClient.post(`/transactions/${id}/reject`, { reason }),
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: ['transactions'] });
+            qc.invalidateQueries({ queryKey: ['finance-dashboard'] });
+        },
     });
 }
 

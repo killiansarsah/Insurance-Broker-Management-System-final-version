@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
+import { PoliciesModule } from '../policies/policies.module';
 import { InvoicesService } from './invoices/invoices.service';
 import { InvoicesController } from './invoices/invoices.controller';
 import { TransactionsService } from './transactions/transactions.service';
@@ -15,8 +16,10 @@ import { FinanceDashboardController } from './dashboard/finance-dashboard.contro
 import { RemittancesService } from './remittances/remittances.service';
 import { RemittancesController } from './remittances/remittances.controller';
 
+import { NotificationsModule } from '../notifications/notifications.module';
+
 @Module({
-  imports: [PrismaModule],
+  imports: [PrismaModule, forwardRef(() => PoliciesModule), NotificationsModule],
   controllers: [
     InvoicesController,
     TransactionsController,

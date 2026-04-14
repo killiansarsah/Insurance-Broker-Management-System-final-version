@@ -63,9 +63,9 @@ export default function InvoicesPage() {
     const balance = (inv: any) => (inv.amount || 0) - (inv.amountPaid || 0);
 
     const totalInvoiced = allInvoices.reduce((s: number, i: any) => s + (i.amount || 0), 0);
-    const totalPaid = allInvoices.filter((i: any) => i.status === 'PAID').reduce((s: number, i: any) => s + (i.amountPaid || 0), 0);
-    const outstanding = allInvoices.filter((i: any) => i.status === 'OUTSTANDING').reduce((s: number, i: any) => s + (i.amount || 0), 0);
-    const overdueAmt = allInvoices.filter((i: any) => i.status === 'OVERDUE').reduce((s: number, i: any) => s + (i.amount || 0), 0);
+    const totalPaid = allInvoices.reduce((s: number, i: any) => s + (i.amountPaid || 0), 0);
+    const outstanding = allInvoices.filter((i: any) => i.status !== 'CANCELLED' && i.status !== 'PAID').reduce((s: number, i: any) => s + balance(i), 0);
+    const overdueAmt = allInvoices.filter((i: any) => i.status === 'OVERDUE').reduce((s: number, i: any) => s + balance(i), 0);
 
     const KPIS = [
         { label: 'Total Invoiced', value: formatCurrency(totalInvoiced), icon: FileText, color: 'text-primary-600', bg: 'bg-primary-50' },

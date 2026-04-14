@@ -89,6 +89,12 @@ export class ClientsController {
     res.send(fileBuffer);
   }
 
+  @Get('metrics')
+  @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
+  getMetrics(@Request() req: RequestWithUser) {
+    return this.clientsService.getMetrics(req.user.tenantId, req.user.sub);
+  }
+
   @Get(':id')
   @Roles('ADMINISTRATOR', 'AGENT', 'SUPERVISOR')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {

@@ -50,7 +50,7 @@ import { BackButton } from '@/components/ui/back-button';
 import type { Policy } from '@/types';
 import { usePolicy, useClaims, useCarrier, useDocuments, useCreateEndorsement, useCancelPolicy } from '@/hooks/api';
 import { toast } from 'sonner';
-import { usePaymentStore } from '@/stores/payment-store';
+import { useTransactions } from '@/hooks/api/use-finance';
 import { generateReceipt } from '@/lib/generate-receipt';
 
 const RecordPaymentModal = dynamic(
@@ -94,7 +94,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     const [showDocUploadModal, setShowDocUploadModal] = useState(false);
     const [localDocuments, setLocalDocuments] = useState<any[]>([]);
 
-    const { transactions } = usePaymentStore();
+    const { data: txnData } = useTransactions({ policyId });
 
     const { data: policyRaw, isLoading: policyLoading } = usePolicy(policyId);
     const policy = policyRaw as any;
@@ -103,7 +103,21 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
     const insurerId = (policy?.insurerId || policy?.carrierId || '') as string;
     const { data: carrierRaw } = useCarrier(insurerId);
     const carrier = carrierRaw as any;
-    const policyTransactions = useMemo(() => transactions.filter(t => t.policyId === policyId), [transactions, policyId]);
+    const policyTransactions: any[] = useMemo(() => {
+        const items = (txnData as any)?.items ?? (Array.isArray(txnData) ? txnData : []);
+        return items;
+    }, [txnData]);
+
+    const financialMetrics = useMemo(() => {
+        const totalPaid = policyTransactions
+            .filter(t => ['SUCCESSFUL', 'COMPLETED', 'PAID', 'APPROVED'].includes(t.status || t.paymentStatus))
+            .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+        
+        const premium = Number(policy?.premiumAmount || 0);
+        const outstanding = Math.max(0, premium - totalPaid);
+        
+        return { totalPaid, outstanding };
+    }, [policyTransactions, policy?.premiumAmount]);
 
     const clientName = policy?.client?.companyName || 
         (policy?.client?.firstName ? `${policy.client.firstName} ${policy.client?.lastName || ''}`.trim() : null) || 
@@ -582,8 +596,8 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 </Card>
                 <Card padding="md" className="text-center">
                     <p className="text-xs text-surface-500 mb-1">Outstanding</p>
-                    <p className={cn('font-bold text-lg', (policy.outstandingBalance ?? 0) > 0 ? 'text-danger-600' : 'text-success-600')}>
-                        {formatCurrency(policy.outstandingBalance ?? 0)}
+                    <p className={cn('font-bold text-lg', financialMetrics.outstanding > 0 ? 'text-danger-600' : 'text-success-600')}>
+                        {formatCurrency(financialMetrics.outstanding)}
                     </p>
                 </Card>
             </div>
@@ -677,18 +691,18 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                                 </tr>
                             </thead>
                             <tbody>
-                                {policyTransactions.map((txn) => (
+                                {policyTransactions.map((txn: any) => (
                                     <tr key={txn.id} className="border-b border-surface-50 last:border-0 hover:bg-surface-50/50">
-                                        <td className="px-6 py-3 font-mono text-xs font-medium text-surface-900">{txn.reference}</td>
+                                        <td className="px-6 py-3 font-mono text-xs font-medium text-surface-900">{txn.reference || txn.transactionNumber}</td>
                                         <td className="px-6 py-3 text-right font-semibold text-success-700 tabular-nums">
                                             +{formatCurrency(txn.amount)}
                                         </td>
                                         <td className="px-6 py-3 capitalize text-surface-600">
-                                            {txn.method.replace(/_/g, ' ')}
+                                            {(txn.paymentMethod || txn.method || '').replace(/_/g, ' ')}
                                             {txn.momoNetwork ? ` (${txn.momoNetwork.toUpperCase()})` : ''}
                                         </td>
                                         <td className="px-6 py-3 text-center">
-                                            <StatusBadge status={txn.status} />
+                                            <StatusBadge status={txn.paymentStatus || txn.status} />
                                         </td>
                                         <td className="px-6 py-3 text-xs text-surface-500">
                                             {formatDate(txn.processedAt || txn.createdAt)}
@@ -1253,6 +1267,15 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 >
                     Cancel
                 </Button>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-success-600 hover:text-success-700 hover:border-success-200"
+                    leftIcon={<DollarSign size={16} />}
+                    onClick={() => setShowPaymentModal(true)}
+                >
+                    Record Payment
+                </Button>
                 <div className="w-px h-6 bg-surface-200 mx-1" />
                 <Button
                     variant="ghost"
@@ -1315,7 +1338,7 @@ export default function PolicyDetailClient({ policyId }: { policyId: string }) {
                 policyNumber={policy.policyNumber}
                 clientId={policy.clientId}
                 clientName={clientName}
-                outstandingBalance={policy.outstandingBalance ?? 0}
+                outstandingBalance={financialMetrics.outstanding}
                 currency={policy.currency}
             />
             <UploadDocumentModal

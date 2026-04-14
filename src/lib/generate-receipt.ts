@@ -24,7 +24,7 @@ function escapeHtml(str: string): string {
  */
 export function generateReceipt(txn: Transaction) {
     const dateStr = escapeHtml(format(new Date(txn.processedAt || txn.createdAt), 'dd MMMM yyyy, h:mm a'));
-    const receiptNumber = escapeHtml(`RCT-${txn.id.replace('TXN-', '')}`);
+    const receiptNumber = escapeHtml(txn.transactionNumber || `RCT-${txn.id.substring(0, 8).toUpperCase()}`);
 
     const html = `
 <!DOCTYPE html>

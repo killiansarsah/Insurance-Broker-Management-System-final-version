@@ -4,11 +4,11 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
 import { MoMoPaymentForm } from '@/components/forms/momo-payment-form';
-import { usePaymentStore } from '@/stores/payment-store';
 import { formatCurrency, cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { generateReceipt } from '@/lib/generate-receipt';
 import { useCreateTransaction } from '@/hooks/api/use-finance';
+import { useQueryClient } from '@tanstack/react-query';
 import type { PaymentMethod, MoMoNetwork, Transaction } from '@/types';
 import {
     CreditCard,
@@ -49,8 +49,8 @@ export function RecordPaymentModal({
     outstandingBalance,
     currency = 'GHS',
 }: RecordPaymentModalProps) {
-    const { addTransaction } = usePaymentStore();
     const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null);
+    const queryClient = useQueryClient();
 
     const [step, setStep] = useState<'method' | 'details' | 'confirm' | 'success'>('method');
     const [method, setMethod] = useState<PaymentMethod>('MOBILE_MONEY');
@@ -144,27 +144,39 @@ export function RecordPaymentModal({
                 ...(method === 'CHEQUE' && { chequeNumber }),
             };
 
-            const result = await createTransaction.mutateAsync(payload);
+            const result = await createTransaction.mutateAsync(payload) as any;
 
+            // Use the actual backend result for the success screen
             const txn: Transaction = {
-                id: (result as any)?.id || `TXN-${Date.now().toString(36).toUpperCase()}`,
-                policyId,
-                policyNumber,
-                clientId,
-                clientName,
-                amount: parsedAmount,
-                currency,
-                status: 'PAID',
-                method,
-                momoNetwork: method === 'MOBILE_MONEY' ? momoNetwork : undefined,
-                phoneNumber: method === 'MOBILE_MONEY' ? phoneNumber : undefined,
-                reference,
-                description,
-                processedAt: new Date().toISOString(),
-                createdAt: new Date().toISOString(),
+                id: result.id,
+                transactionNumber: result.transactionNumber,
+                policyId: result.policyId || policyId,
+                policyNumber: result.policy?.policyNumber || policyNumber,
+                clientId: result.clientId || clientId,
+                clientName: result.client?.firstName 
+                    ? `${result.client.firstName} ${result.client.lastName || ''}`.trim() 
+                    : clientName,
+                amount: Number(result.amount) || parsedAmount,
+                currency: result.currency || currency,
+                status: result.paymentStatus || result.status || 'PAID',
+                method: result.paymentMethod || method,
+                momoNetwork: result.momoNetwork,
+                phoneNumber: result.momoPhone,
+                reference: result.reference || reference,
+                description: result.notes || result.description || description,
+                processedAt: result.processedAt || new Date().toISOString(),
+                createdAt: result.createdAt || new Date().toISOString(),
             };
 
-            addTransaction(txn);
+            // Invalidate queries so that UI refreshes with new data
+            // We do this immediately to trigger background fetches
+            await Promise.all([
+                queryClient.invalidateQueries({ queryKey: ['transactions'] }),
+                queryClient.invalidateQueries({ queryKey: ['policies'] }),
+                queryClient.invalidateQueries({ queryKey: ['finance-dashboard'] }),
+                queryClient.invalidateQueries({ queryKey: ['policy', policyId] }),
+            ]);
+
             setLastTransaction(txn);
             setStep('success');
         } catch (error: any) {
@@ -441,7 +453,7 @@ export function RecordPaymentModal({
                         <div>
                             <h3 className="text-xl font-bold text-surface-900">Payment Recorded</h3>
                             <p className="text-sm text-surface-500 mt-1">
-                                {formatCurrency(parsedAmount)} received from {clientName}
+                                {formatCurrency(lastTransaction?.amount || parsedAmount)} received from {clientName}
                             </p>
                         </div>
                         <div className="flex gap-3">

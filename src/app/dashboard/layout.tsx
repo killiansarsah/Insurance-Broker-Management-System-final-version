@@ -10,6 +10,7 @@ import { ErrorBoundary } from '@/components/ui/error-boundary';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { useProfileStore } from '@/stores/profile-store';
 import { useTenantSettings, useProfile } from '@/hooks/api/use-settings';
+import { SystemAlertManager } from '@/components/features/system-alert-manager';
 
 function GlobalHydrator() {
     const { data: tenant } = useTenantSettings();
@@ -69,6 +70,7 @@ export default function DashboardLayout({
     return (
         <ProtectedRoute>
             <GlobalHydrator />
+            <SystemAlertManager />
             <div className="min-h-screen bg-transparent">
                 <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:rounded-lg focus:bg-primary-600 focus:text-white focus:text-sm focus:font-semibold focus:shadow-lg">
                     Skip to main content

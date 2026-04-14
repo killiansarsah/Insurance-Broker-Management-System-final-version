@@ -12,6 +12,7 @@ import { TransactionsService } from './transactions.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { TransactionQueryDto } from './dto/transaction-query.dto';
 import { VoidTransactionDto } from './dto/void-transaction.dto';
+import { RejectTransactionDto } from './dto/reject-transaction.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -59,6 +60,34 @@ export class TransactionsController {
   @Roles('ADMINISTRATOR', 'AGENT')
   findOne(@Request() req: RequestWithUser, @Param('id') id: string) {
     return this.transactionsService.findOne(id, req.user.tenantId, req.user.sub);
+  }
+
+  @Post(':id/approve')
+  @Roles('SUPERVISOR')
+  approveTransaction(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+  ) {
+    return this.transactionsService.approve(
+      id,
+      req.user.tenantId,
+      req.user.sub,
+    );
+  }
+
+  @Post(':id/reject')
+  @Roles('SUPERVISOR')
+  rejectTransaction(
+    @Request() req: RequestWithUser,
+    @Param('id') id: string,
+    @Body() dto: RejectTransactionDto,
+  ) {
+    return this.transactionsService.reject(
+      id,
+      req.user.tenantId,
+      req.user.sub,
+      dto.reason,
+    );
   }
 
   @Post(':id/void')

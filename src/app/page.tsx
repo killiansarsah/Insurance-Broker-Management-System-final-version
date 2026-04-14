@@ -132,6 +132,20 @@ export default function LandingPage() {
             animate();
         }
 
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            if (enableHeavyEffects) {
+              window.removeEventListener('mousemove', handleMouseMove);
+            }
+            cancelAnimationFrame(pId);
+            cancelAnimationFrame(cId);
+        };
+    }, []);
+
+    // Dedicated effect for reveal animations - triggered after deferred content renders
+    useEffect(() => {
+        if (!showDeferredContent) return;
+
         const observer = new IntersectionObserver(entries => {
             entries.forEach(e => {
                 if (e.isIntersecting) {
@@ -139,9 +153,22 @@ export default function LandingPage() {
                     observer.unobserve(e.target);
                 }
             });
-        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
         
-        document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+        // Use a small timeout to ensure DOM has painted the deferred content
+        const timer = setTimeout(() => {
+          document.querySelectorAll('.reveal, .reveal-left, .reveal-right').forEach(el => observer.observe(el));
+        }, 100);
+
+        return () => {
+          observer.disconnect();
+          clearTimeout(timer);
+        };
+    }, [showDeferredContent]);
+
+    // Stats counter effect
+    useEffect(() => {
+        if (!showDeferredContent) return;
 
         const animateCounter = (key: string, target: number, dur: number) => {
             const start = Date.now();
@@ -168,17 +195,8 @@ export default function LandingPage() {
         const statEl = document.querySelector('.stats-section');
         if (statEl) statObserver.observe(statEl);
 
-        return () => {
-            window.removeEventListener('scroll', handleScroll);
-            if (enableHeavyEffects) {
-              window.removeEventListener('mousemove', handleMouseMove);
-            }
-            cancelAnimationFrame(pId);
-            cancelAnimationFrame(cId);
-            observer.disconnect();
-            statObserver.disconnect();
-        };
-    }, []);
+        return () => statObserver.disconnect();
+    }, [showDeferredContent]);
 
     const submitDemo = async () => {
         const input = document.getElementById('ctaEmail') as HTMLInputElement;

@@ -1,6 +1,8 @@
 import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
+  Inject,
+  forwardRef,
   NotFoundException,
   BadRequestException,
   Logger,
@@ -15,12 +17,17 @@ import { randomBytes } from 'crypto';
 import {
   ROLE_LEVEL,
 } from '../../common/constants/role-hierarchy.js';
+import { PoliciesService } from '../../policies/policies.service';
 
 @Injectable()
 export class InvoicesService {
   private readonly logger = new Logger(InvoicesService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => PoliciesService))
+    private readonly policiesService: PoliciesService,
+  ) {}
 
   private async generateInvoiceNumber(tenantId: string): Promise<string> {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
@@ -354,6 +361,11 @@ export class InvoicesService {
         datePaid: fullyPaid ? new Date() : undefined,
       },
     });
+
+    // If invoice is linked to a policy, sync policy status
+    if (invoice.policyId) {
+      await this.policiesService.syncPaymentStatus(invoice.policyId);
+    }
   }
 
   // ─── REVERSE PAYMENT (called on void) ──────────────
@@ -372,6 +384,11 @@ export class InvoicesService {
         datePaid: null,
       },
     });
+
+    // If invoice is linked to a policy, sync policy status
+    if (invoice.policyId) {
+      await this.policiesService.syncPaymentStatus(invoice.policyId);
+    }
   }
 
   // ─── CRON: Mark overdue ─────────────────────────────

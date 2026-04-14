@@ -347,6 +347,116 @@ export class RenewalsService {
     );
   }
 
+  // ─── OVERDUE INSTALLMENTS (daily at 1 AM) ────────────
+  @Cron('0 1 * * *')
+  async handleOverdueInstallments() {
+    this.logger.log('Running daily overdue installment check...');
+    const now = new Date();
+
+    const result = await this.prisma.premiumInstallment.updateMany({
+      where: {
+        status: 'PENDING',
+        dueDate: { lt: now },
+      },
+      data: { status: 'OVERDUE' },
+    });
+
+    if (result.count > 0) {
+      this.logger.log(
+        `Marked ${result.count} installments as OVERDUE.`,
+      );
+    }
+  }
+
+  // ─── AUTO-LAPSE (daily at 2 AM) ─────────────────────
+  @Cron('0 2 * * *')
+  async handleNonPaymentLapse() {
+    this.logger.log('Running daily non-payment lapse check...');
+    const gracePeriodDays = 30;
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - gracePeriodDays);
+
+    // Find ACTIVE policies with at least one installment that has been
+    // OVERDUE for longer than the grace period
+    const policiesToLapse = await this.prisma.policy.findMany({
+      where: {
+        status: 'ACTIVE',
+        installments: {
+          some: {
+            status: 'OVERDUE',
+            dueDate: { lt: cutoffDate },
+          },
+        },
+      },
+      include: {
+        client: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            companyName: true,
+          },
+        },
+        broker: {
+          select: { email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+
+    if (policiesToLapse.length === 0) return;
+
+    // Bulk update to LAPSED
+    const policyIds = policiesToLapse.map((p) => p.id);
+    await this.prisma.policy.updateMany({
+      where: { id: { in: policyIds } },
+      data: { status: 'LAPSED' },
+    });
+
+    // Create audit logs
+    await this.prisma.auditLog.createMany({
+      data: policiesToLapse.map((p) => ({
+        tenantId: p.tenantId,
+        action: 'policy.auto_lapsed',
+        entity: 'Policy',
+        entityId: p.id,
+        after: {
+          reason: `Auto-lapsed: premium installment overdue for ${gracePeriodDays}+ days`,
+        } as any,
+      })),
+    });
+
+    // Send notifications
+    for (const policy of policiesToLapse) {
+      const clientName =
+        policy.client?.companyName ||
+        `${policy.client?.firstName || ''} ${policy.client?.lastName || ''}`.trim();
+
+      // Notify client
+      if (policy.client?.email) {
+        try {
+          await this.emailService.sendPolicyRenewalReminder(
+            policy.client.email,
+            clientName,
+            policy.policyNumber,
+            new Date(), // use now as reference date
+            0,
+            0,
+            'LAPSED' as any,
+          );
+        } catch (err) {
+          this.logger.error(
+            `Failed to send lapse notification for ${policy.policyNumber}`,
+            err,
+          );
+        }
+      }
+    }
+
+    this.logger.log(
+      `Auto-lapsed ${policiesToLapse.length} policies due to ${gracePeriodDays}-day non-payment.`,
+    );
+  }
+
   @Cron(CronExpression.EVERY_DAY_AT_9AM)
   async sendRenewalReminders() {
     this.logger.log('Sending policy renewal reminder emails...');

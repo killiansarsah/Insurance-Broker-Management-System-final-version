@@ -1,8 +1,11 @@
 import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
+  Inject,
+  forwardRef,
   NotFoundException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
@@ -14,12 +17,19 @@ import { randomBytes } from 'crypto';
 import {
   ROLE_LEVEL,
 } from '../../common/constants/role-hierarchy.js';
+import { PoliciesService } from '../../policies/policies.service';
+import { NotificationsService } from '../../notifications/notifications.service';
 
 @Injectable()
 export class TransactionsService {
+  private readonly logger = new Logger(TransactionsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly invoicesService: InvoicesService,
+    @Inject(forwardRef(() => PoliciesService))
+    private readonly policiesService: PoliciesService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   private async generateTransactionNumber(
@@ -146,6 +156,10 @@ export class TransactionsService {
       await this.assertClientWritableByActor(tenantId, userId, relatedClient);
     }
 
+    // Supervisors+ can auto-approve; agents always create as PENDING
+    const isSupervisor = actorLevel >= supervisorLevel;
+    const initialStatus = isSupervisor ? 'PAID' : 'PENDING';
+
     return await this.prisma.$transaction(async (tx) => {
       const transactionNumber = await this.generateTransactionNumber(
         tenantId,
@@ -161,7 +175,7 @@ export class TransactionsService {
           amount: dto.amount,
           currency: 'GHS',
           paymentMethod: dto.paymentMethod,
-          paymentStatus: 'PAID',
+          paymentStatus: initialStatus,
           momoNetwork: dto.momoNetwork,
           momoPhone: dto.momoPhone,
           reference: dto.reference,
@@ -174,27 +188,53 @@ export class TransactionsService {
         },
       });
 
-      // If linked to invoice, update invoice paidAmount
-      if (dto.invoiceId) {
-        await this.invoicesService.recordPayment(dto.invoiceId, dto.amount);
+      // Only apply financial side-effects if auto-approved (supervisor+)
+      if (isSupervisor) {
+        // Auto-bind logic: if this is a PREMIUM payment for a DRAFT policy, bind it BEFORE applying side effects
+        if (dto.type === 'PREMIUM' && dto.policyId) {
+          try {
+            const linkedPolicy = await tx.policy.findUnique({
+              where: { id: dto.policyId },
+              select: { status: true },
+            });
+            if (linkedPolicy && linkedPolicy.status === 'DRAFT') {
+              await this.policiesService.bind(
+                dto.policyId,
+                tenantId,
+                userId,
+                tx, // Pass the same transaction context
+              );
+              this.logger.log(
+                `Auto-bound DRAFT policy ${dto.policyId} during transaction creation`,
+              );
+            }
+          } catch (err) {
+            this.logger.warn(`Auto-bind failed in create: ${(err as Error).message}`);
+          }
+        }
+
+        await this.applyPaymentSideEffects(tx, dto, transaction.id);
       }
 
-      // If PREMIUM payment linked to policy, try to mark matching installment as PAID
-      if (dto.policyId && dto.type === 'PREMIUM') {
-        const installment = await tx.premiumInstallment.findFirst({
+      // Trigger notification for large payments that need approval
+      if (initialStatus === 'PENDING' && Number(dto.amount) >= 10000) {
+        // Find all supervisors and admins in this tenant
+        const supervisors = await tx.user.findMany({
           where: {
-            policyId: dto.policyId,
-            status: 'PENDING',
+            tenantId,
+            role: { in: ['SUPERVISOR', 'ADMINISTRATOR', 'MANAGER', 'WORKSPACE_OWNER', 'PLATFORM_SUPER_ADMIN'] },
           },
-          orderBy: { dueDate: 'asc' },
+          select: { id: true },
         });
-        if (installment) {
-          await tx.premiumInstallment.update({
-            where: { id: installment.id },
-            data: {
-              status: 'PAID',
-              paidDate: new Date(),
-            },
+
+        for (const supervisor of supervisors) {
+          await this.notificationsService.create(tenantId, {
+            userId: supervisor.id,
+            title: 'Payment Approval Required',
+            message: `A large payment of GHS ${Number(dto.amount).toLocaleString()} was recorded and needs your approval.`,
+            type: 'FINANCE',
+            priority: 'HIGH',
+            link: `/dashboard/finance/transactions?search=${transactionNumber}`,
           });
         }
       }
@@ -204,6 +244,7 @@ export class TransactionsService {
         userId,
         'transaction.created',
         transaction.id,
+        { paymentStatus: initialStatus },
       );
       return transaction;
     });
@@ -402,5 +443,158 @@ export class TransactionsService {
       reason: dto.reason,
     });
     return updated;
+  }
+
+  // ─── APPROVE (PENDING → PAID) ──────────────────────
+  async approve(
+    id: string,
+    tenantId: string,
+    userId: string,
+  ) {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    if (actorLevel < supervisorLevel) {
+      throw new BadRequestException(
+        'Only supervisory roles and above can approve transactions',
+      );
+    }
+
+    const transaction = await this.findOne(id, tenantId, userId);
+    if (transaction.paymentStatus !== 'PENDING') {
+      throw new BadRequestException(
+        'Only PENDING transactions can be approved',
+      );
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      // 1. Fetch policy status inside tx to check for auto-bind
+      if (transaction.type === 'PREMIUM' && transaction.policyId) {
+        const linkedPolicy = await tx.policy.findUnique({
+          where: { id: transaction.policyId },
+          select: { status: true },
+        });
+
+        // 2. AUTO-BIND FIRST: If policy is DRAFT, bind it so installments exist
+        if (linkedPolicy && linkedPolicy.status === 'DRAFT') {
+          await this.policiesService.bind(
+            transaction.policyId,
+            tenantId,
+            userId,
+            tx, // Pass the transaction context
+          );
+          this.logger.log(`Auto-bound DRAFT policy ${transaction.policyId} during approval`);
+        }
+      }
+
+      // 3. Update Transaction status
+      const result = await tx.transaction.update({
+        where: { id },
+        data: {
+          paymentStatus: 'PAID',
+          processedAt: new Date(),
+        },
+      });
+
+      // 4. Apply financial side-effects (now installments are guaranteed to exist if it was DRAFT)
+      await this.applyPaymentSideEffects(tx, {
+        type: transaction.type as any,
+        invoiceId: transaction.invoiceId ?? undefined,
+        policyId: transaction.policyId ?? undefined,
+        amount: Number(transaction.amount),
+      }, id);
+
+      await tx.auditLog.create({
+        data: {
+          tenantId,
+          userId,
+          action: 'transaction.approved',
+          entity: 'Transaction',
+          entityId: id,
+          after: {
+            previousStatus: 'PENDING',
+            newStatus: 'PAID',
+            approvedBy: userId,
+          } as Prisma.InputJsonObject,
+        },
+      });
+
+      return result;
+    });
+
+    return updated;
+  }
+
+  // ─── REJECT (PENDING → REJECTED) ───────────────────
+  async reject(
+    id: string,
+    tenantId: string,
+    userId: string,
+    reason: string,
+  ) {
+    const actorLevel = await getUserRoleLevel(this.prisma, userId);
+    const supervisorLevel = ROLE_LEVEL['SUPERVISOR'] ?? 4;
+    if (actorLevel < supervisorLevel) {
+      throw new BadRequestException(
+        'Only supervisory roles and above can reject transactions',
+      );
+    }
+
+    const transaction = await this.findOne(id, tenantId, userId);
+    if (transaction.paymentStatus !== 'PENDING') {
+      throw new BadRequestException(
+        'Only PENDING transactions can be rejected',
+      );
+    }
+
+    const updated = await this.prisma.transaction.update({
+      where: { id },
+      data: { paymentStatus: 'REFUNDED' },
+    });
+
+    await this.logAudit(tenantId, userId, 'transaction.rejected', id, {
+      reason,
+    });
+
+    return updated;
+  }
+
+  // ─── SHARED: Apply invoice/installment updates ─────
+  private async applyPaymentSideEffects(
+    tx: Prisma.TransactionClient,
+    data: {
+      type?: string;
+      invoiceId?: string;
+      policyId?: string;
+      amount: number;
+    },
+    transactionId: string,
+  ) {
+    // If linked to invoice, update invoice paidAmount
+    if (data.invoiceId) {
+      await this.invoicesService.recordPayment(data.invoiceId, data.amount);
+    }
+
+    // If PREMIUM payment linked to policy, mark the next pending installment as PAID
+    if (data.policyId && data.type === 'PREMIUM') {
+      const installment = await tx.premiumInstallment.findFirst({
+        where: {
+          policyId: data.policyId,
+          status: 'PENDING',
+        },
+        orderBy: { dueDate: 'asc' },
+      });
+      if (installment) {
+        await tx.premiumInstallment.update({
+          where: { id: installment.id },
+          data: {
+            status: 'PAID',
+            paidDate: new Date(),
+          },
+        });
+      }
+
+      // Update policy paymentStatus using centralized method
+      await this.policiesService.syncPaymentStatus(data.policyId, tx);
+    }
   }
 }

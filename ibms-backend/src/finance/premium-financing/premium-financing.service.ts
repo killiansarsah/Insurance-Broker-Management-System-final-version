@@ -1,6 +1,8 @@
 import { getUserRoleLevel } from '../../common/constants/role-utils.js';
 import {
   Injectable,
+  Inject,
+  forwardRef,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
@@ -13,10 +15,15 @@ import {
 import { Prisma } from '@prisma/client';
 import { randomBytes } from 'crypto';
 import { ROLE_LEVEL } from '../../common/constants/role-hierarchy.js';
+import { PoliciesService } from '../../policies/policies.service';
 
 @Injectable()
 export class PremiumFinancingService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(forwardRef(() => PoliciesService))
+    private readonly policiesService: PoliciesService,
+  ) {}
 
   private async buildPfScopeWhere(
     tenantId: string,
@@ -300,6 +307,9 @@ export class PremiumFinancingService {
         notes: `PF installment ${installment.number} for ${pf.applicationNumber}`,
       },
     });
+
+    // Sync policy payment status
+    await this.policiesService.syncPaymentStatus(pf.policyId);
 
     await this.logAudit(
       tenantId,
