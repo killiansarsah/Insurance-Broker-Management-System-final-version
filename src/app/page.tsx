@@ -652,17 +652,32 @@ export default function LandingPage() {
       </div>
     </div>
     <div className="nic-shield reveal">
-      <div className="shield-wrap">
-        <div className="shield-ring ring1"></div>
-        <div className="shield-ring ring2"></div>
-        <div className="shield-ring ring3"></div>
-        <div className="shield-inner">
-          <svg viewBox="0 0 60 60" fill="none">
-            <path d="M30 5L8 15v18c0 12 9.6 22.6 22 26 12.4-3.4 22-14 22-26V15L30 5z" fill="rgba(255,255,255,.15)" stroke="rgba(255,255,255,.6)" strokeWidth="1.5"/>
-            <polyline points="20,30 27,37 42,22" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+      <div className="nic-logo-wrapper">
+        <div className="logo-glow"></div>
+        <div className="shield-ring ring1">
+          <div className="orbiting-shield">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
         </div>
-        <div className="shield-text">NIC Act 1061 Compliant</div>
+        <div className="shield-ring ring2">
+          <div className="orbiting-shield">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+        </div>
+        <div className="shield-ring ring3">
+          <div className="orbiting-shield">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+        </div>
+        <div className="logo-container">
+          <img
+            src="https://nicgh.org/wp-content/themes/nic/assets/images/nic-logo.png"
+            alt="National Insurance Commission"
+            className="nic-official-logo"
+            loading="lazy"
+          />
+        </div>
+        <div className="shield-text">Official NIC Compliance</div>
       </div>
     </div>
   </div>
