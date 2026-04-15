@@ -277,8 +277,18 @@ nav.scrolled{
 .ms-logo{display:flex;align-items:center;gap:7px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border)}
 .ms-hex{width:22px;height:22px;background:linear-gradient(135deg,var(--t1),var(--t2));border-radius:5px}
 .ms-name{font-size:10px;color:var(--t4);font-family:var(--display)}
-.ms-item{height:28px;border-radius:6px;display:flex;align-items:center;gap:7px;padding:0 8px}
-.ms-item.active{background:rgba(59,130,246,.15)}
+.ms-group-label{
+  font-size: 8px; font-weight: 700; color: var(--text3);
+  letter-spacing: 1px; margin-bottom: 8px; padding-left: 10px;
+  opacity: 0.6;
+}
+.ms-item{
+  padding:6px 10px;border-radius:6px;display:flex;align-items:center;gap:10px;
+  transition:all 0.3s ease;
+  font-size: 10px; color: var(--text2);
+}
+.ms-item svg { flex-shrink: 0; }
+.ms-item.active{background:rgba(59,130,246,.08); color: var(--t1); font-weight: 600;}
 .ms-item:hover { background: rgba(255,255,255,0.03); color: var(--text); }
 .ms-dot{width:10px;height:10px;border-radius:3px;background:var(--border2);flex-shrink:0}
 .ms-dot.teal{background:rgba(59,130,246,.5)}
@@ -911,6 +921,87 @@ footer{
   .stats-grid{grid-template-columns:1fr}
   .hero-actions{flex-direction:column;align-items:stretch}
   .btn-primary,.btn-secondary{justify-content:center}
+}
+
+/* ── DARK MODE ── */
+/* Premium Dark Mode Redefinition — High Contrast for Ghana Market */
+:where(.theme-dark, .theme-dark *) .landing-theme {
+  --bg: #0b1120;
+  --bg2: #0f172a;
+  --bg3: #1e293b;
+  --t1: #60a5fa; --t2: #3b82f6; --t3: #2563eb; --t4: #1d4ed8; --t5: #eff6ff;
+  --text: #f8fafc;
+  --text2: #e2e8f0;
+  --text3: #94a3b8;
+  --border: rgba(255, 255, 255, 0.12);
+  --border2: rgba(255, 255, 255, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .liquid-orbs .orb-1 { background: #1e40af; opacity: 0.25; }
+:where(.theme-dark, .theme-dark *) .landing-theme .liquid-orbs .orb-2 { background: #1e3a8a; opacity: 0.2; }
+:where(.theme-dark, .theme-dark *) .landing-theme .liquid-orbs .orb-3 { background: #fbbf24; opacity: 0.08; }
+
+/* Dark Mode Protocol — High Fidelity Overrides */
+:where(.theme-dark, .theme-dark *) .landing-theme .feat-card,
+:where(.theme-dark, .theme-dark *) .landing-theme .plan-card:not(.featured),
+:where(.theme-dark, .theme-dark *) .landing-theme .testi-card,
+:where(.theme-dark, .theme-dark *) .landing-theme .pain-card,
+:where(.theme-dark, .theme-dark *) .landing-theme .mockup-sidebar,
+:where(.theme-dark, .theme-dark *) .landing-theme .mc,
+:where(.theme-dark, .theme-dark *) .landing-theme .mockup-chart,
+:where(.theme-dark, .theme-dark *) .landing-theme .nic-check {
+  background: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(28px) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4) !important;
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .plan-card.featured {
+  background: linear-gradient(160deg, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 0.8)) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme nav.scrolled {
+  background: rgba(11, 17, 32, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .trust {
+  background: rgba(15, 23, 42, 0.4);
+  border-color: rgba(255, 255, 255, 0.05);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .step-num {
+  background: #1e293b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .cta-box {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4), rgba(15, 23, 42, 0.8)) !important;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme footer {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .footer-bottom {
+  border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .mobile-menu {
+  background: rgba(11, 17, 32, 0.98);
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme #successToast {
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+
+:where(.theme-dark, .theme-dark *) .landing-theme .shield-ring {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -301,36 +301,203 @@ export default function LandingPage() {
       </a>
     </div>
 
-    {/*  DASHBOARD MOCKUP  */}
+    {/*  DASHBOARD MOCKUP — mirrors real IBMS dashboard  */}
     <div className="hero-mockup" style={{marginTop: '40px'}}>
       <div className="mockup-wrap">
         <div className="mockup-bar">
           <div className="dot-r"></div><div className="dot-y"></div><div className="dot-g"></div>
-          <div className="mockup-url">app.brokerium.gh/dashboard</div>
+          <div className="mockup-url">app.ibms.gh/dashboard</div>
         </div>
-        <div className="mockup-body" style={{padding: '12px', background: 'var(--bg2)', display: 'grid', gridTemplateColumns: '160px 1fr', gap: '12px', minHeight: '380px'}}>
-          <div className="mockup-sidebar">
-            <div className="ms-logo" style={{display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)'}}>
-               <img src="/logo-icon.png" alt="B" className="w-5 h-5 object-contain" loading="lazy" decoding="async" />
-               <div className="ms-name" style={{fontSize: '11px', fontWeight: '600', color: 'var(--t1)'}}>Brokerium</div>
+
+        {/* DASHBOARD HEADER */}
+        <div className="mockup-header" style={{padding: '10px 16px', background: 'var(--bg2)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <div style={{display: 'flex', alignItems: 'center', gap: '12px'}}>
+            <div className="mockup-search" style={{width: '240px', height: '28px', background: 'var(--bg3)', borderRadius: '14px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', padding: '0 12px', gap: '8px'}}>
+              <svg viewBox="0 0 16 16" fill="var(--text3)" width="12" height="12"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>
+              <div style={{fontSize: '9px', color: 'var(--text3)'}}>Search clients, policies, claims...</div>
             </div>
-            <div className="ms-item active"><div className="ms-dot teal"></div><div className="ms-lbl active"></div></div>
-            <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
-            <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
-            <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
-            <div className="ms-item"><div className="ms-dot"></div><div className="ms-lbl"></div></div>
+            <div style={{display: 'flex', alignItems: 'center', background: 'rgba(239,68,68,0.05)', padding: '4px 8px', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.1)'}}>
+              <div className="live-dot"></div>
+              <div style={{fontSize: '7px', fontWeight: '800', color: '#ef4444', letterSpacing: '0.5px'}}>LIVE DATA</div>
+            </div>
           </div>
-          <div className="mockup-main" style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-            <div className="mockup-cards" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px'}}>
-              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value"></div></div>
-              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(59,130,246,.2)'}}></div></div>
-              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(251,191,36,.1)'}}></div></div>
-              <div className="mc" style={{padding: '12px'}}><div className="mc-label"></div><div className="mc-value" style={{background: 'rgba(52,211,153,.15)'}}></div></div>
+          <div className="mockup-profile" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
+            <div style={{textAlign: 'right'}}>
+              <div style={{fontSize: '9px', fontWeight: '700', color: 'var(--text)'}}>Jerry Mensah</div>
+              <div style={{fontSize: '7px', color: 'var(--text3)', textTransform: 'uppercase'}}>Administrator</div>
             </div>
-            <div className="mockup-chart" style={{flex: 1, padding: '16px'}}>
-              <div className="mc-label" style={{width: '30%', marginBottom: '16px'}}></div>
-              <div className="chart-bars" style={{display: 'flex', alignItems: 'flex-end', gap: '6px', height: '100px'}}>
-                {heights.map((h, i) => <div key={i} className="chart-bar" style={{height: `${h}%`, flex: 1, borderRadius: '4px 4px 0 0', background: i % 2 === 0 ? 'var(--t2)' : 'var(--t4)', opacity: 0.6}}></div>)}
+            <div style={{width: '24px', height: '24px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--t1), var(--t2))', border: '1.5px solid var(--border2)'}}></div>
+          </div>
+        </div>
+
+        <div className="mockup-body" style={{padding: '0', background: 'var(--bg)', display: 'grid', gridTemplateColumns: '170px 1fr', minHeight: '520px'}}>
+          {/* SIDEBAR */}
+          <div className="mockup-sidebar" style={{padding: '16px', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '20px', background: 'var(--bg2)'}}>
+            <div className="ms-logo" style={{display: 'flex', alignItems: 'center', gap: '8px', paddingBottom: '12px'}}>
+              <img src="/logo-icon.png" alt="IBMS" style={{width: '18px', height: '18px', objectFit: 'contain'}} loading="lazy" decoding="async" />
+              <div className="ms-name" style={{fontSize: '11px', fontWeight: '800', color: 'var(--t1)', letterSpacing: '0.5px'}}>IBMS</div>
+            </div>
+
+            <div className="ms-group">
+              <div className="ms-group-label">MAIN HUB</div>
+              <div className="ms-items">
+                <div className="ms-item active"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.7}}><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg> Dashboard</div>
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><circle cx="8" cy="8" r="6" stroke="currentColor" fill="none"/></svg> My Desk</div>
+              </div>
+            </div>
+
+            <div className="ms-group">
+              <div className="ms-group-label">CORE BUSINESS</div>
+              <div className="ms-items">
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg> Clients</div>
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M4 1h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2z"/></svg> Policies</div>
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14z"/></svg> Claims</div>
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M11 5.466V4H5v4h6V6.534a1.75 1.75 0 0 1 0-1.068zM5 10V9h6v1H5z"/></svg> Renewals</div>
+              </div>
+            </div>
+
+            <div className="ms-group">
+              <div className="ms-group-label">GROWTH &amp; FINANCE</div>
+              <div className="ms-items">
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1zm4-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0V7zm4-2a1 1 0 1 1 2 0v7a1 1 0 1 1-2 0V5z"/></svg> Finance</div>
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5V3h2v-.5A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5V11a.5.5 0 0 1-1 0V2.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5V14a.5.5 0 0 1-1 0V3H7v11a.5.5 0 0 1-1 0V2.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5V14a.5.5 0 0 1-1 0V2.5z"/></svg> Leads</div>
+              </div>
+            </div>
+
+            <div className="ms-group">
+              <div className="ms-group-label">OPERATIONS</div>
+              <div className="ms-items">
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M0 3a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3z"/></svg> Carriers</div>
+                <div className="ms-item"><svg viewBox="0 0 16 16" width="10" height="10" fill="currentColor" style={{opacity: 0.5}}><path d="M9.405 1.05c-.413-1.4-2.397-1.4-2.81 0l-.1.34a1.464 1.464 0 0 1-2.105.872l-.31-.17c-1.283-.698-2.686.705-1.987 1.987l.169.311c.446.82.023 1.841-.872 2.105l-.34.1c-1.4.413-1.4 2.397 0 2.81l.34.1a1.464 1.464 0 0 1 .872 2.105l-.17.31c-.698 1.283.705 2.686 1.987 1.987l.311-.169a1.464 1.464 0 0 1 2.105.872l.1.34c.413 1.4 2.397 1.4 2.81 0l.1-.34a1.464 1.464 0 0 1 2.105-.872l.31.17c1.283.698 2.686-.705 1.987-1.987l-.169-.311a1.464 1.464 0 0 1 .872-2.105l.34-.1c1.4-.413 1.4-2.397 0-2.81l-.34-.1a1.464 1.464 0 0 1-.872-2.105l.17-.31c.698-1.283-.705-2.686-1.987-1.987l-.311.169a1.464 1.464 0 0 1-2.105-.872l-.1-.34zM8 10.93a2.929 2.929 0 1 1 0-5.86 2.929 2.929 0 0 1 0 5.858z"/></svg> Settings</div>
+              </div>
+            </div>
+          </div>
+
+          {/* MAIN CONTENT */}
+          <div className="mockup-main" style={{padding: '20px', background: 'var(--bg3)', display: 'flex', flexDirection: 'column', gap: '16px'}}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end'}}>
+              <div>
+                <div style={{fontSize: '18px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px'}}>Executive Dashboard</div>
+                <div style={{fontSize: '10px', color: 'var(--text3)'}}>2026 — Month-to-Date</div>
+              </div>
+              <div style={{display: 'flex', gap: '6px'}}>
+                <div style={{padding: '4px 10px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '9px', color: 'var(--text2)'}}>MTD</div>
+                <div style={{padding: '4px 10px', background: 'var(--bg2)', border: '1px solid var(--border)', borderRadius: '4px', fontSize: '9px', color: 'var(--text2)'}}>Filters</div>
+              </div>
+            </div>
+
+            {/* ROW 1 — KPI Cards */}
+            <div className="mockup-cards" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'}}>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid var(--t2)'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                  <div style={{width: '24px', height: '24px', background: 'rgba(59,130,246,0.1)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t2)', fontSize: '12px'}}>₵</div>
+                  <div style={{fontSize: '8px', color: '#10b981'}}>↑ 3.2%</div>
+                </div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: 'var(--text)'}}>₵1.6M</div>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginTop: '2px'}}>Premium Placed</div>
+              </div>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid #f59e0b'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                  <div style={{width: '24px', height: '24px', background: 'rgba(245,158,11,0.1)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b', fontSize: '12px'}}>%</div>
+                  <div style={{fontSize: '8px', color: '#10b981'}}>↑ 2.1%</div>
+                </div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: 'var(--text)'}}>₵577k</div>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginTop: '2px'}}>Commission Recv</div>
+              </div>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid #10b981'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                  <div style={{width: '24px', height: '24px', background: 'rgba(16,185,129,0.1)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981', fontSize: '12px'}}>👥</div>
+                  <div style={{fontSize: '8px', color: '#10b981'}}>↑ 3%</div>
+                </div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: 'var(--text)'}}>45</div>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginTop: '2px'}}>Active Clients</div>
+              </div>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid var(--t1)'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
+                  <div style={{width: '24px', height: '24px', background: 'rgba(30,64,175,0.1)', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t1)', fontSize: '12px'}}>📄</div>
+                  <div style={{fontSize: '8px', color: '#10b981'}}>↑ 5%</div>
+                </div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: 'var(--text)'}}>1,248</div>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginTop: '2px'}}>Active Policies</div>
+              </div>
+            </div>
+
+            {/* ROW 2 — Alert Cards */}
+            <div className="mockup-cards" style={{display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px'}}>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid #ef4444'}}>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: '6px'}}>Expiring (7D)</div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: '#ef4444'}}>0</div>
+              </div>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid #f59e0b'}}>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: '6px'}}>Leads Pipeline</div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: 'var(--text)'}}>17</div>
+              </div>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid #10b981'}}>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: '6px'}}>Claims Ratio</div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: '#10b981'}}>5.4%</div>
+              </div>
+              <div className="mc" style={{padding: '12px', borderLeft: '3px solid #ef4444'}}>
+                <div style={{fontSize: '8px', color: 'var(--text3)', textTransform: 'uppercase', marginBottom: '6px'}}>Lapsed Policies</div>
+                <div style={{fontSize: '16px', fontWeight: '800', color: '#ef4444'}}>7</div>
+              </div>
+            </div>
+
+            {/* ROW 3 — Analytics Panels */}
+            <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', flex: 1}}>
+              {/* Policy Mix Donut */}
+              <div className="mc" style={{padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                <div style={{width: '100%', fontSize: '11px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px'}}>Policy Mix</div>
+                <div style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative'}}>
+                  <div style={{width: '90px', height: '90px', borderRadius: '50%', border: '14px solid var(--border2)', position: 'relative', opacity: 0.6}}>
+                    <div className="donut-segment" style={{position: 'absolute', inset: '-14px', borderRadius: '50%', border: '14px solid transparent', borderTopColor: 'var(--t1)', transform: 'rotate(45deg)'}}></div>
+                    <div className="donut-segment" style={{position: 'absolute', inset: '-14px', borderRadius: '50%', border: '14px solid transparent', borderRightColor: '#f59e0b', transform: 'rotate(120deg)', animationDelay: '0.2s'}}></div>
+                    <div className="donut-segment" style={{position: 'absolute', inset: '-14px', borderRadius: '50%', border: '14px solid transparent', borderBottomColor: '#ef4444', transform: 'rotate(240deg)', animationDelay: '0.4s'}}></div>
+                  </div>
+                  <div style={{position: 'absolute', textAlign: 'center'}}>
+                    <div style={{fontSize: '11px', fontWeight: '800', color: 'var(--text)'}}>1,248</div>
+                    <div style={{fontSize: '6px', color: 'var(--text3)'}}>POLICIES</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Claims Ratio Gauge */}
+              <div className="mc" style={{padding: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
+                <div style={{width: '100%', fontSize: '11px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px'}}>Claims Ratio</div>
+                <div style={{flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden'}}>
+                  <svg viewBox="0 0 100 50" style={{width: '100px', height: '50px'}}>
+                    <path d="M10,50 A40,40 0 0,1 90,50" fill="none" stroke="var(--border2)" strokeWidth="12" strokeLinecap="round"/>
+                    <path className="gauge-osc" d="M10,50 A40,40 0 0,1 60,18" fill="none" stroke="#10b981" strokeWidth="12" strokeLinecap="round"/>
+                  </svg>
+                  <div style={{position: 'absolute', bottom: '0', textAlign: 'center'}}>
+                    <div style={{fontSize: '14px', fontWeight: '800', color: '#10b981'}}>5.4%</div>
+                    <div style={{fontSize: '6px', color: '#10b981', fontWeight: '700'}}>HEALTHY</div>
+                  </div>
+                </div>
+                <div style={{display: 'flex', gap: '20px', marginTop: '10px'}}>
+                  <div style={{textAlign: 'center'}}><div style={{fontSize: '8px', color: 'var(--text3)'}}>PAID</div><div style={{fontSize: '9px', fontWeight: '700', color: 'var(--text)'}}>₵87k</div></div>
+                  <div style={{textAlign: 'center'}}><div style={{fontSize: '8px', color: 'var(--text3)'}}>RECV</div><div style={{fontSize: '9px', fontWeight: '700', color: 'var(--text)'}}>₵161k</div></div>
+                </div>
+              </div>
+
+              {/* Top Insurers Bar Chart */}
+              <div className="mc" style={{padding: '16px', display: 'flex', flexDirection: 'column'}}>
+                <div style={{fontSize: '11px', fontWeight: '700', color: 'var(--text)', marginBottom: '4px'}}>Top Insurers</div>
+                <div style={{fontSize: '8px', color: 'var(--text3)', marginBottom: '12px'}}>Premium placed by insurer</div>
+                <div style={{display: 'grid', gap: '10px', flex: 1}}>
+                  {[
+                    {n: 'SIC Ins', v: '90%', c: 'var(--t1)', cls: 'bar-move-1'},
+                    {n: 'Enterprise', v: '75%', c: '#10b981', cls: 'bar-move-2'},
+                    {n: 'Hollard', v: '60%', c: '#f59e0b', cls: 'bar-move-3'},
+                    {n: 'Star Assur', v: '45%', c: '#3b82f6', cls: 'bar-move-4'}
+                  ].map((ins, i) => (
+                    <div key={i} style={{display: 'grid', gridTemplateColumns: '44px 1fr', alignItems: 'center', gap: '8px'}}>
+                      <div style={{fontSize: '7px', color: 'var(--text3)', whiteSpace: 'nowrap'}}>{ins.n}</div>
+                      <div style={{height: '6px', background: 'var(--border2)', borderRadius: '3px', position: 'relative', overflow: 'hidden'}}>
+                        <div className={`mini-bar-h ${ins.cls}`} style={{position: 'absolute', top: 0, left: 0, height: '100%', width: ins.v, background: ins.c, borderRadius: '3px'}}></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
